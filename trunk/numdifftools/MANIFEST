@@ -1,0 +1,8 @@
+__init__.py
+core.py
+info.py
+license.py
+setup.py
+test\testnumdifftools.py
+doc\DERIVEST.pdf
+doc\DERIVEST.tex

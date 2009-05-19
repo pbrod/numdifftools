@@ -1,0 +1,356 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>numdifftools.core.Derivative</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css"></link>
+</head>
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+
+<!-- =========== START OF NAVBAR =========== -->
+<table class="navbar" border="0" width="100%" cellpadding="0" bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="center">
+    <th class="navbar">&nbsp;&nbsp;&nbsp;<a class="navbar" href="numdifftools-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+    <th class="navbar">&nbsp;&nbsp;&nbsp;<a class="navbar" href="trees.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+    <th class="navbar">&nbsp;&nbsp;&nbsp;<a class="navbar" href="indices.html">Index</a>&nbsp;&nbsp;&nbsp;</th>
+    <th class="navbar">&nbsp;&nbsp;&nbsp;<a class="navbar" href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+    <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <font size="-1"><b class="breadcrumbs">
+        <a href="numdifftools-module.html">Package&nbsp;numdifftools</a> ::
+        <a href="numdifftools.core-module.html">Module&nbsp;core</a> ::
+        Class&nbsp;Derivative
+      </b></font></br>
+    </td>
+    <td><table cellpadding="0" cellspacing="0">
+      <tr><td align="right"><font size="-2">[show&nbsp;private&nbsp;|&nbsp;<a href="../public/numdifftools.core.Derivative-class.html">hide&nbsp;private</a>]</font></td></tr>
+      <tr><td align="right"><font size="-2">[<a href="frames.html"target="_top">frames</a>&nbsp;|&nbsp;<a href="numdifftools.core.Derivative-class.html" target="_top">no&nbsp;frames</a>]</font></td></tr>
+    </table></td>
+</tr></table>
+
+<!-- =========== START OF CLASS DESCRIPTION =========== -->
+<h2 class="class">Class Derivative</h2>
+
+<pre class="base-tree">
+     <a href="__builtin__.object-class.html"><code>object</code></a> --+    
+              |    
+<a href="..\private\numdifftools.core.Common_diff_par-class.html"><code>Common_diff_par</code></a> --+
+                  |
+                 <b>Derivative</b>
+</pre><br />
+
+<dl><dt><b>Known Subclasses:</b></dt>
+<dd>
+    <a href="numdifftools.core.Gradient-class.html"><code>Gradient</code></a>,
+    <a href="numdifftools.core.Hessdiag-class.html"><code>Hessdiag</code></a>,
+    <a href="numdifftools.core.Hessian-class.html"><code>Hessian</code></a></dd></dl>
+
+<hr/>
+
+<pre class="literalblock">
+Estimate n'th derivative of fun at x0, with error estimate
+
+
+Input arguments
+===============
+fun = function to differentiate.
+
+**kwds
+------
+derOrder : Integer from 1 to 4 defining derivative order. (Default 1)
+metOrder : Integer from 1 to 4 defining order of basic method used.
+             (For 'central' methods, it must be from the set [2,4].
+             (Default 2)
+method   : Method of estimation.  Valid options are:
+              'central', 'forward' or 'backwards'.     (Default 'central')
+numTerms : Number of Romberg terms used in the extrapolation.
+             Must be an integer from 0 to 3.  (Default 2)
+             Note: 0 disables the Romberg step completely.
+stepFix  : If not None, it will define the maximum excursion from x0
+             that is used and prevent the adaptive logic from working.
+             This will be considerably faster, but not necessarily
+             as accurate as allowing the adaptive logic to run.
+            (Default: None)
+stepMax  : Maximum allowed excursion from x0 as a multiple of x0. (Default 100)
+stepRatio: Ratio used between sequential steps in the estimation
+             of the derivative (Default 2)
+vectorized : True  - if your function is vectorized.
+               False - loop over the successive function calls (default).
+
+Uses a semi-adaptive scheme to provide the best estimate of the
+derivative by its automatic choice of a differencing interval. It uses
+finite difference approximations of various orders, coupled with a
+generalized (multiple term) Romberg extrapolation. This also yields the
+error estimate provided. See the document DERIVEST.pdf for more explanation
+of the algorithms behind the parameters.
+
+ Note on metOrder: higher order methods will generally be more accurate,
+         but may also suffer more from numerical problems. First order
+         methods would usually not be recommended.
+ Note on method: Central difference methods are usually the most accurate,
+        but sometimes one can only allow evaluation in forward or backward
+        direction.
+
+
+Examples
+--------
+ # 1'st and 2'nd derivative of exp(x), at x == 1
+ &gt;&gt;&gt; import numpy as np
+ &gt;&gt;&gt; fd = Derivative(np.exp)              # 1'st derivative
+ &gt;&gt;&gt; fdd = Derivative(np.exp,derOrder=2)  # 2'nd derivative
+ &gt;&gt;&gt; fd(1)
+ array([ 2.71828183])
+
+ &gt;&gt;&gt; d2 = fdd(1)
+ &gt;&gt;&gt; fdd.error_estimate # Get error estimate
+ array([  5.95741234e-11])
+
+ # 3'rd derivative of x.^3+x.^4, at x = [0,1]
+ &gt;&gt;&gt; fun = lambda x: x**3 + x**4
+ &gt;&gt;&gt; fd3 = Derivative(fun,derOrder=3)
+ &gt;&gt;&gt; fd3([0,1])          #  True derivatives: [6,30]
+ array([  6.,  30.])
+
+ &gt;&gt;&gt; fd3.error_estimate
+ array([  2.65282677e-14,   1.06113071e-13])
+
+ See also
+ --------
+ Gradient,
+ Hessdiag,
+ Hessian,
+ Jacobian
+</pre>
+<hr/>
+
+
+<!-- =========== START OF METHOD SUMMARY =========== -->
+<table class="summary" border="1" cellpadding="3" cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="summary">
+  <th colspan="2">Method Summary</th></tr>
+<tr><td align="right" valign="top" width="15%"><font size="-1">&nbsp;</font></td>
+  <td><code><a name="__init__"></a><span class="summary-sig"><span class="summary-sig-name">__init__</span>(<span class=summary-sig-arg>self</span>,
+          <span class=summary-sig-arg>fun</span>,
+          <span class="summary-sig-kwarg">**kwds</span>)</span></code>
+</td></tr>
+<tr><td align="right" valign="top" width="15%"><font size="-1">&nbsp;</font></td>
+  <td><code><a name="__call__"></a><span class="summary-sig"><span class="summary-sig-name">__call__</span>(<span class=summary-sig-arg>self</span>,
+          <span class=summary-sig-arg>x00</span>)</span></code>
+</td></tr>
+<tr><td align="right" valign="top" width="15%"><font size="-1">&nbsp;</font></td>
+  <td><code><span class="summary-sig"><a href="numdifftools.core.Derivative-class.html#derivative" class="summary-sig-name"><code>derivative</code></a>(<span class=summary-sig-arg>self</span>,
+          <span class=summary-sig-arg>x00</span>)</span></code>
+<br />
+Return estimate of n'th derivative of fun at x0 using romberg 
+extrapolation</td></tr>
+<tr><td align="right" valign="top" width="15%"><font size="-1">&nbsp;</font></td>
+  <td><code><a name="_derivative"></a><span class="summary-sig"><span class="summary-sig-name">_derivative</span>(<span class=summary-sig-arg>self</span>,
+          <span class=summary-sig-arg>x00</span>)</span></code>
+</td></tr>
+<tr><td align="right" valign="top" width="15%"><font size="-1">&nbsp;</font></td>
+  <td><code><span class="summary-sig"><a href="..\private\numdifftools.core.Derivative-class.html#_fder" class="summary-sig-name"><code>_fder</code></a>(<span class=summary-sig-arg>self</span>,
+          <span class=summary-sig-arg>f_x0i</span>,
+          <span class=summary-sig-arg>x0i</span>,
+          <span class=summary-sig-arg>h</span>)</span></code>
+<br />
+Return derivative estimates of f at x0 for a sequence of stepsizes h...</td></tr>
+<tr><td align="right" valign="top" width="15%"><font size="-1">&nbsp;</font></td>
+  <td><code><a name="_fun"></a><span class="summary-sig"><span class="summary-sig-name">_fun</span>(<span class=summary-sig-arg>self</span>,
+          <span class=summary-sig-arg>xi</span>)</span></code>
+</td></tr>
+<tr><td align="right" valign="top" width="15%"><font size="-1">&nbsp;</font></td>
+  <td><code><a name="_gradient"></a><span class="summary-sig"><span class="summary-sig-name">_gradient</span>(<span class=summary-sig-arg>self</span>,
+          <span class=summary-sig-arg>x00</span>)</span></code>
+</td></tr>
+<tr><td align="right" valign="top" width="15%"><font size="-1">&nbsp;</font></td>
+  <td><code><a name="_hessdiag"></a><span class="summary-sig"><span class="summary-sig-name">_hessdiag</span>(<span class=summary-sig-arg>self</span>,
+          <span class=summary-sig-arg>x00</span>)</span></code>
+</td></tr>
+<tr><td align="right" valign="top" width="15%"><font size="-1">&nbsp;</font></td>
+  <td><code><a name="_hessian"></a><span class="summary-sig"><span class="summary-sig-name">_hessian</span>(<span class=summary-sig-arg>self</span>,
+          <span class=summary-sig-arg>x00</span>)</span></code>
+</td></tr>
+<tr><td align="right" valign="top" width="15%"><font size="-1">&nbsp;</font></td>
+  <td><code><span class="summary-sig"><a href="..\private\numdifftools.core.Derivative-class.html#_partial_der" class="summary-sig-name"><code>_partial_der</code></a>(<span class=summary-sig-arg>self</span>,
+          <span class=summary-sig-arg>x00</span>)</span></code>
+<br />
+Return partial derivatives</td></tr>
+<tr bgcolor="#e8f0f8" class="group">
+  <th colspan="2">&nbsp;&nbsp;&nbsp;&nbsp;Inherited from Common_diff_par</th></tr>
+<tr><td align="right" valign="top" width="15%"><font size="-1">&nbsp;</font></td>
+  <td><code><span class="summary-sig"><a href="..\private\numdifftools.core.Common_diff_par-class.html#_check_params" class="summary-sig-name"><code>_check_params</code></a>(<span class=summary-sig-arg>self</span>)</span></code>
+<br />
+check the parameters for acceptability</td></tr>
+<tr><td align="right" valign="top" width="15%"><font size="-1">&nbsp;</font></td>
+  <td><code><span class="summary-sig"><a href="..\private\numdifftools.core.Common_diff_par-class.html#_fdamat" class="summary-sig-name"><code>_fdamat</code></a>(<span class=summary-sig-arg>self</span>,
+          <span class=summary-sig-arg>parity</span>,
+          <span class=summary-sig-arg>nterms</span>)</span></code>
+<br />
+Return matrix for fda derivation.</td></tr>
+<tr><td align="right" valign="top" width="15%"><font size="-1">&nbsp;</font></td>
+  <td><code><span class="summary-sig"><a href="..\private\numdifftools.core.Common_diff_par-class.html#_fdiff_b" class="summary-sig-name"><code>_fdiff_b</code></a>(<span class=summary-sig-arg>self</span>,
+          <span class=summary-sig-arg>f_x0i</span>,
+          <span class=summary-sig-arg>x0i</span>,
+          <span class=summary-sig-arg>h</span>)</span></code>
+<br />
+Return backward differences...</td></tr>
+<tr><td align="right" valign="top" width="15%"><font size="-1">&nbsp;</font></td>
+  <td><code><span class="summary-sig"><a href="..\private\numdifftools.core.Common_diff_par-class.html#_fdiff_c" class="summary-sig-name"><code>_fdiff_c</code></a>(<span class=summary-sig-arg>self</span>,
+          <span class=summary-sig-arg>f_x0i</span>,
+          <span class=summary-sig-arg>x0i</span>,
+          <span class=summary-sig-arg>h</span>)</span></code>
+<br />
+Return central differences...</td></tr>
+<tr><td align="right" valign="top" width="15%"><font size="-1">&nbsp;</font></td>
+  <td><code><span class="summary-sig"><a href="..\private\numdifftools.core.Common_diff_par-class.html#_fdiff_f" class="summary-sig-name"><code>_fdiff_f</code></a>(<span class=summary-sig-arg>self</span>,
+          <span class=summary-sig-arg>f_x0i</span>,
+          <span class=summary-sig-arg>x0i</span>,
+          <span class=summary-sig-arg>h</span>)</span></code>
+<br />
+Return forward differences...</td></tr>
+<tr><td align="right" valign="top" width="15%"><font size="-1">&nbsp;</font></td>
+  <td><code><span class="summary-sig"><a href="..\private\numdifftools.core.Common_diff_par-class.html#_rombextrap" class="summary-sig-name"><code>_rombextrap</code></a>(<span class=summary-sig-arg>self</span>,
+          <span class=summary-sig-arg>der_init</span>)</span></code>
+<br />
+Return Romberg extrapolated derivatives and error estimates based on the initial derivative estimates...</td></tr>
+<tr><td align="right" valign="top" width="15%"><font size="-1">&nbsp;</font></td>
+  <td><code><span class="summary-sig"><a href="..\private\numdifftools.core.Common_diff_par-class.html#_set_all_der_par" class="summary-sig-name"><code>_set_all_der_par</code></a>(<span class=summary-sig-arg>self</span>)</span></code>
+<br />
+Set derivative parameters: stepsize, differention rule and romberg 
+extrapolation</td></tr>
+<tr><td align="right" valign="top" width="15%"><font size="-1">&nbsp;</font></td>
+  <td><code><span class="summary-sig"><a href="..\private\numdifftools.core.Common_diff_par-class.html#_set_delta" class="summary-sig-name"><code>_set_delta</code></a>(<span class=summary-sig-arg>self</span>)</span></code>
+<br />
+Set the steps to use in derivation.</td></tr>
+<tr><td align="right" valign="top" width="15%"><font size="-1">&nbsp;</font></td>
+  <td><code><span class="summary-sig"><a href="..\private\numdifftools.core.Common_diff_par-class.html#_set_fdarule" class="summary-sig-name"><code>_set_fdarule</code></a>(<span class=summary-sig-arg>self</span>)</span></code>
+<br />
+Generate finite differencing rule in advance.</td></tr>
+<tr><td align="right" valign="top" width="15%"><font size="-1">&nbsp;</font></td>
+  <td><code><span class="summary-sig"><a href="..\private\numdifftools.core.Common_diff_par-class.html#_set_fdiff" class="summary-sig-name"><code>_set_fdiff</code></a>(<span class=summary-sig-arg>self</span>)</span></code>
+<br />
+Set _fdiff fun according to method</td></tr>
+<tr><td align="right" valign="top" width="15%"><font size="-1">&nbsp;</font></td>
+  <td><code><span class="summary-sig"><a href="..\private\numdifftools.core.Common_diff_par-class.html#_set_rombexpon" class="summary-sig-name"><code>_set_rombexpon</code></a>(<span class=summary-sig-arg>self</span>)</span></code>
+<br />
+Member variables used...</td></tr>
+<tr bgcolor="#e8f0f8" class="group">
+  <th colspan="2">&nbsp;&nbsp;&nbsp;&nbsp;Inherited from object</th></tr>
+<tr><td align="right" valign="top" width="15%"><font size="-1">&nbsp;</font></td>
+  <td><code><span class="summary-sig"><a href="__builtin__.object-class.html#__delattr__" class="summary-sig-name"><code>__delattr__</code></a>(<span class="summary-sig-vararg">...</span>)</span></code>
+<br />
+x.__delattr__('name') &lt;==&gt; del x.name</td></tr>
+<tr><td align="right" valign="top" width="15%"><font size="-1">&nbsp;</font></td>
+  <td><code><span class="summary-sig"><a href="__builtin__.object-class.html#__getattribute__" class="summary-sig-name"><code>__getattribute__</code></a>(<span class="summary-sig-vararg">...</span>)</span></code>
+<br />
+x.__getattribute__('name') &lt;==&gt; x.name</td></tr>
+<tr><td align="right" valign="top" width="15%"><font size="-1">&nbsp;</font></td>
+  <td><code><span class="summary-sig"><a href="__builtin__.object-class.html#__hash__" class="summary-sig-name"><code>__hash__</code></a>(<span class=summary-sig-arg>x</span>)</span></code>
+<br />
+x.__hash__() &lt;==&gt; hash(x)</td></tr>
+<tr><td align="right" valign="top" width="15%"><font size="-1">&nbsp;</font></td>
+  <td><code><span class="summary-sig"><a href="__builtin__.object-class.html#__reduce__" class="summary-sig-name"><code>__reduce__</code></a>(<span class="summary-sig-vararg">...</span>)</span></code>
+<br />
+helper for pickle</td></tr>
+<tr><td align="right" valign="top" width="15%"><font size="-1">&nbsp;</font></td>
+  <td><code><span class="summary-sig"><a href="__builtin__.object-class.html#__reduce_ex__" class="summary-sig-name"><code>__reduce_ex__</code></a>(<span class="summary-sig-vararg">...</span>)</span></code>
+<br />
+helper for pickle</td></tr>
+<tr><td align="right" valign="top" width="15%"><font size="-1">&nbsp;</font></td>
+  <td><code><span class="summary-sig"><a href="__builtin__.object-class.html#__repr__" class="summary-sig-name"><code>__repr__</code></a>(<span class=summary-sig-arg>x</span>)</span></code>
+<br />
+x.__repr__() &lt;==&gt; repr(x)</td></tr>
+<tr><td align="right" valign="top" width="15%"><font size="-1">&nbsp;</font></td>
+  <td><code><span class="summary-sig"><a href="__builtin__.object-class.html#__setattr__" class="summary-sig-name"><code>__setattr__</code></a>(<span class="summary-sig-vararg">...</span>)</span></code>
+<br />
+x.__setattr__('name', value) &lt;==&gt; x.name = value</td></tr>
+<tr><td align="right" valign="top" width="15%"><font size="-1">&nbsp;</font></td>
+  <td><code><span class="summary-sig"><a href="__builtin__.object-class.html#__str__" class="summary-sig-name"><code>__str__</code></a>(<span class=summary-sig-arg>x</span>)</span></code>
+<br />
+x.__str__() &lt;==&gt; str(x)</td></tr>
+<tr bgcolor="#e8f0f8" class="group">
+  <th colspan="2">&nbsp;&nbsp;&nbsp;&nbsp;Inherited from type</th></tr>
+<tr><td align="right" valign="top" width="15%"><font size="-1">&nbsp;</font></td>
+  <td><code><span class="summary-sig"><a href="__builtin__.type-class.html#__new__" class="summary-sig-name"><code>__new__</code></a>(<span class=summary-sig-arg>T</span>,
+          <span class=summary-sig-arg>S</span>,
+          <span class="summary-sig-vararg">...</span>)</span></code>
+<br />
+T.__new__(S, ...) -&gt; a new object with type S, a subtype of T</td></tr>
+</table><br />
+
+
+<!-- =========== START OF METHOD DETAILS =========== -->
+<table class="details" border="1" cellpadding="3" cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="details">
+  <th colspan="2">Method Details</th></tr>
+</table>
+
+<a name="derivative"></a>
+<table width="100%" class="func-details" bgcolor="#e0e0e0"><tr><td>
+  <h3><span class="sig"><span class="sig-name">derivative</span>(<span class=sig-arg>self</span>,
+          <span class=sig-arg>x00</span>)</span>
+  </h3>
+  Return estimate of n'th derivative of fun at x0 using romberg 
+  extrapolation
+  <dl><dt></dt><dd>
+  </dd></dl>
+</td></tr></table>
+
+<a name="_fder"></a>
+<table width="100%" class="func-details" bgcolor="#e0e0e0"><tr><td>
+  <h3><span class="sig"><span class="sig-name">_fder</span>(<span class=sig-arg>self</span>,
+          <span class=sig-arg>f_x0i</span>,
+          <span class=sig-arg>x0i</span>,
+          <span class=sig-arg>h</span>)</span>
+  </h3>
+<pre class="literalblock">
+Return derivative estimates of f at x0 for a sequence of stepsizes h
+
+Member variables used
+---------------------
+derOrder
+fdarule
+numTerms
+</pre>
+  <dl><dt></dt><dd>
+  </dd></dl>
+</td></tr></table>
+
+<a name="_partial_der"></a>
+<table width="100%" class="func-details" bgcolor="#e0e0e0"><tr><td>
+  <h3><span class="sig"><span class="sig-name">_partial_der</span>(<span class=sig-arg>self</span>,
+          <span class=sig-arg>x00</span>)</span>
+  </h3>
+  Return partial derivatives
+  <dl><dt></dt><dd>
+  </dd></dl>
+</td></tr></table>
+<br />
+
+
+<!-- =========== START OF NAVBAR =========== -->
+<table class="navbar" border="0" width="100%" cellpadding="0" bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="center">
+    <th class="navbar">&nbsp;&nbsp;&nbsp;<a class="navbar" href="numdifftools-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+    <th class="navbar">&nbsp;&nbsp;&nbsp;<a class="navbar" href="trees.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+    <th class="navbar">&nbsp;&nbsp;&nbsp;<a class="navbar" href="indices.html">Index</a>&nbsp;&nbsp;&nbsp;</th>
+    <th class="navbar">&nbsp;&nbsp;&nbsp;<a class="navbar" href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+    <th class="navbar" width="100%"></th>
+  </tr>
+</table>
+
+<table border="0" cellpadding="0" cellspacing="0" width="100%">
+  <tr>
+    <td align="left"><font size="-2">Generated by Epydoc 2.0 on Sat Nov 22 02:00:54 2008</font></td>
+    <td align="right"><a href="http://epydoc.sourceforge.net"
+                      ><font size="-2">http://epydoc.sf.net</font></a></td>
+  </tr>
+</table>
+</body>
+</html>
