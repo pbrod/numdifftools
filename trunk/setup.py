@@ -16,8 +16,10 @@ python setup.py sdist bdist_wininst upload --show-response
 #!/usr/bin/env python
 import os, sys
 
+DISTUTILS_DEBUG = True
+
 # make sure we import from this package, not an installed one:
-sys.path.insert(0, os.path.join(''))
+sys.path.insert(0, os.path.join('numdifftools'))
 import core as numdifftools
 
 if  __file__ == 'setupegg.py':
@@ -25,16 +27,18 @@ if  __file__ == 'setupegg.py':
     from setuptools import setup, Extension
 else:
     from distutils.core import setup
-
+test_dir = os.path.join('numdifftools','test')
+doc_dir = os.path.join('numdifftools','doc')
 testscripts = [os.path.join('test', f)
-               for f in os.listdir('test')
+               for f in os.listdir(test_dir)
                if not (f.startswith('.') or f.endswith('~') or
                        f.endswith('.old') or f.endswith('.bak'))]
-docs = [os.path.join('doc', f) for f in os.listdir('doc')]                       
-packagedata = docs + testscripts                    
+docs = [os.path.join('doc', f) for f in os.listdir(doc_dir)]                       
+packagedata = docs + testscripts                 
+#package_data = {'numdifftools': packagedata},   
 setup(
     name = "Numdifftools",
-    version = '0.2.1',
+    version = '0.3.1',
     author="John D'Errico and Per A. Brodtkorb",
     author_email='woodchips at rochester.rr.com, Brodtkorb at frisurf.no',
     description = 'Solves automatic numerical differentiation problems in one or more variables.',
@@ -43,9 +47,8 @@ setup(
     url='http://code.google.com/p/numdifftools/',
     maintainer='Per A. Brodtkorb',
     maintainer_email = 'Brodtkorb at frisurf.no',
-    package_dir = {'numdifftools': ''},
-    packages = ["numdifftools"],
-    package_data = {'': packagedata},
+    packages = ['numdifftools'],
+	package_data = {'': packagedata},   
     classifiers=[
           'Development Status :: 4 - Beta',
           'Intended Audience :: Education',
