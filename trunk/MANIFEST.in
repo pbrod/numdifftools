@@ -1,2 +1,1 @@
-include *.txt
 recursive-include numdifftools *.tex *.pdf *.py
