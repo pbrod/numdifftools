@@ -33,9 +33,9 @@ testscripts = [os.path.join('test', f)
                for f in os.listdir(test_dir)
                if not (f.startswith('.') or f.endswith('~') or
                        f.endswith('.old') or f.endswith('.bak'))]
-docs = [os.path.join('doc', f) for f in os.listdir(doc_dir)]                       
-packagedata = docs + testscripts                 
-#package_data = {'numdifftools': packagedata},   
+docs = [os.path.join('doc', f) for f in os.listdir(doc_dir)]
+packagedata = docs + testscripts
+#package_data = {'numdifftools': packagedata},
 setup(
     name = "Numdifftools",
     version = '0.3.1',
@@ -48,7 +48,7 @@ setup(
     maintainer='Per A. Brodtkorb',
     maintainer_email = 'Brodtkorb at frisurf.no',
     packages = ['numdifftools'],
-	package_data = {'': packagedata},   
+    package_data = {'': packagedata},
     classifiers=[
           'Development Status :: 4 - Beta',
           'Intended Audience :: Education',
