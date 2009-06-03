@@ -38,7 +38,7 @@ packagedata = docs + testscripts
 #package_data = {'numdifftools': packagedata},
 setup(
     name = "Numdifftools",
-    version = '0.3.1',
+    version = '0.3.2',
     author="John D'Errico and Per A. Brodtkorb",
     author_email='woodchips at rochester.rr.com, Brodtkorb at frisurf.no',
     description = 'Solves automatic numerical differentiation problems in one or more variables.',

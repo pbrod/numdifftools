@@ -97,7 +97,7 @@ def dea3(v0, v1, v2):
 
     result = zeros(E0.shape)
     abserr = result.copy()
-    converged = ( err1 <= tol1) | (err2 <= tol2).ravel()
+    converged = ( err1 <= tol1) & (err2 <= tol2).ravel()
     k0, = converged.nonzero()
     if k0.size>0 :
         #%C           IF E0, E1 AND E2 ARE EQUAL TO WITHIN MACHINE
