@@ -22,7 +22,7 @@ DISTUTILS_DEBUG = True
 sys.path.insert(0, os.path.join('numdifftools'))
 import core as numdifftools
 
-if  __file__ == 'setupegg.py':
+if  True:#__file__ == 'setupegg.py':
     # http://peak.telecommunity.com/DevCenter/setuptools
     from setuptools import setup, Extension
 else:
@@ -33,7 +33,7 @@ testscripts = [os.path.join('test', f)
                for f in os.listdir(test_dir)
                if not (f.startswith('.') or f.endswith('~') or
                        f.endswith('.old') or f.endswith('.bak'))]
-docs = [os.path.join('doc', f) for f in os.listdir(doc_dir)]
+docs = [os.path.join('doc', f) for f in os.listdir(doc_dir) if os.path.isfile(f)]
 packagedata = docs + testscripts
 #package_data = {'numdifftools': packagedata},
 setup(
