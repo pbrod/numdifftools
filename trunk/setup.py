@@ -17,7 +17,7 @@ python setup.py sdist bdist_wininst upload --show-response
 import os, sys
 
 DISTUTILS_DEBUG = True
-
+#sys.argv.append("install")
 # make sure we import from this package, not an installed one:
 sys.path.insert(0, os.path.join('numdifftools'))
 import core as numdifftools
