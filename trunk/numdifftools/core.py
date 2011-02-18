@@ -796,10 +796,6 @@ class Derivative(_CommonDiffPar):
         self._set_all_der_par()
         return self._partial_der(x00)
 
-
-
-
-
     def _hessdiag(self, x00):
         self.derOrder = 2
         self.vectorized = False
@@ -807,19 +803,13 @@ class Derivative(_CommonDiffPar):
 
         return self._partial_der(x00)
 
-
-
     def _hessian(self, x00):
 
         zeros = np.zeros
         x0 = np.atleast_1d(x00)
         nx = len(x0)
         self.method = 'central'
-
-
         #sx = nx #size(x0)
-
-
 
         #% get the diagonal elements of the hessian (2nd partial
         #% derivatives wrt each variable.)
@@ -833,7 +823,6 @@ class Derivative(_CommonDiffPar):
         if nx<2 :
             #% the hessian matrix is 1x1. all done
             return hess
-
 
         #% get the gradient vector. This is done only to decide
         #% on intelligent step sizes for the mixed partials
@@ -1181,6 +1170,9 @@ class Hessian(Derivative):
     >>> fun = lambda xy : cos(xy[0]-xy[1])
     >>> Hfun2 = Hessian(fun)
     >>> h2 = Hfun2([0, 0]) # h2 = [-1 1; 1 -1];
+    >>> h2
+    array([[-1.,  1.],
+           [ 1., -1.]])
     >>> Hfun2.error_estimate
     array([[  4.34170696e-15,   4.34170696e-15],
            [  4.34170696e-15,   4.34170696e-15]])
