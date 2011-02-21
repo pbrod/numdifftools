@@ -3,20 +3,22 @@ import numpy as np
 try:
     import  Scientific.Functions.Derivatives as SFD
 except ImportError:
-    SFD=None
+    SFD = None
 try:
     import  Scientific.Functions.FirstDerivatives as SFF
 except ImportError:
-    SFF=None
+    SFF = None
 class _Common(object):
     def __init__(self, fun, derOrder=1):
         self.fun = fun
         self.derOrder = derOrder
     def _derivative(self, x0):
         x = np.atleast_1d(x0)
-        DerivVar = SFD.DerivVar if self.derOrder>1 else SFF.DerivVar
-        return self.fun(DerivVar(x, 0, self.derOrder))[1][0]
-         
+        DerivVar = SFD.DerivVar if self.derOrder > 1 else SFF.DerivVar
+        der = self.fun(DerivVar(x, 0, self.derOrder))[self.derOrder][0]
+        for i in xrange(self.derOrder - 1):
+            der = der[0]
+        return der
     def _jacobian(self, x):
         return np.squeeze(self._gradient(x))
     
@@ -36,6 +38,7 @@ class Derivative(_Common):
     Examples
     --------
      # 1'st and 2'nd derivative of exp(x), at x == 1
+     
      >>> import numpy as np
      >>> fd = Derivative(np.exp)              # 1'st derivative
      >>> fdd = Derivative(np.exp,derOrder=2)  # 2'nd derivative
@@ -44,13 +47,13 @@ class Derivative(_Common):
 
      >>> d2 = fdd([1,2])
      >>> d2
-    array([ 2.71828183,  7.3890561 ])
+     array([ 2.71828183,  7.3890561 ])
 
      # 3'rd derivative of x.^3+x.^4, at x = [0,1]
      >>> fun = lambda x: x**3 + x**4
      >>> fd3 = Derivative(fun,derOrder=3)
      >>> fd3([0,1])          #  True derivatives: [6,30]
-     array([  6.,  30.])
+     array([ 6, 30])
  
 
      See also
@@ -192,7 +195,7 @@ class Gradient(_Common):
         '''
         return self._gradient(x0)
         
-    def __call__(self,x): 
+    def __call__(self, x): 
         return self._gradient(x)
     
 class Hessian(_Common):

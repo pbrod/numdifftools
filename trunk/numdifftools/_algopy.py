@@ -1,8 +1,9 @@
+from __future__ import division
 import numpy as np
 try:
     import algopy
 except ImportError:
-    algopy=None
+    algopy = None
 
 class _Common(object):
     def __init__(self, fun, x=0, method='forward'):
@@ -13,7 +14,7 @@ class _Common(object):
     def initialize(self, x):
         if self.method.startswith('reverse'):
             # reverse mode using a computational graph
-            x = np.asarray(x)
+            x = np.asarray(x, dtype=float)
             self.x = x.copy()
             # STEP 1: trace the function evaluation
             cg = algopy.CGraph()
@@ -33,12 +34,13 @@ class _Common(object):
         return self._cg.gradient([x])
     def _hessian_reverse(self, x):
         return self._cg.hessian([np.asarray(x)])
-    def _gradient_forward(self,x):
-        tmp = algopy.UTPM.init_jacobian(x)
+    def _gradient_forward(self, x):
+        tmp = algopy.UTPM.init_jacobian(np.asarray(x, dtype=float))
         return algopy.UTPM.extract_jacobian(self.fun(tmp))
     def _hessian_forward(self, x):
-        tmp = algopy.UTPM.init_hessian(x)
-        return algopy.UTPM.extract_hessian(len(x), self.fun(tmp))
+        tmp = algopy.UTPM.init_hessian(np.asarray(x, dtype=float))
+        tmp2 = self.fun(tmp)
+        return algopy.UTPM.extract_hessian(len(x), tmp2)
 class Gradient(_Common):
     '''Estimate gradient of fun at x0
 
@@ -91,7 +93,7 @@ class Gradient(_Common):
         '''
         return self._gradient(x0)
         
-    def __call__(self,x): 
+    def __call__(self, x): 
         return self._gradient(x)
     
 class Hessian(_Common):
@@ -119,8 +121,8 @@ class Hessian(_Common):
     >>> Hfun = Hessian(rosen)
     >>> h = Hfun([1, 1]) #  h =[ 842 -420; -420, 210];
     >>> h
-    array([[ 842, -420],
-           [-420,  210]])
+    array([[ 842., -420.],
+           [-420.,  210.]])
      
     #cos(x-y), at (0,0)
     >>> cos = np.cos
@@ -128,8 +130,8 @@ class Hessian(_Common):
     >>> Hfun2 = Hessian(fun)
     >>> h2 = Hfun2([0, 0]) # h2 = [-1 1; 1 -1] # TODO: Hfun2 fails in this case
     >>> h2
-    array([[-1,  1],
-           [ 1, -1]])
+    array([[-1.,  1.],
+           [ 1., -1.]])
     
     >>> Hfun3 = Hessian(fun,x=[0,0], method='reverse')
     >>> h3 = Hfun3([0, 0]) # h2 = [-1, 1; 1, -1];
