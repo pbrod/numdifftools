@@ -44,6 +44,7 @@ setup(
     description = 'Solves automatic numerical differentiation problems in one or more variables.',
     long_description = numdifftools.__doc__,
     license = "New BSD",
+    install_requires = ['numpy>=1.4', 'scipy>=0.8'],
     url='http://code.google.com/p/numdifftools/',
     maintainer='Per A. Brodtkorb',
     maintainer_email = 'Brodtkorb at frisurf.no',
