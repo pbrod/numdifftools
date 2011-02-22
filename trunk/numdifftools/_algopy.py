@@ -64,7 +64,7 @@ class Derivative(_Common):
     # 1'st derivative of x.^3+x.^4, at x = [0,1]
     >>> fun = lambda x: x**3 + x**4
     >>> fd3 = Derivative(fun)
-    >>> fd3([0,1])          #  True derivatives: [6,30]
+    >>> fd3([0,1])          #  True derivatives: [0,7]
     array([ 0.,  7.])
  
 
