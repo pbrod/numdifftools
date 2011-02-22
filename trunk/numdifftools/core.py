@@ -28,7 +28,7 @@ import scipy.linalg as linalg
 import scipy.misc as misc
 
 __all__ = [
-    'dea3','Derivative','Jacobian','Gradient','Hessian','Hessdiag'
+    'dea3', 'Derivative', 'Jacobian', 'Gradient', 'Hessian', 'Hessdiag'
     ]
 
 def dea3(v0, v1, v2):

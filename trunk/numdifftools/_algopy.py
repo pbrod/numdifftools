@@ -29,7 +29,10 @@ class _Common(object):
         else: # forward mode without building the computational graph
             self._gradient = self._gradient_forward
             self._hessian = self._hessian_forward
-            
+    def _derivative(self, x):
+        return self._gradient(x)
+    def _jacobian(self, x):
+        return self._gradient(x)
     def _gradient_reverse(self, x):
         return self._cg.gradient([x])
     def _hessian_reverse(self, x):
@@ -41,6 +44,115 @@ class _Common(object):
         tmp = algopy.UTPM.init_hessian(np.asarray(x, dtype=float))
         tmp2 = self.fun(tmp)
         return algopy.UTPM.extract_hessian(len(x), tmp2)
+
+class Derivative(_Common):
+    '''
+    Estimate n'th derivative of fun at x0
+    
+    Examples
+    --------
+    # 1'st and 2'nd derivative of exp(x), at x == 1
+    >>> import numpy as np
+    >>> fd = Derivative(np.exp)              # 1'st derivative
+    >>> fd(1)
+    array([ 2.71828183])
+
+    
+    # 1'st derivative of x.^3+x.^4, at x = [0,1]
+    >>> fun = lambda x: x**3 + x**4
+    >>> fd3 = Derivative(fun)
+    >>> fd3([0,1])          #  True derivatives: [6,30]
+    array([  0.,  4.])
+ 
+
+    See also
+    --------
+    Gradient,
+    Hessdiag,
+    Hessian,
+    Jacobian
+    '''
+    def derivative(self, x0):
+        return self._derivative(x0)
+    def __call__(self, x0):
+        return self._derivative(x0)
+
+class Jacobian(_Common):
+    '''Estimate Jacobian matrix
+    
+    The Jacobian matrix is the matrix of all first-order partial derivatives
+    of a vector-valued function.
+
+    Assumptions
+    -----------
+    fun : (vector valued)
+        analytical function to differentiate.
+        fun must be a function of the vector or array x0.
+
+    x0 : vector location at which to differentiate fun
+        If x0 is an N x M array, then fun is assumed to be
+        a function of N*M variables.
+
+    Examples
+    --------
+
+    #(nonlinear least squares)
+    >>> xdata = np.reshape(np.arange(0,1,0.1),(-1,1))
+    >>> ydata = 1+2*np.exp(0.75*xdata)
+    >>> fun = lambda c: (c[0]+c[1]*np.exp(c[2]*xdata) - ydata)**2
+    >>> Jfun = Jacobian(fun)
+    >>> Jfun([1,2,0.75]) # should be numerically zero
+    array([[ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
+           [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
+           [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]])
+ 
+
+    See also
+    --------
+    Gradient,
+    Derivative,
+    Hessdiag,
+    Hessian
+    '''
+    def __call__(self, x0):
+        return self.jacobian(x0)
+
+    def jacobian(self, x0):
+        '''
+        Return Jacobian matrix of a vector valued function of n variables
+
+
+        Parameter
+        ---------
+        x0 : vector
+            location at which to differentiate fun.
+            If x0 is an nxm array, then fun is assumed to be
+            a function of n*m variables.
+
+        Member variable used
+        --------------------
+        fun : (vector valued) analytical function to differentiate.
+                fun must be a function of the vector or array x0.
+
+        Returns
+        -------
+        jac : array-like
+           first partial derivatives of fun. Assuming that x0
+           is a vector of length p and fun returns a vector
+           of length n, then jac will be an array of size (n,p)
+
+        err - vector
+            of error estimates corresponding to each partial
+            derivative in jac.
+
+        See also
+        --------
+        Derivative,
+        Gradient,
+        Hessian,
+        Hessdiag
+        '''
+        return self._jacobian(x0)  
 class Gradient(_Common):
     '''Estimate gradient of fun at x0
 
