@@ -30,7 +30,10 @@ class _Common(object):
             self._gradient = self._gradient_forward
             self._hessian = self._hessian_forward
     def _derivative(self, x):
-        return self._gradient(x)
+        xi = np.asarray(x, dtype=float)
+        shape0  = xi.shape
+        y = np.array([self._gradient(xj) for xj in xi.ravel()]) 
+        return y.reshape(shape0)
     def _jacobian(self, x):
         return self._gradient(x)
     def _gradient_reverse(self, x):
@@ -55,14 +58,14 @@ class Derivative(_Common):
     >>> import numpy as np
     >>> fd = Derivative(np.exp)              # 1'st derivative
     >>> fd(1)
-    array([ 2.71828183])
+    array(2.7182818284590451)
 
     
     # 1'st derivative of x.^3+x.^4, at x = [0,1]
     >>> fun = lambda x: x**3 + x**4
     >>> fd3 = Derivative(fun)
     >>> fd3([0,1])          #  True derivatives: [6,30]
-    array([  0.,  4.])
+    array([ 0.,  7.])
  
 
     See also
