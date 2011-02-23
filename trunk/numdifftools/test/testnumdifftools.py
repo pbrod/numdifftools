@@ -19,75 +19,75 @@ class TestDerivative(unittest.TestCase):
     def testderivative(self):
         #derivative of exp(x), at x == 0
         dexp = nd.Derivative(np.exp)
-        self.assertAlmostEqual(dexp(0),np.exp(0))
+        self.assertAlmostEqual(dexp(0), np.exp(0))
         dexp.derOrder = 2
-        self.assertAlmostEqual(dexp(0),np.exp(0))
+        self.assertAlmostEqual(dexp(0), np.exp(0))
 
         # Evaluate the indicated (default = first)
         # derivative at multiple points
         dsin = nd.Derivative(np.sin)
-        x = np.linspace(0,2.*np.pi,13)
+        x = np.linspace(0, 2. * np.pi, 13)
         y = dsin(x)
-        small = np.abs(y-np.cos(x))<dsin.error_estimate*10
+        small = np.abs(y - np.cos(x)) < dsin.error_estimate * 10
         self.assertTrue(np.all(small))
 
         #Higher order derivatives (second derivative)
         # Truth: 0
-        d2sin = nd.Derivative(np.sin,derOrder=2,stepFix=0.5)
+        d2sin = nd.Derivative(np.sin, derOrder=2, stepFix=0.5)
 
-        self.assertAlmostEqual(d2sin(np.pi),0.0,)
+        self.assertAlmostEqual(d2sin(np.pi), 0.0,)
 
         # Higher order derivatives (up to the fourth derivative)
         # Truth: sqrt(2)/2 = 0.707106781186548
         d2sin.derOrder = 4
-        y = d2sin(np.pi/4)
-        small = np.abs(y-np.sqrt(2.)/2.)<d2sin.error_estimate
+        y = d2sin(np.pi / 4)
+        small = np.abs(y - np.sqrt(2.) / 2.) < d2sin.error_estimate
         self.assertTrue(small)
 
         # Higher order derivatives (third derivative)
         # Truth: 1
-        d3cos = nd.Derivative(np.cos,derOrder=3)
-        y = d3cos(np.pi/2.0)
-        small = np.abs(y-1.0)< d3cos.error_estimate
+        d3cos = nd.Derivative(np.cos, derOrder=3)
+        y = d3cos(np.pi / 2.0)
+        small = np.abs(y - 1.0) < d3cos.error_estimate
         self.assertTrue(small)
 
         # Compute the derivative of a function using a backward difference scheme
         # And a backward scheme will only look below x0.
-        dsinh = nd.Derivative(np.sinh,method='backward')
-        small = np.abs(dsinh(0.0)-np.cosh(0.0))< dsinh.error_estimate
+        dsinh = nd.Derivative(np.sinh, method='backward')
+        small = np.abs(dsinh(0.0) - np.cosh(0.0)) < dsinh.error_estimate
         self.assertTrue(small)
 
         # Although a central rule may put some samples in the wrong places, it may still succeed
-        dlog = nd.Derivative(np.log,method='central')
+        dlog = nd.Derivative(np.log, method='central')
         x = 0.001
-        small = np.abs(dlog(x)-1.0/x)<dlog.error_estimate
+        small = np.abs(dlog(x) - 1.0 / x) < dlog.error_estimate
         self.assertTrue(small)
 
         #But forcing the use of a one-sided rule may be smart anyway
         dlog.method = 'forward'
-        small = np.abs(dlog(x)-1/x)<dlog.error_estimate
+        small = np.abs(dlog(x) - 1 / x) < dlog.error_estimate
         self.assertTrue(small)
 
         # Control the behavior of Derivative - forward 2nd order method, with only 1 Romberg term
         # Compute the first derivative, also return the final stepsize chosen
         #[deriv,err,fdelta] = derivest(@(x) tan(x),pi,'deriv',1,'Style','for','MethodOrder',2,'RombergTerms',1)
-        dtan = nd.Derivative(np.tan,derOrder=1,metOrder=2,method='forward',numTerms=1)
+        dtan = nd.Derivative(np.tan, derOrder=1, metOrder=2, method='forward', numTerms=1)
         y = dtan(np.pi)
         abserr = dtan.error_estimate
-        self.assertTrue(np.abs(y-1)<abserr)
+        self.assertTrue(np.abs(y - 1) < abserr)
 
         dtan.finaldelta
     
         ##%% Specify the step size (default stepsize = 0.1)
-        p0 = np.poly1d(range(1,6))
-        fd = nd.Derivative(p0,derOrder=4,stepFix=1.)
+        p0 = np.poly1d(range(1, 6))
+        fd = nd.Derivative(p0, derOrder=4, stepFix=1.)
         p4 = p0.deriv(4)
-        self.assertAlmostEqual(fd(1),p4(1))
+        self.assertAlmostEqual(fd(1), p4(1))
         
         ##%% Control the behavior of DERIVEST - forward 2nd order method, with only 1 Romberg term
         ##% Compute the first derivative, also return the final stepsize chosen
-        dtan = nd.Derivative(np.tan,derOrder=1,method='forward',metOrder=2,numTerms=1)
-        self.assertAlmostEqual(dtan(np.pi),1.0)
+        dtan = nd.Derivative(np.tan, derOrder=1, method='forward', metOrder=2, numTerms=1)
+        self.assertAlmostEqual(dtan(np.pi), 1.0)
         
 
 ##
@@ -161,13 +161,13 @@ class TestJacobian(unittest.TestCase):
         pass
 
     def testjacobian(self):
-        xdata = np.reshape(np.arange(0,1,0.1),(-1,1))
-        ydata = 1+2*np.exp(0.75*xdata)
-        fun = lambda c: (c[0]+c[1]*np.exp(c[2]*xdata) - ydata)**2
+        xdata = np.reshape(np.arange(0, 1, 0.1), (-1, 1))
+        ydata = 1 + 2 * np.exp(0.75 * xdata)
+        fun = lambda c: (c[0] + c[1] * np.exp(c[2] * xdata) - ydata) ** 2
         Jfun = nd.Jacobian(fun)
-        J = Jfun([1,2,0.75]) # should be numerically zero
+        J = Jfun([1, 2, 0.75]) # should be numerically zero
         for ji in J.ravel():
-            self.assertAlmostEqual(ji,0.0)
+            self.assertAlmostEqual(ji, 0.0)
 
 class TestGradient(unittest.TestCase):
 
@@ -178,12 +178,12 @@ class TestGradient(unittest.TestCase):
         pass
 
     def testgradient(self):
-        fun = lambda x: np.sum(x**2)
+        fun = lambda x: np.sum(x ** 2)
         dfun = nd.Gradient(fun)
-        d = dfun([1,2,3])
-        dtrue = [ 2.,  4.,  6.]
-        for (di,dit) in zip(d,dtrue):
-            self.assertAlmostEqual(di,dit)
+        d = dfun([1, 2, 3])
+        dtrue = [ 2., 4., 6.]
+        for (di, dit) in zip(d, dtrue):
+            self.assertAlmostEqual(di, dit)
 
 class TestHessian(unittest.TestCase):
 
@@ -196,12 +196,12 @@ class TestHessian(unittest.TestCase):
     def testhessian(self):
          #cos(x-y), at (0,0)
         cos = np.cos
-        fun = lambda xy : cos(xy[0]-xy[1])
+        fun = lambda xy : cos(xy[0] - xy[1])
         Hfun2 = nd.Hessian(fun)
         h2 = Hfun2([0, 0]) # h2 = [-1 1; 1 -1];
-        htrue = [-1.,  1., 1., -1.]
-        for (hi,hit) in zip(h2.ravel(),htrue):
-            self.assertAlmostEqual(hi,hit)
+        htrue = [-1., 1., 1., -1.]
+        for (hi, hit) in zip(h2.ravel(), htrue):
+            self.assertAlmostEqual(hi, hit)
         
 class TestHessdiag(unittest.TestCase):
 
@@ -212,12 +212,12 @@ class TestHessdiag(unittest.TestCase):
         pass
 
     def testhessdiag(self):
-        fun = lambda x : x[0] + x[1]**2 + x[2]**3
+        fun = lambda x : x[0] + x[1] ** 2 + x[2] ** 3
         Hfun = nd.Hessdiag(fun)
-        hd = Hfun([1,2,3])
-        htrue = [  0.,   2.,  18.]
-        for (hi,hit) in zip(hd,htrue):
-            self.assertAlmostEqual(hi,hit)
+        hd = Hfun([1, 2, 3])
+        htrue = [  0., 2., 18.]
+        for (hi, hit) in zip(hd, htrue):
+            self.assertAlmostEqual(hi, hit)
 
 
 class TestGlobalFunctions(unittest.TestCase):
@@ -231,14 +231,14 @@ class TestGlobalFunctions(unittest.TestCase):
     def testvec2mat(self):
         pass
     def testdea3(self):
-        Ei= np.zeros(3)
-        linfun = lambda k : np.linspace(0,np.pi/2.,2.**(k+5)+1)
+        Ei = np.zeros(3)
+        linfun = lambda k : np.linspace(0, np.pi / 2., 2. ** (k + 5) + 1)
         for k in np.arange(3): 
             x = linfun(k) 
-            Ei[k] = np.trapz(np.sin(x),x)
-        [En, err] = nd.dea3(Ei[0],Ei[1],Ei[2])
-        self.assertTrue(np.abs(En-1)<err)
-        self.assertAlmostEqual(En,1.0)
+            Ei[k] = np.trapz(np.sin(x), x)
+        [En, err] = nd.dea3(Ei[0], Ei[1], Ei[2])
+        self.assertTrue(np.abs(En - 1) < err)
+        self.assertAlmostEqual(En, 1.0)
 
 if __name__ == '__main__':
     unittest.main()

@@ -21,8 +21,12 @@ class _Common(object):
             self.x = x.copy()
             # STEP 1: trace the function evaluation
             cg = algopy.CGraph()
-            #x = np.array([algopy.Function(x[i]) for i in range(len(x))])
-            x = algopy.Function(x)
+            if True:
+                x = algopy.Function(x)
+                #x = [x]
+            else:
+                x = np.array([algopy.Function(x[i]) for i in range(len(x))])
+            
             y = self.fun(x)
             cg.trace_off()
             cg.independentFunctionList = [x]
