@@ -1,5 +1,5 @@
 '''
-Easy to use interface to algopy
+Easy to use interface to derivatives in algopy
 '''
 from __future__ import division
 import numpy as np

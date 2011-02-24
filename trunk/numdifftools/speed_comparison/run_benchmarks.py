@@ -107,7 +107,7 @@ print 'results_hessians=\n',results_hessians
 print results_gradients.shape
 
 import matplotlib.pyplot as pyplot
-import prettyplotting
+#import prettyplotting
 
 plotfun = pyplot.plot
 # plot gradient run times

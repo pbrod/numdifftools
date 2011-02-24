@@ -29,6 +29,9 @@ class TestDerivative(unittest.TestCase):
         x = np.linspace(0, 2. * np.pi, 13)
         y = dsin(x)
         small = np.abs(y - np.cos(x)) < dsin.error_estimate * 10
+        #print np.abs(y - np.cos(x))
+        #print dsin.error_estimate
+        #print small
         self.assertTrue(np.all(small))
 
         #Higher order derivatives (second derivative)

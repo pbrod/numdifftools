@@ -38,13 +38,13 @@ class classicalHamiltonian:
 
     def potential(self, positionvector):                     #Defines the potential that is going to be minimized
        
-        x = positionvector                         #x is an 1-d array (vector) of lenght N that contains the positions of the N ions
+        x = positionvector                         #x is an 1-d array (vector) of length N that contains the positions of the N ions
         w = self.w
         C = self.C
         m = self.m
        
        
-        #First we consider the potential of the harmonic osszilator
+        #First we consider the potential of the harmonic oscillator
         Vx = 0.5 * m * (w ** 2) * sum(x ** 2)               
        
         for i in range(len(x)):
@@ -72,9 +72,11 @@ def main():
     print c.potential(array([0.0, 0.0]))
     
     xopt = optimize.fmin(c.potential, c.initialposition(), xtol=1e-10)
-    hessian = nd.Hessian(c.potential, stepMax=1.0, stepNom=np.abs(xopt))
+    hessian = nd.Hessian(c.potential, stepFix=1.0, stepNom=np.abs(xopt))
+    #hessian = nd.Hessian(c.potential)
     H = hessian(xopt)
-    hessian.error_estimate
+    print H
+    print hessian.error_estimate
 
     eigenvalues = linalg.eigvals(H)
     normal_modes = c.normal_modes(eigenvalues)

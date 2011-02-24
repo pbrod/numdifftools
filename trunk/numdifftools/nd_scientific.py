@@ -1,5 +1,5 @@
 '''
-Easy to use interface to 
+Easy to use interface to derivatives in ScientificPython
 http://dirac.cnrs-orleans.fr/ScientificPython/ScientificPythonManual/
 
 '''
