@@ -11,6 +11,8 @@ PyPi upload:
 
 python setup.py sdist bdist_wininst upload --show-response
 
+python setup.py register sdist bdist_wininst upload --show-response
+
 
 """
 #!/usr/bin/env python
@@ -20,7 +22,7 @@ DISTUTILS_DEBUG = True
 #sys.argv.append("install")
 # make sure we import from this package, not an installed one:
 sys.path.insert(0, os.path.join('numdifftools'))
-import core as numdifftools
+import info as numdifftools
 
 if  True:#__file__ == 'setupegg.py':
     # http://peak.telecommunity.com/DevCenter/setuptools
@@ -38,7 +40,7 @@ packagedata = docs + testscripts
 #package_data = {'numdifftools': packagedata},
 setup(
     name = "Numdifftools",
-    version = '0.3.2',
+    version = '0.3.4',
     author="John D'Errico and Per A. Brodtkorb",
     author_email='woodchips at rochester.rr.com, Brodtkorb at frisurf.no',
     description = 'Solves automatic numerical differentiation problems in one or more variables.',
