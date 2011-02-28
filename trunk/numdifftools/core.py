@@ -267,7 +267,7 @@ class _CommonDiffPar(object):
         stepRatio
         '''
         # sr is the ratio between successive steps
-        srinv = 1 / self.stepRatio
+        srinv = 1.0 / self.stepRatio
         factorial = misc.factorial
         arange = np.arange
         [i, j] = np.ogrid[0:nterms, 0:nterms]
@@ -546,16 +546,18 @@ class _CommonDiffPar(object):
 
         isnonfinite = 1 - np.isfinite(der_init)
         i_nonfinite, = isnonfinite.ravel().nonzero()
-
+        
+        if i_nonfinite.size > 0:
+            allfinite_start = np.max(i_nonfinite) + 1
+            der_init = der_init[allfinite_start:]
         #% this does the extrapolation to a zero step size.
         ne = der_init.size
         rhs = vec2mat(der_init, nexpon + 2, max(1, ne - (nexpon + 2)))
 
-
-        if i_nonfinite.size > 0:
-            rhsmax = np.nanmax(np.abs(der_init))
-            ix_nans = np.isfinite(rhs) == 0
-            rhs[ix_nans] = np.random.normal(size=ix_nans.sum())*rhsmax
+#        if i_nonfinite.size > 0:
+#            rhsmax = np.nanmax(np.abs(der_init))
+#            ix_nans = np.isfinite(rhs) == 0
+#            rhs[ix_nans] = np.random.normal(size=ix_nans.sum())*rhsmax
 
         rombcoefs = linalg.lstsq(rromb, (qromb.T * rhs))
         der_romb = rombcoefs[0][0, :]
