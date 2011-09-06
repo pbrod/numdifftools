@@ -200,7 +200,7 @@ pyplot.grid()
 leg = pyplot.legend(loc=0)
 frame= leg.get_frame()
 frame.set_alpha(0.4)
-pyplot.savefig('hessian_preprocessingtimes.png',format='png')
+pyplot.savefig('hessian_errors.png',format='png')
 
 
 
