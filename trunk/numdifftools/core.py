@@ -1296,8 +1296,6 @@ def _test_fun():
 ##    rd.error_estimate
 
 
-
-
 if __name__ == '__main__':
     if  True: # False: #
         import doctest
