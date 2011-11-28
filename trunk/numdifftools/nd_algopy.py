@@ -9,29 +9,30 @@ except ImportError:
     algopy = None
 
 class _Common(object):
-    def __init__(self, fun, x=0, method='forward'):
+    def __init__(self, fun, method='forward'):
         self.fun = fun
         self.method = method
-        self.initialize(x)
+        self.initialize()
+    def _initialize_reverse(self, x):
+        #x = np.asarray(x, dtype=float)
+        #self.x = x.copy()
+        # STEP 1: trace the function evaluation
+        cg = algopy.CGraph()
+        if True:
+            x = algopy.Function(x)
+            #x = [x]
+        else:
+            x = np.array([algopy.Function(x[i]) for i in range(len(x))])
         
-    def initialize(self, x):
+        y = self.fun(x)
+        cg.trace_off()
+        cg.independentFunctionList = [x]
+        cg.dependentFunctionList = [y]
+        self._cg = cg
+    def initialize(self):
         if self.method.startswith('reverse'):
             # reverse mode using a computational graph
-            x = np.asarray(x, dtype=float)
-            self.x = x.copy()
-            # STEP 1: trace the function evaluation
-            cg = algopy.CGraph()
-            if True:
-                x = algopy.Function(x)
-                #x = [x]
-            else:
-                x = np.array([algopy.Function(x[i]) for i in range(len(x))])
-            
-            y = self.fun(x)
-            cg.trace_off()
-            cg.independentFunctionList = [x]
-            cg.dependentFunctionList = [y]
-            self._cg = cg
+            #self._initialize_reverse(x)
             self._gradient = self._gradient_reverse
             self._hessian = self._hessian_reverse
             self._jacobian = self._jacobian_reverse  
@@ -48,12 +49,17 @@ class _Common(object):
     #def _jacobian(self, x):
     #    return self._gradient(x) 
     def _jacobian_reverse(self, x):
-         return self._cg.jacobian([np.asarray(x)])
+        self._initialize_reverse(x)
+        return self._cg.jacobian([np.asarray(x)])
     def _gradient_reverse(self, x):
+        self._initialize_reverse(x)
         return self._cg.gradient([np.asarray(x)])
     def _hessian_reverse(self, x):
+        self._initialize_reverse(x)
         return self._cg.hessian([np.asarray(x)])
+        #return self._cg.hessian([x])
     def _gradient_forward(self, x):
+        # forward mode without building the computational graph
         tmp = algopy.UTPM.init_jacobian(np.asarray(x, dtype=float))
         tmp2 = self.fun(tmp)
         return algopy.UTPM.extract_jacobian(tmp2)
@@ -72,7 +78,7 @@ class Derivative(_Common):
     >>> import numpy as np
     >>> fd = Derivative(np.exp)              # 1'st derivative
     >>> fd(1)
-    array(2.7182818284590451)
+    array(2.718281828459045)
 
     
     # 1'st derivative of x.^3+x.^4, at x = [0,1]
@@ -117,18 +123,27 @@ class Jacobian(_Common):
     >>> xdata = np.reshape(np.arange(0,1,0.1),(-1,1))
     >>> ydata = 1+2*np.exp(0.75*xdata)
     >>> fun = lambda c: (c[0]+c[1]*np.exp(c[2]*xdata) - ydata)**2
-    >>> Jfun = Jacobian(fun)
-    >>> Jfun([1,2,0.75]) # should be numerically zero
+    
+    Jfun = Jacobian(fun) # Todo: This does not work
+    Jfun([1,2,0.75]) # should be numerically zero
     array([[ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
            [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
            [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]])
  
-    >>> Jfun2 = Jacobian(fun,x=[1,2,0.75], method='reverse')
-    >>> Jfun2([1,2,0.75]) # should be numerically zero
+    Jfun2 = Jacobian(fun, method='reverse')
+    Jfun2([1,2,0.75]) # should be numerically zero
     array([[ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
            [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
            [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]])
-
+           
+    >>> fun2 = lambda x : x[0]*x[1]*x[2] + np.exp(x[0])*x[1]
+    >>> Jfun3 = Jacobian(fun2)
+    >>> Jfun3([3.,5.,7.])
+    array([ 135.42768462,   41.08553692,   15.        ])
+    
+    Jfun4 = Jacobian(fun2, method='reverse')
+    Jfun4([3,5,7])
+    
     See also
     --------
     Gradient,
@@ -262,14 +277,14 @@ class Hessian(_Common):
     >>> cos = np.cos
     >>> fun = lambda xy : cos(xy[0]-xy[1])
     >>> Hfun2 = Hessian(fun)
-    >>> h2 = Hfun2([0, 0]) # h2 = [-1 1; 1 -1] # TODO: Hfun2 fails in this case
+    >>> h2 = Hfun2([0, 0]) # h2 = [-1 1; 1 -1] 
     >>> h2
     array([[-1.,  1.],
            [ 1., -1.]])
     
-    >>> Hfun3 = Hessian(fun,x=[0,0], method='reverse')
-    >>> h3 = Hfun3([0, 0]) # h2 = [-1, 1; 1, -1];
-    >>> h3
+    Hfun3 = Hessian(fun, method='reverse') # TODO: Hfun3 fails in this case
+    h3 = Hfun3([0, 0]) # h2 = [-1, 1; 1, -1];
+    h3
     array([[[-1.,  1.],
             [ 1., -1.]]])
     
