@@ -536,13 +536,13 @@ class _CommonDiffPar(object):
 
 
         rmat = np.matrix(rmat)
-        #% qr factorization used for the extrapolation as well
-        #% as the uncertainty estimates
+        # qr factorization used for the extrapolation as well
+        # as the uncertainty estimates
         [qromb, rromb] = linalg.qr(rmat) #,econ=True)
 
         # amp - noise amplification factor due to the romberg step
         # the noise amplification is further amplified by the Romberg step.
-        #% amp = cond(rromb)
+        # amp = cond(rromb)
 
         isnonfinite = 1 - np.isfinite(der_init)
         i_nonfinite, = isnonfinite.ravel().nonzero()
@@ -550,7 +550,7 @@ class _CommonDiffPar(object):
         if i_nonfinite.size > 0:
             allfinite_start = np.max(i_nonfinite) + 1
             der_init = der_init[allfinite_start:]
-        #% this does the extrapolation to a zero step size.
+        # this does the extrapolation to a zero step size.
         ne = der_init.size
         rhs = vec2mat(der_init, nexpon + 2, max(1, ne - (nexpon + 2)))
 
@@ -565,7 +565,7 @@ class _CommonDiffPar(object):
         sqrt = np.sqrt
         sum = np.sum
         asarray = np.asarray
-        #% uncertainty estimate of derivative prediction
+        # uncertainty estimate of derivative prediction
         s = sqrt(sum(asarray(rhs - rmat * rombcoefs[0]) ** 2, axis=0))
         rinv = asarray(linalg.pinv(rromb))
         cov1 = sum(rinv ** 2, axis=1) # 1 spare dof
@@ -579,7 +579,7 @@ class _CommonDiffPar(object):
         #der_dea, err_dea = dea3(der_init[0:-2],der_init[1:-1],der_init[2:])
 
         return der_romb, errest
-        #end % _rombextrap
+        #end _rombextrap
 
 
 ##'''
@@ -654,14 +654,14 @@ class Derivative(_CommonDiffPar):
 
         f_del = self._fdiff(f_x0i, x0i, h)
 
-         #% check the size of f_del to ensure it was properly vectorized.
+         # check the size of f_del to ensure it was properly vectorized.
         if f_del.size != h.size:
             t = 'fun did not return data of correct size (it must be vectorized)'
             raise ValueError(t)
 
-        #% Apply the finite difference rule at each delta, scaling
-        #% as appropriate for delta and the requested DerivativeOrder.
-        #% First, decide how many of these estimates we will end up with.
+        # Apply the finite difference rule at each delta, scaling
+        # as appropriate for delta and the requested DerivativeOrder.
+        # First, decide how many of these estimates we will end up with.
         ne = ndel + 1 - nfda - self.numTerms
 
         # Form the initial derivative estimates from the chosen
