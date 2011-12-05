@@ -634,8 +634,6 @@ class Derivative(_CommonDiffPar):
     def __init__(self, fun, **kwds):
         super(Derivative, self).__init__(fun, **kwds)
 
-
-
     def _fder(self, f_x0i, x0i, h):
         ''' Return derivative estimates of f at x0 for a sequence of stepsizes h
 
@@ -814,13 +812,13 @@ class Derivative(_CommonDiffPar):
         self.method = 'central'
         #sx = nx #size(x0)
 
-        #% get the diagonal elements of the hessian (2nd partial
-        #% derivatives wrt each variable.)
+        # get the diagonal elements of the hessian (2nd partial
+        # derivatives wrt each variable.)
         hess = self._hessdiag(x00)
         err = self.error_estimate
 
-        #% form the eventual hessian matrix, stuffing only
-        #% the diagonals for now.
+        # form the eventual hessian matrix, stuffing only
+        # the diagonals for now.
         hess = np.diag(hess)
         err = np.diag(err)
         if nx < 2 :
@@ -835,8 +833,8 @@ class Derivative(_CommonDiffPar):
 
         #self.numTerms = 4
 
-        #% Get params.RombergTerms+1 estimates of the upper
-        #% triangle of the hessian matrix
+        # Get params.RombergTerms+1 estimates of the upper
+        # triangle of the hessian matrix
 
         ndel = 3. + np.ceil(self.derOrder / 2.) + self.metOrder + self.numTerms + 4
         if self.method[0] == 'c':
@@ -873,6 +871,7 @@ class Derivative(_CommonDiffPar):
 
         self.error_estimate = err
         return hess
+    
 class Jacobian(_CommonDiffPar):
     _jacob_txt = _CommonDiffPar.__doc__.partition('\n')[2].replace(
     'Integer from 1 to 4 defining derivative order. (Default 1)',
@@ -979,7 +978,6 @@ class Jacobian(_CommonDiffPar):
         newaxis = np.newaxis
         x0 = np.atleast_1d(x00)
         nx = x0.size
-
 
         # get fun at the center point
         f0 = fun(x0)
