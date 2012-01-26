@@ -37,7 +37,7 @@ def dea3(v0, v1, v2):
 
     Parameters
     ----------
-    v0,v1,v2 : array-like
+    v0, v1, v2 : array-like
         3 values of a convergent sequence to extrapolate
 
     Returns
@@ -61,8 +61,10 @@ def dea3(v0, v1, v2):
      >>> import numpy as np
      >>> Ei= np.zeros(3)
      >>> linfun = lambda k : np.linspace(0,np.pi/2.,2.**(k+5)+1)
-     >>> for k in np.arange(3): x = linfun(k); Ei[k] = np.trapz(np.sin(x),x)
-     >>> [En, err] = dea3(Ei[0],Ei[1],Ei[2])
+     >>> for k in np.arange(3): 
+     ...    x = linfun(k) 
+     ...    Ei[k] = np.trapz(np.sin(x),x)
+     >>> [En, err] = dea3(Ei[0], Ei[1], Ei[2])
      >>> truErr = Ei-1.
      >>> (truErr, err, En)
      (array([ -2.00805680e-04,  -5.01999079e-05,  -1.25498825e-05]), array([ 0.00020081]), array([ 1.]))
@@ -98,8 +100,8 @@ def dea3(v0, v1, v2):
     converged = (err1 <= tol1) & (err2 <= tol2).ravel()
     k0, = converged.nonzero()
     if k0.size > 0 :
-        #%C           IF E0, E1 AND E2 ARE EQUAL TO WITHIN MACHINE
-        #%C           ACCURACY, CONVERGENCE IS ASSUMED.
+        # IF E0, E1 AND E2 ARE EQUAL TO WITHIN MACHINE
+        #   ACCURACY, CONVERGENCE IS ASSUMED.
         result[k0] = E2[k0]
         abserr[k0] = err1[k0] + err2[k0] + E2[k0] * small * ten
 
@@ -145,7 +147,7 @@ class _CommonDiffPar(object):
     metOrder : Integer from 1 to 4 defining order of basic method used.
             For 'central' methods, it must be from the set [2,4]. (Default 2)
     method : Method of estimation.  Valid options are:
-            'central', 'forward' or 'backwards'.          (Default 'central')
+            'central', 'forward' or 'backward'.          (Default 'central')
     numTerms : Number of Romberg terms used in the extrapolation.
             Must be an integer from 0 to 3.                       (Default 2)
             Note: 0 disables the Romberg step completely.
@@ -160,9 +162,9 @@ class _CommonDiffPar(object):
                  of the derivative (Default 2)
             The steps used h_i = stepNom[i]*stepMax*stepRatio**arange(ndel)
             where ndel = 26 if stepFix is None
-                  ndel = 3.+ np.ceil(self.derOrder/2.) + self.metOrder + self.numTerms +4
+                  ndel = 3.+ np.ceil(self.derOrder/2.) + self.metOrder + self.numTerms +4 otherwise
     vectorized : True  - if your function is vectorized.
-                   False - loop over the successive function calls (default).
+                False - loop over the successive function calls (default).
 
     Uses a semi-adaptive scheme to provide the best estimate of the
     derivative by its automatic choice of a differencing interval. It uses
@@ -206,9 +208,11 @@ class _CommonDiffPar(object):
         self.finaldelta = None
 
         # The remaining member variables are set by _set_all_der_par
-        self.fdarule = None
-        self.delta = None
-        self.rombexpon = None
+        self._fda_rule = None
+        self._delta = None
+        self._rmat = None
+        self._qromb = None
+        self._rromb = None
         self._fdiff = None
 
 
@@ -242,15 +246,15 @@ class _CommonDiffPar(object):
 
     def _set_all_der_par(self):
         '''Set derivative parameters:
-            stepsize, differention rule and romberg extrapolation
+            stepsize, differention rule and romberg extrapolation matrices
         '''
         self._set_delta()
-        self._set_fdarule()
-        self._set_rombexpon()
-        self._set_fdiff()
+        self._set_fda_rule()
+        self._set_romb_qr()
+        self._set_difference_function()
 
 
-    def _fdamat(self, parity, nterms):
+    def _fda_mat(self, parity, nterms):
         ''' Return matrix for fda derivation.
 
         Parameters
@@ -287,7 +291,7 @@ class _CommonDiffPar(object):
         return np.matrix(mat)
 
 
-    def _set_fdarule(self):
+    def _set_fda_rule(self):
         '''
         Generate finite differencing rule in advance.
 
@@ -296,7 +300,7 @@ class _CommonDiffPar(object):
 
         Member methods used
         -------------------
-        _fdamat
+        _fda_mat
 
         Member variables used
         ---------------------
@@ -310,51 +314,49 @@ class _CommonDiffPar(object):
         array = np.atleast_1d
         matrix = np.matrix
         zeros = np.zeros
-        self.fdarule = matrix(derOrder)
+        self._fda_rule = matrix(derOrder)
         #lstsq = linalg.lstsq
         pinv = linalg.pinv
         if method == 'c' :
             #'central'
-            #% for central rules, we will reduce the load by an
-            #% even or odd transformation as appropriate.
+            #for central rules, we will reduce the load by an
+            #even or odd transformation as appropriate.
             if metOrder == 2:
                 if derOrder == 1:
-                    #% the odd transformation did all the work
-                    #self.fdarule[0] = 1
+                    # the odd transformation did all the work
+                    #self._fda_rule[0] = 1
                     pass
                 elif derOrder == 2:
-                    #% the even transformation did all the work
-                    #self.fdarule[0] = 2
+                    # the even transformation did all the work
+                    #self._fda_rule[0] = 2
                     pass
                 elif derOrder == 3:
-                    #% the odd transformation did most of the work, but
-                    #% we need to kill off the linear term
-                    self.fdarule = matrix([0, 1]) * pinv(self._fdamat(1, 2))
+                    # the odd transformation did most of the work, but
+                    # we need to kill off the linear term
+                    self._fda_rule = matrix([0, 1]) * pinv(self._fda_mat(1, 2))
                 elif derOrder == 4:
-                    #% the even transformation did most of the work, but
-                    #% we need to kill off the quadratic term
-                    self.fdarule = matrix([0, 1]) * pinv(self._fdamat(2, 2))
-
-            #% a 4th order method. We've already ruled out the 1st
-            #% order methods since these are central rules.
+                    # the even transformation did most of the work, but
+                    # we need to kill off the quadratic term
+                    self._fda_rule = matrix([0, 1]) * pinv(self._fda_mat(2, 2))
+            # a 4th order method. We've already ruled out the 1st
+            # order methods since these are central rules.
             elif derOrder == 1:
                 # the odd transformation did most of the work, but
                 # we need to kill off the cubic term
-                self.fdarule = matrix([1, 0]) * pinv(self._fdamat(1, 2))
-                #self.fdarule = lstsq(self._fdamat(1,2).T,matrix([1, 0]).T)[0]
+                self._fda_rule = matrix([1, 0]) * pinv(self._fda_mat(1, 2))
+                #self._fda_rule = lstsq(self._fda_mat(1,2).T,matrix([1, 0]).T)[0]
             elif derOrder == 2:
                 # the even transformation did most of the work, but
                 # we need to kill off the quartic term
-                self.fdarule = matrix([1, 0]) * pinv(self._fdamat(2, 2))
+                self._fda_rule = matrix([1, 0]) * pinv(self._fda_mat(2, 2))
             elif derOrder == 3:
                 # the odd transformation did much of the work, but
                 # we need to kill off the linear & quintic terms
-                self.fdarule = matrix([0, 1, 0]) * pinv(self._fdamat(1, 3))
+                self._fda_rule = matrix([0, 1, 0]) * pinv(self._fda_mat(1, 3))
             elif derOrder == 4:
                 # the even transformation did much of the work, but
                 # we need to kill off the quadratic and 6th order terms
-                self.fdarule = matrix([0, 1, 0]) * pinv(self._fdamat(2, 3))
-
+                self._fda_rule = matrix([0, 1, 0]) * pinv(self._fda_mat(2, 3))
         else:
             # Cases {'forward' 'backward'}
             # These two cases are identical, except at the very end,
@@ -364,28 +366,25 @@ class _CommonDiffPar(object):
             # off the constant term
             if metOrder == 1:
                 if derOrder == 1:
-                    #self.fdarule[0] = 1
+                    #self._fda_rule[0] = 1
                     pass
                 else:
                     #% 2:4
                     v = zeros(derOrder)
                     v[derOrder - 1] = 1
-                    self.fdarule = matrix(v) * pinv(self._fdamat(0, derOrder))
-
+                    self._fda_rule = matrix(v) * pinv(self._fda_mat(0, derOrder))
             else:
                 # par.MethodOrder methods drop off the lower order terms,
                 # plus terms directly above DerivativeOrder
                 v = zeros(derOrder + metOrder - 1)
                 v[derOrder - 1] = 1
                 dpm = derOrder + metOrder - 1
-                self.fdarule = matrix(v) * pinv(self._fdamat(0, dpm))
-
-
+                self._fda_rule = matrix(v) * pinv(self._fda_mat(0, dpm))
             #% correct sign for the 'backward' rule
             if method == 'b':
-                self.fdarule = -self.fdarule
+                self._fda_rule = -self._fda_rule
 
-        self.fdarule = self.fdarule.ravel()
+        self._fda_rule = self._fda_rule.ravel()
     def _set_delta(self):
         ''' Set the steps to use in derivation.
 
@@ -398,7 +397,7 @@ class _CommonDiffPar(object):
             stepFix
             stepMax
         '''
-        # Always choose the stepsize h so that
+        # Always choose the step size h so that
         # it is an exactly representable number.
         # This is important when calculating numerical derivatives and is
         #  accomplished by the following.
@@ -414,76 +413,90 @@ class _CommonDiffPar(object):
             if self.method[0] == 'c':
                 ndel = ndel - 2
 
-        self.delta = step1 * stepRatio ** (-np.arange(ndel))
+        self._delta = step1 * stepRatio ** (-np.arange(ndel))
 
         #hn^N<sqrt(eps)
 
-    def _set_rombexpon(self):
+    def _set_romb_qr(self):
         '''
-          Member variables used
+        Member variables used
             metOrder
             method
             numTerms
 
         '''
+        nexpon = self.numTerms
         add1 = self.method[0] == 'c'
-        self.rombexpon = (1 + add1) * np.arange(self.numTerms) + self.metOrder
+        rombexpon = (1 + add1) * np.arange(nexpon) + self.metOrder
+        
+        srinv = 1.0 / self.stepRatio
+        
+        # do nothing if no romberg terms
+        rmat = np.ones((nexpon + 2, nexpon + 1))
+        if nexpon > 0:
+            rmat[1, 1:] = srinv ** rombexpon
+            for n in range(2, nexpon + 2):
+                rmat[n, 1:] = srinv ** (n * rombexpon)
 
-    def _set_fdiff(self):
-        ''' Set _fdiff fun according to method
+
+        rmat = np.matrix(rmat)
+        # qr factorization used for the extrapolation as well
+        # as the uncertainty estimates
+        self._qromb, self._rromb = linalg.qr(rmat)
+        self._rmat = rmat
+        
+
+    def _set_difference_function(self):
+        ''' Set _fdiff function according to method
         '''
-        diff_fun = dict(c=self._fdiff_c, b=self._fdiff_b, f=self._fdiff_f)
-        self._fdiff = diff_fun[self.method[0]]
+        get_diff_fun = dict(c=self._central, b=self._backward, f=self._forward)[self.method[0]]
+        self._fdiff = get_diff_fun()
 
-    def  _fdiff_c(self, f_x0i, x0i, h):
-        ''' Return central differences
+    def  _central(self):
+        ''' Return central difference function
 
         Member variables used
             derOrder
             fun
             vectorized
         '''
-        #% A central rule, so we will need to evaluate
-        #% symmetrically around x0i.
-        fun = self.fun
+        # A central rule, so we will need to evaluate
+        # symmetrically around x0i.
+        #fun = self.fun
+        evenOrder = (np.remainder(self.derOrder, 2) == 0) 
+        
         if self.vectorized:
-            f_plusdel = fun(x0i + h)
-            f_minusdel = fun(x0i - h)
+            if evenOrder:
+                f_del = lambda fun, f_x0i, x0i, h: (fun(x0i + h) + fun(x0i - h)).ravel()/2.0 - f_x0i
+            else:
+                f_del = lambda fun, f_x0i, x0i, h: (fun(x0i + h) - fun(x0i - h)).ravel()/2.0 
         else:
-            #% not vectorized, so loop
-            f_minusdel = np.zeros_like(h)
-            f_plusdel = f_minusdel.copy()
-            for j, h_j in enumerate(h):
-                f_plusdel[j] = fun(x0i + h_j)
-                f_minusdel[j] = fun(x0i - h_j)
-        oddOrder = self.derOrder in (1, 3)
-        if oddOrder:
-            # odd transformation
-            f_del = (f_plusdel - f_minusdel) / 2.0
-        else:
-            f_del = (f_plusdel + f_minusdel) / 2.0 - f_x0i
-        return f_del.ravel()
+            # not vectorized, so loop
+            if evenOrder:
+                f_del = lambda fun, f_x0i, x0i, h: np.asfarray([fun(x0i + h_j) + fun(x0i - h_j) for h_j in h]).ravel()/2.0 - f_x0i
+            else:
+                f_del = lambda fun, f_x0i, x0i, h: np.asfarray([fun(x0i + h_j) - fun(x0i - h_j) for h_j in h]).ravel()/2.0
+           
+        return f_del
 
-    def _fdiff_f(self, f_x0i, x0i, h):
-        ''' Return forward differences
+    def _forward(self):
+        ''' Return forward difference function
 
         Member variables used
             fun
             vectorized
 
         '''
-        fun = self.fun
-        #% drop off the constant only
+        #fun = self.fun
+        # drop off the constant only
         if self.vectorized:
-            f_del = fun(x0i + h) - f_x0i
+            f_del = lambda fun, f_x0i, x0i, h: (fun(x0i + h) - f_x0i).ravel()
         else:
-            f_del = np.zeros_like(h)
-            for j , h_j in enumerate(h):
-                f_del[j] = fun(x0i + h_j) - f_x0i
-        return f_del.ravel()
+            f_del = lambda fun, f_x0i, x0i, h: np.asfarray([fun(x0i + h_j) - f_x0i for h_j in h]).ravel()
+        return f_del
 
-    def _fdiff_b(self, f_x0i, x0i, h):
-        ''' Return backward differences
+    def _backward(self):
+        ''' Return backward difference function
 
         Member variables used
         ---------------------
@@ -491,19 +504,17 @@ class _CommonDiffPar(object):
         vectorized
 
         '''
-        fun = self.fun
+        #fun = self.fun
         #% drop off the constant only
         if self.vectorized:
-            f_del = fun(x0i - h) - f_x0i
+            f_del = lambda fun, f_x0i, x0i, h: (fun(x0i - h) - f_x0i).ravel()
         else:
-            f_del = np.zeros_like(h)
-            for j , h_j in enumerate(h):
-                f_del[j] = fun(x0i - h_j) - f_x0i
-        return f_del.ravel()
+            f_del = lambda fun, f_x0i, x0i, h: np.asfarray([fun(x0i - h_j) - f_x0i for h_j in h]).ravel()
+        return f_del
 
 
 
-    def _rombextrap(self, der_init):
+    def _romb_extrap(self, der_init):
         ''' Return Romberg extrapolated derivatives and error estimates
             based on the initial derivative estimates
 
@@ -521,24 +532,7 @@ class _CommonDiffPar(object):
         stepRatio - Ratio decrease in step
         rombexpon - higher order terms to cancel using the romberg step
         '''
-        srinv = 1.0 / self.stepRatio
-        rombexpon = self.rombexpon
-
-        # do nothing if no romberg terms
-        nexpon = len(rombexpon)
-        rmat = np.ones((nexpon + 2, nexpon + 1))
-        #if nexpon == 0
-        # rmat is simple: ones(2,1)
-        if nexpon > 0:
-            rmat[1, 1:] = srinv ** rombexpon
-            for n in range(2, nexpon + 2):
-                rmat[n, 1:] = srinv ** (n * rombexpon)
-
-
-        rmat = np.matrix(rmat)
-        # qr factorization used for the extrapolation as well
-        # as the uncertainty estimates
-        [qromb, rromb] = linalg.qr(rmat) #,econ=True)
+       
 
         # amp - noise amplification factor due to the romberg step
         # the noise amplification is further amplified by the Romberg step.
@@ -551,23 +545,19 @@ class _CommonDiffPar(object):
             allfinite_start = np.max(i_nonfinite) + 1
             der_init = der_init[allfinite_start:]
         # this does the extrapolation to a zero step size.
+        nexpon = self.numTerms #self._nexpon
         ne = der_init.size
         rhs = vec2mat(der_init, nexpon + 2, max(1, ne - (nexpon + 2)))
 
-#        if i_nonfinite.size > 0:
-#            rhsmax = np.nanmax(np.abs(der_init))
-#            ix_nans = np.isfinite(rhs) == 0
-#            rhs[ix_nans] = np.random.normal(size=ix_nans.sum())*rhsmax
-
-        rombcoefs = linalg.lstsq(rromb, (qromb.T * rhs))
+        rombcoefs = linalg.lstsq(self._rromb, (self._qromb.T * rhs))
         der_romb = rombcoefs[0][0, :]
 
         sqrt = np.sqrt
         sum = np.sum
         asarray = np.asarray
         # uncertainty estimate of derivative prediction
-        s = sqrt(sum(asarray(rhs - rmat * rombcoefs[0]) ** 2, axis=0))
-        rinv = asarray(linalg.pinv(rromb))
+        s = sqrt(sum(asarray(rhs - self._rmat * rombcoefs[0]) ** 2, axis=0))
+        rinv = asarray(linalg.pinv(self._rromb))
         cov1 = sum(rinv ** 2, axis=1) # 1 spare dof
         eps = np.finfo(float).eps
         errest = np.maximum(s * 12.7062047361747 * sqrt(cov1[0]), s * eps * 10.)
@@ -579,7 +569,7 @@ class _CommonDiffPar(object):
         #der_dea, err_dea = dea3(der_init[0:-2],der_init[1:-1],der_init[2:])
 
         return der_romb, errest
-        #end _rombextrap
+        #end % _romb_extrap
 
 
 ##'''
@@ -634,25 +624,22 @@ class Derivative(_CommonDiffPar):
     def __init__(self, fun, **kwds):
         super(Derivative, self).__init__(fun, **kwds)
 
-    def _fder(self, f_x0i, x0i, h):
+    def _fder(self, fun, f_x0i, x0i, h):
         ''' Return derivative estimates of f at x0 for a sequence of stepsizes h
 
         Member variables used
         ---------------------
         derOrder
-        fdarule
+        _fda_rule
         numTerms
-
         '''
-
-        fdarule = self.fdarule
+        fdarule = self._fda_rule
         nfda = fdarule.size
         ndel = h.size
 
+        f_del = self._fdiff(fun, f_x0i, x0i, h)
 
-        f_del = self._fdiff(f_x0i, x0i, h)
-
-         # check the size of f_del to ensure it was properly vectorized.
+        # check the size of f_del to ensure it was properly vectorized.
         if f_del.size != h.size:
             t = 'fun did not return data of correct size (it must be vectorized)'
             raise ValueError(t)
@@ -664,7 +651,6 @@ class Derivative(_CommonDiffPar):
 
         # Form the initial derivative estimates from the chosen
         # finite difference method.
-
         der_init = np.asarray(vec2mat(f_del, ne, nfda) * fdarule.T)
 
         # scale to reflect the local delta
@@ -680,9 +666,29 @@ class Derivative(_CommonDiffPar):
             using romberg extrapolation
         '''
         self._set_all_der_par()
-        return self._derivative(x00, self.stepNom)
+        return self._derivative(self.fun, x00, self.stepNom)
 
-    def _derivative(self, x00, stepNom=None):
+
+    def _trim_estimates(self, der_romb, errors, h):
+        '''
+        trim off the estimates at each end of the scale if not self.stepFix
+        '''
+        if self.stepFix == None:
+            
+            nr_rem = 2 * max((self.derOrder - 1), 1)
+            der_romb = np.atleast_1d(der_romb)
+            tags, = np.where(np.isfinite(der_romb))
+            if len(tags) == len(der_romb):
+                tags = der_romb.argsort()
+                tags = tags[nr_rem:-nr_rem]
+            der_romb = der_romb[tags]
+            errors = errors[tags]
+            trimdelta = h[tags]
+        else:
+            trimdelta = h
+        return der_romb, errors, trimdelta
+
+    def _derivative(self, fun, x00, stepNom=None):
         x0 = np.atleast_1d(x00)
 
         if stepNom is None:
@@ -690,20 +696,21 @@ class Derivative(_CommonDiffPar):
         else:
             stepNom = np.atleast_1d(stepNom)
         
-
-        #% was a single point supplied?
+        
+        # was a single point supplied?
         nx0 = x0.shape
         n = x0.size
 
         f_x0 = np.zeros(nx0)
-        #% will we need fun(x0)?
+        # will we need fun(x0)?
         evenOrder = (np.remainder(self.derOrder, 2) == 0)
         if  evenOrder or not self.method[0] == 'c':
             if self.vectorized:
-                f_x0 = self.fun(x0)
+                f_x0 = fun(x0)
             else:
-                for j, x0j in enumerate(x0):
-                    f_x0[j] = self.fun(x0j)
+                f_x0 = np.asfarray([fun(x0j) for x0j in x0])
+                #for j, x0j in enumerate(x0):
+                #    f_x0[j] = self.fun(x0j)
 
         # Loop over the elements of x0, reducing it to
         # a scalar problem. Sorry, vectorization is not
@@ -711,41 +718,22 @@ class Derivative(_CommonDiffPar):
         der = np.zeros(nx0)
         errest = der.copy()
         finaldelta = der.copy()
-        delta = self.delta
+        delta = self._delta
         for i in range(n):
             f_x0i = float(f_x0[i])
             x0i = float(x0[i])
             h = (1.0 * stepNom[i]) * delta
 
-            der_init = self._fder(f_x0i, x0i, h)
+            der_init = self._fder(fun, f_x0i, x0i, h)
 
             # Each approximation that results is an approximation
             # of order derOrder to the desired derivative.
             # Additional (higher order, even or odd) terms in the
             # Taylor series also remain. Use a generalized (multi-term)
             # Romberg extrapolation to improve these estimates.
+            [der_romb, errors] = self._romb_extrap(der_init)
 
-
-            [der_romb, errors] = self._rombextrap(der_init)
-
-            # Choose which result to return
-            # first, trim off the
-            if self.stepFix == None:
-                # trim off the estimates at each end of the scale
-                nr_rem = 2 * max((self.derOrder - 1), 1)
-                
-                der_romb = np.atleast_1d(der_romb)
-                
-                tags, = np.where(np.isfinite(der_romb))
-                if len(tags)==len(der_romb):
-                    tags = der_romb.argsort()
-                    tags = tags[nr_rem:-nr_rem]
-                    
-                der_romb = der_romb[tags]
-                errors = errors[tags]
-                trimdelta = h[tags]
-            else:
-                trimdelta = h
+            der_romb, errors, trimdelta  = self._trim_estimates(der_romb, errors, h)
 
             ind = errors.argmin()
             
@@ -770,16 +758,14 @@ class Derivative(_CommonDiffPar):
         finaldelta = PD.copy()
         
         stepNom = [None,]*nx if self.stepNom is None else self.stepNom 
-        self.fun_org = self.fun
-        self.fun = self._fun
+        
+        fun = self._fun
         self._x = np.asarray(x0, dtype=float)
         for ind in range(nx):
             self._ix = ind
-            PD[ind] = self._derivative(x0[ind], stepNom[ind])
+            PD[ind] = self._derivative(fun, x0[ind], stepNom[ind])
             err[ind] = self.error_estimate
             finaldelta[ind] = self.finaldelta
-
-        self.fun = self.fun_org
         self.error_estimate = err
         self.finaldelta = finaldelta
         return PD
@@ -787,7 +773,7 @@ class Derivative(_CommonDiffPar):
     def _fun(self, xi):
         x = self._x.copy()
         x[self._ix] = xi
-        return  self.fun_org(x)
+        return  self.fun(x)
 
     def _gradient(self, x00):
 
@@ -812,13 +798,13 @@ class Derivative(_CommonDiffPar):
         self.method = 'central'
         #sx = nx #size(x0)
 
-        # get the diagonal elements of the hessian (2nd partial
-        # derivatives wrt each variable.)
+        #% get the diagonal elements of the hessian (2nd partial
+        #% derivatives wrt each variable.)
         hess = self._hessdiag(x00)
         err = self.error_estimate
 
-        # form the eventual hessian matrix, stuffing only
-        # the diagonals for now.
+        #% form the eventual hessian matrix, stuffing only
+        #% the diagonals for now.
         hess = np.diag(hess)
         err = np.diag(err)
         if nx < 2 :
@@ -839,7 +825,8 @@ class Derivative(_CommonDiffPar):
         ndel = 3. + np.ceil(self.derOrder / 2.) + self.metOrder + self.numTerms + 4
         if self.method[0] == 'c':
             ndel = ndel - 2
-        ndelMin = len(self.rombexpon) + 2
+        #ndelMin = len(self.rombexpon) + 2
+        ndelMin = self.numTerms + 2
         ndel = np.maximum(ndelMin, ndel)
         #ndel = ndelMin
         dfac = (1.0 * self.stepRatio) ** (-np.arange(ndel))
@@ -863,7 +850,7 @@ class Derivative(_CommonDiffPar):
                 dij = dij / (dfac ** 2)
 
                 #% Romberg extrapolation step
-                [hess_romb, errors] = self._rombextrap(dij)
+                [hess_romb, errors] = self._romb_extrap(dij)
                 ind = errors.argmin()
 
                 hess[j, i] = hess[i, j] = hess_romb[ind]
@@ -979,6 +966,7 @@ class Jacobian(_CommonDiffPar):
         x0 = np.atleast_1d(x00)
         nx = x0.size
 
+
         # get fun at the center point
         f0 = fun(x0)
         f0 = f0.ravel()
@@ -990,7 +978,7 @@ class Jacobian(_CommonDiffPar):
             self.error_estimate = jac
             return jac
 
-        delta = self.delta
+        delta = self._delta
         nsteps = delta.size
 
         if self.stepNom == None :
@@ -1028,7 +1016,7 @@ class Jacobian(_CommonDiffPar):
             # loop here, as rombextrap coupled with the trimming
             # will get complicated otherwise.
             for j in range(n):
-                [der_romb, errest] = self._rombextrap(derest[j, :])
+                [der_romb, errest] = self._romb_extrap(derest[j, :])
 
                 # trim off 3 estimates at each end of the scale
 
@@ -1292,6 +1280,8 @@ def _test_fun():
 ##    rd = Hessian(rosen)
 ##    h = rd([1, 1])  #%  h =[ 842 -420; -420, 210];
 ##    rd.error_estimate
+
+
 
 
 if __name__ == '__main__':

@@ -21,7 +21,8 @@ class TestDerivative(unittest.TestCase):
         dexp = nd.Derivative(np.exp)
         self.assertAlmostEqual(dexp(0), np.exp(0))
         dexp.derOrder = 2
-        self.assertAlmostEqual(dexp(0), np.exp(0))
+        t = dexp(0)
+        self.assertAlmostEqual(t, np.exp(0))
 
         # Evaluate the indicated (default = first)
         # derivative at multiple points
