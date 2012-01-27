@@ -20,7 +20,7 @@ class TestDerivative(unittest.TestCase):
         #derivative of exp(x), at x == 0
         dexp = nd.Derivative(np.exp)
         self.assertAlmostEqual(dexp(0), np.exp(0))
-        dexp.derOrder = 2
+        dexp.n = 2
         t = dexp(0)
         self.assertAlmostEqual(t, np.exp(0))
 
@@ -37,20 +37,20 @@ class TestDerivative(unittest.TestCase):
 
         #Higher order derivatives (second derivative)
         # Truth: 0
-        d2sin = nd.Derivative(np.sin, derOrder=2, stepFix=0.5)
+        d2sin = nd.Derivative(np.sin, n=2, stepFix=0.5)
 
         self.assertAlmostEqual(d2sin(np.pi), 0.0,)
 
         # Higher order derivatives (up to the fourth derivative)
         # Truth: sqrt(2)/2 = 0.707106781186548
-        d2sin.derOrder = 4
+        d2sin.n = 4
         y = d2sin(np.pi / 4)
         small = np.abs(y - np.sqrt(2.) / 2.) < d2sin.error_estimate
         self.assertTrue(small)
 
         # Higher order derivatives (third derivative)
         # Truth: 1
-        d3cos = nd.Derivative(np.cos, derOrder=3)
+        d3cos = nd.Derivative(np.cos, n=3)
         y = d3cos(np.pi / 2.0)
         small = np.abs(y - 1.0) < d3cos.error_estimate
         self.assertTrue(small)
@@ -75,7 +75,7 @@ class TestDerivative(unittest.TestCase):
         # Control the behavior of Derivative - forward 2nd order method, with only 1 Romberg term
         # Compute the first derivative, also return the final stepsize chosen
         #[deriv,err,fdelta] = derivest(@(x) tan(x),pi,'deriv',1,'Style','for','MethodOrder',2,'RombergTerms',1)
-        dtan = nd.Derivative(np.tan, derOrder=1, metOrder=2, method='forward', numTerms=1)
+        dtan = nd.Derivative(np.tan, n=1, order=2, method='forward', romberg_terms=1)
         y = dtan(np.pi)
         abserr = dtan.error_estimate
         self.assertTrue(np.abs(y - 1) < abserr)
@@ -84,13 +84,13 @@ class TestDerivative(unittest.TestCase):
     
         ##%% Specify the step size (default stepsize = 0.1)
         p0 = np.poly1d(range(1, 6))
-        fd = nd.Derivative(p0, derOrder=4, stepFix=1.)
+        fd = nd.Derivative(p0, n=4, stepFix=1.)
         p4 = p0.deriv(4)
         self.assertAlmostEqual(fd(1), p4(1))
         
         ##%% Control the behavior of DERIVEST - forward 2nd order method, with only 1 Romberg term
         ##% Compute the first derivative, also return the final stepsize chosen
-        dtan = nd.Derivative(np.tan, derOrder=1, method='forward', metOrder=2, numTerms=1)
+        dtan = nd.Derivative(np.tan, n=1, method='forward', order=2, romberg_terms=1)
         self.assertAlmostEqual(dtan(np.pi), 1.0)
         
 
