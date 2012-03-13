@@ -48,7 +48,7 @@ Compute 1'st and 2'nd derivative of exp(x), at x == 1::
     >>> import numpy as np
     >>> import numdifftools as nd
     >>> fd = nd.Derivative(np.exp)              # 1'st derivative
-    >>> fdd = nd.Derivative(np.exp,derOrder=2)  # 2'nd derivative
+    >>> fdd = nd.Derivative(np.exp, n=2)  # 2'nd derivative
     >>> fd(1)
     array([ 2.71828183])
 
