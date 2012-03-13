@@ -107,8 +107,8 @@ def dea3(v0, v1, v2):
     k1, = (1 - converged).nonzero()
 
     if k1.size > 0 :
-        t1 = np.where(delta1[k1]==0,_TINY,0) # avoid division by zero 
-        t2 = np.where(delta2[k1]==0,_TINY,0)
+        t1 = np.where(delta1[k1]==0, _TINY,0) # avoid division by zero 
+        t2 = np.where(delta2[k1]==0, _TINY,0)
         ss = one / (delta2[k1] + t2) - one / (delta1[k1] + t1)
         smallE2 = (abs(ss * E1[k1]) <= 1.0e-3).ravel()
         k2 = k1[smallE2.nonzero()]
@@ -134,7 +134,7 @@ def vec2mat(vec, n, m):
 
 
 
-class _CommonDiffPar(object):
+class _Derivative(object):
     ''' Object holding common variables and methods for the numdifftools
 
 
@@ -195,7 +195,7 @@ class _CommonDiffPar(object):
         self.step_num = None
         self.vectorized = False
 
-        valid_keys = self.__dict__.keys()
+        valid_keys = self.__dict__
         dict2update = dict((k, kwds[k]) for k in valid_keys if k in kwds)
 
         if any(dict2update):
@@ -252,7 +252,118 @@ class _CommonDiffPar(object):
         self._set_romb_qr()
         self._set_difference_function()
 
+    def _fder(self, fun, f_x0i, x0i, h):
+        ''' Return derivative estimates of f at x0 for a sequence of stepsizes h
 
+        Member variables used
+        ---------------------
+        n
+        _fda_rule
+        romberg_terms
+        '''
+        fdarule = self._fda_rule
+        nfda = fdarule.size
+        ndel = h.size
+
+        f_del = self._fdiff(fun, f_x0i, x0i, h)
+
+        # check the size of f_del to ensure it was properly vectorized.
+        if f_del.size != h.size:
+            t = 'fun did not return data of correct size (it must be vectorized)'
+            raise ValueError(t)
+
+        # Apply the finite difference rule at each delta, scaling
+        # as appropriate for delta and the requested DerivativeOrder.
+        # First, decide how many of these estimates we will end up with.
+        ne = ndel + 1 - nfda - self.romberg_terms
+
+        # Form the initial derivative estimates from the chosen
+        # finite difference method.
+        der_init = np.asarray(vec2mat(f_del, ne, nfda) * fdarule.T)
+
+        # scale to reflect the local delta
+        der_init = der_init.ravel() / (h[0:ne]) ** self.n
+
+        return der_init, h[0:ne]
+    
+    def _trim_estimates(self, der_romb, errors, h):
+        '''
+        trim off the estimates at each end of the scale if not self.stepFix
+        '''
+        if self.stepFix is None:
+            der_romb = np.atleast_1d(der_romb)
+            tags, = np.where(np.isfinite(der_romb))
+            if len(tags) == len(der_romb):
+                nr_rem = 2 * max((self.n - 1), 1)
+                tags = der_romb.argsort()
+                tags = tags[nr_rem:-nr_rem]
+            der_romb = der_romb[tags]
+            errors = errors[tags]
+            trimdelta = h[tags]
+        else:
+            trimdelta = h
+        return der_romb, errors, trimdelta
+
+    def _derivative(self, fun, x00, stepNom=None):
+        x0 = np.atleast_1d(x00)
+
+        if stepNom is None:
+            stepNom = np.maximum(np.abs(x0), 0.02)
+        else:
+            stepNom = np.atleast_1d(stepNom)
+        
+        
+        # was a single point supplied?
+        nx0 = x0.shape
+        n = x0.size
+
+        f_x0 = np.zeros(nx0)
+        # will we need fun(x0)?
+        evenOrder = (np.remainder(self.n, 2) == 0)
+        if  evenOrder or not self.method[0] == 'c':
+            if self.vectorized:
+                f_x0 = fun(x0)
+            else:
+                f_x0 = np.asfarray([fun(x0j) for x0j in x0])
+
+        # Loop over the elements of x0, reducing it to
+        # a scalar problem. Sorry, vectorization is not
+        # complete here, but this IS only a single loop.
+        der = np.zeros(nx0)
+        errest = der.copy()
+        finaldelta = der.copy()
+        delta = self._delta
+        for i in range(n):
+            f_x0i = float(f_x0[i])
+            x0i = float(x0[i])
+            h = (1.0 * stepNom[i]) * delta
+
+            der_init, h1 = self._fder(fun, f_x0i, x0i, h)
+
+            # Each approximation that results is an approximation
+            # of order n to the desired derivative.
+            # Additional (higher order, even or odd) terms in the
+            # Taylor series also remain. Use a generalized (multi-term)
+            # Romberg extrapolation to improve these estimates.
+            der_romb, errors, h2 = self._romb_extrap(der_init, h1)
+#            import matplotlib.pyplot as plt
+#            plt.ioff()
+#            plt.loglog(h2,der_romb, h2, der_romb+errors,'r--',h2, der_romb-errors,'r--')
+#            plt.loglog(h2,errors,'r--')
+#            plt.show()
+            der_romb, errors, trimdelta  = self._trim_estimates(der_romb, errors, h2)
+            
+            ind = errors.argmin()
+            
+            errest[i] = errors[ind]
+            finaldelta[i] = trimdelta[ind]
+            der[i] = der_romb[ind]
+
+        # Save errorEstimate and final step
+        self.error_estimate = errest
+        self.finaldelta = finaldelta
+        return der
+        
     def _fda_mat(self, parity, nterms):
         ''' Return matrix for fda derivation.
 
@@ -278,7 +389,7 @@ class _CommonDiffPar(object):
             #% single sided rule
             c = 1.0 / factorial(arange(1, nterms + 1))
             mat = c[j] * srinv ** (i * (j + 1))
-        elif parity == 1  or parity ==2:
+        elif parity == 1  or parity == 2:
             c = 1.0 / factorial(arange(parity, 2 * nterms + 1, 2))
             mat = c[j] * srinv ** (i * (2 * j + parity))
 #        elif parity == 2:
@@ -518,11 +629,13 @@ class _CommonDiffPar(object):
         Parameter
         ---------
         der_init - initial derivative estimates
+        h1 - stepsizes used in the derivative estimates
 
         Returns
         -------
         der_romb - derivative estimates returned
         errest - error estimates
+        hout - stepsizes returned
 
         Member variables used
         ---------------------
@@ -571,7 +684,37 @@ class _CommonDiffPar(object):
         return der_romb, errest, hout
         #end % _romb_extrap
 
+class _PartialDerivative(_Derivative):
+    def _partial_der(self, x00):
+        ''' Return partial derivatives
+        '''
+        x0 = np.atleast_1d(x00)
+        nx = len(x0)
 
+        PD = np.zeros(nx)
+        err = PD.copy()
+        finaldelta = PD.copy()
+        
+        stepNom = [None,]*nx if self.stepNom is None else self.stepNom 
+        
+        fun = self._fun
+        self._x = np.asarray(x0, dtype=float)
+        for ind in range(nx):
+            self._ix = ind
+            PD[ind] = self._derivative(fun, x0[ind], stepNom[ind])
+            err[ind] = self.error_estimate
+            finaldelta[ind] = self.finaldelta
+        self.error_estimate = err
+        self.finaldelta = finaldelta
+        return PD
+
+    def _fun(self, xi):
+        x = self._x.copy()
+        x[self._ix] = xi
+        return  self.fun(x)
+
+
+    
 ##'''
 ##     Arguments: (output)
 ##      der     = derivative estimate for each element of x0
@@ -585,9 +728,9 @@ class _CommonDiffPar(object):
 ##      x0  = scalar, vector, or array of points at which to differentiate fun.
 ##
 ##    '''
-class Derivative(_CommonDiffPar):
+class Derivative(_Derivative):
     __doc__ = '''Estimate n'th derivative of fun at x0, with error estimate
-    ''' + _CommonDiffPar.__doc__.partition('\n')[2] + '''
+    ''' + _Derivative.__doc__.partition('\n')[2] + '''
     Examples
     --------
      # 1'st and 2'nd derivative of exp(x), at x == 1
@@ -621,42 +764,6 @@ class Derivative(_CommonDiffPar):
      Hessian,
      Jacobian
     '''
-    def __init__(self, fun, **kwds):
-        super(Derivative, self).__init__(fun, **kwds)
-
-    def _fder(self, fun, f_x0i, x0i, h):
-        ''' Return derivative estimates of f at x0 for a sequence of stepsizes h
-
-        Member variables used
-        ---------------------
-        n
-        _fda_rule
-        romberg_terms
-        '''
-        fdarule = self._fda_rule
-        nfda = fdarule.size
-        ndel = h.size
-
-        f_del = self._fdiff(fun, f_x0i, x0i, h)
-
-        # check the size of f_del to ensure it was properly vectorized.
-        if f_del.size != h.size:
-            t = 'fun did not return data of correct size (it must be vectorized)'
-            raise ValueError(t)
-
-        # Apply the finite difference rule at each delta, scaling
-        # as appropriate for delta and the requested DerivativeOrder.
-        # First, decide how many of these estimates we will end up with.
-        ne = ndel + 1 - nfda - self.romberg_terms
-
-        # Form the initial derivative estimates from the chosen
-        # finite difference method.
-        der_init = np.asarray(vec2mat(f_del, ne, nfda) * fdarule.T)
-
-        # scale to reflect the local delta
-        der_init = der_init.ravel() / (h[0:ne]) ** self.n
-
-        return der_init, h[0:ne]
 
     def __call__(self, x00):
         return self.derivative(x00)
@@ -668,200 +775,9 @@ class Derivative(_CommonDiffPar):
         self._initialize()
         return self._derivative(self.fun, x00, self.stepNom)
 
-
-    def _trim_estimates(self, der_romb, errors, h):
-        '''
-        trim off the estimates at each end of the scale if not self.stepFix
-        '''
-        if self.stepFix == None:
-            nr_rem = 2 * max((self.n - 1), 1)
-            der_romb = np.atleast_1d(der_romb)
-            tags, = np.where(np.isfinite(der_romb))
-            if len(tags) == len(der_romb):
-                tags = der_romb.argsort()
-                tags = tags[nr_rem:-nr_rem]
-            der_romb = der_romb[tags]
-            errors = errors[tags]
-            trimdelta = h[tags]
-        else:
-            trimdelta = h
-        return der_romb, errors, trimdelta
-
-    def _derivative(self, fun, x00, stepNom=None):
-        x0 = np.atleast_1d(x00)
-
-        if stepNom is None:
-            stepNom = np.maximum(np.abs(x0), 0.02)
-        else:
-            stepNom = np.atleast_1d(stepNom)
-        
-        
-        # was a single point supplied?
-        nx0 = x0.shape
-        n = x0.size
-
-        f_x0 = np.zeros(nx0)
-        # will we need fun(x0)?
-        evenOrder = (np.remainder(self.n, 2) == 0)
-        if  evenOrder or not self.method[0] == 'c':
-            if self.vectorized:
-                f_x0 = fun(x0)
-            else:
-                f_x0 = np.asfarray([fun(x0j) for x0j in x0])
-
-        # Loop over the elements of x0, reducing it to
-        # a scalar problem. Sorry, vectorization is not
-        # complete here, but this IS only a single loop.
-        der = np.zeros(nx0)
-        errest = der.copy()
-        finaldelta = der.copy()
-        delta = self._delta
-        for i in range(n):
-            f_x0i = float(f_x0[i])
-            x0i = float(x0[i])
-            h = (1.0 * stepNom[i]) * delta
-
-            der_init, h1 = self._fder(fun, f_x0i, x0i, h)
-
-            # Each approximation that results is an approximation
-            # of order n to the desired derivative.
-            # Additional (higher order, even or odd) terms in the
-            # Taylor series also remain. Use a generalized (multi-term)
-            # Romberg extrapolation to improve these estimates.
-            der_romb, errors, h2 = self._romb_extrap(der_init, h1)
-#            import matplotlib.pyplot as plt
-#            plt.ioff()
-#            plt.loglog(h2,der_romb, h2, der_romb+errors,'r--',h2, der_romb-errors,'r--')
-#            plt.loglog(h2,errors,'r--')
-#            plt.show()
-            der_romb, errors, trimdelta  = self._trim_estimates(der_romb, errors, h2)
-            
-            ind = errors.argmin()
-            
-            errest[i] = errors[ind]
-            finaldelta[i] = trimdelta[ind]
-            der[i] = der_romb[ind]
-
-        # Save errorEstimate and final step
-        self.error_estimate = errest
-        self.finaldelta = finaldelta
-        return der
-
-
-    def _partial_der(self, x00):
-        ''' Return partial derivatives
-        '''
-        x0 = np.atleast_1d(x00)
-        nx = len(x0)
-
-        PD = np.zeros(nx)
-        err = PD.copy()
-        finaldelta = PD.copy()
-        
-        stepNom = [None,]*nx if self.stepNom is None else self.stepNom 
-        
-        fun = self._fun
-        self._x = np.asarray(x0, dtype=float)
-        for ind in range(nx):
-            self._ix = ind
-            PD[ind] = self._derivative(fun, x0[ind], stepNom[ind])
-            err[ind] = self.error_estimate
-            finaldelta[ind] = self.finaldelta
-        self.error_estimate = err
-        self.finaldelta = finaldelta
-        return PD
-
-    def _fun(self, xi):
-        x = self._x.copy()
-        x[self._ix] = xi
-        return  self.fun(x)
-
-    def _gradient(self, x00):
-
-        self.n = 1
-        self.vectorized = False
-
-        self._initialize()
-        return self._partial_der(x00)
-
-    def _hessdiag(self, x00):
-        self.n = 2
-        self.vectorized = False
-        self._initialize()
-
-        return self._partial_der(x00)
-
-    def _hessian(self, x00):
-
-        zeros = np.zeros
-        x0 = np.atleast_1d(x00)
-        nx = len(x0)
-        self.method = 'central'
-        #sx = nx #size(x0)
-
-        # get the diagonal elements of the hessian (2nd partial
-        # derivatives wrt each variable.)
-        hess = self._hessdiag(x00)
-        err = self.error_estimate
-
-        # form the eventual hessian matrix, stuffing only
-        # the diagonals for now.
-        hess = np.diag(hess)
-        err = np.diag(err)
-        if nx < 2 :
-            #% the hessian matrix is 1x1. all done
-            return hess
-
-        # get the gradient vector. This is done only to decide
-        # on intelligent step sizes for the mixed partials
-        #grad = self._gradient(x00)
-        stepsize = self.finaldelta #np.maximum(, 1e-4)
-
-
-        #self.romberg_terms = 4
-
-        # Get params.RombergTerms+1 estimates of the upper
-        # triangle of the hessian matrix
-
-        ndel = 3. + np.ceil(self.n / 2.) + self.order + self.romberg_terms + 4
-        if self.method[0] == 'c':
-            ndel = ndel - 2
-        #ndelMin = len(self.rombexpon) + 2
-        ndelMin = self.romberg_terms + 2
-        ndel = np.maximum(ndelMin, ndel)
-        #ndel = ndelMin
-        dfac = (1.0 * self.step_ratio) ** (-np.arange(ndel))
-        fun = self.fun
-        for i in range(1, nx):
-            for j in range(i):
-                dij = zeros(ndel)
-                step = zeros(nx)
-                step[[i, j]] = stepsize[[i, j]]
-
-                for k in range(int(ndel)):
-                    x1 = x0 + step * dfac[k]
-                    x2 = x0 - step * dfac[k]
-                    step[j] = -step[j]
-                    x3 = x0 + step * dfac[k]; step = -step
-                    x4 = x0 + step * dfac[k]
-                    step[i] = -step[i]
-                    dij[k] = fun(x1) + fun(x2) - fun(x3) - fun(x4)
-
-                dij = dij / 4 / stepsize[[i, j]].prod()
-                dij = dij / (dfac ** 2)
-
-                #% Romberg extrapolation step
-                hess_romb, errors, dfac1 = self._romb_extrap(dij, dfac)
-                ind = errors.argmin()
-
-                hess[j, i] = hess[i, j] = hess_romb[ind]
-                err[j, i] = err[i, j] = errors[ind]
-
-        self.error_estimate = err
-        return hess
-    
-class Jacobian(_CommonDiffPar):
-    _jacob_txt = _CommonDiffPar.__doc__.partition('\n')[2].replace(
+ 
+class Jacobian(_Derivative):
+    _jacob_txt = _Derivative.__doc__.partition('\n')[2].replace(
     'Integer from 1 to 4 defining derivative order. (Default 1)',
     'Derivative order is always 1')
     __doc__ = '''Estimate Jacobian matrix, with error estimate
@@ -891,15 +807,15 @@ class Jacobian(_CommonDiffPar):
     >>> h = Jfun([1., 2., 0.75]) # should be numerically zero
     >>> h
     array([[  0.00000000e+00,   0.00000000e+00,   0.00000000e+00],
-           [  0.00000000e+00,   0.00000000e+00,   4.88688382e-17],
-           [  0.00000000e+00,   0.00000000e+00,   5.64779765e-17],
-           [  0.00000000e+00,   0.00000000e+00,  -6.40888856e-17],
-           [  0.00000000e+00,   0.00000000e+00,  -2.34616021e-16],
-           [  0.00000000e+00,   0.00000000e+00,   1.04362373e-15],
-           [  0.00000000e+00,   1.39294107e-15,   2.52710501e-15],
-           [  0.00000000e+00,   0.00000000e+00,   1.59139220e-16],
-           [  0.00000000e+00,   0.00000000e+00,  -1.73461877e-15],
-           [  0.00000000e+00,  -1.75378837e-15,  -1.00619657e-15]])
+           [  0.00000000e+00,   0.00000000e+00,   3.54331083e-17],
+           [  0.00000000e+00,   0.00000000e+00,   5.49357976e-17],
+           [  0.00000000e+00,   0.00000000e+00,   1.41355642e-17],
+           [  0.00000000e+00,   0.00000000e+00,   3.18159118e-17],
+           [  0.00000000e+00,   0.00000000e+00,   6.59658923e-16],
+           [  0.00000000e+00,   0.00000000e+00,   2.33446494e-15],
+           [  0.00000000e+00,   0.00000000e+00,   1.77505224e-15],
+           [  0.00000000e+00,   0.00000000e+00,   1.56635810e-15],
+           [  0.00000000e+00,  -1.74440902e-15,  -4.74370787e-15]])
     
     >>> np.abs(h)<=2*Jfun.error_estimate
     array([[ True,  True,  True],
@@ -908,7 +824,7 @@ class Jacobian(_CommonDiffPar):
            [ True,  True,  True],
            [ True,  True,  True],
            [ True,  True,  True],
-           [ True, False, False],
+           [ True,  True,  True],
            [ True,  True,  True],
            [ True,  True,  True],
            [ True, False,  True]], dtype=bool)
@@ -993,8 +909,8 @@ class Jacobian(_CommonDiffPar):
             x0_i = x0[i]
             h = (1.0 * stepNom[i]) * delta
 
-            #% evaluate at each step, centered around x0_i
-            #% difference to give a second order estimate
+            # evaluate at each step, centered around x0_i
+            # difference to give a second order estimate
             fdel = zeros((n, nsteps))
             xp = x0.copy()
             xm = x0.copy()
@@ -1039,8 +955,8 @@ class Jacobian(_CommonDiffPar):
         return jac
 
 
-class Gradient(Derivative):
-    _grad_txt = _CommonDiffPar.__doc__.partition('\n')[2].replace(
+class Gradient(_PartialDerivative):
+    _grad_txt = _Derivative.__doc__.partition('\n')[2].replace(
         'Integer from 1 to 4 defining derivative order. (Default 1)',
         'Derivative order is always 1')
     __doc__ = '''Estimate gradient of fun at x0, with error estimate
@@ -1090,9 +1006,9 @@ class Gradient(Derivative):
     --------
     Derivative, Hessdiag, Hessian, Jacobian
     '''
-
+      
     def __call__(self, x00):
-        return self._gradient(x00)
+        return self.gradient(x00)
     def gradient(self, x00):
         ''' Gradient vector of an analytical function of n variables
 
@@ -1116,10 +1032,76 @@ class Gradient(Derivative):
           #[grad,err] = gradest(@(x) sum(x.^2),[1 2 3]) #  grad = [ 2,4, 6]
 
         '''
-        return self._gradient(x00)
+        self.n = 1
+        self.vectorized = False
 
-class Hessian(Derivative):
-    _hessian_txt = _CommonDiffPar.__doc__.partition('\n')[2].replace(
+        self._initialize()
+        return self._partial_der(x00)
+
+
+class Hessdiag(_PartialDerivative):
+    _hessdiag_txt = _Derivative.__doc__.partition('\n')[2].replace(
+        'Integer from 1 to 4 defining derivative order. (Default 1)',
+        'Derivative order is always 2')
+    __doc__ = '''Estimate diagonal elements of Hessian of fun at x0,
+    with error estimate
+    ''' + _hessdiag_txt + '''
+
+    HESSDIAG return a vector of second order partial derivatives of fun.
+    These are the diagonal elements of the Hessian matrix, evaluated
+    at x0.  When all that you want are the diagonal elements of the hessian
+    matrix, it will be more efficient to call HESSDIAG than HESSIAN.
+    HESSDIAG uses DERIVATIVE to provide both second derivative estimates
+    and error estimates.
+
+    Assumptions
+    ------------
+    fun : SCALAR analytical function to differentiate.
+        fun must be a function of the vector or array x0,
+        but it needs not to be vectorized.
+
+    x0 : vector location at which to differentiate fun
+        If x0 is an N x M array, then fun is assumed to be
+        a function of N*M variables.
+
+    Examples
+    --------
+    >>> fun = lambda x : x[0] + x[1]**2 + x[2]**3
+    >>> ddfun = lambda x : np.asarray((0, 2, 6*x[2]))
+    >>> Hfun = Hessdiag(fun)
+    >>> hd = Hfun([1,2,3]) # HD = [ 0,2,18]
+    >>> hd
+    array([  0.,   2.,  18.])
+    >>> np.abs(ddfun([1,2,3])-hd) <= Hfun.error_estimate
+    array([ True,  True,  True], dtype=bool)
+
+
+    See also
+    --------
+    Gradient, Derivative, Hessian, Jacobian
+    '''
+##    def __init__(self,fun,**kwds):
+##        super(Hessdiag,self).__init__(fun,**kwds)
+##        self.vectorized = False
+##        self.n = 2
+
+    def __call__(self, x00):
+        return self.hessdiag(x00)
+        
+    def hessdiag(self, x00):
+        ''' Diagonal elements of Hessian matrix
+
+         See also derivative, gradient, hessian, jacobian
+        '''
+        self.n = 2
+        self.vectorized = False
+        self._initialize()
+
+        return self._partial_der(x00)
+
+        
+class Hessian(Hessdiag):
+    _hessian_txt = _Derivative.__doc__.partition('\n')[2].replace(
         'Integer from 1 to 4 defining derivative order. (Default 1)',
         'Derivative order is always 2')
     __doc__ = ''' Estimate Hessian matrix, with error estimate
@@ -1186,8 +1168,8 @@ class Hessian(Derivative):
     Jacobian
     '''
     def __call__(self, x00):
-        return self._hessian(x00)
-
+        return self.hessian(x00)
+        
     def hessian(self, x00):
         '''Hessian matrix i.e., array of 2nd order partial derivatives
 
@@ -1195,63 +1177,72 @@ class Hessian(Derivative):
 
         '''
 
-        return self._hessian(x00)
+        zeros = np.zeros
+        x0 = np.atleast_1d(x00)
+        nx = len(x0)
+        self.method = 'central'
+        #sx = nx #size(x0)
 
-class Hessdiag(Derivative):
-    _hessdiag_txt = _CommonDiffPar.__doc__.partition('\n')[2].replace(
-        'Integer from 1 to 4 defining derivative order. (Default 1)',
-        'Derivative order is always 2')
-    __doc__ = '''Estimate diagonal elements of Hessian of fun at x0,
-    with error estimate
-    ''' + _hessdiag_txt + '''
+        # get the diagonal elements of the hessian (2nd partial
+        # derivatives wrt each variable.)
+        hess = self.hessdiag(x00)
+        err = self.error_estimate
 
-    HESSDIAG return a vector of second order partial derivatives of fun.
-    These are the diagonal elements of the Hessian matrix, evaluated
-    at x0.  When all that you want are the diagonal elements of the hessian
-    matrix, it will be more efficient to call HESSDIAG than HESSIAN.
-    HESSDIAG uses DERIVATIVE to provide both second derivative estimates
-    and error estimates.
+        # form the eventual hessian matrix, stuffing only
+        # the diagonals for now.
+        hess = np.diag(hess)
+        err = np.diag(err)
+        if nx < 2 :
+            #% the hessian matrix is 1x1. all done
+            return hess
 
-    Assumptions
-    ------------
-    fun : SCALAR analytical function to differentiate.
-        fun must be a function of the vector or array x0,
-        but it needs not to be vectorized.
-
-    x0 : vector location at which to differentiate fun
-        If x0 is an N x M array, then fun is assumed to be
-        a function of N*M variables.
-
-    Examples
-    --------
-    >>> fun = lambda x : x[0] + x[1]**2 + x[2]**3
-    >>> ddfun = lambda x : np.asarray((0, 2, 6*x[2]))
-    >>> Hfun = Hessdiag(fun)
-    >>> hd = Hfun([1,2,3]) # HD = [ 0,2,18]
-    >>> hd
-    array([  0.,   2.,  18.])
-    >>> np.abs(ddfun([1,2,3])-hd) <= Hfun.error_estimate
-    array([ True,  True,  True], dtype=bool)
+        # get the gradient vector. This is done only to decide
+        # on intelligent step sizes for the mixed partials
+        #grad = self._gradient(x00)
+        stepsize = self.finaldelta #np.maximum(, 1e-4)
 
 
-    See also
-    --------
-    Gradient, Derivative, Hessian, Jacobian
-    '''
-##    def __init__(self,fun,**kwds):
-##        super(Hessdiag,self).__init__(fun,**kwds)
-##        self.vectorized = False
-##        self.n = 2
+        #self.romberg_terms = 4
 
-    def __call__(self, x00):
-        return self._hessdiag(x00)
-    def hessdiag(self, x00):
-        ''' Diagonal elements of Hessian matrix
+        # Get params.RombergTerms+1 estimates of the upper
+        # triangle of the hessian matrix
 
-         See also derivative, gradient, hessian, jacobian
-        '''
+        ndel = 3. + np.ceil(self.n / 2.) + self.order + self.romberg_terms + 4
+        if self.method[0] == 'c':
+            ndel = ndel - 2
+        #ndelMin = len(self.rombexpon) + 2
+        ndelMin = self.romberg_terms + 2
+        ndel = np.maximum(ndelMin, ndel)
+        #ndel = ndelMin
+        dfac = (1.0 * self.step_ratio) ** (-np.arange(ndel))
+        fun = self.fun
+        for i in range(1, nx):
+            for j in range(i):
+                dij = zeros(ndel)
+                step = zeros(nx)
+                step[[i, j]] = stepsize[[i, j]]
 
-        return self._hessdiag(x00)
+                for k in range(int(ndel)):
+                    x1 = x0 + step * dfac[k]
+                    x2 = x0 - step * dfac[k]
+                    step[j] = -step[j]
+                    x3 = x0 + step * dfac[k]; step = -step
+                    x4 = x0 + step * dfac[k]
+                    step[i] = -step[i]
+                    dij[k] = fun(x1) + fun(x2) - fun(x3) - fun(x4)
+
+                dij = dij / 4 / stepsize[[i, j]].prod()
+                dij = dij / (dfac ** 2)
+
+                #% Romberg extrapolation step
+                hess_romb, errors, dfac1 = self._romb_extrap(dij, dfac)
+                ind = errors.argmin()
+
+                hess[j, i] = hess[i, j] = hess_romb[ind]
+                err[j, i] = err[i, j] = errors[ind]
+
+        self.error_estimate = err
+        return hess
 
 def _test_fun():
 
@@ -1291,7 +1282,7 @@ def test_derivative():
 
 
 if __name__ == '__main__':
-    if  False: #True: # 
+    if True: #  False: #
         import doctest
         doctest.testmod()
     else:

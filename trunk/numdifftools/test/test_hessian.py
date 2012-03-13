@@ -7,13 +7,13 @@
 from __future__ import division
 
 #import system data
-import sys, os
+#import sys, os
 
 #Loading the required packages
-import scipy as sp
+#import scipy as sp
 import numpy as np
-import matplotlib as mpl
-import matplotlib.pyplot as plt
+#import matplotlib as mpl
+#import matplotlib.pyplot as plt
 import numdifftools as nd
 
 # and subpackages
