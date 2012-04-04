@@ -30,6 +30,7 @@ __all__ = [
     ]
 
 _TINY =  np.finfo(float).machar.tiny
+_EPS = np.finfo(float).machar.eps
 def dea3(v0, v1, v2):
     '''
     Extrapolate a slowly convergent sequence
@@ -152,18 +153,20 @@ class _Derivative(object):
     romberg_terms : Number of Romberg terms used in the extrapolation.
             Must be an integer from 0 to 3.                       (Default 2)
             Note: 0 disables the Romberg step completely.
-    stepFix : If not None, it will define the maximum excursion from stepNom
+    step_fix : If not None, it will define the maximum excursion from step_nom
                  that is used and prevent the adaptive logic from working.
                  This will be considerably faster, but not necessarily
                  as accurate as allowing the adaptive logic to run.
                 (Default: None)
-    stepMax  : Maximum allowed excursion from stepNom as a multiple of it. (Default 1)
-    stepNom  : Nominal step.                          default maximum(x0, 0.02) 
+    step_max  : Maximum allowed excursion from step_nom as a multiple of it. (Default 4)
+    step_nom  : Nominal step.                          default maximum(x0, 0.02) 
     step_ratio: Ratio used between sequential steps in the estimation
                  of the derivative (Default 2)
-            The steps used h_i = stepNom[i]*stepMax*step_ratio**arange(ndel)
-            where ndel = 26 if stepFix is None
-                  ndel = 3.+ np.ceil(self.n/2.) + self.order + self.romberg_terms +4 otherwise
+            The steps used h_i = step_nom[i]*step_max*step_ratio**(-arange(steps_num))
+    step_num : integer
+        if not specified it will be set according to the following rules: 
+            step_num = 26 if step_fix is None
+            step_num = 3.+ np.ceil(self.n/2.) + self.order + self.romberg_terms +4 otherwise
     vectorized : True  - if your function is vectorized.
                 False - loop over the successive function calls (default).
 
@@ -188,10 +191,10 @@ class _Derivative(object):
         self.order = 2
         self.method = 'central'
         self.romberg_terms = 2
-        self.stepFix = None
-        self.stepMax = (3.0 + 1.0) - 1.0
+        self.step_fix = None
+        self.step_max = (2.0 + 1.0) - 1.0
         self.step_ratio = (2.0 + 1.0) - 1.0
-        self.stepNom = None
+        self.step_nom = None
         self.step_num = None
         self.vectorized = False
 
@@ -229,7 +232,7 @@ class _Derivative(object):
         if ((len(val) != 1) or (not val in (0, 1, 2, 3))):
             raise ValueError('%s must be scalar, one of [0 1 2 3].' % name)
 
-        for name in ('stepFix', 'stepMax'):
+        for name in ('step_fix', 'step_max', 'step_num'):
             val = kwds[name]
             if (val != None and ((len(atleast_1d(val)) > 1) or (val <= 0))):
                 raise ValueError('%s must be None or a scalar, >0.' % name)
@@ -288,15 +291,17 @@ class _Derivative(object):
     
     def _trim_estimates(self, der_romb, errors, h):
         '''
-        trim off the estimates at each end of the scale if not self.stepFix
+        trim off the estimates at each end of the scale if not self.step_fix
         '''
-        if self.stepFix is None:
+        if self.step_fix is None:
             der_romb = np.atleast_1d(der_romb)
             tags, = np.where(np.isfinite(der_romb))
-            if len(tags) == len(der_romb):
-                nr_rem = 2 * max((self.n - 1), 1)
-                tags = der_romb.argsort()
-                tags = tags[nr_rem:-nr_rem]
+            num_vals = len(der_romb)
+            #if len(tags) == num_vals:
+            nr_rem_min = int((num_vals-1)/2)
+            nr_rem = min(2 * max((self.n - 1), 1), nr_rem_min)
+            tags = der_romb.argsort()
+            tags = tags[nr_rem:-nr_rem]
             der_romb = der_romb[tags]
             errors = errors[tags]
             trimdelta = h[tags]
@@ -311,7 +316,6 @@ class _Derivative(object):
             stepNom = np.maximum(np.abs(x0), 0.02)
         else:
             stepNom = np.atleast_1d(stepNom)
-        
         
         # was a single point supplied?
         nx0 = x0.shape
@@ -348,8 +352,12 @@ class _Derivative(object):
             der_romb, errors, h2 = self._romb_extrap(der_init, h1)
 #            import matplotlib.pyplot as plt
 #            plt.ioff()
-#            plt.loglog(h2,der_romb, h2, der_romb+errors,'r--',h2, der_romb-errors,'r--')
-#            plt.loglog(h2,errors,'r--')
+#            #plt.loglog(h2,der_romb, h2, der_romb+errors,'r--',h2, der_romb-errors,'r--')
+#            plt.loglog(h2,errors,'r--', h2,errors,'r.')
+#            small = np.sqrt(_EPS)**(1./np.sqrt(self.n))
+#            plt.vlines(small, 1e-15, 1)
+#            plt.title('Relative error as function of stepsize nom=%g' % step_nom[i])
+#            print np.vstack((h2,der_romb,errors)).T 
 #            plt.show()
             der_romb, errors, trimdelta  = self._trim_estimates(der_romb, errors, h2)
             
@@ -502,25 +510,30 @@ class _Derivative(object):
             order
             method
             romberg_terms
-            stepFix
-            stepMax
+            step_fix
+            step_max
         '''
         # Always choose the step size h so that
         # it is an exactly representable number.
         # This is important when calculating numerical derivatives and is
         #  accomplished by the following.
-        stepRatio = float(self.step_ratio + 2.0) - 2.0
+        stepRatio = float(self.step_ratio + 1.0) - 1.0
         
-        
-        if self.stepFix is None:     
+        if self.step_num is None:
             num_steps = 26
-            step1 = float(self.stepMax + 2.0) - 2.0
-        else:
-            step1 = float(self.stepFix + 2.0) - 2.0
-            num_steps = 3. + np.ceil(self.n / 2.) + self.order + self.romberg_terms + 4 
+            if self.step_fix:
+                num_steps = int(3 + np.ceil(self.n / 2.) + self.order + self.romberg_terms + 4) 
             if self.method[0] == 'c':
                 num_steps = num_steps - 2
-
+        else:
+            num_steps = self.step_num
+            
+        
+        if self.step_fix is None:      
+            step1 = float(self.step_max + 1.0) - 1.0
+        else:
+            step1 = float(self.step_fix + 1.0) - 1.0
+          
         self._delta = step1 * stepRatio ** (-np.arange(num_steps))
 
         #hn^N<sqrt(eps)
@@ -695,7 +708,7 @@ class _PartialDerivative(_Derivative):
         err = PD.copy()
         finaldelta = PD.copy()
         
-        stepNom = [None,]*nx if self.stepNom is None else self.stepNom 
+        stepNom = [None,]*nx if self.step_nom is None else self.step_nom 
         
         fun = self._fun
         self._x = np.asarray(x0, dtype=float)
@@ -773,7 +786,7 @@ class Derivative(_Derivative):
             using romberg extrapolation
         '''
         self._initialize()
-        return self._derivative(self.fun, x00, self.stepNom)
+        return self._derivative(self.fun, x00, self.step_nom)
 
  
 class Jacobian(_Derivative):
@@ -898,10 +911,10 @@ class Jacobian(_Derivative):
         delta = self._delta
         nsteps = delta.size
 
-        if self.stepNom == None :
+        if self.step_nom == None :
             stepNom = np.maximum(np.abs(x0), 0.02)
         else:
-            stepNom = self.stepNom
+            stepNom = self.step_nom
 
         err = jac.copy()
         finaldelta = jac.copy()
@@ -1274,15 +1287,34 @@ def _test_fun():
 ##    rd.error_estimate
 
 def test_derivative():
-    dexp = Derivative(np.exp)
-    x = np.linspace(0,10,10)
-    y = dexp(0)
-    dexp.n = 2
-    t = dexp(0)
+#    dexp = Derivative(np.exp)
+#    x = np.linspace(0,10,10)
+#    y = dexp(0)
+#    dexp.n = 2
+#    t = dexp(0)
+    
+    #Higher order derivatives (second derivative)
+    # Truth: 0
+    d2sin = Derivative(np.sin, n=2)
+
+   
+    # Higher order derivatives (up to the fourth derivative)
+    # Truth: sqrt(2)/2 = 0.707106781186548
+    d2sin.n = 4
+    y = d2sin(np.pi / 4)
+    small = np.abs(y - np.sqrt(2.) / 2.) < d2sin.error_estimate
+    
+
+    # Higher order derivatives (third derivative)
+    # Truth: 1
+    d3cos = Derivative(np.cos, n=3)
+    y = d3cos(np.pi / 2.0)
+    small = np.abs(y - 1.0) < d3cos.error_estimate
+    
 
 
 if __name__ == '__main__':
-    if True: #  False: #
+    if False: #True: #  
         import doctest
         doctest.testmod()
     else:

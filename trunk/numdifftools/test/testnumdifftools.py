@@ -82,14 +82,14 @@ class TestDerivative(unittest.TestCase):
 
         dtan.finaldelta
     
-        ##%% Specify the step size (default stepsize = 0.1)
+        ## Specify the step size (default stepsize = 0.1)
         p0 = np.poly1d(range(1, 6))
         fd = nd.Derivative(p0, n=4, stepFix=1.)
         p4 = p0.deriv(4)
         self.assertAlmostEqual(fd(1), p4(1))
         
-        ##%% Control the behavior of DERIVEST - forward 2nd order method, with only 1 Romberg term
-        ##% Compute the first derivative, also return the final stepsize chosen
+        ## Control the behavior of DERIVEST - forward 2nd order method, with only 1 Romberg term
+        ## Compute the first derivative, also return the final stepsize chosen
         dtan = nd.Derivative(np.tan, n=1, method='forward', order=2, romberg_terms=1)
         self.assertAlmostEqual(dtan(np.pi), 1.0)
         

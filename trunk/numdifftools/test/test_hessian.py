@@ -15,10 +15,14 @@ import numpy as np
 #import matplotlib as mpl
 #import matplotlib.pyplot as plt
 import numdifftools as nd
+import numdifftools.nd_algopy as algopy
+import numdifftools.nd_scientific as scientific
 
 # and subpackages
 from scipy import *
 from scipy import linalg, optimize, constants
+
+_TINY = np.finfo(float).machar.tiny
 
 #-----------------------------------------------------------------------------------------
 #       Hamiltonian      H=sum_i(p_i2/(2m)+ 1/2 * m * w2 x_i2)+ sum_(i!=j)(a/|x_i-x_j|)
@@ -72,10 +76,17 @@ def main():
     print c.potential(array([0.0, 0.0]))
     
     xopt = optimize.fmin(c.potential, c.initialposition(), xtol=1e-10)
-    hessian = nd.Hessian(c.potential, stepFix=1.0, stepNom=np.abs(xopt))
+    # Important to restrict the step in order to avoid the discontinutiy at x=[0,0]
+    hessian = nd.Hessian(c.potential, step_max=1.0, stepNom=np.abs(xopt))
     #hessian = nd.Hessian(c.potential)
+    #hessian = algopy.Hessian(c.potential) # Does not work
+    #hessian = scientific.Hessian(c.potential) # does not work
     H = hessian(xopt)
+    true_H = np.array([[  5.23748385e-12,  -2.61873829e-12],
+                       [ -2.61873829e-12,   5.23748385e-12]])
+    print xopt
     print H
+    print (np.abs(H-true_H))
     print hessian.error_estimate
 
     eigenvalues = linalg.eigvals(H)

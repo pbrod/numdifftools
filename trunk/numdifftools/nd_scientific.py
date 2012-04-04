@@ -46,7 +46,7 @@ class Derivative(_Common):
      
      >>> import numpy as np
      >>> fd = Derivative(np.exp)              # 1'st derivative
-     >>> fdd = Derivative(np.exp,derOrder=2)  # 2'nd derivative
+     >>> fdd = Derivative(np.exp, derOrder=2)  # 2'nd derivative
      >>> fd(1)
      array([ 2.71828183])
 
@@ -72,6 +72,7 @@ class Derivative(_Common):
         return self._derivative(x0)
     def __call__(self, x0):
         return self._derivative(x0)
+    
 class Jacobian(_Common):
     '''Estimate Jacobian matrix
     

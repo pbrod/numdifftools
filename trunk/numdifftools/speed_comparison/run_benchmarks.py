@@ -7,7 +7,7 @@ import numdifftools.nd_algopy as algopy
 import numdifftools.nd_scientific as scientific
  
 
-method = {'algopy_reverse':0, 'scientific':1, 'numdifftools':2, 'algopy_forward':3,}
+method = {'numdifftools':0, 'scientific':1, 'algopy_reverse':2, 'algopy_forward':3}
 
 
  
@@ -25,7 +25,7 @@ for N in gradient_N_list:
     # algopy, UTPS variant
     f = benchmark1.F(N)
     f0 = f(3*np.ones(N))
-    t = time.time();  gradient = algopy.Gradient(f, x=np.ones(N), method='forward'); preproc_time = time.time() - t
+    t = time.time();  gradient = algopy.Gradient(f, method='forward'); preproc_time = time.time() - t
     t = time.time();  ref_g =  gradient(3*np.ones(N));  run_time = time.time() - t
     results_gradient[method['algopy_reverse']] = run_time,  0.0, preproc_time
         
@@ -39,7 +39,7 @@ for N in gradient_N_list:
    
     # algopy, UTPM variant
     f = benchmark1.F(N)
-    t = time.time();  gradient = algopy.Gradient(f, np.ones(N), method='forward'); preproc_time = time.time() - t
+    t = time.time();  gradient = algopy.Gradient(f, method='forward'); preproc_time = time.time() - t
     t = time.time();  g =  gradient(3*np.ones(N));  run_time = time.time() - t
     results_gradient[method['algopy_forward']] = run_time,  np.linalg.norm(g - ref_g)/np.linalg.norm(ref_g), preproc_time
    
@@ -69,7 +69,7 @@ for N in hessian_N_list:
     results_hessian = np.zeros((4,3))
     
     f = benchmark1.F(N)
-    t = time.time();  hessian = algopy.Hessian(f, np.ones(N), method='forward'); preproc_time = time.time() - t
+    t = time.time();  hessian = algopy.Hessian(f,  method='forward'); preproc_time = time.time() - t
     t = time.time();  ref_H = hessian(3*np.ones(N));  run_time = time.time() - t
     results_hessian[method['algopy_reverse']] = run_time, 0.0, preproc_time    
     
@@ -83,7 +83,7 @@ for N in hessian_N_list:
    
      # algopy forward utpm variant
     f = benchmark1.F(N)
-    t = time.time();  hessian = algopy.Hessian(f, np.ones(N), method='forward'); preproc_time = time.time() - t
+    t = time.time();  hessian = algopy.Hessian(f, method='forward'); preproc_time = time.time() - t
     t = time.time();  H = hessian(3*np.ones(N));  run_time = time.time() - t
     results_hessian[method['algopy_forward']] = run_time, np.linalg.norm( (H-ref_H).ravel())/ np.linalg.norm( (ref_H).ravel()), preproc_time
     
@@ -109,14 +109,15 @@ print results_gradients.shape
 import matplotlib.pyplot as pyplot
 #import prettyplotting
 
-plotfun = pyplot.plot
+plottimefun = pyplot.plot
+plotfun = pyplot.semilogy
 # plot gradient run times
 pyplot.figure()
 pyplot.title('Gradient run times')
-plotfun(gradient_N_list, results_gradients[:,method['scientific'],0], '-.k+', markerfacecolor='None', label = 'scientific')
-plotfun(gradient_N_list, results_gradients[:,method['algopy_reverse'],0], '-.k<', markerfacecolor='None', label = 'algopy reverse utps')
-plotfun(gradient_N_list, results_gradients[:,method['algopy_forward'],0], '-.k>', markerfacecolor='None', label = 'algopy forward utpm')
-plotfun(gradient_N_list, results_gradients[:,method['numdifftools'],0], '--ks', markerfacecolor='None', label = 'numdifftools')
+plottimefun(gradient_N_list, results_gradients[:,method['scientific'],0], '-.k+', markerfacecolor='None', label = 'scientific')
+#plottimefun(gradient_N_list, results_gradients[:,method['algopy_reverse'],0], '-.k<', markerfacecolor='None', label = 'algopy reverse utps')
+plottimefun(gradient_N_list, results_gradients[:,method['algopy_forward'],0], '-.k>', markerfacecolor='None', label = 'algopy forward utpm')
+plottimefun(gradient_N_list, results_gradients[:,method['numdifftools'],0], '--ks', markerfacecolor='None', label = 'numdifftools')
 pyplot.ylabel('time $t$ [seconds]')
 pyplot.xlabel('problem size $N$')
 pyplot.grid()
@@ -128,10 +129,10 @@ pyplot.savefig('gradient_runtimes.png',format='png')
 # plot hessian run times
 pyplot.figure()
 pyplot.title('Hessian run times')
-plotfun(hessian_N_list, results_hessians[:,method['scientific'],0], '-.k+', markerfacecolor='None', label = 'scientific')
-plotfun(hessian_N_list, results_hessians[:,method['algopy_forward'],0], '-.k>', markerfacecolor='None', label = 'algopy (fo)')
-plotfun(hessian_N_list, results_hessians[:,method['algopy_reverse'],0], '-.k<', markerfacecolor='None', label = 'algopy (fo/rev)')
-plotfun(hessian_N_list, results_hessians[:,method['numdifftools'],0], '--ks', markerfacecolor='None', label = 'numdifftools')
+plottimefun(hessian_N_list, results_hessians[:,method['scientific'],0], '-.k+', markerfacecolor='None', label = 'scientific')
+plottimefun(hessian_N_list, results_hessians[:,method['algopy_forward'],0], '-.k>', markerfacecolor='None', label = 'algopy (fo)')
+#plottimefun(hessian_N_list, results_hessians[:,method['algopy_reverse'],0], '-.k<', markerfacecolor='None', label = 'algopy (fo/rev)')
+plottimefun(hessian_N_list, results_hessians[:,method['numdifftools'],0], '--ks', markerfacecolor='None', label = 'numdifftools')
 pyplot.ylabel('time $t$ [seconds]')
 pyplot.xlabel('problem size $N$')
 pyplot.grid()
@@ -144,10 +145,10 @@ pyplot.savefig('hessian_runtimes.png',format='png')
 # plot gradient preprocessing times
 pyplot.figure()
 pyplot.title('Gradient preprocessing times')
-plotfun(gradient_N_list, results_gradients[:,method['numdifftools'],2], '--ks', markerfacecolor='None', label = 'numdifftools')
-plotfun(gradient_N_list, results_gradients[:,method['scientific'],2], '-.k+', markerfacecolor='None', label = 'scientific')
-plotfun(gradient_N_list, results_gradients[:,method['algopy_reverse'],2], '-.k<', markerfacecolor='None', label = 'algopy reverse')
-plotfun(gradient_N_list, results_gradients[:,method['algopy_forward'],2], '-.k>', markerfacecolor='None', label = 'algopy forward')
+plottimefun(gradient_N_list, results_gradients[:,method['numdifftools'],2], '--ks', markerfacecolor='None', label = 'numdifftools')
+plottimefun(gradient_N_list, results_gradients[:,method['scientific'],2], '-.k+', markerfacecolor='None', label = 'scientific')
+#plottimefun(gradient_N_list, results_gradients[:,method['algopy_reverse'],2], '-.k<', markerfacecolor='None', label = 'algopy reverse')
+plottimefun(gradient_N_list, results_gradients[:,method['algopy_forward'],2], '-.k>', markerfacecolor='None', label = 'algopy forward')
 
 pyplot.ylabel('time $t$ [seconds]')
 pyplot.xlabel('problem size $N$')
@@ -160,10 +161,10 @@ pyplot.savefig('gradient_preprocessingtimes.png',format='png')
 # plot hessian preprocessing times
 pyplot.figure()
 pyplot.title('Hessian preprocessing times')
-plotfun(hessian_N_list, results_hessians[:,method['scientific'],2], '-.k+', markerfacecolor='None', label = 'scientific')
-plotfun(hessian_N_list, results_hessians[:,method['algopy_forward'],2], '-.k>', markerfacecolor='None', label = 'algopy (fo)')
-plotfun(hessian_N_list, results_hessians[:,method['algopy_reverse'],2], '-.k<', markerfacecolor='None', label = 'algopy (fo/rev)')
-plotfun(hessian_N_list, results_hessians[:,method['numdifftools'],2], '--ks', markerfacecolor='None', label = 'numdifftools')
+plottimefun(hessian_N_list, results_hessians[:,method['scientific'],2], '-.k+', markerfacecolor='None', label = 'scientific')
+plottimefun(hessian_N_list, results_hessians[:,method['algopy_forward'],2], '-.k>', markerfacecolor='None', label = 'algopy (fo)')
+#plottimefun(hessian_N_list, results_hessians[:,method['algopy_reverse'],2], '-.k<', markerfacecolor='None', label = 'algopy (fo/rev)')
+plottimefun(hessian_N_list, results_hessians[:,method['numdifftools'],2], '--ks', markerfacecolor='None', label = 'numdifftools')
 pyplot.ylabel('time $t$ [seconds]')
 pyplot.xlabel('problem size $N$')
 pyplot.grid()
@@ -177,7 +178,7 @@ pyplot.figure()
 pyplot.title('Gradient Correctness')
 plotfun(gradient_N_list, results_gradients[:,method['numdifftools'],1], '--ks', markerfacecolor='None', label = 'numdifftools')
 plotfun(gradient_N_list, results_gradients[:,method['scientific'],1], '-.k+', markerfacecolor='None', label = 'scientific')
-plotfun(gradient_N_list, results_gradients[:,method['algopy_reverse'],1], '-.k<', markerfacecolor='None', label = 'algopy reverse')
+#plotfun(gradient_N_list, results_gradients[:,method['algopy_reverse'],1], '-.k<', markerfacecolor='None', label = 'algopy reverse')
 plotfun(gradient_N_list, results_gradients[:,method['algopy_forward'],1], '-.k>', markerfacecolor='None', label = 'algopy forward')
 pyplot.ylabel(r'relative error $\|g_{ref} - g\|/\|g_{ref}\}$')
 pyplot.xlabel('problem size $N$')
@@ -193,7 +194,7 @@ pyplot.title('Hessian Correctness')
 plotfun(hessian_N_list, results_hessians[:,method['numdifftools'],1], '--ks', markerfacecolor='None', label = 'numdifftools')
 plotfun(hessian_N_list, results_hessians[:,method['scientific'],1], '-.k+', markerfacecolor='None', label = 'scientific')
 plotfun(hessian_N_list, results_hessians[:,method['algopy_forward'],1], '-.k>', markerfacecolor='None', label = 'algopy (fo)')
-plotfun(hessian_N_list, results_hessians[:,method['algopy_reverse'],1], '-.k<', markerfacecolor='None', label = 'algopy (fo/rev)')
+#plotfun(hessian_N_list, results_hessians[:,method['algopy_reverse'],1], '-.k<', markerfacecolor='None', label = 'algopy (fo/rev)')
 pyplot.ylabel(r'relative error $\|H_{ref} - H\|/\|H_{ref}\|$')
 pyplot.xlabel(r'problem size $N$')
 pyplot.grid()
