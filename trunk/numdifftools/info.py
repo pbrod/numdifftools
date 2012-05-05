@@ -57,23 +57,23 @@ Nonlinear least squares::
     >>> xdata = np.reshape(np.arange(0,1,0.1),(-1,1))
     >>> ydata = 1+2*np.exp(0.75*xdata)
     >>> fun = lambda c: (c[0]+c[1]*np.exp(c[2]*xdata) - ydata)**2
-    >>> Jfun = Jacobian(fun)
-    >>> Jfun([1,2,0.75]) # should be numerically zero
-    array([[  0.00000000e+00,   0.00000000e+00,   0.00000000e+00],
-           [  0.00000000e+00,   0.00000000e+00,  -1.30229526e-17],
-           [  0.00000000e+00,  -2.12916532e-17,   6.35877095e-17],
-           [  0.00000000e+00,   0.00000000e+00,   6.95367972e-19],
-           [  0.00000000e+00,   0.00000000e+00,  -2.13524915e-17],
-           [  0.00000000e+00,  -3.08563327e-16,   7.43577440e-16],
-           [  0.00000000e+00,   1.16128292e-15,   1.71041646e-15],
-           [  0.00000000e+00,   0.00000000e+00,  -5.51592310e-16],
-           [  0.00000000e+00,  -4.51138245e-19,   1.90866225e-15],
-           [ -2.40861944e-19,  -1.82530534e-15,  -4.02819694e-15]])
+    >>> Jfun = nd.Jacobian(fun)
+    >>> np.abs(Jfun([1,2,0.75])) < 1e-14 # should be numerically zero
+    array([[ True,  True,  True],
+           [ True,  True,  True],
+           [ True,  True,  True],
+           [ True,  True,  True],
+           [ True,  True,  True],
+           [ True,  True,  True],
+           [ True,  True,  True],
+           [ True,  True,  True],
+           [ True,  True,  True],
+           [ True,  True,  True]], dtype=bool)
 
 Compute gradient of sum(x**2)::
 
     >>> fun = lambda x: np.sum(x**2)
-    >>> dfun = Gradient(fun)
+    >>> dfun = nd.Gradient(fun)
     >>> dfun([1,2,3])
     array([ 2.,  4.,  6.])
 

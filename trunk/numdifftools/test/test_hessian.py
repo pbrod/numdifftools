@@ -6,21 +6,18 @@
 # import a tool to use / as a symbol for normal division
 from __future__ import division
 
-#import system data
-#import sys, os
-
 #Loading the required packages
-#import scipy as sp
+import unittest
+import numdifftools as nd #@UnresolvedImport
 import numpy as np
-#import matplotlib as mpl
-#import matplotlib.pyplot as plt
-import numdifftools as nd
-import numdifftools.nd_algopy as algopy
-import numdifftools.nd_scientific as scientific
+from numpy import pi, r_, sqrt, array
+#import numdifftools.nd_algopy as algopy
+#import numdifftools.nd_scientific as scientific
 
 # and subpackages
-from scipy import *
-from scipy import linalg, optimize, constants
+from scipy import linalg, optimize, constants 
+
+
 
 _TINY = np.finfo(float).machar.tiny
 
@@ -37,9 +34,6 @@ class classicalHamiltonian:
         self.C = (4 * pi * constants.epsilon_0) ** (-1) * constants.e ** 2    #C is a scalar, it's the Coulomb constant times the electronic charge in SI
         self.m = 39.96 * 1.66e-27                        #m is the mass of a single trapped ion in the chain
        
-       
-
-
     def potential(self, positionvector):                     #Defines the potential that is going to be minimized
        
         x = positionvector                         #x is an 1-d array (vector) of length N that contains the positions of the N ions
@@ -68,13 +62,14 @@ class classicalHamiltonian:
         normal_modes = sqrt(eigenvalues / m)
         return normal_modes
 
-def main():
+def _run_hamiltonian(verbose=True):
     #C=(4*pi*constants.epsilon_0)**(-1)*constants.e**2
     c = classicalHamiltonian()
-    print c.potential(array([-0.5, 0.5]))
-    print c.potential(array([-0.5, 0.0]))
-    print c.potential(array([0.0, 0.0]))
-    
+    if verbose:
+        print c.potential(array([-0.5, 0.5]))
+        print c.potential(array([-0.5, 0.0]))
+        print c.potential(array([0.0, 0.0]))
+        
     xopt = optimize.fmin(c.potential, c.initialposition(), xtol=1e-10)
     # Important to restrict the step in order to avoid the discontinutiy at x=[0,0]
     hessian = nd.Hessian(c.potential, step_max=1.0, stepNom=np.abs(xopt))
@@ -84,13 +79,25 @@ def main():
     H = hessian(xopt)
     true_H = np.array([[  5.23748385e-12,  -2.61873829e-12],
                        [ -2.61873829e-12,   5.23748385e-12]])
-    print xopt
-    print H
-    print (np.abs(H-true_H))
-    print hessian.error_estimate
-
-    eigenvalues = linalg.eigvals(H)
-    normal_modes = c.normal_modes(eigenvalues)
+    if verbose:
+        print xopt
+        print 'H', H
+        print ('H-true_H', np.abs(H-true_H))
+        print 'error_estimate', hessian.error_estimate
+        
+        eigenvalues = linalg.eigvals(H)
+        normal_modes = c.normal_modes(eigenvalues)
+        
+        print 'eigenvalues', eigenvalues
+        print 'normal_modes', normal_modes
+    return H, hessian.error_estimate, true_H
+    
+class TestHessian(unittest.TestCase):
+    def test_hessian(self):
+        H, error_estimate, true_H =_run_hamiltonian(verbose=False) #@UnusedVariable
+        self.assertTrue((np.abs(H-true_H)<1e-18).all())
+       
 
 if __name__ == '__main__':
-    main()
+    #_run_hamiltonian()
+    unittest.main()

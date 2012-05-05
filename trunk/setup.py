@@ -19,6 +19,7 @@ python setup.py register sdist bdist_wininst upload --show-response
 import os, sys
 
 DISTUTILS_DEBUG = True
+#sys.argv.append("develop")
 #sys.argv.append("install")
 # make sure we import from this package, not an installed one:
 sys.path.insert(0, os.path.join('numdifftools'))
@@ -40,7 +41,7 @@ packagedata = docs + testscripts
 #package_data = {'numdifftools': packagedata},
 setup(
     name = "Numdifftools",
-    version = '0.3.5',
+    version = '0.4.0',
     author="John D'Errico and Per A. Brodtkorb",
     author_email='woodchips at rochester.rr.com, Brodtkorb at frisurf.no',
     description = 'Solves automatic numerical differentiation problems in one or more variables.',
@@ -58,7 +59,7 @@ setup(
           'Intended Audience :: Science/Research',
           'License :: OSI Approved :: BSD License',
           'Operating System :: OS Independent',
-          'Programming Language :: Python :: 2.5',
+          'Programming Language :: Python :: 2.6',
           'Topic :: Scientific/Engineering :: Mathematics',
           ],
     )

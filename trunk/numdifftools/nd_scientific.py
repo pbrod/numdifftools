@@ -21,7 +21,7 @@ class _Common(object):
         x = np.atleast_1d(x0)
         DerivVar = SFD.DerivVar if self.derOrder > 1 else SFF.DerivVar
         der = self.fun(DerivVar(x, 0, self.derOrder))[self.derOrder][0]
-        for i in xrange(self.derOrder - 1):
+        for _i in xrange(self.derOrder - 1):
             der = der[0]
         return der
     def _jacobian(self, x):
@@ -45,8 +45,9 @@ class Derivative(_Common):
      # 1'st and 2'nd derivative of exp(x), at x == 1
      
      >>> import numpy as np
-     >>> fd = Derivative(np.exp)              # 1'st derivative
-     >>> fdd = Derivative(np.exp, derOrder=2)  # 2'nd derivative
+     >>> import numdifftools.nd_scientific as nds
+     >>> fd = nds.Derivative(np.exp)              # 1'st derivative
+     >>> fdd = nds.Derivative(np.exp, derOrder=2)  # 2'nd derivative
      >>> fd(1)
      array([ 2.71828183])
 
@@ -56,7 +57,7 @@ class Derivative(_Common):
 
      # 3'rd derivative of x.^3+x.^4, at x = [0,1]
      >>> fun = lambda x: x**3 + x**4
-     >>> fd3 = Derivative(fun,derOrder=3)
+     >>> fd3 = nds.Derivative(fun,derOrder=3)
      >>> fd3([0,1])          #  True derivatives: [6,30]
      array([ 6, 30])
  
@@ -91,12 +92,13 @@ class Jacobian(_Common):
 
     Examples
     --------
-
+    >>> import numdifftools.nd_scientific as nds
+    
     #(nonlinear least squares)
     >>> xdata = np.reshape(np.arange(0,1,0.1),(-1,1))
     >>> ydata = 1+2*np.exp(0.75*xdata)
     >>> fun = lambda c: (c[0]+c[1]*np.exp(c[2]*xdata) - ydata)**2
-    >>> Jfun = Jacobian(fun)
+    >>> Jfun = nds.Jacobian(fun)
     >>> Jfun([1,2,0.75]) # should be numerically zero
     array([[ 0.,  0.,  0.],
            [ 0.,  0.,  0.],
@@ -171,8 +173,9 @@ class Gradient(_Common):
 
     Examples
     --------
+    >>> import numdifftools.nd_scientific as nds
     >>> fun = lambda x: np.sum(x**2)
-    >>> dfun = Gradient(fun)
+    >>> dfun = nds.Gradient(fun)
     >>> dfun([1,2,3])
     array([2, 4, 6])
 
@@ -181,7 +184,7 @@ class Gradient(_Common):
 
     >>> sin = np.sin; exp = np.exp
     >>> z = lambda xy: sin(xy[0]-xy[1]) + xy[1]*exp(xy[0])
-    >>> dz = Gradient(z)
+    >>> dz = nds.Gradient(z)
     >>> grad2 = dz([1, 1])
     >>> grad2
     array([ 3.71828183,  1.71828183])
@@ -191,7 +194,7 @@ class Gradient(_Common):
     #compute the gradient. It should be essentially zero.
 
     >>> rosen = lambda x : (1-x[0])**2 + 105.*(x[1]-x[0]**2)**2
-    >>> rd = Gradient(rosen)
+    >>> rd = nds.Gradient(rosen)
     >>> grad3 = rd([1,1])
     >>> grad3==np.array([ 0.,  0.])
     array([ True,  True], dtype=bool)
@@ -229,10 +232,11 @@ class Hessian(_Common):
 
     Examples
     --------
-
+    >>> import numdifftools.nd_scientific as nds
+    
     #Rosenbrock function, minimized at [1,1]
     >>> rosen = lambda x : (1.-x[0])**2 + 105*(x[1]-x[0]**2)**2
-    >>> Hfun = Hessian(rosen)
+    >>> Hfun = nds.Hessian(rosen)
     >>> h = Hfun([1, 1]) #  h =[ 842 -420; -420, 210];
     >>> h
     array([[ 842., -420.],
@@ -241,7 +245,7 @@ class Hessian(_Common):
     #cos(x-y), at (0,0)
     >>> cos = np.cos
     >>> fun = lambda xy : cos(xy[0]-xy[1])
-    >>> Hfun2 = Hessian(fun)
+    >>> Hfun2 = nds.Hessian(fun)
     >>> h2 = Hfun2([0, 0]) # h2 = [-1 1; 1 -1];
     >>> h2
     array([[-1.,  1.],

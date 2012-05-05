@@ -1,10 +1,10 @@
 import numpy as np
 import time
 
-import benchmark1
-import numdifftools
-import numdifftools.nd_algopy as algopy
-import numdifftools.nd_scientific as scientific
+import benchmark1 #@UnresolvedImport
+import numdifftools #@UnresolvedImport
+import numdifftools.nd_algopy as algopy #@UnresolvedImport
+import numdifftools.nd_scientific as scientific #@UnresolvedImport
  
 
 method = {'numdifftools':0, 'scientific':1, 'algopy_reverse':2, 'algopy_forward':3}
@@ -81,7 +81,7 @@ for N in hessian_N_list:
     results_hessian[method['scientific']] = run_time, np.linalg.norm( (H-ref_H).ravel())/ np.linalg.norm( (ref_H).ravel()), preproc_time
      
    
-     # algopy forward utpm variant
+    # algopy forward utpm variant
     f = benchmark1.F(N)
     t = time.time();  hessian = algopy.Hessian(f, method='forward'); preproc_time = time.time() - t
     t = time.time();  H = hessian(3*np.ones(N));  run_time = time.time() - t
