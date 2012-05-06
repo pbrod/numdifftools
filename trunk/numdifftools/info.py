@@ -10,7 +10,7 @@ To test if the toolbox is working paste the following in an interactive
 python session::
 
    import numdifftools as nd
-   nd.test(coverage=True)
+   nd.test(coverage=True, doctests=True)
 
 Derivative:
 -----------

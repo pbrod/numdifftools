@@ -1011,7 +1011,7 @@ class Gradient(_PartialDerivative):
 
     >>> sin = np.sin; exp = np.exp
     >>> z = lambda xy: sin(xy[0]-xy[1]) + xy[1]*exp(xy[0])
-    >>> dz = Gradient(z)
+    >>> dz = nd.Gradient(z)
     >>> grad2 = dz([1, 1])
     >>> grad2
     array([ 3.71828183,  1.71828183])
@@ -1020,7 +1020,7 @@ class Gradient(_PartialDerivative):
     # compute the gradient. It should be essentially zero.
 
     >>> rosen = lambda x : (1-x[0])**2 + 105.*(x[1]-x[0]**2)**2
-    >>> rd = Gradient(rosen)
+    >>> rd = nd.Gradient(rosen)
     >>> grad3 = rd([1,1])
     >>> grad3
     array([ 0.,  0.])
