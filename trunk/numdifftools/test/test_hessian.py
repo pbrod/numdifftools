@@ -66,9 +66,9 @@ def _run_hamiltonian(verbose=True):
     #C=(4*pi*constants.epsilon_0)**(-1)*constants.e**2
     c = classicalHamiltonian()
     if verbose:
-        print c.potential(array([-0.5, 0.5]))
-        print c.potential(array([-0.5, 0.0]))
-        print c.potential(array([0.0, 0.0]))
+        print(c.potential(array([-0.5, 0.5])))
+        print(c.potential(array([-0.5, 0.0])))
+        print(c.potential(array([0.0, 0.0])))
         
     xopt = optimize.fmin(c.potential, c.initialposition(), xtol=1e-10)
     # Important to restrict the step in order to avoid the discontinutiy at x=[0,0]
@@ -80,16 +80,16 @@ def _run_hamiltonian(verbose=True):
     true_H = np.array([[  5.23748385e-12,  -2.61873829e-12],
                        [ -2.61873829e-12,   5.23748385e-12]])
     if verbose:
-        print xopt
-        print 'H', H
-        print ('H-true_H', np.abs(H-true_H))
-        print 'error_estimate', hessian.error_estimate
+        print(xopt)
+        print('H', H)
+        print('H-true_H', np.abs(H-true_H))
+        print('error_estimate', hessian.error_estimate)
         
         eigenvalues = linalg.eigvals(H)
         normal_modes = c.normal_modes(eigenvalues)
         
-        print 'eigenvalues', eigenvalues
-        print 'normal_modes', normal_modes
+        print('eigenvalues', eigenvalues)
+        print('normal_modes', normal_modes)
     return H, hessian.error_estimate, true_H
     
 class TestHessian(unittest.TestCase):

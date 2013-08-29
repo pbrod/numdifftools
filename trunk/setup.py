@@ -59,7 +59,7 @@ setup(
           'Intended Audience :: Science/Research',
           'License :: OSI Approved :: BSD License',
           'Operating System :: OS Independent',
-          'Programming Language :: Python :: 2.6',
+          'Programming Language :: Python :: Implementation',
           'Topic :: Scientific/Engineering :: Mathematics',
           ],
     )
