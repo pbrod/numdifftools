@@ -613,7 +613,6 @@ class _Derivative(object):
         vectorized
 
         '''
-        # drop off the constant only
         if self.vectorized:
             f_del = lambda fun, f_x0i, x0i, h: (fun(x0i - h) - f_x0i).ravel()
         else:
@@ -665,7 +664,6 @@ class _Derivative(object):
         rombexpon - higher order terms to cancel using the romberg step
         '''
        
-
         # amp = linalg.cond(self._rromb)
         # amp - noise amplification factor due to the romberg step
         # the noise amplification is further amplified by the Romberg step.
@@ -687,6 +685,7 @@ class _Derivative(object):
             errest = np.maximum(errest[2:], err_dea)
             hout = hout[2:]
         return der_romb, errest, hout
+       
 
 class _PartialDerivative(_Derivative):
     def _partial_der(self, x00):
@@ -1164,6 +1163,7 @@ class Hessian(Hessdiag):
     Hessdiag,
     Jacobian
     ''')
+    
     def __call__(self, x00):
         return self.hessian(x00)
         
