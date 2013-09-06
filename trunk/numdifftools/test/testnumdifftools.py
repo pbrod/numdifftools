@@ -6,12 +6,6 @@ import numdifftools as nd #@UnresolvedImport
 import numpy as np
 
 class TestDerivative(unittest.TestCase):
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
-
     def test_derivative_exp(self):
         #derivative of exp(x), at x == 0
         dexp = nd.Derivative(np.exp)
@@ -19,6 +13,7 @@ class TestDerivative(unittest.TestCase):
         dexp.n = 2
         t = dexp(0)
         self.assertAlmostEqual(t, np.exp(0))
+        
     def test_derivative_sin(self):
         # Evaluate the indicated (default = first)
         # derivative at multiple points
@@ -59,6 +54,7 @@ class TestDerivative(unittest.TestCase):
         dsinh = nd.Derivative(np.sinh, method='backward')
         small = np.abs(dsinh(0.0) - np.cosh(0.0)) < dsinh.error_estimate
         self.assertTrue(small)
+
     def test_central_n_forward_derivative_log(self):
         # Although a central rule may put some samples in the wrong places, it may still succeed
         dlog = nd.Derivative(np.log, method='central')
@@ -86,6 +82,7 @@ class TestDerivative(unittest.TestCase):
         ## Compute the first derivative, also return the final stepsize chosen
         dtan = nd.Derivative(np.tan, n=1, method='forward', order=2, romberg_terms=1)
         self.assertAlmostEqual(dtan(np.pi), 1.0)
+
     def test_derivative_poly1d(self):
         ## Specify the step size (default stepsize = 0.1)
         p0 = np.poly1d(range(1, 6))
@@ -177,13 +174,6 @@ class TestDerivative(unittest.TestCase):
 
 
 class TestJacobian(unittest.TestCase):
-
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
-
     def testjacobian(self):
         xdata = np.reshape(np.arange(0, 1, 0.1), (-1, 1))
         ydata = 1 + 2 * np.exp(0.75 * xdata)
@@ -194,13 +184,6 @@ class TestJacobian(unittest.TestCase):
             self.assertAlmostEqual(ji, 0.0)
 
 class TestGradient(unittest.TestCase):
-
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
-
     def testgradient(self):
         fun = lambda x: np.sum(x ** 2)
         dfun = nd.Gradient(fun)
@@ -210,13 +193,6 @@ class TestGradient(unittest.TestCase):
             self.assertAlmostEqual(di, dit)
 
 class TestHessian(unittest.TestCase):
-
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
-
     def testhessian(self):
         #cos(x-y), at (0,0)
         cos = np.cos
@@ -227,14 +203,8 @@ class TestHessian(unittest.TestCase):
         for (hi, hit) in zip(h2.ravel(), htrue):
             self.assertAlmostEqual(hi, hit)
         
+
 class TestHessdiag(unittest.TestCase):
-
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
-
     def testhessdiag(self):
         fun = lambda x : x[0] + x[1] ** 2 + x[2] ** 3
         Hfun = nd.Hessdiag(fun)
@@ -245,15 +215,12 @@ class TestHessdiag(unittest.TestCase):
 
 
 class TestGlobalFunctions(unittest.TestCase):
-
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
-
     def testvec2mat(self):
-        pass
+        mat = nd.core.vec2mat(np.arange(12),3,4)
+        self.assertListEqual(mat.tolist(), [[0, 1, 2, 3], 
+                                            [1, 2, 3, 4], 
+                                            [2, 3, 4, 5]])
+    
     def testdea3(self):
         Ei = np.zeros(3)
         linfun = lambda k : np.linspace(0, np.pi / 2., 2. ** (k + 5) + 1)
