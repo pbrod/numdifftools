@@ -293,21 +293,31 @@ class _Derivative(object):
         '''
         trim off the estimates at each end of the scale if not self.step_fix
         '''
+        trimdelta = h
         if self.step_fix is None:
             der_romb = np.atleast_1d(der_romb)
-            #tags, = np.where(np.isfinite(der_romb))
             num_vals = len(der_romb)
-            #if len(tags) == num_vals:
             nr_rem_min = int((num_vals-1)/2)
             nr_rem = min(2 * max((self.n - 1), 1), nr_rem_min)
-            tags = der_romb.argsort()
-            tags = tags[nr_rem:-nr_rem]
-            der_romb = der_romb[tags]
-            errors = errors[tags]
-            trimdelta = h[tags]
-        else:
-            trimdelta = h
+            if nr_rem>0:
+                tags = der_romb.argsort()
+                tags = tags[nr_rem:-nr_rem]
+                der_romb = der_romb[tags]
+                errors = errors[tags]
+                trimdelta = trimdelta[tags]
         return der_romb, errors, trimdelta
+
+    def _plot_errors(self, h2, errors, stepNom_i, der_romb ):
+        print np.vstack((h2, der_romb, errors)).T
+        
+        import matplotlib.pyplot as plt
+        plt.ioff()
+        #plt.loglog(h2,der_romb, h2, der_romb+errors,'r--',h2, der_romb-errors,'r--')
+        plt.loglog(h2, errors, 'r--', h2, errors, 'r.')
+        small = np.sqrt(_EPS) ** (1. / np.sqrt(self.n))
+        plt.vlines(small, 1e-15, 1)
+        plt.title('Absolute error as function of stepsize nom=%g' % stepNom_i)
+        plt.show()
 
     def _derivative(self, fun, x00, stepNom=None):
         x0 = np.atleast_1d(x00)
@@ -350,15 +360,7 @@ class _Derivative(object):
             # Taylor series also remain. Use a generalized (multi-term)
             # Romberg extrapolation to improve these estimates.
             der_romb, errors, h2 = self._romb_extrap(der_init, h1)
-#            import matplotlib.pyplot as plt
-#            plt.ioff()
-#            #plt.loglog(h2,der_romb, h2, der_romb+errors,'r--',h2, der_romb-errors,'r--')
-#            plt.loglog(h2,errors,'r--', h2,errors,'r.')
-#            small = np.sqrt(_EPS)**(1./np.sqrt(self.n))
-#            plt.vlines(small, 1e-15, 1)
-#            plt.title('Relative error as function of stepsize nom=%g' % step_nom[i])
-#            print np.vstack((h2,der_romb,errors)).T 
-#            plt.show()
+            #self._plot_errors(h2, errors, stepNom[i], der_romb )
             der_romb, errors, trimdelta  = self._trim_estimates(der_romb, errors, h2)
             
             ind = errors.argmin()
@@ -621,6 +623,30 @@ class _Derivative(object):
             f_del = lambda fun, f_x0i, x0i, h: np.asfarray([fun(x0i - h_j) - f_x0i for h_j in h]).ravel()
         return f_del
 
+
+    def _remove_non_finite(self, der_init, h1):
+        isnonfinite = 1 - np.isfinite(der_init)
+        i_nonfinite, = isnonfinite.ravel().nonzero()
+        hout = h1
+        if i_nonfinite.size > 0:
+            allfinite_start = np.max(i_nonfinite) + 1
+            der_init = der_init[allfinite_start:]
+            hout = h1[allfinite_start:]
+        return der_init, hout
+
+    def _predict_uncertainty(self, rombcoefs, rhs):
+        '''uncertainty estimate of derivative prediction'''
+        sqrt = np.sqrt
+        asarray = np.asarray
+    
+        s = sqrt(np.sum(asarray(rhs - self._rmat * rombcoefs[0]) ** 2, axis=0))
+        rinv = asarray(linalg.pinv(self._rromb))
+        cov1 = np.sum(rinv ** 2, axis=1) # 1 spare dof
+        eps = np.finfo(float).eps
+        errest = np.maximum(s * 12.7062047361747 * sqrt(cov1[0]), s * eps * 10.)
+        errest = np.where(s == 0, eps, errest)
+        return errest
+
     def _romb_extrap(self, der_init, h1):
         ''' Return Romberg extrapolated derivatives and error estimates
             based on the initial derivative estimates
@@ -643,17 +669,11 @@ class _Derivative(object):
         '''
        
 
+        # amp = linalg.cond(self._rromb)
         # amp - noise amplification factor due to the romberg step
         # the noise amplification is further amplified by the Romberg step.
-        # amp = cond(rromb)
-
-        isnonfinite = 1 - np.isfinite(der_init)
-        i_nonfinite, = isnonfinite.ravel().nonzero()
-        hout = h1
-        if i_nonfinite.size > 0:
-            allfinite_start = np.max(i_nonfinite) + 1
-            der_init = der_init[allfinite_start:]
-            hout = h1[allfinite_start:]
+        
+        der_init, hout = self._remove_non_finite(der_init, h1)
         # this does the extrapolation to a zero step size.
         nexpon = self.romberg_terms
         ne = der_init.size
@@ -661,18 +681,9 @@ class _Derivative(object):
 
         rombcoefs = linalg.lstsq(self._rromb, (self._qromb.T * rhs))
         der_romb = rombcoefs[0][0, :]
-        
         hout = hout[:der_romb.size]
-        sqrt = np.sqrt
-        sum = np.sum #@ReservedAssignment
-        asarray = np.asarray
-        # uncertainty estimate of derivative prediction
-        s = sqrt(sum(asarray(rhs - self._rmat * rombcoefs[0]) ** 2, axis=0))
-        rinv = asarray(linalg.pinv(self._rromb))
-        cov1 = sum(rinv ** 2, axis=1) # 1 spare dof
-        eps = np.finfo(float).eps
-        errest = np.maximum(s * 12.7062047361747 * sqrt(cov1[0]), s * eps * 10.)
-        errest = np.where(s==0, eps, errest)
+        
+        errest = self._predict_uncertainty(rombcoefs, rhs)
         if der_romb.size > 2:
             der_romb, err_dea = dea3(der_romb[0:-2], der_romb[1:-1],
                                         der_romb[2:])
@@ -1234,4 +1245,16 @@ def test_docstrings():
 
 if __name__ == '__main__':
     test_docstrings()
-
+    #fun = np.cos
+    #dfun = lambda x: -np.sin(x)
+    
+#     fun = np.tanh
+#     dfun = lambda x : 1./np.cosh(x)**2
+#     fun  = np.log
+#     dfun = lambda x : 1./x
+#     h = 1e-2
+#     fd = Derivative(fun, method='central')#, step_nom=9)
+#     x = 0.00001
+#     t = fd(x)
+#     print((fun(x+h)-fun(x))/(h), dfun(x), t, fd.error_estimate, fd.error_estimate/t)
+    
