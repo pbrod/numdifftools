@@ -112,9 +112,6 @@ def dea3(v0, v1, v2):
     if k1.size > 0 :
         with warnings.catch_warnings():
             warnings.simplefilter("ignore") # ignore division by zero and overflow
-#            t1 = np.where(delta1[k1]==0, _TINY,0) # avoid division by zero 
-#            t2 = np.where(delta2[k1]==0, _TINY,0)
-#            ss = one / (delta2[k1] + t2) - one / (delta1[k1] + t1)
             ss = one / delta2[k1] - one / delta1[k1]
             smallE2 = (abs(ss * E1[k1]) <= 1.0e-3).ravel()
         k2 = k1[smallE2.nonzero()]
