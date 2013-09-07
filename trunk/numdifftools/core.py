@@ -487,7 +487,7 @@ class _Derivative(object):
                 v[derOrder - 1] = 1
                 dpm = derOrder + metOrder - 1
                 fda_rule = matrix(v) * pinv(self._fda_mat(0, dpm))
-            #% correct sign for the 'backward' rule
+            # correct sign for the 'backward' rule
             if method == 'b':
                 fda_rule = -fda_rule
 
@@ -1250,8 +1250,8 @@ if __name__ == '__main__':
 #     fun  = np.log
 #     dfun = lambda x : 1./x
 #     h = 1e-2
-#     fd = Derivative(fun, method='central')#, step_nom=9)
-#     x = 0.00001
+#     fd = Derivative(fun, method='central', step_ratio=2, step_max=1)#, step_nom=9)
+#     x = .0001
 #     t = fd(x)
 #     print((fun(x+h)-fun(x))/(h), dfun(x), t, fd.error_estimate, fd.error_estimate/t)
     
