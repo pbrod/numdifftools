@@ -311,7 +311,7 @@ class _Derivative(object):
         plt.ioff()
         #plt.loglog(h2,der_romb, h2, der_romb+errors,'r--',h2, der_romb-errors,'r--')
         plt.loglog(h2, errors, 'r--', h2, errors, 'r.')
-        small = np.sqrt(_EPS) ** (1. / np.sqrt(self.n))
+        small = 2 * np.sqrt(_EPS) ** (1. / np.sqrt(self.n))
         plt.vlines(small, 1e-15, 1)
         plt.title('Absolute error as function of stepsize nom=%g' % stepNom_i)
         plt.show()
@@ -357,7 +357,7 @@ class _Derivative(object):
             # Taylor series also remain. Use a generalized (multi-term)
             # Romberg extrapolation to improve these estimates.
             der_romb, errors, h2 = self._romb_extrap(der_init, h1)
-            #self._plot_errors(h2, errors, stepNom[i], der_romb )
+            self._plot_errors(h2, errors, stepNom[i], der_romb )
             der_romb, errors, trimdelta  = self._trim_estimates(der_romb, errors, h2)
             
             ind = errors.argmin()
@@ -587,7 +587,6 @@ class _Derivative(object):
                 f_del = lambda fun, f_x0i, x0i, h: np.asfarray([fun(x0i + h_j) + fun(x0i - h_j) for h_j in h]).ravel()/2.0 - f_x0i
             else:
                 f_del = lambda fun, f_x0i, x0i, h: np.asfarray([fun(x0i + h_j) - fun(x0i - h_j) for h_j in h]).ravel()/2.0
-           
         return f_del
 
     def _forward(self):
@@ -1241,17 +1240,20 @@ def test_docstrings():
     
 
 if __name__ == '__main__':
-    test_docstrings()
-    #fun = np.cos
-    #dfun = lambda x: -np.sin(x)
+    #test_docstrings()
+    fun = np.cos
+    dfun = lambda x: -np.sin(x)
+    print 2*np.sqrt(1e-16)
+    #fun = np.tanh
+    #dfun = lambda x : 1./np.cosh(x)**2
+    fun  = np.log
+    dfun = lambda x : 1./x
+    fun  = lambda x : 1./x
+    dfun = lambda x : -1./x**2
     
-#     fun = np.tanh
-#     dfun = lambda x : 1./np.cosh(x)**2
-#     fun  = np.log
-#     dfun = lambda x : 1./x
-#     h = 1e-2
-#     fd = Derivative(fun, method='central', step_ratio=2, step_max=1)#, step_nom=9)
-#     x = .0001
-#     t = fd(x)
-#     print((fun(x+h)-fun(x))/(h), dfun(x), t, fd.error_estimate, fd.error_estimate/t)
+    h = 1e-2
+    fd = Derivative(fun, method='central', step_ratio=2)#, step_nom=9)
+    x = 0.005
+    t = fd(x)
+    print((fun(x+h)-fun(x))/(h), dfun(x),t, fd.error_estimate, fd.error_estimate/t, fd.finaldelta)
     
