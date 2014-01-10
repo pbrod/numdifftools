@@ -194,6 +194,7 @@ class _Derivative(object):
         self.step_nom = None
         self.step_num = None
         self.vectorized = False
+        self.verbose = False
 
         valid_keys = self.__dict__
         dict2update = dict((k, kwds[k]) for k in valid_keys if k in kwds)
@@ -237,7 +238,7 @@ class _Derivative(object):
         validMethods = dict(c='central', f='forward', b='backward')
         method = validMethods.get(kwds['method'][0])
         if method == None :
-            t = 'Invalid method: Must start with one of c,f,b characters!'
+            t = 'Invalid method: Must start with one of c, f, b characters!'
             raise ValueError(t)
         if method[0] == 'c' and kwds['method'] in (1, 3):
             t = 'order 1 or 3 is not possible for central difference methods'
@@ -305,7 +306,8 @@ class _Derivative(object):
         return der_romb, errors, trimdelta
 
     def _plot_errors(self, h2, errors, stepNom_i, der_romb ):
-        print np.vstack((h2, der_romb, errors)).T
+        print('Stepsize, Value, Errors')
+        print((np.vstack((h2, der_romb, errors)).T))
         
         import matplotlib.pyplot as plt
         plt.ioff()
@@ -357,7 +359,8 @@ class _Derivative(object):
             # Taylor series also remain. Use a generalized (multi-term)
             # Romberg extrapolation to improve these estimates.
             der_romb, errors, h2 = self._romb_extrap(der_init, h1)
-            self._plot_errors(h2, errors, stepNom[i], der_romb )
+            if self.verbose:
+                self._plot_errors(h2, errors, stepNom[i], der_romb )
             der_romb, errors, trimdelta  = self._trim_estimates(der_romb, errors, h2)
             
             ind = errors.argmin()
@@ -759,12 +762,15 @@ class Derivative(_Derivative):
     def __call__(self, x00):
         return self.derivative(x00)
 
-    def derivative(self, x00):
+    def derivative(self, x0):
         ''' Return estimate of n'th derivative of fun at x0
             using romberg extrapolation
         '''
         self._initialize()
-        return self._derivative(self.fun, x00, self.step_nom)
+        x00 = np.atleast_1d(x0)
+        shape = x00.shape
+        tmp =  self._derivative(self.fun, x00.ravel(), self.step_nom)
+        return tmp.reshape(shape)
 
  
 class Jacobian(_Derivative):
@@ -1243,7 +1249,7 @@ if __name__ == '__main__':
     #test_docstrings()
     fun = np.cos
     dfun = lambda x: -np.sin(x)
-    print 2*np.sqrt(1e-16)
+    print((2*np.sqrt(1e-16)))
     #fun = np.tanh
     #dfun = lambda x : 1./np.cosh(x)**2
     fun  = np.log
@@ -1255,5 +1261,5 @@ if __name__ == '__main__':
     fd = Derivative(fun, method='central', step_ratio=2)#, step_nom=9)
     x = 0.005
     t = fd(x)
-    print((fun(x+h)-fun(x))/(h), dfun(x),t, fd.error_estimate, fd.error_estimate/t, fd.finaldelta)
+    print(((fun(x+h)-fun(x))/(h), dfun(x),t, fd.error_estimate, fd.error_estimate/t, fd.finaldelta))
     
