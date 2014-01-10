@@ -6,17 +6,21 @@ http://dirac.cnrs-orleans.fr/ScientificPython/ScientificPythonManual/
 import numpy as np
 
 try:
-    import  Scientific.Functions.Derivatives as SFD
+    import Scientific.Functions.Derivatives as SFD
 except ImportError:
     SFD = None
 try:
-    import  Scientific.Functions.FirstDerivatives as SFF
+    import Scientific.Functions.FirstDerivatives as SFF
 except ImportError:
     SFF = None
+
+
 class _Common(object):
+
     def __init__(self, fun, derOrder=1):
         self.fun = fun
         self.derOrder = derOrder
+
     def _derivative(self, x0):
         x = np.atleast_1d(x0)
         DerivVar = SFD.DerivVar if self.derOrder > 1 else SFF.DerivVar
@@ -24,9 +28,10 @@ class _Common(object):
         for _i in xrange(self.derOrder - 1):
             der = der[0]
         return der
+
     def _jacobian(self, x):
         return np.squeeze(self._gradient(x)).T
-    
+
     def _gradient(self, x):
         N = len(x)
         sx = np.array([SFF.DerivVar(x[i], i, 1) for i in range(N)])
@@ -36,6 +41,7 @@ class _Common(object):
         N = len(x)
         sx = np.array([SFD.DerivVar(x[i], i, 2) for i in range(N)])
         return np.array(self.fun(sx)[2])
+
 
 class Derivative(_Common):
     '''Estimate n'th derivative of fun at x0
@@ -69,11 +75,14 @@ class Derivative(_Common):
      Hessian,
      Jacobian
     '''
+
     def derivative(self, x0):
         return self._derivative(x0)
+
     def __call__(self, x0):
         return self._derivative(x0)
-    
+
+
 class Jacobian(_Common):
     '''Estimate Jacobian matrix
     
@@ -118,6 +127,7 @@ class Jacobian(_Common):
     Hessdiag,
     Hessian
     '''
+
     def __call__(self, x0):
         return self.jacobian(x0)
 
@@ -157,6 +167,8 @@ class Jacobian(_Common):
         Hessdiag
         '''
         return self._jacobian(x0)
+
+
 class Gradient(_Common):
     '''Estimate gradient of fun at x0
 
@@ -209,10 +221,11 @@ class Gradient(_Common):
         ''' Gradient vector of an analytical function of n variables
         '''
         return self._gradient(x0)
-        
-    def __call__(self, x): 
+
+    def __call__(self, x):
         return self._gradient(x)
-    
+
+
 class Hessian(_Common):
     ''' Estimate Hessian matrix 
 
@@ -259,7 +272,7 @@ class Hessian(_Common):
     Hessdiag,
     Jacobian
     '''
-    
+
     def hessian(self, x0):
         '''Hessian matrix i.e., array of 2nd order partial derivatives
 
@@ -267,15 +280,11 @@ class Hessian(_Common):
         derivative, gradient, hessdiag, jacobian
         '''
         return self._hessian(x0)
-     
+
     def __call__(self, x):
-        return self._hessian(x) 
-    
- 
+        return self._hessian(x)
+
+
 if __name__ == '__main__':
     import doctest
     doctest.testmod()
-     
-
-
-

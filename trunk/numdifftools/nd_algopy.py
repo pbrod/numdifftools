@@ -14,13 +14,13 @@ class _Common(object):
         self.method = method
         self.initialize()
     def _initialize_reverse(self, x):
-        #x = np.asarray(x, dtype=float)
-        #self.x = x.copy()
+        # x = np.asarray(x, dtype=float)
+        # self.x = x.copy()
         # STEP 1: trace the function evaluation
         cg = algopy.CGraph()
         if True:
             x = algopy.Function(x)
-            #x = [x]
+            # x = [x]
         else:
             x = np.array([algopy.Function(x[i]) for i in range(len(x))])
         
@@ -32,21 +32,21 @@ class _Common(object):
     def initialize(self):
         if self.method.startswith('reverse'):
             # reverse mode using a computational graph
-            #self._initialize_reverse(x)
+            # self._initialize_reverse(x)
             self._gradient = self._gradient_reverse
             self._hessian = self._hessian_reverse
             self._jacobian = self._jacobian_reverse  
-        else: # forward mode without building the computational graph
+        else:  # forward mode without building the computational graph
             self._gradient = self._gradient_forward
             self._hessian = self._hessian_forward
             self._jacobian = self._gradient_forward
            
     def _derivative(self, x):
         xi = np.asarray(x, dtype=float)
-        shape0  = xi.shape
+        shape0 = xi.shape
         y = np.array([self._gradient(xj) for xj in xi.ravel()]) 
         return y.reshape(shape0)
-    #def _jacobian(self, x):
+    # def _jacobian(self, x):
     #    return self._gradient(x) 
     def _jacobian_reverse(self, x):
         self._initialize_reverse(x)
@@ -57,7 +57,7 @@ class _Common(object):
     def _hessian_reverse(self, x):
         self._initialize_reverse(x)
         return self._cg.hessian([np.asarray(x)])
-        #return self._cg.hessian([x])
+        # return self._cg.hessian([x])
     def _gradient_forward(self, x):
         # forward mode without building the computational graph
         tmp = algopy.UTPM.init_jacobian(np.asarray(x, dtype=float))
