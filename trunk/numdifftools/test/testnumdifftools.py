@@ -7,8 +7,12 @@ import numpy as np
 
 
 class TestDerivative(unittest.TestCase):
-    '''Test for Issue 7'''
+    def test_vec2mat(self):
+        mat = nd.core.vec2mat(np.arange(6), n=2, m=3)
+        self.assertListEqual(mat.tolist(), [[0, 1, 2], [1, 2, 3]])
+        
     def test_derivative_cube(self):
+        '''Test for Issue 7'''
         cube = lambda x : x*x*x
         dcube = nd.Derivative(cube)
         shape = (3, 2)

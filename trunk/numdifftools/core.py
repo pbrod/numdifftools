@@ -30,8 +30,10 @@ __all__ = [
     'dea3', 'Derivative', 'Jacobian', 'Gradient', 'Hessian', 'Hessdiag'
     ]
 
-_TINY =  np.finfo(float).machar.tiny
-_EPS = np.finfo(float).machar.eps
+_TINY =  np.finfo(float).tiny
+_EPS = np.finfo(float).eps
+
+
 def dea3(v0, v1, v2):
     '''
     Extrapolate a slowly convergent sequence
@@ -82,48 +84,25 @@ def dea3(v0, v1, v2):
             "Lecture Notes in Math.", vol. 584,
             Springer-Verlag, New York, 1977.
     '''
-
     E0, E1, E2 = np.atleast_1d(v0, v1, v2)
     abs = np.abs #@ReservedAssignment
     max = np.maximum #@ReservedAssignment
-    zeros = np.zeros
-    ten = 10.0
-    one = np.ones(1)
-    small = np.finfo(float).eps  #1.0e-16 #spacing(one)
-    delta2 = E2 - E1
-    delta1 = E1 - E0
-    err2 = abs(delta2)
-    err1 = abs(delta1)
-    tol2 = max(abs(E2), abs(E1)) * small
-    tol1 = max(abs(E1), abs(E0)) * small
+    delta2, delta1 = E2 - E1, E1 - E0
+    err2, err1 = abs(delta2), abs(delta1)
+    tol2, tol1 = max(abs(E2), abs(E1)) * _EPS, max(abs(E1), abs(E0)) * _EPS
 
-    result = zeros(E0.shape)
-    abserr = result.copy()
-    converged = (err1 <= tol1) & (err2 <= tol2).ravel()
-    k0, = converged.nonzero()
-    if k0.size > 0 :
-        # IF E0, E1 AND E2 ARE EQUAL TO WITHIN MACHINE
-        #   ACCURACY, CONVERGENCE IS ASSUMED.
-        result[k0] = E2[k0]
-        abserr[k0] = err1[k0] + err2[k0] + E2[k0] * small * ten
-
-    k1, = (1 - converged).nonzero()
-
-    if k1.size > 0 :
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore") # ignore division by zero and overflow
-            ss = one / delta2[k1] - one / delta1[k1]
-            smallE2 = (abs(ss * E1[k1]) <= 1.0e-3).ravel()
-        k2 = k1[smallE2.nonzero()]
-        if k2.size > 0 :
-            result[k2] = E2[k2]
-            abserr[k2] = err1[k2] + err2[k2] + E2[k2] * small * ten
-
-        k4, = (1 - smallE2).nonzero()
-        if k4.size > 0 :
-            k3 = k1[k4]
-            result[k3] = E1[k3] + one / ss[k4]
-            abserr[k3] = err1[k3] + err2[k3] + abs(result[k3] - E2[k3])
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore") # ignore division by zero and overflow
+        ss = 1.0 / delta2 - 1.0 / delta1
+        smallE2 = (abs(ss * E1) <= 1.0e-3).ravel()
+            
+    result = 1.0 * E2
+    abserr = err1 + err2 + E2 * _EPS * 10.0
+    converged = (err1 <= tol1) & (err2 <= tol2).ravel() | smallE2
+    k4, = (1 - converged).nonzero()
+    if k4.size > 0 :
+        result[k4] = E1[k4] + 1.0 / ss[k4]
+        abserr[k4] = err1[k4] + err2[k4] + abs(result[k4] - E2[k4])
 
     return result, abserr
 
@@ -142,30 +121,29 @@ class _Derivative(object):
     ----------
     fun : callable
         function to differentiate.
-    n : Integer from 1 to 4 defining derivative order.     (Default 1)
-    order : Integer from 1 to 4 defining order of basic method used.
-            For 'central' methods, it must be from the set [2,4]. (Default 2)
+    n : Integer from 1 to 4             (Default 1)
+        defining derivative order.
+    order : Integer from 1 to 4        (Default 2)
+        defining order of basic method used.
+        For 'central' methods, it must be from the set [2,4].
     method : Method of estimation.  Valid options are:
-            'central', 'forward' or 'backward'.          (Default 'central')
-    romberg_terms : Number of Romberg terms used in the extrapolation.
-            Must be an integer from 0 to 3.                       (Default 2)
-            Note: 0 disables the Romberg step completely.
-    step_fix : If not None, it will define the maximum excursion from step_nom
-                 that is used and prevent the adaptive logic from working.
-                 This will be considerably faster, but not necessarily
-                 as accurate as allowing the adaptive logic to run.
-                (Default: None)
-    step_max  : Maximum allowed excursion from step_nom as a multiple of it. (Default 4)
-    step_nom  : Nominal step.                          default maximum(x0, 0.02) 
-    step_ratio: Ratio used between sequential steps in the estimation
-                 of the derivative (Default 2)
-            The steps used h_i = step_nom[i]*step_max*step_ratio**(-arange(steps_num))
-    step_num : integer
-        if not specified it will be set according to the following rules: 
-            step_num = 26 if step_fix is None
-            step_num = 3.+ np.ceil(self.n/2.) + self.order + self.romberg_terms +4 otherwise
-    vectorized : True  - if your function is vectorized.
-                False - loop over the successive function calls (default).
+        'central', 'forward' or 'backward'.          (Default 'central')
+    romberg_terms : integer from 0 to 3  (Default 2)
+        Number of Romberg terms used in the extrapolation.
+        Note: 0 disables the Romberg step completely.
+    step_max : real scalar  (Default 2.0)
+        Maximum allowed excursion from step_nom as a multiple of it. 
+    step_nom : real scalar   default maximum(x0, 0.02)
+        Nominal step.
+    step_ratio: real scalar  (Default 2.0)
+        Ratio used between sequential steps in the estimation of the derivative 
+    step_num : integer, default 26
+        The minimum step_num is
+            7 + np.ceil(self.n/2.) + self.order + self.romberg_terms
+        The steps: h_i = step_nom[i]*step_max*step_ratio**(-arange(steps_num))
+    vectorized : Bool
+        True  - if your function is vectorized.
+        False - loop over the successive function calls (default).
 
     Uses a semi-adaptive scheme to provide the best estimate of the
     derivative by its automatic choice of a differencing interval. It uses
@@ -188,11 +166,10 @@ class _Derivative(object):
         self.order = 2
         self.method = 'central'
         self.romberg_terms = 2
-        self.step_fix = None
-        self.step_max = (2.0 + 1.0) - 1.0
-        self.step_ratio = (2.0 + 1.0) - 1.0
+        self.step_max = 2.0
+        self.step_ratio = 2.0
         self.step_nom = None
-        self.step_num = None
+        self.step_num = 26
         self.vectorized = False
         self.verbose = False
 
@@ -215,7 +192,6 @@ class _Derivative(object):
         self._rromb = None
         self._fdiff = None
 
-
     def _check_params(self):
         ''' check the parameters for acceptability
         '''
@@ -230,7 +206,7 @@ class _Derivative(object):
         if ((len(val) != 1) or (not val in (0, 1, 2, 3))):
             raise ValueError('%s must be scalar, one of [0 1 2 3].' % name)
 
-        for name in ('step_fix', 'step_max', 'step_num'):
+        for name in ('step_max', 'step_num'):
             val = kwds[name]
             if (val != None and ((len(atleast_1d(val)) > 1) or (val <= 0))):
                 raise ValueError('%s must be None or a scalar, >0.' % name)
@@ -254,7 +230,8 @@ class _Derivative(object):
         self._set_difference_function()
 
     def _fder(self, fun, f_x0i, x0i, h):
-        ''' Return derivative estimates of f at x0 for a sequence of stepsizes h
+        '''
+        Return derivative estimates of f at x0 for a sequence of stepsizes h
 
         Member variables used
         ---------------------
@@ -268,21 +245,13 @@ class _Derivative(object):
 
         f_del = self._fdiff(fun, f_x0i, x0i, h)
 
-        # check the size of f_del to ensure it was properly vectorized.
         if f_del.size != h.size:
             t = 'fun did not return data of correct size (it must be vectorized)'
             raise ValueError(t)
 
-        # Apply the finite difference rule at each delta, scaling
-        # as appropriate for delta and the requested DerivativeOrder.
-        # First, decide how many of these estimates we will end up with.
         ne = ndel + 1 - nfda - self.romberg_terms
-
-        # Form the initial derivative estimates from the chosen
-        # finite difference method.
         der_init = np.asarray(vec2mat(f_del, ne, nfda) * fdarule.T)
 
-        # scale to reflect the local delta
         der_init = der_init.ravel() / (h[0:ne]) ** self.n
 
         return der_init, h[0:ne]
@@ -292,17 +261,16 @@ class _Derivative(object):
         trim off the estimates at each end of the scale if not self.step_fix
         '''
         trimdelta = h
-        if self.step_fix is None:
-            der_romb = np.atleast_1d(der_romb)
-            num_vals = len(der_romb)
-            nr_rem_min = int((num_vals-1)/2)
-            nr_rem = min(2 * max((self.n - 1), 1), nr_rem_min)
-            if nr_rem>0:
-                tags = der_romb.argsort()
-                tags = tags[nr_rem:-nr_rem]
-                der_romb = der_romb[tags]
-                errors = errors[tags]
-                trimdelta = trimdelta[tags]
+        der_romb = np.atleast_1d(der_romb)
+        num_vals = len(der_romb)
+        nr_rem_min = int((num_vals-1)/2)
+        nr_rem = min(2 * max((self.n - 1), 1), nr_rem_min)
+        if nr_rem>0:
+            tags = der_romb.argsort()
+            tags = tags[nr_rem:-nr_rem]
+            der_romb = der_romb[tags]
+            errors = errors[tags]
+            trimdelta = trimdelta[tags]
         return der_romb, errors, trimdelta
 
     def _plot_errors(self, h2, errors, stepNom_i, der_romb ):
@@ -339,12 +307,9 @@ class _Derivative(object):
             else:
                 f_x0 = np.asfarray([fun(x0j) for x0j in x0])
 
-        # Loop over the elements of x0, reducing it to
-        # a scalar problem. Sorry, vectorization is not
-        # complete here, but this IS only a single loop.
         der = np.zeros(nx0)
-        errest = der.copy()
-        finaldelta = der.copy()
+        errest = np.zeros(nx0)
+        finaldelta = np.zeros(nx0)
         delta = self._delta
         for i in range(n):
             f_x0i = float(f_x0[i])
@@ -352,24 +317,16 @@ class _Derivative(object):
             h = (1.0 * stepNom[i]) * delta
 
             der_init, h1 = self._fder(fun, f_x0i, x0i, h)
-
-            # Each approximation that results is an approximation
-            # of order n to the desired derivative.
-            # Additional (higher order, even or odd) terms in the
-            # Taylor series also remain. Use a generalized (multi-term)
-            # Romberg extrapolation to improve these estimates.
             der_romb, errors, h2 = self._romb_extrap(der_init, h1)
             if self.verbose:
                 self._plot_errors(h2, errors, stepNom[i], der_romb )
-            der_romb, errors, trimdelta  = self._trim_estimates(der_romb, errors, h2)
+            der_romb, errors, h2  = self._trim_estimates(der_romb, errors, h2)
             
             ind = errors.argmin()
-            
             errest[i] = errors[ind]
-            finaldelta[i] = trimdelta[ind]
+            finaldelta[i] = h2[ind]
             der[i] = der_romb[ind]
 
-        # Save errorEstimate and final step
         self.error_estimate = errest
         self.finaldelta = finaldelta
         return der
@@ -419,82 +376,47 @@ class _Derivative(object):
         order
         method
         '''
-        derOrder = self.n
-        metOrder = self.order
+        der_order = self.n
+        met_order = self.order
         method = self.method[0]
         
         matrix = np.matrix
         zeros = np.zeros
-        fda_rule = matrix(derOrder)
-        #lstsq = linalg.lstsq
+        fda_rule = matrix(der_order)
+
         pinv = linalg.pinv
         if method == 'c' : #'central'
-            #for central rules, we will reduce the load by an
-            #even or odd transformation as appropriate.
-            if metOrder == 2:
-                if derOrder == 1:
-                    # the odd transformation did all the work
-                    #fda_rule[0] = 1
-                    pass
-                elif derOrder == 2:
-                    # the even transformation did all the work
-                    #fda_rule[0] = 2
-                    pass
-                elif derOrder == 3:
-                    # the odd transformation did most of the work, but
-                    # we need to kill off the linear term
+            if met_order == 2:
+                if der_order == 3:
                     fda_rule = matrix([0, 1]) * pinv(self._fda_mat(1, 2))
-                elif derOrder == 4:
-                    # the even transformation did most of the work, but
-                    # we need to kill off the quadratic term
+                elif der_order == 4:
                     fda_rule = matrix([0, 1]) * pinv(self._fda_mat(2, 2))
-            # a 4th order method. We've already ruled out the 1st
-            # order methods since these are central rules.
-            elif derOrder == 1:
-                # the odd transformation did most of the work, but
-                # we need to kill off the cubic term
+            elif der_order == 1:
                 fda_rule = matrix([1, 0]) * pinv(self._fda_mat(1, 2))
-                #fda_rule = lstsq(self._fda_mat(1,2).T,matrix([1, 0]).T)[0]
-            elif derOrder == 2:
-                # the even transformation did most of the work, but
-                # we need to kill off the quartic term
+            elif der_order == 2:
                 fda_rule = matrix([1, 0]) * pinv(self._fda_mat(2, 2))
-            elif derOrder == 3:
-                # the odd transformation did much of the work, but
-                # we need to kill off the linear & quintic terms
+            elif der_order == 3:
                 fda_rule = matrix([0, 1, 0]) * pinv(self._fda_mat(1, 3))
-            elif derOrder == 4:
-                # the even transformation did much of the work, but
-                # we need to kill off the quadratic and 6th order terms
+            elif der_order == 4:
                 fda_rule = matrix([0, 1, 0]) * pinv(self._fda_mat(2, 3))
         else:
-            # Cases {'forward' 'backward'}
-            # These two cases are identical, except at the very end,
-            # where a sign will be introduced.
-
-            # No odd/even trans, but we already dropped
-            # off the constant term
-            if metOrder == 1:
-                if derOrder == 1:
-                    #fda_rule[0] = 1
-                    pass
-                else:
-                    #% 2:4
-                    v = zeros(derOrder)
-                    v[derOrder - 1] = 1
-                    fda_rule = matrix(v) * pinv(self._fda_mat(0, derOrder))
+            if met_order == 1:
+                if der_order != 1:
+                    v = zeros(der_order)
+                    v[der_order - 1] = 1
+                    fda_rule = matrix(v) * pinv(self._fda_mat(0, der_order))
             else:
-                # par.MethodOrder methods drop off the lower order terms,
-                # plus terms directly above DerivativeOrder
-                v = zeros(derOrder + metOrder - 1)
-                v[derOrder - 1] = 1
-                dpm = derOrder + metOrder - 1
+                v = zeros(der_order + met_order - 1)
+                v[der_order - 1] = 1
+                dpm = der_order + met_order - 1
                 fda_rule = matrix(v) * pinv(self._fda_mat(0, dpm))
-            # correct sign for the 'backward' rule
-            if method == 'b':
+            if method == 'b':  # 'backward' rule
                 fda_rule = -fda_rule
-
         self._fda_rule = fda_rule.ravel()
+
+    def _get_min_num_steps(self):
+        n0 = 5 if self.method[0] == 'c' else 7
+        return int(n0 + np.ceil(self.n / 2.) + self.order + self.romberg_terms)
 
     def _set_delta(self):
         ''' Set the steps to use in derivation.
@@ -505,31 +427,19 @@ class _Derivative(object):
             order
             method
             romberg_terms
-            step_fix
             step_max
         '''
-        # Always choose the step size h so that
-        # it is an exactly representable number.
+        # Choose the step size h so that it is an exactly representable number.
         # This is important when calculating numerical derivatives and is
         #  accomplished by the following.
-        stepRatio = float(self.step_ratio + 1.0) - 1.0
-        
+        step_ratio = float(self.step_ratio + 1.0) - 1.0
+        min_num_steps = self._get_min_num_steps()
         if self.step_num is None:
-            num_steps = 26
-            if self.step_fix:
-                num_steps = int(3 + np.ceil(self.n / 2.) + self.order + self.romberg_terms + 4) 
-            if self.method[0] == 'c':
-                num_steps = num_steps - 2
+            num_steps =  min_num_steps
         else:
-            num_steps = self.step_num
-            
-        
-        if self.step_fix is None:      
-            step1 = float(self.step_max + 1.0) - 1.0
-        else:
-            step1 = float(self.step_fix + 1.0) - 1.0
-          
-        self._delta = step1 * stepRatio ** (-np.arange(num_steps))
+            num_steps = max(self.step_num, min_num_steps)
+        step1 = float(self.step_max + 1.0) - 1.0
+        self._delta = step1 * step_ratio ** (-np.arange(num_steps))
 
         #hn^N<sqrt(eps)
 
@@ -553,7 +463,6 @@ class _Derivative(object):
             rmat[1, 1:] = srinv ** rombexpon
             for n in range(2, nexpon + 2):
                 rmat[n, 1:] = srinv ** (n * rombexpon)
-
 
         rmat = np.matrix(rmat)
         # qr factorization used for the extrapolation as well
@@ -640,9 +549,8 @@ class _Derivative(object):
         s = sqrt(np.sum(asarray(rhs - self._rmat * rombcoefs[0]) ** 2, axis=0))
         rinv = asarray(linalg.pinv(self._rromb))
         cov1 = np.sum(rinv ** 2, axis=1) # 1 spare dof
-        eps = np.finfo(float).eps
-        errest = np.maximum(s * 12.7062047361747 * sqrt(cov1[0]), s * eps * 10.)
-        errest = np.where(s == 0, eps, errest)
+        errest = np.maximum(s * 12.7062047361747 * sqrt(cov1[0]), s * _EPS * 10.)
+        errest = np.where(s == 0, _EPS, errest)
         return errest
 
     def _romb_extrap(self, der_init, h1):
@@ -665,11 +573,9 @@ class _Derivative(object):
         step_ratio - Ratio decrease in step
         rombexpon - higher order terms to cancel using the romberg step
         '''
-       
         # amp = linalg.cond(self._rromb)
         # amp - noise amplification factor due to the romberg step
         # the noise amplification is further amplified by the Romberg step.
-        
         der_init, hout = self._remove_non_finite(der_init, h1)
         # this does the extrapolation to a zero step size.
         nexpon = self.romberg_terms
@@ -1250,16 +1156,20 @@ if __name__ == '__main__':
     fun = np.cos
     dfun = lambda x: -np.sin(x)
     print((2*np.sqrt(1e-16)))
-    #fun = np.tanh
-    #dfun = lambda x : 1./np.cosh(x)**2
+#    fun = np.tanh
+#    dfun = lambda x : 1./np.cosh(x)**2
     fun  = np.log
     dfun = lambda x : 1./x
-    fun  = lambda x : 1./x
-    dfun = lambda x : -1./x**2
+#    fun  = lambda x : 1./x
+#    dfun = lambda x : -1./x**2
     
-    h = 1e-2
-    fd = Derivative(fun, method='central', step_ratio=2)#, step_nom=9)
-    x = 0.005
+    h = 1e-4
+    fd = Derivative(fun, method='central', step_ratio=2, verbose=True) #2)#, step_nom=9)
+#     fd = Derivative(fun, method='central', step_ratio=1.62, verbose=True,
+#                     step_fix=2, step_num=None, romberg_terms=2, vectorized=True)
+                    #step_nom=0.0005) #2)#, step_nom=9)
+    x = 1
+    x=0.00001
     t = fd(x)
     print(((fun(x+h)-fun(x))/(h), dfun(x),t, fd.error_estimate, fd.error_estimate/t, fd.finaldelta))
     
