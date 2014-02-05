@@ -201,7 +201,6 @@ class TestJacobian(unittest.TestCase):
 
 
 class TestGradient(unittest.TestCase):
-
     def testgradient(self):
         fun = lambda x: np.sum(x ** 2)
         dfun = nd.Gradient(fun)

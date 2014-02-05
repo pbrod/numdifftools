@@ -251,16 +251,15 @@ class _Derivative(object):
 
         ne = ndel + 1 - nfda - self.romberg_terms
         der_init = np.asarray(vec2mat(f_del, ne, nfda) * fdarule.T)
-
         der_init = der_init.ravel() / (h[0:ne]) ** self.n
 
         return der_init, h[0:ne]
     
     def _trim_estimates(self, der_romb, errors, h):
         '''
-        trim off the estimates at each end of the scale if not self.step_fix
+        trim off the estimates at each end of the scale
         '''
-        trimdelta = h
+        trimdelta = h.copy()
         der_romb = np.atleast_1d(der_romb)
         num_vals = len(der_romb)
         nr_rem_min = int((num_vals-1)/2)
@@ -279,7 +278,10 @@ class _Derivative(object):
         
         import matplotlib.pyplot as plt
         plt.ioff()
+        plt.subplot(2,1,1)
         #plt.loglog(h2,der_romb, h2, der_romb+errors,'r--',h2, der_romb-errors,'r--')
+        plt.loglog(h2, der_romb-der_romb.min(), h2, der_romb-der_romb.min(), '.') #, h2, +errors,'r--',h2, -errors,'r--')
+        plt.subplot(2,1,2)
         plt.loglog(h2, errors, 'r--', h2, errors, 'r.')
         small = 2 * np.sqrt(_EPS) ** (1. / np.sqrt(self.n))
         plt.vlines(small, 1e-15, 1)
@@ -530,7 +532,6 @@ class _Derivative(object):
             f_del = lambda fun, f_x0i, x0i, h: np.asfarray([fun(x0i - h_j) - f_x0i for h_j in h]).ravel()
         return f_del
 
-
     def _remove_non_finite(self, der_init, h1):
         isnonfinite = 1 - np.isfinite(der_init)
         i_nonfinite, = isnonfinite.ravel().nonzero()
@@ -593,7 +594,7 @@ class _Derivative(object):
             errest = np.maximum(errest[2:], err_dea)
             hout = hout[2:]
         return der_romb, errest, hout
-       
+
 
 class _PartialDerivative(_Derivative):
     def _partial_der(self, x00):
@@ -603,8 +604,8 @@ class _PartialDerivative(_Derivative):
         nx = len(x0)
 
         PD = np.zeros(nx)
-        err = PD.copy()
-        finaldelta = PD.copy()
+        err = np.zeros(nx)
+        finaldelta = np.zeros(nx)
         
         stepNom = [None,]*nx if self.step_nom is None else self.step_nom 
         
@@ -796,7 +797,6 @@ class Jacobian(_Derivative):
 
         jac = zeros((n, nx))
         if n == 0 :
-            # empty begets empty
             self.error_estimate = jac
             return jac
 
@@ -824,33 +824,14 @@ class Jacobian(_Derivative):
                 xm[i] = x0_i - h[j]
                 fdif = fun(xp) - fun(xm)
                 fdel[:, j] = fdif.ravel()
-
-
-            # these are pure second order estimates of the
-            # first derivative, for each trial delta.
             derest = fdel * 0.5 / h[newaxis, :]
 
-            # The error term on these estimates has a second order
-            # component, but also some 4th and 6th order terms in it.
-            # Use Romberg extrapolation to improve the estimates to
-            # 6th order, as well as to provide the error estimate.
-
-            # loop here, as rombextrap coupled with the trimming
-            # will get complicated otherwise.
             for j in range(n):
                 der_romb, errest, h1 = self._romb_extrap(derest[j, :], h)
-                # trim off 3 estimates at each end of the scale
-                tags = der_romb.argsort()
-                tags = tags[3:-3]
-                der_romb = der_romb[tags]
-
-                errest = errest[tags]
-                trimdelta = h1[tags]
-
-                # now pick the estimate with the lowest predicted error
+                der_romb, errest, h1 = self._trim_estimates(der_romb, errest, h)
                 ind = errest.argmin()
                 err[j, i] = errest[ind]
-                finaldelta[j, i] = trimdelta[ind]
+                finaldelta[j, i] = h1[ind]
                 jac[j, i] = der_romb[ind]
 
         self.finaldelta = finaldelta
@@ -1083,46 +1064,29 @@ class Hessian(Hessdiag):
 
          See also derivative, gradient, hessdiag, jacobian
         '''
-        zeros = np.zeros
         x0 = np.atleast_1d(x00)
         nx = len(x0)
         self.method = 'central'
-        # get the diagonal elements of the hessian (2nd partial
-        # derivatives wrt each variable.)
-        hess = self.hessdiag(x00)
+
+        hess = self.hessdiag(x0)
         err = self.error_estimate
 
-        # form the eventual hessian matrix, stuffing only
-        # the diagonals for now.
-        hess = np.diag(hess)
-        err = np.diag(err)
+        hess, err = np.diag(hess), np.diag(err)
         if nx < 2 :
             return hess # the hessian matrix is 1x1. all done
 
-        # get the gradient vector. This is done only to decide
-        # on intelligent step sizes for the mixed partials
-        #grad = self._gradient(x00)
-        stepsize = self.finaldelta #np.maximum(, 1e-4)
-
-
-        #self.romberg_terms = 4
-        # Get params.RombergTerms+1 estimates of the upper
-        # triangle of the hessian matrix
-
-        ndel = int(3. + np.ceil(self.n / 2.) + self.order + self.romberg_terms + 4)
-        if self.method[0] == 'c':
-            ndel = ndel - 2
-        ndelMin = self.romberg_terms + 2
-        ndel = np.maximum(ndelMin, ndel)
+        # Decide on intelligent step sizes for the mixed partials
+        stepsize = self.finaldelta
+        ndel = np.maximum(self._get_min_num_steps(), self.romberg_terms + 2)
+ 
         dfac = (1.0 * self.step_ratio) ** (-np.arange(ndel))
         stepmax = stepsize / dfac[ndel//2]
         fun = self.fun
+        zeros = np.zeros
         for i in range(1, nx):
             for j in range(i):
-                dij = zeros(ndel)
-                step = zeros(nx)
+                dij, step = zeros(ndel), zeros(nx)
                 step[[i, j]] = stepmax[[i, j]]
-
                 for k in range(int(ndel)):
                     x1 = x0 + step * dfac[k]
                     x2 = x0 - step * dfac[k]
@@ -1131,14 +1095,10 @@ class Hessian(Hessdiag):
                     x4 = x0 + step * dfac[k]
                     step[i] = -step[i]
                     dij[k] = fun(x1) + fun(x2) - fun(x3) - fun(x4)
+                dij = dij / 4 / stepmax[[i, j]].prod() / (dfac ** 2)
 
-                dij = dij / 4 / stepmax[[i, j]].prod()
-                dij = dij / (dfac ** 2)
-
-                # Romberg extrapolation step
                 hess_romb, errors, _dfac1 = self._romb_extrap(dij, dfac) 
                 ind = errors.argmin()
-
                 hess[j, i] = hess[i, j] = hess_romb[ind]
                 err[j, i] = err[i, j] = errors[ind]
 
@@ -1164,12 +1124,12 @@ if __name__ == '__main__':
 #    dfun = lambda x : -1./x**2
     
     h = 1e-4
-    fd = Derivative(fun, method='central', step_ratio=2, verbose=True) #2)#, step_nom=9)
+    fd = Derivative(fun, method='central', num_step=46, step_ratio=2, verbose=True) #2)#, step_nom=9)
 #     fd = Derivative(fun, method='central', step_ratio=1.62, verbose=True,
 #                     step_fix=2, step_num=None, romberg_terms=2, vectorized=True)
                     #step_nom=0.0005) #2)#, step_nom=9)
     x = 1
-    x=0.00001
+    x=0.1
     t = fd(x)
     print(((fun(x+h)-fun(x))/(h), dfun(x),t, fd.error_estimate, fd.error_estimate/t, fd.finaldelta))
     
