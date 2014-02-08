@@ -46,7 +46,7 @@ class TestDerivative(unittest.TestCase):
     def test_high_order_derivative_sin(self):
         # Higher order derivatives (second derivative)
         # Truth: 0
-        d2sin = nd.Derivative(np.sin, n=2, stepFix=0.5)
+        d2sin = nd.Derivative(np.sin, n=2, step_max=0.5)
 
         self.assertAlmostEqual(d2sin(np.pi), 0.0,)
 
@@ -106,9 +106,9 @@ class TestDerivative(unittest.TestCase):
     def test_derivative_poly1d(self):
         # Specify the step size (default stepsize = 0.1)
         p0 = np.poly1d(range(1, 6))
-        fd = nd.Derivative(p0, n=4, stepFix=1.)
+        fd = nd.Derivative(p0, n=4, romberg_terms=0) #, step_max=3, step_num=10)
         p4 = p0.deriv(4)
-        self.assertAlmostEqual(fd(1), p4(1))
+        self.assertAlmostEqual(fd(1), p4(1), places=5)
 
 
 #    fun = lambda x: x**3 + x**4

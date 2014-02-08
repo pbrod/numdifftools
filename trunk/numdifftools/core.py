@@ -132,7 +132,7 @@ class _Derivative(object):
         Note: 0 disables the Romberg step completely.
     step_max : real scalar  (Default 2.0)
         Maximum allowed excursion from step_nom as a multiple of it. 
-    step_nom : real scalar   default maximum(x0, 0.02)
+    step_nom : real scalar   default maximum(log2(abs(x0)), 0.02)
         Nominal step.
     step_ratio: real scalar  (Default 2.0)
         Ratio used between sequential steps in the estimation of the derivative 
@@ -159,24 +159,20 @@ class _Derivative(object):
             direction.
 
     '''
-    def __init__(self, fun, **kwds):
+    def __init__(self, fun, n=1, order=2, method='central', romberg_terms=2,
+                 step_max=2.0, step_nom=None, step_ratio=2.0, step_num=26, 
+                 vectorized=False, verbose=False):
         self.fun = fun
-        self.n = 1
-        self.order = 2
-        self.method = 'central'
-        self.romberg_terms = 2
-        self.step_max = 2.0
-        self.step_ratio = 2.0
-        self.step_nom = None
-        self.step_num = 26
-        self.vectorized = False
-        self.verbose = False
-
-        valid_keys = self.__dict__
-        dict2update = dict((k, kwds[k]) for k in valid_keys if k in kwds)
-
-        if any(dict2update):
-            self.__dict__.update(dict2update)
+        self.n = n
+        self.order = order
+        self.method = method
+        self.romberg_terms = romberg_terms
+        self.step_max = step_max
+        self.step_ratio = step_ratio
+        self.step_nom = step_nom
+        self.step_num = step_num
+        self.vectorized = vectorized
+        self.verbose = verbose
 
         self._check_params()
 
@@ -296,7 +292,7 @@ class _Derivative(object):
         x0 = np.atleast_1d(x00)
 
         if stepNom is None:
-            stepNom = np.maximum(np.abs(x0), 0.02)
+            stepNom = np.maximum(np.log2(np.abs(x0)), 0.02)
         else:
             stepNom = np.atleast_1d(stepNom)
         
@@ -580,19 +576,20 @@ class _Derivative(object):
         # amp = linalg.cond(self._rromb)
         # amp - noise amplification factor due to the romberg step
         # the noise amplification is further amplified by the Romberg step.
-        der_init, hout = self._remove_non_finite(der_init, h1)
+        der_romb, hout = self._remove_non_finite(der_init, h1)
         # this does the extrapolation to a zero step size.
         nexpon = self.romberg_terms
-        ne = der_init.size
+        ne = der_romb.size
         if ne < nexpon+2:
-            return der_init, np.ones(der_init.shape) * hout, hout
-        rhs = vec2mat(der_init, nexpon + 2, max(1, ne - (nexpon + 2)))
-
-        rombcoefs = linalg.lstsq(self._rromb, (self._qromb.T * rhs))
-        der_romb = rombcoefs[0][0, :]
-        hout = hout[:der_romb.size]
-        
-        errest = self._predict_uncertainty(rombcoefs, rhs)
+            errest = np.ones(der_init.shape) * hout
+        else:
+            rhs = vec2mat(der_romb, nexpon + 2, max(1, ne - (nexpon + 2)))
+    
+            rombcoefs = linalg.lstsq(self._rromb, (self._qromb.T * rhs))
+            der_romb = rombcoefs[0][0, :]
+            hout = hout[:der_romb.size]
+            
+            errest = self._predict_uncertainty(rombcoefs, rhs)
         if der_romb.size > 2:
             der_romb, err_dea = dea3(der_romb[0:-2], der_romb[1:-1],
                                         der_romb[2:])
@@ -1121,21 +1118,20 @@ if __name__ == '__main__':
     fun = np.cos
     dfun = lambda x: -np.sin(x)
     print((2*np.sqrt(1e-16)))
-#    fun = np.tanh
-#    dfun = lambda x : 1./np.cosh(x)**2
-#     fun  = np.log
-#     dfun = lambda x : 1./x
-#     fun  = lambda x : 1./x
-#     dfun = lambda x : -1./x**2
+    #fun = np.tanh
+    #dfun = lambda x : 1./np.cosh(x)**2
+    #fun  = np.log
+    #dfun = lambda x : 1./x
+    #fun  = lambda x : 1./x
+    #dfun = lambda x : -1./x**2
     
     h = 1e-4
-    fd = Derivative(fun, method='central', step_max=1e-1,step_num=16,
-                    step_ratio=2, verbose=True, vectorized=True) #2)#, step_nom=9)
+    fd = Derivative(fun, method='central',step_max=2,
+                    step_ratio=2, verbose=True, vectorized=True, romberg_terms=3) #2)#, step_nom=9)
 #     fd = Derivative(fun, method='central', step_ratio=1.62, verbose=True,
 #                     step_fix=2, step_num=None, romberg_terms=2, vectorized=True)
                     #step_nom=0.0005) #2)#, step_nom=9)
-    x = 1
-    x=10
+    x=1.
     t = fd(x)
     print(((fun(x+h)-fun(x))/(h), dfun(x),t,dfun(x)-t, fd.error_estimate, fd.error_estimate/t, fd.finaldelta))
     
