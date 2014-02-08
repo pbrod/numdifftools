@@ -103,7 +103,6 @@ def dea3(v0, v1, v2):
     if k4.size > 0 :
         result[k4] = E1[k4] + 1.0 / ss[k4]
         abserr[k4] = err1[k4] + err2[k4] + abs(result[k4] - E2[k4])
-
     return result, abserr
 
 
@@ -249,7 +248,7 @@ class _Derivative(object):
             t = 'fun did not return data of correct size (it must be vectorized)'
             raise ValueError(t)
 
-        ne = ndel + 1 - nfda - self.romberg_terms
+        ne = max(ndel + 1 - nfda - self.romberg_terms, 1)
         der_init = np.asarray(vec2mat(f_del, ne, nfda) * fdarule.T)
         der_init = der_init.ravel() / (h[0:ne]) ** self.n
 
@@ -279,15 +278,20 @@ class _Derivative(object):
         import matplotlib.pyplot as plt
         plt.ioff()
         plt.subplot(2,1,1)
-        #plt.loglog(h2,der_romb, h2, der_romb+errors,'r--',h2, der_romb-errors,'r--')
-        plt.loglog(h2, der_romb-der_romb.min(), h2, der_romb-der_romb.min(), '.') #, h2, +errors,'r--',h2, -errors,'r--')
-        plt.subplot(2,1,2)
-        plt.loglog(h2, errors, 'r--', h2, errors, 'r.')
-        small = 2 * np.sqrt(_EPS) ** (1. / np.sqrt(self.n))
-        plt.vlines(small, 1e-15, 1)
-        plt.title('Absolute error as function of stepsize nom=%g' % stepNom_i)
-        plt.show()
-
+        try:
+            #plt.loglog(h2,der_romb, h2, der_romb+errors,'r--',h2, der_romb-errors,'r--')
+            plt.loglog(h2, der_romb-der_romb.min() + _EPS,
+                       h2, der_romb-der_romb.min() + _EPS, '.') #, h2, +errors,'r--',h2, -errors,'r--')
+            small = 2 * np.sqrt(_EPS) ** (1. / np.sqrt(self.n))
+            plt.vlines(small, 1e-15, 1)
+            plt.title('Absolute error as function of stepsize nom=%g' % stepNom_i)
+            plt.subplot(2,1,2)
+            plt.loglog(h2, errors, 'r--', h2, errors, 'r.')
+            plt.vlines(small, 1e-15, 1)
+            
+            plt.show()
+        except:
+            pass
     def _derivative(self, fun, x00, stepNom=None):
         x0 = np.atleast_1d(x00)
 
@@ -435,11 +439,10 @@ class _Derivative(object):
         # This is important when calculating numerical derivatives and is
         #  accomplished by the following.
         step_ratio = float(self.step_ratio + 1.0) - 1.0
-        min_num_steps = self._get_min_num_steps()
         if self.step_num is None:
-            num_steps =  min_num_steps
+            num_steps = self._get_min_num_steps()
         else:
-            num_steps = max(self.step_num, min_num_steps)
+            num_steps = max(self.step_num, 1)
         step1 = float(self.step_max + 1.0) - 1.0
         self._delta = step1 * step_ratio ** (-np.arange(num_steps))
 
@@ -581,6 +584,8 @@ class _Derivative(object):
         # this does the extrapolation to a zero step size.
         nexpon = self.romberg_terms
         ne = der_init.size
+        if ne < nexpon+2:
+            return der_init, np.ones(der_init.shape) * hout, hout
         rhs = vec2mat(der_init, nexpon + 2, max(1, ne - (nexpon + 2)))
 
         rombcoefs = linalg.lstsq(self._rromb, (self._qromb.T * rhs))
@@ -1118,18 +1123,19 @@ if __name__ == '__main__':
     print((2*np.sqrt(1e-16)))
 #    fun = np.tanh
 #    dfun = lambda x : 1./np.cosh(x)**2
-    fun  = np.log
-    dfun = lambda x : 1./x
-#    fun  = lambda x : 1./x
-#    dfun = lambda x : -1./x**2
+#     fun  = np.log
+#     dfun = lambda x : 1./x
+#     fun  = lambda x : 1./x
+#     dfun = lambda x : -1./x**2
     
     h = 1e-4
-    fd = Derivative(fun, method='central', num_step=46, step_ratio=2, verbose=True) #2)#, step_nom=9)
+    fd = Derivative(fun, method='central', step_max=1e-1,step_num=16,
+                    step_ratio=2, verbose=True, vectorized=True) #2)#, step_nom=9)
 #     fd = Derivative(fun, method='central', step_ratio=1.62, verbose=True,
 #                     step_fix=2, step_num=None, romberg_terms=2, vectorized=True)
                     #step_nom=0.0005) #2)#, step_nom=9)
     x = 1
-    x=0.1
+    x=10
     t = fd(x)
-    print(((fun(x+h)-fun(x))/(h), dfun(x),t, fd.error_estimate, fd.error_estimate/t, fd.finaldelta))
+    print(((fun(x+h)-fun(x))/(h), dfun(x),t,dfun(x)-t, fd.error_estimate, fd.error_estimate/t, fd.finaldelta))
     
