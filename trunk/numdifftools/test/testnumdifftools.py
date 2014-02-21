@@ -37,7 +37,7 @@ class TestDerivative(unittest.TestCase):
         dsin = nd.Derivative(np.sin)
         x = np.linspace(0, 2. * np.pi, 13)
         y = dsin(x)
-        small = np.abs(y - np.cos(x)) < dsin.error_estimate * 10
+        small = np.abs(y - np.cos(x)) < dsin.error_estimate * 100
         # print np.abs(y - np.cos(x))
         # print dsin.error_estimate
         # print small
@@ -95,7 +95,7 @@ class TestDerivative(unittest.TestCase):
         abserr = dtan.error_estimate
         self.assertTrue(np.abs(y - 1) < abserr)
 
-        dtan.finaldelta
+        dtan.final_delta
 
         # Control the behavior of DERIVEST - forward 2nd order method, with only 1 Romberg term
         # Compute the first derivative, also return the final stepsize chosen

@@ -5,7 +5,8 @@ import numdifftools
 
 
 def suite():
-    return doctest.DocTestSuite(numdifftools.core)
+    return doctest.DocTestSuite(numdifftools.core,
+                                optionflags=doctest.NORMALIZE_WHITESPACE)
 
 
 def load_tests(loader=None, tests=None, ignore=None):

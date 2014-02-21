@@ -64,7 +64,7 @@ def _run_hamiltonian(verbose=True):
         
     xopt = optimize.fmin(c.potential, c.initialposition(), xtol=1e-10)
     # Important to restrict the step in order to avoid the discontinutiy at x=[0,0]
-    hessian = nd.Hessian(c.potential, step_max=1.0, stepNom=np.abs(xopt))
+    hessian = nd.Hessian(c.potential, step_max=1.0, step_nom=np.abs(xopt))
     #hessian = nd.Hessian(c.potential)
     #hessian = algopy.Hessian(c.potential) # Does not work
     #hessian = scientific.Hessian(c.potential) # does not work
