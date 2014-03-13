@@ -1,0 +1,541 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>numdifftools.core.Jacobian</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="numdifftools-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Project homepage -->
+      <th class="navbar" align="right" width="100%">
+        <table border="0" cellpadding="0" cellspacing="0">
+          <tr><th class="navbar" align="center"
+            ><a class="navbar" target="_top" href="http://code.google.com/p/numdifftools/">numdifftools</a></th>
+          </tr></table></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="numdifftools-module.html">Package&nbsp;numdifftools</a> ::
+        <a href="numdifftools.core-module.html">Module&nbsp;core</a> ::
+        Class&nbsp;Jacobian
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="numdifftools.core.Jacobian-class.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== CLASS DESCRIPTION ==================== -->
+<h1 class="epydoc">Class Jacobian</h1><p class="nomargin-top"><span class="codelink"><a href="numdifftools.core-pysrc.html#Jacobian">source&nbsp;code</a></span></p>
+<center>
+<center>  <map id="uml_class_diagram_for_numdifft_5" name="uml_class_diagram_for_numdifft_5">
+<area shape="rect" id="node1_4" href="numdifftools.core.Jacobian-class.html#__doc__" title="numdifftools.core.Jacobian.__doc__" alt="" coords="39,108,151,127"/>
+<area shape="rect" id="node1_5" href="numdifftools.core.Jacobian-class.html#__call__" title="numdifftools.core.Jacobian.__call__" alt="" coords="39,129,151,148"/>
+<area shape="rect" id="node1_6" href="numdifftools.core.Jacobian-class.html#jacobian" title="Return Jacobian matrix of a vector valued function of n variables" alt="" coords="39,148,151,167"/>
+<area shape="rect" id="node1" href="numdifftools.core.Jacobian-class.html" title="Estimate Jacobian matrix, with error estimate" alt="" coords="27,83,163,173"/>
+<area shape="rect" id="node2_7" href="numdifftools.core._Derivative-class.html#__init__" title="x.__init__(...) initializes x; see help(type(x)) for signature" alt="" coords="17,39,171,57"/>
+<area shape="rect" id="node2" href="numdifftools.core._Derivative-class.html" title="Object holding common variables and methods for the numdifftools" alt="" coords="5,6,182,63"/>
+</map>
+  <img src="uml_class_diagram_for_numdifft_5.gif" alt='' usemap="#uml_class_diagram_for_numdifft_5" ismap="ismap" class="graph-without-title" />
+</center>
+</center>
+<hr />
+<pre class="literalblock">
+Estimate Jacobian matrix, with error estimate
+
+Parameters
+----------
+fun : callable
+    function to differentiate.
+n : Integer from 1 to 4 defining derivative order.     (Default 1)
+order : Integer from 1 to 4 defining order of basic method used.
+        For 'central' methods, it must be from the set [2,4]. (Default 2)
+method : Method of estimation.  Valid options are:
+        'central', 'forward' or 'backward'.          (Default 'central')
+romberg_terms : Number of Romberg terms used in the extrapolation.
+        Must be an integer from 0 to 3.                       (Default 2)
+        Note: 0 disables the Romberg step completely.
+step_fix : If not None, it will define the maximum excursion from step_nom
+             that is used and prevent the adaptive logic from working.
+             This will be considerably faster, but not necessarily
+             as accurate as allowing the adaptive logic to run.
+            (Default: None)
+step_max  : Maximum allowed excursion from step_nom as a multiple of it. (Default 4)
+step_nom  : Nominal step.                          default maximum(x0, 0.02) 
+step_ratio: Ratio used between sequential steps in the estimation
+             of the derivative (Default 2)
+        The steps used h_i = step_nom[i]*step_max*step_ratio**(-arange(steps_num))
+step_num : integer
+    if not specified it will be set according to the following rules: 
+        step_num = 26 if step_fix is None
+        step_num = 3.+ np.ceil(self.n/2.) + self.order + self.romberg_terms +4 otherwise
+vectorized : True  - if your function is vectorized.
+            False - loop over the successive function calls (default).
+
+Uses a semi-adaptive scheme to provide the best estimate of the
+derivative by its automatic choice of a differencing interval. It uses
+finite difference approximations of various orders, coupled with a
+generalized (multiple term) Romberg extrapolation. This also yields the
+error estimate provided. See the document DERIVEST.pdf for more explanation
+of the algorithms behind the parameters.
+
+ Note on order: higher order methods will generally be more accurate,
+         but may also suffer more from numerical problems. First order
+         methods would usually not be recommended.
+ Note on method: Central difference methods are usually the most accurate,
+        but sometimes one can only allow evaluation in forward or backward
+        direction.
+
+
+
+The Jacobian matrix is the matrix of all first-order partial derivatives
+of a vector-valued function.
+
+Assumptions
+-----------
+fun : (vector valued)
+    analytical function to differentiate.
+    fun must be a function of the vector or array x0.
+
+x0 : vector location at which to differentiate fun
+    If x0 is an N x M array, then fun is assumed to be
+    a function of N*M variables.
+
+Examples
+--------
+&gt;&gt;&gt; import numpy as np
+&gt;&gt;&gt; import numdifftools as nd
+
+#(nonlinear least squares)
+&gt;&gt;&gt; xdata = np.reshape(np.arange(0,1,0.1),(-1,1))
+&gt;&gt;&gt; ydata = 1+2*np.exp(0.75*xdata)
+&gt;&gt;&gt; fun = lambda c: (c[0]+c[1]*np.exp(c[2]*xdata) - ydata)**2
+&gt;&gt;&gt; Jfun = nd.Jacobian(fun)
+&gt;&gt;&gt; h = Jfun([1., 2., 0.75]) # should be numerically zero
+&gt;&gt;&gt; np.abs(h) &lt; 1e-14
+array([[ True,  True,  True],
+       [ True,  True,  True],
+       [ True,  True,  True],
+       [ True,  True,  True],
+       [ True,  True,  True],
+       [ True,  True,  True],
+       [ True,  True,  True],
+       [ True,  True,  True],
+       [ True,  True,  True],
+       [ True,  True,  True]], dtype=bool)
+
+&gt;&gt;&gt; np.abs(h) &lt;= 2 * Jfun.error_estimate
+array([[ True,  True,  True],
+       [ True,  True,  True],
+       [ True,  True,  True],
+       [ True,  True,  True],
+       [ True,  True,  True],
+       [ True,  True,  True],
+       [ True,  True,  True],
+       [ True,  True,  True],
+       [ True,  True,  True],
+       [ True, False,  True]], dtype=bool)
+ 
+See also
+--------
+Gradient,
+Derivative,
+Hessdiag,
+Hessian
+
+</pre>
+
+<!-- ==================== INSTANCE METHODS ==================== -->
+<a name="section-InstanceMethods"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Instance Methods</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-InstanceMethods"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="__call__"></a><span class="summary-sig-name">__call__</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">x00</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="numdifftools.core-pysrc.html#Jacobian.__call__">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="numdifftools.core.Jacobian-class.html#jacobian" class="summary-sig-name">jacobian</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">x00</span>)</span><br />
+      Return Jacobian matrix of a vector valued function of n variables</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="numdifftools.core-pysrc.html#Jacobian.jacobian">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2" class="summary">
+    <p class="indent-wrapped-lines"><b>Inherited from <code><a href="numdifftools.core._Derivative-class.html" onclick="show_private();">_Derivative</a></code></b>:
+      <code><a href="numdifftools.core._Derivative-class.html#__init__">__init__</a></code>
+      </p>
+    <div class="private">    <p class="indent-wrapped-lines"><b>Inherited from <code><a href="numdifftools.core._Derivative-class.html" onclick="show_private();">_Derivative</a></code></b> (private):
+      <code><a href="numdifftools.core._Derivative-class.html#_backward" onclick="show_private();">_backward</a></code>,
+      <code><a href="numdifftools.core._Derivative-class.html#_central" onclick="show_private();">_central</a></code>,
+      <code><a href="numdifftools.core._Derivative-class.html#_check_params" onclick="show_private();">_check_params</a></code>,
+      <code><a href="numdifftools.core._Derivative-class.html#_derivative" onclick="show_private();">_derivative</a></code>,
+      <code><a href="numdifftools.core._Derivative-class.html#_fda_mat" onclick="show_private();">_fda_mat</a></code>,
+      <code><a href="numdifftools.core._Derivative-class.html#_fder" onclick="show_private();">_fder</a></code>,
+      <code><a href="numdifftools.core._Derivative-class.html#_forward" onclick="show_private();">_forward</a></code>,
+      <code><a href="numdifftools.core._Derivative-class.html#_initialize" onclick="show_private();">_initialize</a></code>,
+      <code><a href="numdifftools.core._Derivative-class.html#_romb_extrap" onclick="show_private();">_romb_extrap</a></code>,
+      <code><a href="numdifftools.core._Derivative-class.html#_set_delta" onclick="show_private();">_set_delta</a></code>,
+      <code><a href="numdifftools.core._Derivative-class.html#_set_difference_function" onclick="show_private();">_set_difference_function</a></code>,
+      <code><a href="numdifftools.core._Derivative-class.html#_set_fda_rule" onclick="show_private();">_set_fda_rule</a></code>,
+      <code><a href="numdifftools.core._Derivative-class.html#_set_romb_qr" onclick="show_private();">_set_romb_qr</a></code>,
+      <code><a href="numdifftools.core._Derivative-class.html#_trim_estimates" onclick="show_private();">_trim_estimates</a></code>
+      </p></div>
+    <p class="indent-wrapped-lines"><b>Inherited from <code>object</code></b>:
+      <code>__delattr__</code>,
+      <code>__format__</code>,
+      <code>__getattribute__</code>,
+      <code>__hash__</code>,
+      <code>__new__</code>,
+      <code>__reduce__</code>,
+      <code>__reduce_ex__</code>,
+      <code>__repr__</code>,
+      <code>__setattr__</code>,
+      <code>__sizeof__</code>,
+      <code>__str__</code>,
+      <code>__subclasshook__</code>
+      </p>
+    </td>
+  </tr>
+</table>
+<!-- ==================== CLASS VARIABLES ==================== -->
+<a name="section-ClassVariables"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Class Variables</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-ClassVariables"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a href="numdifftools.core.Jacobian-class.html#_jacob_txt" class="summary-name" onclick="show_private();">_jacob_txt</a> = <code title="'''
+    Parameters
+    ----------
+    fun : callable
+        function to differentiate.
+    n : Integer from 1 to 4 defining derivative order.     (Default 1)
+    order : Integer from 1 to 4 defining order of basic method used.
+            For \'central\' methods, it must be from the set [2,4]. (D\
+..."><code class="variable-quote">'</code><code class="variable-string">\n    Parameters\n    ----------\n    fun : call</code><code class="variable-ellipsis">...</code></code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a href="numdifftools.core.Jacobian-class.html#__doc__" class="summary-name">__doc__</a> = <code title="'''Estimate Jacobian matrix, with error estimate
+    '''+ _jacob_txt+ '''
+
+    The Jacobian matrix is the matrix of all first-order partial deriv\
+atives
+    of a vector-valued function.
+
+    Assumptions
+...">'''Estimate Jacobian matrix, with error estima<code class="variable-ellipsis">...</code></code>
+    </td>
+  </tr>
+</table>
+<!-- ==================== PROPERTIES ==================== -->
+<a name="section-Properties"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Properties</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Properties"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+  <tr>
+    <td colspan="2" class="summary">
+    <p class="indent-wrapped-lines"><b>Inherited from <code>object</code></b>:
+      <code>__class__</code>
+      </p>
+    </td>
+  </tr>
+</table>
+<!-- ==================== METHOD DETAILS ==================== -->
+<a name="section-MethodDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Method Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-MethodDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="jacobian"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">jacobian</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">x00</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="numdifftools.core-pysrc.html#Jacobian.jacobian">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <pre class="literalblock">
+
+Return Jacobian matrix of a vector valued function of n variables
+
+
+Parameter
+---------
+x0 : vector
+    location at which to differentiate fun.
+    If x0 is an nxm array, then fun is assumed to be
+    a function of n*m variables.
+
+Member variable used
+--------------------
+fun : (vector valued) analytical function to differentiate.
+        fun must be a function of the vector or array x0.
+
+Returns
+-------
+jac : array-like
+   first partial derivatives of fun. Assuming that x0
+   is a vector of length p and fun returns a vector
+   of length n, then jac will be an array of size (n,p)
+
+err - vector
+    of error estimates corresponding to each partial
+    derivative in jac.
+
+See also
+--------
+Derivative,
+Gradient,
+Hessian,
+Hessdiag
+
+</pre>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== CLASS VARIABLE DETAILS ==================== -->
+<a name="section-ClassVariableDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Class Variable Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-ClassVariableDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="_jacob_txt"></a>
+<div class="private">
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <h3 class="epydoc">_jacob_txt</h3>
+  
+  <dl class="fields">
+  </dl>
+  <dl class="fields">
+    <dt>Value:</dt>
+      <dd><table><tr><td><pre class="variable">
+<code class="variable-quote">'''</code><code class="variable-string"></code>
+<code class="variable-string">    Parameters</code>
+<code class="variable-string">    ----------</code>
+<code class="variable-string">    fun : callable</code>
+<code class="variable-string">        function to differentiate.</code>
+<code class="variable-string">    n : Integer from 1 to 4 defining derivative order.     (Default 1)</code>
+<code class="variable-string">    order : Integer from 1 to 4 defining order of basic method used.</code>
+<code class="variable-string">            For \'central\' methods, it must be from the set [2,4]. (D</code><span class="variable-linewrap"><img src="crarr.png" alt="\" /></span>
+<code class="variable-ellipsis">...</code>
+</pre></td></tr></table>
+</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="__doc__"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <h3 class="epydoc">__doc__</h3>
+  
+  <dl class="fields">
+  </dl>
+  <dl class="fields">
+    <dt>Value:</dt>
+      <dd><table><tr><td><pre class="variable">
+'''Estimate Jacobian matrix, with error estimate
+    '''+ _jacob_txt+ '''
+
+    The Jacobian matrix is the matrix of all first-order partial deriv<span class="variable-linewrap"><img src="crarr.png" alt="\" /></span>
+atives
+    of a vector-valued function.
+
+    Assumptions
+<code class="variable-ellipsis">...</code>
+</pre></td></tr></table>
+</dd>
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="numdifftools-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Project homepage -->
+      <th class="navbar" align="right" width="100%">
+        <table border="0" cellpadding="0" cellspacing="0">
+          <tr><th class="navbar" align="center"
+            ><a class="navbar" target="_top" href="http://code.google.com/p/numdifftools/">numdifftools</a></th>
+          </tr></table></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Sat May 05 22:01:07 2012
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

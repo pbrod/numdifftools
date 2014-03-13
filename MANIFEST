@@ -1,0 +1,8 @@
+setup.py
+numdifftools\__init__.py
+numdifftools\core.py
+numdifftools\info.py
+numdifftools\license.py
+numdifftools\doc\DERIVEST.pdf
+numdifftools\doc\DERIVEST.tex
+numdifftools\test\testnumdifftools.py

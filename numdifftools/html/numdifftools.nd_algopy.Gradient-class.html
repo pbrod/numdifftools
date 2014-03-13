@@ -1,0 +1,286 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>numdifftools.nd_algopy.Gradient</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="numdifftools-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Project homepage -->
+      <th class="navbar" align="right" width="100%">
+        <table border="0" cellpadding="0" cellspacing="0">
+          <tr><th class="navbar" align="center"
+            ><a class="navbar" target="_top" href="http://code.google.com/p/numdifftools/">numdifftools</a></th>
+          </tr></table></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        <a href="numdifftools-module.html">Package&nbsp;numdifftools</a> ::
+        <a href="numdifftools.nd_algopy-module.html">Module&nbsp;nd_algopy</a> ::
+        Class&nbsp;Gradient
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="numdifftools.nd_algopy.Gradient-class.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== CLASS DESCRIPTION ==================== -->
+<h1 class="epydoc">Class Gradient</h1><p class="nomargin-top"><span class="codelink"><a href="numdifftools.nd_algopy-pysrc.html#Gradient">source&nbsp;code</a></span></p>
+<center>
+<center>  <map id="uml_class_diagram_for_numdifft_10" name="uml_class_diagram_for_numdifft_10">
+<area shape="rect" id="node1_4" href="numdifftools.nd_algopy.Gradient-class.html#gradient" title="Gradient vector of an analytical function of n variables" alt="" coords="71,135,175,153"/>
+<area shape="rect" id="node1_5" href="numdifftools.nd_algopy.Gradient-class.html#__call__" title="numdifftools.nd_algopy.Gradient.__call__" alt="" coords="71,153,175,172"/>
+<area shape="rect" id="node1" href="numdifftools.nd_algopy.Gradient-class.html" title="Estimate gradient of fun at x0" alt="" coords="59,102,187,178"/>
+<area shape="rect" id="node2_6" href="numdifftools.nd_algopy._Common-class.html#__init__" title="x.__init__(...) initializes x; see help(type(x)) for signature" alt="" coords="17,39,227,57"/>
+<area shape="rect" id="node2_7" href="numdifftools.nd_algopy._Common-class.html#initialize" title="numdifftools.nd_algopy._Common.initialize" alt="" coords="17,57,227,76"/>
+<area shape="rect" id="node2" href="numdifftools.nd_algopy._Common-class.html" title="numdifftools.nd_algopy._Common" alt="" coords="5,6,238,82"/>
+</map>
+  <img src="uml_class_diagram_for_numdifft_10.gif" alt='' usemap="#uml_class_diagram_for_numdifft_10" ismap="ismap" class="graph-without-title" />
+</center>
+</center>
+<hr />
+<pre class="literalblock">
+Estimate gradient of fun at x0
+
+Assumptions
+-----------
+  fun - SCALAR analytical function to differentiate.
+        fun must be a function of the vector or array x0,
+        but it needs not to be vectorized.
+
+  x0  - vector location at which to differentiate fun
+        If x0 is an N x M array, then fun is assumed to be
+        a function of N*M variables.
+
+
+Examples
+-------- 
+&gt;&gt;&gt; import numdifftools.nd_algopy as nda
+&gt;&gt;&gt; fun = lambda x: np.sum(x**2)
+&gt;&gt;&gt; dfun = nda.Gradient(fun)
+&gt;&gt;&gt; dfun([1,2,3])
+array([ 2.,  4.,  6.])
+
+#At [x,y] = [1,1], compute the numerical gradient
+#of the function sin(x-y) + y*exp(x)
+
+&gt;&gt;&gt; sin = np.sin; exp = np.exp
+&gt;&gt;&gt; z = lambda xy: sin(xy[0]-xy[1]) + xy[1]*exp(xy[0])
+&gt;&gt;&gt; dz = nda.Gradient(z)
+&gt;&gt;&gt; grad2 = dz([1, 1])
+&gt;&gt;&gt; grad2
+array([ 3.71828183,  1.71828183])
+ 
+
+#At the global minimizer (1,1) of the Rosenbrock function,
+#compute the gradient. It should be essentially zero.
+
+&gt;&gt;&gt; rosen = lambda x : (1-x[0])**2 + 105.*(x[1]-x[0]**2)**2
+&gt;&gt;&gt; rd = nda.Gradient(rosen)
+&gt;&gt;&gt; grad3 = rd([1,1])
+&gt;&gt;&gt; grad3==np.array([ 0.,  0.])
+array([ True,  True], dtype=bool)
+
+
+See also
+--------
+Derivative, Hessdiag, Hessian, Jacobian
+
+</pre>
+
+<!-- ==================== INSTANCE METHODS ==================== -->
+<a name="section-InstanceMethods"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Instance Methods</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-InstanceMethods"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="gradient"></a><span class="summary-sig-name">gradient</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">x0</span>)</span><br />
+      Gradient vector of an analytical function of n variables</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="numdifftools.nd_algopy-pysrc.html#Gradient.gradient">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="__call__"></a><span class="summary-sig-name">__call__</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">x</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="numdifftools.nd_algopy-pysrc.html#Gradient.__call__">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2" class="summary">
+    <p class="indent-wrapped-lines"><b>Inherited from <code><a href="numdifftools.nd_algopy._Common-class.html" onclick="show_private();">_Common</a></code></b>:
+      <code><a href="numdifftools.nd_algopy._Common-class.html#__init__">__init__</a></code>,
+      <code><a href="numdifftools.nd_algopy._Common-class.html#initialize">initialize</a></code>
+      </p>
+    <div class="private">    <p class="indent-wrapped-lines"><b>Inherited from <code><a href="numdifftools.nd_algopy._Common-class.html" onclick="show_private();">_Common</a></code></b> (private):
+      <code><a href="numdifftools.nd_algopy._Common-class.html#_derivative" onclick="show_private();">_derivative</a></code>,
+      <code><a href="numdifftools.nd_algopy._Common-class.html#_gradient_forward" onclick="show_private();">_gradient_forward</a></code>,
+      <code><a href="numdifftools.nd_algopy._Common-class.html#_gradient_reverse" onclick="show_private();">_gradient_reverse</a></code>,
+      <code><a href="numdifftools.nd_algopy._Common-class.html#_hessian_forward" onclick="show_private();">_hessian_forward</a></code>,
+      <code><a href="numdifftools.nd_algopy._Common-class.html#_hessian_reverse" onclick="show_private();">_hessian_reverse</a></code>,
+      <code><a href="numdifftools.nd_algopy._Common-class.html#_initialize_reverse" onclick="show_private();">_initialize_reverse</a></code>,
+      <code><a href="numdifftools.nd_algopy._Common-class.html#_jacobian_reverse" onclick="show_private();">_jacobian_reverse</a></code>
+      </p></div>
+    <p class="indent-wrapped-lines"><b>Inherited from <code>object</code></b>:
+      <code>__delattr__</code>,
+      <code>__format__</code>,
+      <code>__getattribute__</code>,
+      <code>__hash__</code>,
+      <code>__new__</code>,
+      <code>__reduce__</code>,
+      <code>__reduce_ex__</code>,
+      <code>__repr__</code>,
+      <code>__setattr__</code>,
+      <code>__sizeof__</code>,
+      <code>__str__</code>,
+      <code>__subclasshook__</code>
+      </p>
+    </td>
+  </tr>
+</table>
+<!-- ==================== PROPERTIES ==================== -->
+<a name="section-Properties"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Properties</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Properties"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+  <tr>
+    <td colspan="2" class="summary">
+    <p class="indent-wrapped-lines"><b>Inherited from <code>object</code></b>:
+      <code>__class__</code>
+      </p>
+    </td>
+  </tr>
+</table>
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+  <!-- Home link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="numdifftools-module.html">Home</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Project homepage -->
+      <th class="navbar" align="right" width="100%">
+        <table border="0" cellpadding="0" cellspacing="0">
+          <tr><th class="navbar" align="center"
+            ><a class="navbar" target="_top" href="http://code.google.com/p/numdifftools/">numdifftools</a></th>
+          </tr></table></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Sat May 05 22:01:07 2012
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>
