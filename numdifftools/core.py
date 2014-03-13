@@ -2,6 +2,7 @@
 Numdifftools implementation
 
 """
+
 #-------------------------------------------------------------------------
 # Author:      Per A. Brodtkorb
 #
