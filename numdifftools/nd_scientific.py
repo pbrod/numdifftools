@@ -45,11 +45,11 @@ class _Common(object):
 
 class Derivative(_Common):
     '''Estimate n'th derivative of fun at x0
-    
+
     Examples
     --------
      # 1'st and 2'nd derivative of exp(x), at x == 1
-     
+
      >>> import numpy as np
      >>> import numdifftools.nd_scientific as nds
      >>> fd = nds.Derivative(np.exp)              # 1'st derivative
@@ -66,7 +66,6 @@ class Derivative(_Common):
      >>> fd3 = nds.Derivative(fun,derOrder=3)
      >>> fd3([0,1])          #  True derivatives: [6,30]
      array([ 6, 30])
- 
 
      See also
      --------
@@ -85,7 +84,7 @@ class Derivative(_Common):
 
 class Jacobian(_Common):
     '''Estimate Jacobian matrix
-    
+
     The Jacobian matrix is the matrix of all first-order partial derivatives
     of a vector-valued function.
 
@@ -102,7 +101,7 @@ class Jacobian(_Common):
     Examples
     --------
     >>> import numdifftools.nd_scientific as nds
-    
+
     #(nonlinear least squares)
     >>> xdata = np.reshape(np.arange(0,1,0.1),(-1,1))
     >>> ydata = 1+2*np.exp(0.75*xdata)
@@ -200,7 +199,6 @@ class Gradient(_Common):
     >>> grad2 = dz([1, 1])
     >>> grad2
     array([ 3.71828183,  1.71828183])
-     
 
     #At the global minimizer (1,1) of the Rosenbrock function,
     #compute the gradient. It should be essentially zero.
@@ -210,7 +208,6 @@ class Gradient(_Common):
     >>> grad3 = rd([1,1])
     >>> grad3==np.array([ 0.,  0.])
     array([ True,  True], dtype=bool)
-    
 
     See also
     --------
@@ -227,10 +224,10 @@ class Gradient(_Common):
 
 
 class Hessian(_Common):
-    ''' Estimate Hessian matrix 
+    ''' Estimate Hessian matrix
 
     HESSIAN estimate the matrix of 2nd order partial derivatives of a real
-    valued function FUN evaluated at X0.  
+    valued function FUN evaluated at X0.
 
     Assumptions
     -----------
@@ -246,7 +243,7 @@ class Hessian(_Common):
     Examples
     --------
     >>> import numdifftools.nd_scientific as nds
-    
+
     #Rosenbrock function, minimized at [1,1]
     >>> rosen = lambda x : (1.-x[0])**2 + 105*(x[1]-x[0]**2)**2
     >>> Hfun = nds.Hessian(rosen)
@@ -254,7 +251,7 @@ class Hessian(_Common):
     >>> h
     array([[ 842., -420.],
            [-420.,  210.]])
-     
+
     #cos(x-y), at (0,0)
     >>> cos = np.cos
     >>> fun = lambda xy : cos(xy[0]-xy[1])
@@ -263,8 +260,7 @@ class Hessian(_Common):
     >>> h2
     array([[-1.,  1.],
            [ 1., -1.]])
-    
-   
+
     See also
     --------
     Gradient,
@@ -276,7 +272,7 @@ class Hessian(_Common):
     def hessian(self, x0):
         '''Hessian matrix i.e., array of 2nd order partial derivatives
 
-        See also 
+        See also
         derivative, gradient, hessdiag, jacobian
         '''
         return self._hessian(x0)
@@ -285,6 +281,10 @@ class Hessian(_Common):
         return self._hessian(x)
 
 
-if __name__ == '__main__':
+def test_docstrings():
     import doctest
-    doctest.testmod()
+    doctest.testmod(optionflags=doctest.NORMALIZE_WHITESPACE)
+
+
+if __name__ == '__main__':
+    test_docstrings()

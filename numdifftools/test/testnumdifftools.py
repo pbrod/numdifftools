@@ -4,24 +4,22 @@
 import unittest
 import numdifftools as nd
 import numpy as np
+from numpy.testing import assert_array_almost_equal
 
 
 class TestDerivative(unittest.TestCase):
-    def test_vec2mat(self):
-        mat = nd.core.vec2mat(np.arange(6), n=2, m=3)
-        self.assertListEqual(mat.tolist(), [[0, 1, 2], [1, 2, 3]])
-        
     def test_derivative_cube(self):
         '''Test for Issue 7'''
-        cube = lambda x : x*x*x
+        cube = lambda x: x * x * x
         dcube = nd.Derivative(cube)
         shape = (3, 2)
         x = np.ones(shape)*2
         dx = dcube(x)
         self.assertListEqual(list(dx.shape), list(shape), 'Shape mismatch')
+        txt = 'First differing element %d\n value = %g,\n true value = %g'
         for i, (val, tval) in enumerate(zip(dx.ravel(), (3*x**2).ravel())):
-            self.assertAlmostEqual(val, tval,places=12,
-                                   msg='First differing element %d\n value = %g, \n true value = %g' % (i, val, tval))
+            self.assertAlmostEqual(val, tval, places=12,
+                                   msg=txt % (i, val, tval))
 
     def test_derivative_exp(self):
         # derivative of exp(x), at x == 0
@@ -38,17 +36,13 @@ class TestDerivative(unittest.TestCase):
         x = np.linspace(0, 2. * np.pi, 13)
         y = dsin(x)
         small = np.abs(y - np.cos(x)) < dsin.error_estimate * 100
-        # print np.abs(y - np.cos(x))
-        # print dsin.error_estimate
-        # print small
         self.assertTrue(np.all(small))
 
-    def test_high_order_derivative_sin(self):
+    def test_second_and_fourth_derivative_of_sin(self):
         # Higher order derivatives (second derivative)
         # Truth: 0
         d2sin = nd.Derivative(np.sin, n=2, step_max=0.5)
-
-        self.assertAlmostEqual(d2sin(np.pi), 0.0,)
+        self.assertAlmostEqual(d2sin(np.pi), 0.0)
 
         # Higher order derivatives (up to the fourth derivative)
         # Truth: sqrt(2)/2 = 0.707106781186548
@@ -65,14 +59,14 @@ class TestDerivative(unittest.TestCase):
         small = np.abs(y - 1.0) < d3cos.error_estimate
         self.assertTrue(small)
 
-    def test_backward_derivative_sinh(self):
-        # Compute the derivative of a function using a backward difference scheme
-        # And a backward scheme will only look below x0.
+    def test_backward_derivative_on_sinh(self):
+        # Compute the derivative of a function using a backward difference
+        # scheme.  A backward scheme will only look below x0.
         dsinh = nd.Derivative(np.sinh, method='backward')
         small = np.abs(dsinh(0.0) - np.cosh(0.0)) < dsinh.error_estimate
         self.assertTrue(small)
 
-    def test_central_n_forward_derivative_log(self):
+    def test_central_and_forward_derivative_on_log(self):
         # Although a central rule may put some samples in the wrong places, it
         # may still succeed
         dlog = nd.Derivative(np.log, method='central')
@@ -85,109 +79,31 @@ class TestDerivative(unittest.TestCase):
         small = np.abs(dlog(x) - 1 / x) < dlog.error_estimate
         self.assertTrue(small)
 
-    def test_forward_derivative_tan(self):
-        # Control the behavior of Derivative - forward 2nd order method, with only 1 Romberg term
-        # Compute the first derivative, also return the final stepsize chosen
-        #[deriv,err,fdelta] = derivest(@(x) tan(x),pi,'deriv',1,'Style','for','MethodOrder',2,'RombergTerms',1)
-        dtan = nd.Derivative(
-            np.tan, n=1, order=2, method='forward', romberg_terms=1)
+    def test_forward_derivative_on_tan(self):
+        # Control the behavior of Derivative - forward 2nd order method, with
+        # only 1 Romberg term.
+        dtan = nd.Derivative(np.tan, n=1, order=2, method='forward',
+                             romberg_terms=1)
         y = dtan(np.pi)
         abserr = dtan.error_estimate
-        self.assertTrue(np.abs(y - 1) < abserr)
-
-        dtan.final_delta
-
-        # Control the behavior of DERIVEST - forward 2nd order method, with only 1 Romberg term
-        # Compute the first derivative, also return the final stepsize chosen
-        dtan = nd.Derivative(
-            np.tan, n=1, method='forward', order=2, romberg_terms=1)
-        self.assertAlmostEqual(dtan(np.pi), 1.0)
+        self.assertTrue(np.abs(y - 1.0) < abserr)
+        self.assertAlmostEqual(y, 1.0)
 
     def test_derivative_poly1d(self):
-        # Specify the step size (default stepsize = 0.1)
         p0 = np.poly1d(range(1, 6))
-        fd = nd.Derivative(p0, n=4, romberg_terms=0) #, step_max=3, step_num=10)
+        fd = nd.Derivative(p0, n=4, romberg_terms=0)
         p4 = p0.deriv(4)
         self.assertAlmostEqual(fd(1), p4(1), places=5)
 
+    def test_vectorized_derivative_of_x2(self):
+        # Functions should be vectorized for speed, but its not
+        # always easy to do.
+        fun = lambda x: x**2
+        df = nd.Derivative(fun, vectorized=True)
+        x = np.linspace(0, 5, 6)
+        assert_array_almost_equal(df(x), 2*x)
 
-#    fun = lambda x: x**3 + x**4
-#    fd3 = Derivative(fun,n=3)
-# fd3([0,1])          #  True derivatives: [6,30]
-#
-# fd = Derivative(np.exp)              # 1'st derivative
-# fdd = Derivative(np.exp,n=2)  # 2'nd derivative
-#    d = fd(1)
-#    d2 = fdd(1)
-#
-#    fun = lambda x : x[0] + x[1]**2 + x[2]**3
-#    fd = Hessdiag(fun)
-# hd = fd([1,2,3]) # HD = [ 0,2,18]
-#    fd.error_estimate
-#
-#    rosen = lambda x : (1-x[0])**2 + 105*(x[1]-x[0]**2)**2
-#    rd = Hessian(rosen)
-# h = rd([1, 1])  #%  h =[ 842 -420; -420, 210];
-#    rd.error_estimate
-#
-#%% Provide other parameters via an anonymous function
-#% At a minimizer of a function, its derivative should be
-#% essentially zero. So, first, find a local minima of a
-#% first kind bessel function of order nu.
-#nu = 0;
-# fun = @(t) besselj(nu,t);
-# fplot(fun,[0,10])
-#x0 = fminbnd(fun,0,10,optimset('TolX',1.e-15))
-# hold on
-# plot(x0,fun(x0),'ro')
-# hold off
-#
-#deriv = derivest(fun,x0,'d',1)
-#
-#%% The second derivative should be positive at a minimizer.
-#deriv = derivest(fun,x0,'d',2)
-#
-#%% Compute the numerical gradient vector of a 2-d function
-#% Note: the gradient at this point should be [4 6]
-# fun = @(x,y) x.^2 + y.^2;
-# xy = [2 3];
-# gradvec = [derivest(@(x) fun(x,xy(2)),xy(1),'d',1), ...
-#           derivest(@(y) fun(xy(1),y),xy(2),'d',1)]
-#
-#%% Compute the numerical Laplacian function of a 2-d function
-#% Note: The Laplacian of this function should be everywhere == 4
-# fun = @(x,y) x.^2 + y.^2;
-# xy = [2 3];
-# lapval = derivest(@(x) fun(x,xy(2)),xy(1),'d',2) + ...
-#           derivest(@(y) fun(xy(1),y),xy(2),'d',2)
-#
-#%% Compute the derivative of a function using a central difference scheme
-#% Sometimes you may not want your function to be evaluated
-#% above or below a given point. A 'central' difference scheme will
-#% look in both directions equally.
-#[deriv,err] = derivest(@(x) sinh(x),0,'Style','central')
-#
-#%% Compute the derivative of a function using a forward difference scheme
-#% But a forward scheme will only look above x0.
-#[deriv,err] = derivest(@(x) sinh(x),0,'Style','forward')
-#
-#%% Compute the derivative of a function using a backward difference scheme
-#% And a backward scheme will only look below x0.
-#[deriv,err] = derivest(@(x) sinh(x),0,'Style','backward')
-#
-#%% Although a central rule may put some samples in the wrong places, it may still succeed
-#[d,e,del]=derivest(@(x) log(x),.001,'style','central')
-#
-#%% But forcing the use of a one-sided rule may be smart anyway
-#[d,e,del]=derivest(@(x) log(x),.001,'style','forward')
-#
-#%% Control the behavior of DERIVEST - forward 2nd order method, with only 1 Romberg term
-#% Compute the first derivative, also return the final stepsize chosen
-#[deriv,err,fdelta] = derivest(@(x) tan(x),pi,'deriv',1,'Style','for','MethodOrder',2,'RombergTerms',1)
-#
-#%% Functions should be vectorized for speed, but its not always easy to do.
-#[deriv,err] = derivest(@(x) x.^2,0:5,'deriv',1)
-#[deriv,err] = derivest(@(x) x^2,0:5,'deriv',1,'vectorized','no')
+
 class TestJacobian(unittest.TestCase):
 
     def testjacobian(self):
@@ -213,7 +129,7 @@ class TestGradient(unittest.TestCase):
 class TestHessian(unittest.TestCase):
 
     def testhessian(self):
-        #cos(x-y), at (0,0)
+        # cos(x-y), at (0,0)
         cos = np.cos
         fun = lambda xy: cos(xy[0] - xy[1])
         Hfun2 = nd.Hessian(fun)
@@ -235,8 +151,10 @@ class TestHessdiag(unittest.TestCase):
 
 
 class TestGlobalFunctions(unittest.TestCase):
+    def test_vec2mat(self):
+        mat = nd.core.vec2mat(np.arange(6), n=2, m=3)
+        self.assertListEqual(mat.tolist(), [[0, 1, 2], [1, 2, 3]])
 
-    def testvec2mat(self):
         mat = nd.core.vec2mat(np.arange(12), 3, 4)
         self.assertListEqual(mat.tolist(), [[0, 1, 2, 3],
                                             [1, 2, 3, 4],
