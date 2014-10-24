@@ -183,12 +183,12 @@ class _Derivative(object):
         self.final_delta = None
 
         # The remaining member variables are set by _initialize
-        self._fda_rule = None
+        self._fd_rule = None
         self._delta = None
         self._rmat = None
         self._qromb = None
         self._rromb = None
-        self._fdiff = None
+        self._diff_fun = None
 
     finaldelta = property(lambda cls: cls.final_delta)
 
@@ -225,7 +225,7 @@ class _Derivative(object):
             stepsize, differention rule and romberg extrapolation matrices
         '''
         self._set_delta()
-        self._set_fda_rule()
+        self._set_fd_rule()
         self._set_romb_qr()
         self._set_difference_function()
 
@@ -236,24 +236,24 @@ class _Derivative(object):
         Member variables used
         ---------------------
         n
-        _fda_rule
+        _fd_rule
         romberg_terms
         '''
-        fdarule = self._fda_rule
-        nfda = fdarule.size
-        ndel = h.size
+        fd_rule = self._fd_rule
+        n_fdr = fd_rule.size
+        n_h = h.size
 
-        f_del = self._fdiff(fun, f_x0i, x0i, h)
+        f_del = self._diff_fun(fun, f_x0i, x0i, h)
 
-        if f_del.size != h.size:
+        if f_del.size != n_h:
             raise ValueError('fun did not return data of correct size ' +
                              '(it must be vectorized)')
 
-        ne = max(ndel + 1 - nfda - self.romberg_terms, 1)
-        der_init = np.asarray(vec2mat(f_del, ne, nfda) * fdarule.T)
-        der_init = der_init.ravel() / (h[0:ne]) ** self.n
+        ne = max(n_h + 1 - n_fdr - self.romberg_terms, 1)
+        der_init = np.asarray(vec2mat(f_del, ne, n_fdr) * fd_rule.T).ravel()
+        der_init = der_init / (h[:ne]) ** self.n
 
-        return der_init, h[0:ne]
+        return der_init, h[:ne]
 
     def _trim_estimates(self, der_romb, errors, h):
         '''
@@ -297,7 +297,6 @@ class _Derivative(object):
         arg_mins = np.flatnonzero(errest == np.min(errest))
         n = arg_mins.size
         return arg_mins[n // 2]
-        return errest.argmin()
 
     def _get_step_nom(self, step_nom, x0):
         if step_nom is None:
@@ -316,8 +315,8 @@ class _Derivative(object):
 
         f_x0 = np.zeros(nx0)
         # will we need fun(x0)?
-        evenOrder = (np.remainder(self.n, 2) == 0)
-        if evenOrder or not self.method[0] == 'c':
+        even_order = (np.remainder(self.n, 2) == 0)
+        if even_order or not self.method[0] == 'c':
             if self.vectorized:
                 f_x0 = fun(x0)
             else:
@@ -347,8 +346,8 @@ class _Derivative(object):
         self.final_delta = final_delta
         return der
 
-    def _fda_mat(self, parity, nterms):
-        ''' Return matrix for fda derivation.
+    def _fd_mat(self, parity, nterms):
+        ''' Return matrix for finite difference derivation.
 
         Parameters
         ----------
@@ -375,7 +374,7 @@ class _Derivative(object):
             mat = c[j] * srinv ** (i * (2 * j + parity))
         return np.matrix(mat)
 
-    def _set_fda_rule(self):
+    def _set_fd_rule(self):
         '''
         Generate finite differencing rule in advance.
 
@@ -384,7 +383,7 @@ class _Derivative(object):
 
         Member methods used
         -------------------
-        _fda_mat
+        _fd_mat
 
         Member variables used
         ---------------------
@@ -398,37 +397,37 @@ class _Derivative(object):
 
         matrix = np.matrix
         zeros = np.zeros
-        fda_rule = matrix(der_order)
+        fd_rule = matrix(der_order)
 
         pinv = linalg.pinv
         if method == 'c':  # 'central'
             if met_order == 2:
                 if der_order == 3:
-                    fda_rule = matrix([0, 1]) * pinv(self._fda_mat(1, 2))
+                    fd_rule = matrix([0, 1]) * pinv(self._fd_mat(1, 2))
                 elif der_order == 4:
-                    fda_rule = matrix([0, 1]) * pinv(self._fda_mat(2, 2))
+                    fd_rule = matrix([0, 1]) * pinv(self._fd_mat(2, 2))
             elif der_order == 1:
-                fda_rule = matrix([1, 0]) * pinv(self._fda_mat(1, 2))
+                fd_rule = matrix([1, 0]) * pinv(self._fd_mat(1, 2))
             elif der_order == 2:
-                fda_rule = matrix([1, 0]) * pinv(self._fda_mat(2, 2))
+                fd_rule = matrix([1, 0]) * pinv(self._fd_mat(2, 2))
             elif der_order == 3:
-                fda_rule = matrix([0, 1, 0]) * pinv(self._fda_mat(1, 3))
+                fd_rule = matrix([0, 1, 0]) * pinv(self._fd_mat(1, 3))
             elif der_order == 4:
-                fda_rule = matrix([0, 1, 0]) * pinv(self._fda_mat(2, 3))
+                fd_rule = matrix([0, 1, 0]) * pinv(self._fd_mat(2, 3))
         else:
             if met_order == 1:
                 if der_order != 1:
                     v = zeros(der_order)
                     v[der_order - 1] = 1
-                    fda_rule = matrix(v) * pinv(self._fda_mat(0, der_order))
+                    fd_rule = matrix(v) * pinv(self._fd_mat(0, der_order))
             else:
                 v = zeros(der_order + met_order - 1)
                 v[der_order - 1] = 1
                 dpm = der_order + met_order - 1
-                fda_rule = matrix(v) * pinv(self._fda_mat(0, dpm))
+                fd_rule = matrix(v) * pinv(self._fd_mat(0, dpm))
             if method == 'b':  # 'backward' rule
-                fda_rule = -fda_rule
-        self._fda_rule = fda_rule.ravel()
+                fd_rule = -fd_rule
+        self._fd_rule = fd_rule.ravel()
 
     def _get_min_num_steps(self):
         n0 = 5 if self.method[0] == 'c' else 7
@@ -437,13 +436,13 @@ class _Derivative(object):
     def _set_delta(self):
         ''' Set the steps to use in derivation.
 
-            Member variables used:
+        Member variables used:
 
-            n
-            order
-            method
-            romberg_terms
-            step_max
+        n
+        order
+        method
+        romberg_terms
+        step_max
         '''
         # Choose the step size h so that it is an exactly representable number.
         # This is important when calculating numerical derivatives and is
@@ -459,9 +458,9 @@ class _Derivative(object):
     def _set_romb_qr(self):
         '''
         Member variables used
-            order
-            method
-            romberg_terms
+        order
+        method
+        romberg_terms
         '''
         nexpon = self.romberg_terms
         add1 = self.method[0] == 'c'
@@ -478,11 +477,11 @@ class _Derivative(object):
         self._rmat = rmat
 
     def _set_difference_function(self):
-        ''' Set _fdiff function according to method
+        ''' Set _diff_fun function according to method
         '''
         get_diff_fun = dict(c=self._central, b=self._backward,
                             f=self._forward)[self.method[0]]
-        self._fdiff = get_diff_fun()
+        self._diff_fun = get_diff_fun()
 
     def _central(self):
         ''' Return central difference function
@@ -560,8 +559,8 @@ class _Derivative(object):
         s = sqrt(np.sum(asarray(rhs - self._rmat * rombcoefs[0]) ** 2, axis=0))
         rinv = asarray(linalg.pinv(self._rromb))
         cov1 = np.sum(rinv ** 2, axis=1)  # 1 spare dof
-        errest = np.maximum(
-            s * 12.7062047361747 * sqrt(cov1[0]), s * _EPS * 10.)
+        errest = np.maximum(s * 12.7062047361747 * sqrt(cov1[0]),
+                            s * _EPS * 10.)
         errest = np.where(s == 0, _EPS, errest)
         return errest
 
@@ -755,8 +754,9 @@ class Jacobian(_Derivative):
     Hessdiag,
     Hessian
     ''' % _Derivative.__doc__.partition('\n')[2].replace(
-        'Integer from 1 to 4 defining derivative order. (Default 1)',
-        'Derivative order is always 1'))
+        'Integer from 1 to 4             (Default 1)', '1').replace(
+        'defining derivative order.',
+        'Derivative order is always 1.'))
 
     def __call__(self, x00):
         return self.jacobian(x00)
@@ -899,8 +899,9 @@ class Gradient(_PartialDerivative):
     --------
     Derivative, Hessdiag, Hessian, Jacobian
     ''' % _Derivative.__doc__.partition('\n')[2].replace(
-        'Integer from 1 to 4 defining derivative order. (Default 1)',
-        'Derivative order is always 1'))
+        'Integer from 1 to 4             (Default 1)', '1').replace(
+        'defining derivative order.',
+        'Derivative order is always 1.'))
 
     def __call__(self, x00):
         return self.gradient(x00)
@@ -957,8 +958,9 @@ class Hessdiag(_PartialDerivative):
     --------
     Gradient, Derivative, Hessian, Jacobian
     ''' % _Derivative.__doc__.partition('\n')[2].replace(
-        'Integer from 1 to 4 defining derivative order. (Default 1)',
-        'Derivative order is always 2'))
+        'Integer from 1 to 4             (Default 1)', '2').replace(
+        'defining derivative order.',
+        'Derivative order is always 2.'))
 
     def __call__(self, x00):
         return self.hessdiag(x00)
@@ -1040,8 +1042,9 @@ class Hessian(Hessdiag):
     Hessdiag,
     Jacobian
     ''' % _Derivative.__doc__.partition('\n')[2].replace(
-        'Integer from 1 to 4 defining derivative order. (Default 1)',
-        'Derivative order is always 2'))
+        'Integer from 1 to 4             (Default 1)', '2').replace(
+        'defining derivative order.',
+        'Derivative order is always 2.'))
 
     def __call__(self, x00):
         return self.hessian(x00)

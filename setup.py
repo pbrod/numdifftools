@@ -48,7 +48,7 @@ setup(
     long_description=info.__doc__,
     license="New BSD",
     install_requires=['numpy>=1.4', 'scipy>=0.8', 'algopy>=0.5.1'],
-    url='http://code.google.com/p/numdifftools/',
+    url='https://github.com/pbrod/numdifftools/',
     maintainer='Per A. Brodtkorb',
     maintainer_email='Per.Andreas.Brodtkorb at gmail.com',
     packages=['numdifftools'],
