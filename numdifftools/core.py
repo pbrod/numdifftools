@@ -109,7 +109,7 @@ def dea3(v0, v1, v2):
 
 
 def vec2mat(vec, n, m):
-    ''' forms the matrix M, such that M(i,j) = vec(i+j)
+    ''' forms the matrix M, such that M[i,j] = vec[i+j]
     '''
     [i, j] = np.ogrid[0:n, 0:m]
     return np.matrix(vec[i + j])
@@ -139,7 +139,7 @@ class _Derivative(object):
         Nominal step.
     step_ratio: real scalar  (Default 2.0)
         Ratio used between sequential steps in the estimation of the derivative
-    step_num : integer, default 26
+    step_num : integer  (Default 26)
         The minimum step_num is
             7 + np.ceil(self.n/2.) + self.order + self.romberg_terms
         The steps: h_i = step_nom[i]*step_max*step_ratio**(-arange(steps_num))
@@ -300,37 +300,55 @@ class _Derivative(object):
 
     def _get_step_nom(self, step_nom, x0):
         if step_nom is None:
-            step_nom = (np.maximum(np.log1p(np.abs(x0)), 0.02) + 1) - 1
+            step_nom = self._make_exact(np.maximum(np.log1p(np.abs(x0)), 0.02))
         else:
-            step_nom = (np.atleast_1d(step_nom) + 1) - 1
+            step_nom = self._make_exact(np.atleast_1d(step_nom))
         return step_nom
 
-    def _derivative(self, fun, x00, step_nom=None):
-        x0 = np.atleast_1d(x00)
-        step_nom = self._get_step_nom(step_nom, x0)
-
-        # was a single point supplied?
-        nx0 = x0.shape
-        n = x0.size
-
-        f_x0 = np.zeros(nx0)
+    def _eval_first(self, fun, x0):
+        f_x0 = np.zeros(x0.shape)
         # will we need fun(x0)?
-        even_order = (np.remainder(self.n, 2) == 0)
+        even_order = np.remainder(self.n, 2) == 0
         if even_order or not self.method[0] == 'c':
             if self.vectorized:
                 f_x0 = fun(x0)
             else:
                 f_x0 = np.asfarray([fun(x0j) for x0j in x0])
+        return f_x0
 
+    def _remove_non_positive(self, h):
+        if (h <= 0).any():
+            warnings.warn('Some of the steps are too small, either because ' +
+                          'step_max*step_nom is too small or ' +
+                          'step_ratio**step_num too large!')
+            return h[h > 0]
+        return h
+
+    def _make_exact(self, h):
+        '''Make sure h is an exact representable number
+        This is important when calculating numerical derivatives and is
+        accomplished by adding 1 and then subtracting 1..
+        '''
+        return (h + 1.0) - 1.0
+
+    def _get_steps(self, step_nom):
+        h = self._make_exact((1.0 * step_nom) * self._delta)
+        return self._remove_non_positive(h)
+
+    def _derivative(self, fun, x00, step_nom=None):
+        x0 = np.atleast_1d(x00)
+        step_nom = self._get_step_nom(step_nom, x0)
+
+        f_x0 = self._eval_first(fun, x0)
+        nx0 = x0.shape
         der = np.zeros(nx0)
         errest = np.zeros(nx0)
         final_delta = np.zeros(nx0)
-        delta = self._delta
+        n = x0.size
         for i in range(n):
             f_x0i = float(f_x0[i])
             x0i = float(x0[i])
-            h = ((1.0 * step_nom[i]) * delta + 1) - 1
-
+            h = self._get_steps(step_nom[i])
             der_init, h1 = self._fder(fun, f_x0i, x0i, h)
             der_romb, errors, h2 = self._romb_extrap(der_init, h1)
             if self.verbose:
@@ -444,15 +462,12 @@ class _Derivative(object):
         romberg_terms
         step_max
         '''
-        # Choose the step size h so that it is an exactly representable number.
-        # This is important when calculating numerical derivatives and is
-        #  accomplished by the following.
-        step_ratio = float(self.step_ratio + 1.0) - 1.0
+        step_ratio = self._make_exact(self.step_ratio)
         if self.step_num is None:
             num_steps = self._get_min_num_steps()
         else:
             num_steps = max(self.step_num, 1)
-        step1 = float(self.step_max + 1.0) - 1.0
+        step1 = self._make_exact(self.step_max)
         self._delta = step1 * step_ratio ** (-np.arange(num_steps))
 
     def _set_romb_qr(self):
@@ -544,12 +559,13 @@ class _Derivative(object):
     def _remove_non_finite(self, der_init, h1):
         isnonfinite = 1 - np.isfinite(der_init)
         i_nonfinite, = isnonfinite.ravel().nonzero()
-        hout = h1
         if i_nonfinite.size > 0:
-            allfinite_start = np.max(i_nonfinite) + 1
+            i = np.max(i_nonfinite)
+            allfinite_start = i + 1
+            warnings.warn('The stepsize (%g) is possibly too large!' % h1[i])
             der_init = der_init[allfinite_start:]
-            hout = h1[allfinite_start:]
-        return der_init, hout
+            h1 = h1[allfinite_start:]
+        return der_init, h1
 
     def _predict_uncertainty(self, rombcoefs, rhs):
         '''uncertainty estimate of derivative prediction'''
@@ -814,17 +830,14 @@ class Jacobian(_Derivative):
             self.error_estimate = jac
             return jac
 
-        delta = self._delta
-        nsteps = delta.size
-
         step_nom = self._get_step_nom(self.step_nom, x0)
 
         err = jac.copy()
         final_delta = jac.copy()
         for i in range(nx):
             x0_i = x0[i]
-            h = ((1.0 * step_nom[i]) * delta + 1) - 1
-
+            h = self._get_steps(step_nom[i])
+            nsteps = h.size
             # evaluate at each step, centered around x0_i
             # difference to give a second order estimate
             fdel = zeros((n, nsteps))
@@ -839,8 +852,8 @@ class Jacobian(_Derivative):
 
             for j in range(n):
                 der_romb, errest, h1 = self._romb_extrap(derest[j, :], h)
-                der_romb, errest, h1 = self._trim_estimates(
-                    der_romb, errest, h)
+                der_romb, errest, h1 = self._trim_estimates(der_romb, errest,
+                                                            h1)
                 ind = self._get_arg_min(errest)
                 err[j, i] = errest[ind]
                 final_delta[j, i] = h1[ind]
@@ -913,7 +926,6 @@ class Gradient(_PartialDerivative):
         '''
         self.n = 1
         self.vectorized = False
-
         self._initialize()
         return self._partial_der(x00)
 
@@ -1069,7 +1081,7 @@ class Hessian(Hessdiag):
         stepsize = self.final_delta
         ndel = np.maximum(self._get_min_num_steps(), self.romberg_terms + 2)
 
-        dfac = ((1.0 * self.step_ratio) ** (-np.arange(ndel)) + 1) - 1
+        dfac = self._make_exact((1.0 * self.step_ratio) ** (-np.arange(ndel)))
         stepmax = stepsize / dfac[ndel // 2]
         fun = self.fun
         zeros = np.zeros
@@ -1107,10 +1119,10 @@ def _example():
     fun, dfun = func_dict.get('log')
 
     h = 1e-4
-    fd = Derivative(fun, method='forward', step_max=1, step_ratio=2,
-                    step_num=32, verbose=True, vectorized=True,
+    fd = Derivative(fun, method='forward', step_max=20, step_ratio=5,
+                    step_num=35, verbose=True, vectorized=True,
                     romberg_terms=2)
-    x = 0.01
+    x = 0.0001
     t = fd(x)
     print(('(f(x+h)-f(x))/h = %g\n true df(x) = %g\n estimated df(x) = %g\n' +
            ' true err = %g\n err estimate = %g\n relative err = %g\n' +
@@ -1127,4 +1139,5 @@ def test_docstrings():
 
 
 if __name__ == '__main__':
+    # _example()
     test_docstrings()

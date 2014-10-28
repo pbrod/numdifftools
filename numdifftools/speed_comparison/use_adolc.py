@@ -6,8 +6,10 @@ except:
 import numpy as np
 import algopy
 
+
 class EVAL:
-    def __init__(self, f, x, test = 'f'):
+
+    def __init__(self, f, x, test='f'):
         self.f = f
         self.x = x.copy()
 
@@ -19,20 +21,23 @@ class EVAL:
         cg.independentFunctionList = x
         cg.dependentFunctionList = [y]
         self.cg = cg
-        
+
     def function(self, x):
         return self.cg.function(x)
-        
+
     def gradient(self, x):
         return np.asarray(self.cg.gradient(x))
 #    def hessian(self, x):
 #        return np.asarray(self.cg.hessian([x]))
+
     def hessian(self, x):
         tmp = algopy.UTPM.init_hessian(x)
         return algopy.UTPM.extract_hessian(len(x), self.f(tmp))
 
+
 class EVAL0:
-    def __init__(self, f, x, test = 'f'):
+
+    def __init__(self, f, x, test='f'):
         self.f = f
         self.x = x
 
@@ -42,19 +47,12 @@ class EVAL0:
         y = f(ax)
         adolc.dependent(y)
         adolc.trace_off()
-        
+
     def function(self, x):
-        return adolc.function(0,x)
-        
+        return adolc.function(0, x)
+
     def gradient(self, x):
-        return adolc.gradient(0,x)
+        return adolc.gradient(0, x)
 
     def hessian(self, x):
-        return adolc.hessian(0,x)
-
-
-
-
-
-
-
+        return adolc.hessian(0, x)
