@@ -1,8 +1,12 @@
 Numdifftools
 ============
-Suite of tools written in `_Python <http://www.python.org/>`_ to solve automatic numerical differentiation
-problems in one or more variables. Finite differences are used in an adaptive manner, coupled with a Romberg extrapolation methodology to provide a maximally accurate result.
-The user can configure many options like; changing the order of the method or the extrapolation, even allowing the user to specify whether central, forward or backward differences are used.
+Suite of tools written in `_Python <http://www.python.org/>`_ to solve automatic
+numerical differentiation problems in one or more variables. Finite differences
+are used in an adaptive manner, coupled with a Romberg extrapolation methodology
+to provide a maximally accurate result.
+The user can configure many options like; changing the order of the method or
+the extrapolation, even allowing the user to specify whether central, forward or
+backward differences are used.
 
 The methods provided are:
 

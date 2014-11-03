@@ -35,7 +35,7 @@ class TestDerivative(unittest.TestCase):
         dsin = nd.Derivative(np.sin)
         x = np.linspace(0, 2. * np.pi, 13)
         y = dsin(x)
-        small = np.abs(y - np.cos(x)) < dsin.error_estimate * 100
+        small = np.abs(y - np.cos(x)) <= dsin.error_estimate * 100
         self.assertTrue(np.all(small))
 
     def test_second_and_fourth_derivative_of_sin(self):
