@@ -94,19 +94,43 @@ class Dea(object):
              the last 3 results.
     '''
     def __init__(self, limexp=3):
-        self.limexp = limexp
-        self.epstab = np.zeros(limexp+7)
+        self.limexp = 2 * (limexp // 2) + 1
+        self.epstab = np.zeros(limexp+5)
         self.ABSERR = 10.
+        self._n = 0
+        self._nres = 0
         if (limexp < 3):
             raise ValueError('LIMEXP IS LESS THAN 3')
 
+    def _compute_error(self, RES3LA, NRES, RES):
+        fact = [6.0, 2.0, 1.0][min(NRES-1, 2)]
+        error = fact * np.abs(RES - RES3LA[:NRES]).sum()
+        return error
+
+    def _shift_table(self, EPSTAB, N, NEWELM, NUM):
+        i_0 = 1 if ((NUM // 2) * 2 == NUM - 1) else 0
+        i_n = 2 * NEWELM + 2
+        EPSTAB[i_0:i_n:2] = EPSTAB[i_0 + 2:i_n + 2:2]
+
+        if (NUM != N):
+            i_n = NUM - N
+            EPSTAB[:N + 1] = EPSTAB[i_n:i_n + N + 1]
+        return EPSTAB
+
+    def _update_RES3LA(self, RES3LA, RESULT, NRES):
+        if NRES > 2:
+            RES3LA[:2] = RES3LA[1:]
+            RES3LA[2] = RESULT
+        else:
+            RES3LA[NRES] = RESULT
+
     def __call__(self, SVALUE):
-        limexp = self.limexp
+
         EPSTAB = self.epstab
         RES3LA = EPSTAB[-3:]
         RESULT = SVALUE
-        N = int(EPSTAB[-5])
-        NRES = int(EPSTAB[-4])
+        N = self._n
+        NRES = self._nres
         EPSTAB[N] = SVALUE
         if (N == 0):
             ABSERR = abs(RESULT)
@@ -114,8 +138,6 @@ class Dea(object):
             ABSERR = 6.0 * abs(RESULT - EPSTAB[0])
         else:
             ABSERR = self.ABSERR
-            DRELPR = _EPS
-            DEPRN = 10.*DRELPR
             EPSTAB[N + 2] = EPSTAB[N]
             NEWELM = N // 2
             NUM = N
@@ -126,133 +148,73 @@ class Dea(object):
                 E2 = RES = EPSTAB[K1 + 2]
                 DELTA2, DELTA3 = E2 - E1, E1 - E0
                 ERR2, ERR3 = abs(DELTA2), abs(DELTA3)
-                TOL2 = max(abs(E2), abs(E1)) * DRELPR
-                TOL3 = max(abs(E1), abs(E0)) * DRELPR
+                TOL2 = max(abs(E2), abs(E1)) * _EPS
+                TOL3 = max(abs(E1), abs(E0)) * _EPS
                 converged = (ERR2 <= TOL2 and ERR3 <= TOL3)
                 if converged:
                     ABSERR = ERR2 + ERR3
                     RESULT = RES
-                    # GO TO 50
                     break
+                if (I != 0):
+                    E3 = EPSTAB[K1]
+                    DELTA1 = E1 - E3
+                    ERR1 = abs(DELTA1)
+                    TOL1 = max(abs(E1), abs(E3)) * _EPS
+                    converged = (ERR1 <= TOL1 or ERR2 <= TOL2 or
+                                 ERR3 <= TOL3)
+                    if not converged:
+                        SS = 1.0 / DELTA1 + 1.0 / DELTA2 - 1.0 / DELTA3
                 else:
-                    EPSTAB[K1] = E1
-                    if (I != 0):
-                        E3 = EPSTAB[K1]
-                        DELTA1 = E1 - E3
-                        ERR1 = abs(DELTA1)
-                        TOL1 = max(abs(E1), abs(E3)) * DRELPR
-                        # IF TWO ELEMENTS ARE VERY CLOSE TO EACH OTHER, OMIT
-                        # A PART OF THE TABLE BY ADJUSTING THE VALUE OF N
-                        converged = (ERR1 <= TOL1 or ERR2 <= TOL2 or
-                                     ERR3 <= TOL3)
-                        if not converged:
-                            SS = 1.0 / DELTA1 + 1.0 / DELTA2 - 1.0 / DELTA3
-                    else:
-                        converged = (ERR2 <= TOL2 or ERR3 <= TOL3)
-                        if not converged:
-                            SS = 1.0 / DELTA2 - 1.0 / DELTA3
-                        #  ENDIF
-
-                        # TEST TO DETECT IRREGULAR BEHAVIOUR IN THE TABLE, AND
-                        # EVENTUALLY OMIT A PART OF THE TABLE ADJUSTING THE
-                        # VALUE OF N
-                    if (converged or abs(SS * E1) <= 1e-04):
-                        # GO TO 30
-                        # 20
-                        N = 2 * I
-                        if (NRES == 0):
-                            ABSERR = ERR2 + ERR3
-                            RESULT = RES
-                        elif (NRES == 1):
-                            RESULT = RES3LA[0]
-                        elif (NRES == 2):
-                            RESULT = RES3LA[1]
-                        else:
-                            RESULT = RES3LA[2]
-                        # ENDIF
-                        # GO TO 50
-                        break
-                    # 30
-                    # COMPUTE A NEW ELEMENT AND EVENTUALLY ADJUST
-                    # THE VALUE OF RESULT
-                    RES = E1 + 1.0 / SS
-                    EPSTAB[K1] = RES
-                    K1 = K1 - 2
+                    converged = (ERR2 <= TOL2 or ERR3 <= TOL3)
+                    if not converged:
+                        SS = 1.0 / DELTA2 - 1.0 / DELTA3
+                EPSTAB[K1] = E1
+                if (converged or abs(SS * E1) <= 1e-04):
+                    N = 2 * I
                     if (NRES == 0):
-                        ABSERR = ERR2 + abs(RES - E2) + ERR3
+                        ABSERR = ERR2 + ERR3
                         RESULT = RES
-                        continue
-                    elif (NRES == 1):
-                        ERROR = 6.0 * (abs(RES - RES3LA[0]))
-                    elif (NRES == 2):
-                        ERROR = 2.0 * (abs(RES - RES3LA[1]) +
-                                       abs(RES - RES3LA[0]))
                     else:
-                        ERROR = (abs(RES - RES3LA[2]) + abs(RES - RES3LA[1]) +
-                                 abs(RES - RES3LA[0]))
-                    # ENDIF
-                    if (ERROR > 10.0 * ABSERR):
-                        # GO TO 40
-                        continue
-                    ABSERR = ERROR
+                        RESULT = RES3LA[min(NRES-1, 2)]
+                    break
+                RES = E1 + 1.0 / SS
+                EPSTAB[K1] = RES
+                K1 = K1 - 2
+                if (NRES == 0):
+                    ABSERR = ERR2 + abs(RES - E2) + ERR3
                     RESULT = RES
-            # 40 CONTINUE
-            else:
-                # COMPUTE ERROR ESTIMATE
-                if (NRES == 1):
-                    ERROR = 6.0 * (abs(RES - RES3LA[0]))
-                elif (NRES == 2):
-                    ERROR = 2.0 * (abs(RES - RES3LA[1]) + abs(RES - RES3LA[0]))
-                elif (NRES > 2):
-                    ERROR = (abs(RES - RES3LA[2]) + abs(RES - RES3LA[1]) +
-                             abs(RES - RES3LA[0]))
+                    continue
+                ERROR = self._compute_error(RES3LA, NRES, RES)
 
-            #           SHIFT THE TABLE
+                if (ERROR > 10.0 * ABSERR):
+                    continue
+                ABSERR = ERROR
+                RESULT = RES
+            else:
+                ERROR = self._compute_error(RES3LA, NRES, RES)
+
             # 50
-            if (N == limexp - 1):
-                N = 2 * (limexp // 2) - 1
-            IB = 0
-            if ((NUM // 2) * 2 == NUM - 1):
-                IB = 1
-            IE = NEWELM + 1
-            for I in range(IE):
-                IB2 = IB + 2
-                EPSTAB[IB] = EPSTAB[IB2]
-                IB = IB2
+            if (N == self.limexp - 1):
+                N = 2 * (self.limexp // 2) - 1
+            EPSTAB = self._shift_table(EPSTAB, N, NEWELM, NUM)
+            self._update_RES3LA(RES3LA, RESULT, NRES)
 
-            if (NUM != N):
-                IN = NUM - N
-                for I in range(N + 1):
-                    EPSTAB[I] = EPSTAB[IN]
-                    IN = IN + 1
-
-            # UPDATE RES3LA
-            if (NRES == 0):
-                RES3LA[0] = RESULT
-            elif (NRES == 1):
-                RES3LA[1] = RESULT
-            elif (NRES == 2):
-                RES3LA[2] = RESULT
-            else:
-                RES3LA[:2] = RES3LA[1:3]
-                RES3LA[2] = RESULT
-                # ENDIF
-            ABSERR = max(ABSERR, DEPRN * abs(RESULT))
+            ABSERR = max(ABSERR, 10.0*_EPS * abs(RESULT))
             NRES = NRES + 1
 
-        N = N + 1
-        EPSTAB[-5] = N
-        EPSTAB[-4] = NRES
-        EPSTAB[-3:] = RES3LA
+        N += 1
+        self._n = N
+        self._nres = NRES
+        # EPSTAB[-3:] = RES3LA
         self.ABSERR = ABSERR
         return RESULT, ABSERR
 
 
 def test_dea():
     linfun = lambda i: np.linspace(0, np.pi/2., 2**i+1)
-    dea = Dea(limexp=3)
+    dea = Dea(limexp=11)
     print('NO. PANELS      TRAP. APPROX          APPROX W/EA           ABSERR')
-    for k in np.arange(8):
+    for k in np.arange(10):
         x = linfun(k)
         val = np.trapz(np.sin(x), x)
         vale, err = dea(val)
@@ -353,16 +315,17 @@ class _Derivative(object):
     romberg_terms : integer from 0 to 3  (Default 2)
         Number of Romberg terms used in the extrapolation.
         Note: 0 disables the Romberg step completely.
+    step_nom : vector   default maximum(log1p(abs(x0)), 0.02)
+        Nominal step. (The steps: h_i = step_nom[i] * delta)
     step_max : real scalar  (Default 2.0)
         Maximum allowed excursion from step_nom as a multiple of it.
-    step_nom : real scalar   default maximum(log1p(abs(x0)), 0.02)
-        Nominal step.
     step_ratio: real scalar  (Default 2.0)
         Ratio used between sequential steps in the estimation of the derivative
     step_num : integer  (Default 26)
-        The minimum step_num is
+        The minimum step_num for making romberg extrapolation work is
             7 + np.ceil(self.n/2.) + self.order + self.romberg_terms
-        The steps: h_i = step_nom[i]*step_max*step_ratio**(-arange(steps_num))
+    delta : vector default step_max*step_ratio**(-arange(steps_num))
+        Defines the steps sizes used in derivation: h_i = step_nom[i] * delta
     vectorized : Bool
         True  - if your function is vectorized.
         False - loop over the successive function calls (default).
@@ -384,7 +347,8 @@ class _Derivative(object):
 
     def __init__(self, fun, n=1, order=2, method='central', romberg_terms=2,
                  step_max=2.0, step_nom=None, step_ratio=2.0, step_num=26,
-                 vectorized=False, verbose=False, use_dea=True):
+                 delta=None, vectorized=False, verbose=False,
+                 use_dea=True):
         self.fun = fun
         self.n = n
         self.order = order
@@ -394,6 +358,7 @@ class _Derivative(object):
         self.step_ratio = step_ratio
         self.step_nom = step_nom
         self.step_num = step_num
+        self.delta = delta
         self.vectorized = vectorized
         self.verbose = verbose
         self.use_dea = use_dea
@@ -405,12 +370,29 @@ class _Derivative(object):
 
         # The remaining member variables are set by _initialize
         self._fd_rule = None
-        self._delta = None
         self._rmat = None
         self._qromb = None
         self._rromb = None
         self._diff_fun = None
 
+    def _set_delta(self, delta=None):
+        ''' Set the steps to use in derivation.
+
+        Member variables used:
+        step_ratio, step_num, step_max
+        '''
+        if delta is None:
+            step_ratio = self._make_exact(self.step_ratio)
+            if self.step_num is None:
+                num_steps = self._get_min_num_steps()
+            else:
+                num_steps = max(self.step_num, 1)
+            step1 = self._make_exact(self.step_max)
+            self._delta = step1 * step_ratio ** (-np.arange(num_steps))
+        else:
+            self._delta = np.atleast_1d(delta)
+
+    delta = property(fset=_set_delta)
     finaldelta = property(lambda cls: cls.final_delta)
 
     def _check_params(self):
@@ -443,9 +425,8 @@ class _Derivative(object):
 
     def _initialize(self):
         '''Set derivative parameters:
-            stepsize, differention rule and romberg extrapolation matrices
+            differention rule and romberg extrapolation matrices
         '''
-        self._set_delta()
         self._set_fd_rule()
         self._set_romb_qr()
         self._set_difference_function()
@@ -502,7 +483,7 @@ class _Derivative(object):
         tmp = (np.vstack((h2[i], der_romb[i], errors[i])).T).ravel().tolist()
         print(fmt % tuple(tmp))
         # ind = self._get_arg_min(errors)
-        plt.ioff()
+        # plt.ioff()
         try:
             # diff_df = np.diff(np.hstack(((der_romb[i], 0))))[ii]
             diff_df = np.diff(np.hstack(((0, der_romb[i], 0))), n=1)  # [ii]
@@ -522,7 +503,7 @@ class _Derivative(object):
             plt.title('Estimated error as function of stepsize. (nom=%g)' %
                       step_nom_i)
 
-            plt.show()
+            # plt.show()
         except:
             pass
 
@@ -534,7 +515,7 @@ class _Derivative(object):
     def _get_step_nom(self, step_nom, x0):
         if step_nom is None:
             step_nom = np.maximum(np.log1p(np.abs(x0)), 0.02)
-        return self._make_exact(np.atleast_1d(step_nom))
+        return self._make_exact(np.atleast_1d(step_nom)) * np.ones(x0.shape)
 
     def _eval_first(self, fun, x0):
         f_x0 = np.zeros(x0.shape)
@@ -685,25 +666,6 @@ class _Derivative(object):
         n0 = 5 if self.method[0] == 'c' else 7
         return int(n0 + np.ceil(self.n / 2.) + self.order + self.romberg_terms)
 
-    def _set_delta(self):
-        ''' Set the steps to use in derivation.
-
-        Member variables used:
-
-        n
-        order
-        method
-        romberg_terms
-        step_max
-        '''
-        step_ratio = self._make_exact(self.step_ratio)
-        if self.step_num is None:
-            num_steps = self._get_min_num_steps()
-        else:
-            num_steps = max(self.step_num, 1)
-        step1 = self._make_exact(self.step_max)
-        self._delta = step1 * step_ratio ** (-np.arange(num_steps))
-
     def _set_romb_qr(self):
         '''
         Member variables used
@@ -840,6 +802,7 @@ class _Derivative(object):
         # this does the extrapolation to a zero step size.
         num_terms = self.romberg_terms
         ne = der_romb.size
+
         if ne < num_terms + 2:
             errest = np.ones(der_init.shape) * hout
         else:
@@ -848,14 +811,14 @@ class _Derivative(object):
             rombcoefs = linalg.lstsq(self._rromb, (self._qromb.T * rhs))
             der_romb = rombcoefs[0][0, :]
             hout = hout[:der_romb.size]
+            errest = self._predict_uncertainty(rombcoefs)
 
         if self.use_dea and der_romb.size > 2:
             der_romb, errest = dea3(der_romb[0:-2], der_romb[1:-1],
                                     der_romb[2:], symmetric=True)
             hout = hout[2:-1]
             # der_romb, errest = _extrapolate(hout, der_romb, errest)
-        else:
-            errest = self._predict_uncertainty(rombcoefs)
+
         return der_romb, errest + _EPS, hout
 
 
@@ -1295,6 +1258,17 @@ class Hessian(Hessdiag):
     def __call__(self, x00):
         return self.hessian(x00)
 
+    def _get_step_max(self):
+        # Decide on intelligent step sizes for the mixed partials
+        best_step_size = self.final_delta
+        num_steps = self._get_min_num_steps()
+        if self.step_num is not None:
+            num_steps = min(num_steps, self.step_num)
+        deltas = (1.0 * self.step_ratio) ** (-np.arange(num_steps))
+        deltas = self._make_exact(deltas)
+        stepmax = best_step_size / deltas[num_steps // 2]
+        return stepmax, deltas
+
     def hessian(self, x00):
         '''Hessian matrix i.e., array of 2nd order partial derivatives
 
@@ -1311,19 +1285,15 @@ class Hessian(Hessdiag):
         if nx < 2:
             return hess  # the hessian matrix is 1x1. all done
 
-        # Decide on intelligent step sizes for the mixed partials
-        stepsize = self.final_delta
-        ndel = np.maximum(self._get_min_num_steps(), self.romberg_terms + 2)
-
-        dfac = self._make_exact((1.0 * self.step_ratio) ** (-np.arange(ndel)))
-        stepmax = stepsize / dfac[ndel // 2]
+        stepmax, dfac = self._get_step_max()
+        ndel = dfac.size
         fun = self.fun
         zeros = np.zeros
         for i in range(1, nx):
             for j in range(i):
                 dij, step = zeros(ndel), zeros(nx)
                 step[[i, j]] = stepmax[[i, j]]
-                for k in range(int(ndel)):
+                for k in range(ndel):
                     x1 = x0 + step * dfac[k]
                     x2 = x0 - step * dfac[k]
                     step[j] = -step[j]
@@ -1353,21 +1323,22 @@ def _example(x=0.0001, fun_name='inv', n=1, method='central', step_max=100,
                       lambda x: -np.cos(x),
                       lambda x: np.sin(x),
                       lambda x: np.cos(x),),
-                tanh=(tanh,
-                      lambda x: 1. / cosh(x) ** 2,
-                      lambda x: -2 * sinh(x) / cosh(x) ** 3,
-                      lambda x: 2.*(3 * tanh(x)**2 - 1) / cosh(x)**2,
-                      lambda x: (6 + 4*sinh(x)*(cosh(x)-3*tanh(x))) / cosh(x)**4),
-                log=(np.log,
-                     lambda x: 1. / x,
-                     lambda x: -1. / x ** 2,
-                     lambda x: 2. / x ** 3,
-                     lambda x: -6. / x ** 4),
-                inv=(lambda x: 1. / x,
-                     lambda x: -1. / x ** 2,
-                     lambda x: 2. / x ** 3,
-                     lambda x: -6. / x ** 4,
-                     lambda x: 24. / x ** 5))
+                 tanh=(tanh,
+                       lambda x: 1. / cosh(x) ** 2,
+                       lambda x: -2 * sinh(x) / cosh(x) ** 3,
+                       lambda x: 2.*(3 * tanh(x)**2 - 1) / cosh(x)**2,
+                       lambda x: (6 + 4*sinh(x)*(cosh(x) -
+                                                 3*tanh(x))) / cosh(x)**4),
+                 log=(np.log,
+                      lambda x: 1. / x,
+                      lambda x: -1. / x ** 2,
+                      lambda x: 2. / x ** 3,
+                      lambda x: -6. / x ** 4),
+                 inv=(lambda x: 1. / x,
+                      lambda x: -1. / x ** 2,
+                      lambda x: 2. / x ** 3,
+                      lambda x: -6. / x ** 4,
+                      lambda x: 24. / x ** 5))
     funs = f_dic.get(fun_name)
     fun0 = funs[0]
     dfun = funs[n]
@@ -1400,5 +1371,5 @@ def test_docstrings():
 
 if __name__ == '__main__':
     test_dea()
-    #_example()
+    # _example()
     # test_docstrings()

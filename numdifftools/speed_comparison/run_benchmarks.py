@@ -144,7 +144,7 @@ plottimefun = pyplot.plot
 plotfun = pyplot.semilogy
 # plot gradient run times
 for title, results in [('Gradient run times', results_gradients),
-             ('Hessian run times', results_hessians)]:
+                       ('Hessian run times', results_hessians)]:
     ref_sol = results[:, method['algopy_forward'], 0]
     pyplot.figure()
     pyplot.title(title)
@@ -233,7 +233,7 @@ pyplot.savefig('gradient_errors.png', format='png')
 pyplot.figure()
 pyplot.title('Hessian Correctness')
 
-ref_sol = 1 #results_hessians[:, method['algopy_forward'], 1]
+ref_sol = 1  # results_hessians[:, method['algopy_forward'], 1]
 plotfun(hessian_N_list, results_hessians[:, method['numdifftools'], 1]/ref_sol,
         '--ks', markerfacecolor='None', label='numdifftools')
 plotfun(hessian_N_list, results_hessians[:, method['scientific'], 1]/ref_sol,
