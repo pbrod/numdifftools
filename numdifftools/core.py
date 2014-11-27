@@ -285,7 +285,7 @@ def dea3(v0, v1, v2, symmetric=False):
     converged = (err1 <= tol1) & (err2 <= tol2).ravel() | smalle2
     result = np.where(converged, E2 * 1.0, E1 + 1.0 / ss)
     abserr = err1 + err2 + np.where(converged, tol2 * 10, abs(result-E2))
-    if symmetric:
+    if symmetric and len(result) > 1:
         return result[:-1], abserr[1:]
     return result, abserr
 
@@ -392,7 +392,7 @@ class _Derivative(object):
         else:
             self._delta = np.atleast_1d(delta)
 
-    delta = property(fset=_set_delta)
+    delta = property(lambda cls: cls._delta, fset=_set_delta)
     finaldelta = property(lambda cls: cls.final_delta)
 
     def _check_params(self):
@@ -764,15 +764,15 @@ class _Derivative(object):
 
     def _predict_uncertainty(self, rombcoefs):
         '''uncertainty estimate of derivative prediction'''
-        coeffs = rombcoefs[0]
+        coefs = rombcoefs[0][0]
         s = np.sqrt(rombcoefs[1])
         rinv = np.asarray(linalg.pinv(self._rromb))
         cov1 = np.sum(rinv ** 2, axis=1)  # 1 spare dof
         errest = np.maximum(s * 12.7062047361747 * np.sqrt(cov1[0]),
                             s * _EPS * 10.)
 
-        tmp_err = np.abs(np.diff(np.hstack((0, coeffs[0], 0))))
-        abserr = tmp_err[:-1] + tmp_err[1:] + np.abs(coeffs[0]) * _EPS * 10.0
+        tmp_err = np.abs(np.diff(np.hstack((0, coefs, 0)))) * (len(coefs) > 1)
+        abserr = tmp_err[:-1] + tmp_err[1:] + np.abs(coefs) * _EPS * 10.0
         return np.maximum(errest, abserr)
 
     def _romb_extrap(self, der_init, h1):
@@ -1302,9 +1302,10 @@ class Hessian(Hessdiag):
                     x4 = x0 + step * dfac[k]
                     step[i] = -step[i]
                     dij[k] = fun(x1) + fun(x2) - fun(x3) - fun(x4)
-                dij = dij / 4 / stepmax[[i, j]].prod() / (dfac ** 2)
+                h2 = stepmax[[i, j]].prod() * (dfac ** 2)
+                dij = dij / (4 * h2)
 
-                hess_romb, errors, _dfac1 = self._romb_extrap(dij, dfac)
+                hess_romb, errors, _h = self._romb_extrap(dij, np.sqrt(h2))
                 ind = self._get_arg_min(errors)
                 hess[j, i] = hess[i, j] = hess_romb[ind]
                 err[j, i] = err[i, j] = errors[ind]
@@ -1370,6 +1371,11 @@ def test_docstrings():
 
 
 if __name__ == '__main__':
-    test_dea()
+    rosen = lambda x: (1.-x[0])**2 + 105*(x[1]-x[0]**2)**2
+    Hfun = Hessian(rosen, delta=[1e-6], step_num=1)
+    print Hfun([1, 1])
+    print Hfun.final_delta
+    print Hfun.error_estimate
+    # test_dea()
     # _example()
     # test_docstrings()
