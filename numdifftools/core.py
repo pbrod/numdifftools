@@ -1218,7 +1218,7 @@ class Hessian(Hessdiag):
     >>> h
     array([[ 842., -420.],
            [-420.,  210.]])
-    >>> Hfun.error_estimate < 1.e-11
+    >>> Hfun.error_estimate < 5.e-10
     array([[ True,  True],
            [ True,  True]], dtype=bool)
 
@@ -1239,7 +1239,7 @@ class Hessian(Hessdiag):
     >>> h3
     array([[-1.,  1.],
            [ 1., -1.]])
-    >>> np.abs(h3-np.array([[-1,  1],[ 1, -1]])) < Hfun2.error_estimate
+    >>> np.abs(h3-np.array([[-1.,  1.],[ 1., -1.]])) < Hfun2.error_estimate
     array([[ True,  True],
            [ True,  True]], dtype=bool)
 
@@ -1363,6 +1363,15 @@ def _example(x=0.0001, fun_name='inv', n=1, method='central', step_max=100,
                                      fd.error_estimate,
                                      fd.error_estimate / t,
                                      fd.final_delta))
+    plt.show('hold')
+
+
+def _test_rosen():
+    rosen = lambda x: (1.-x[0])**2 + 105*(x[1]-x[0]**2)**2
+    Hfun = Hessian(rosen, delta=[1e-6], step_num=1)
+    print Hfun([1, 1])
+    print Hfun.final_delta
+    print Hfun.error_estimate
 
 
 def test_docstrings():
@@ -1371,11 +1380,9 @@ def test_docstrings():
 
 
 if __name__ == '__main__':
-    rosen = lambda x: (1.-x[0])**2 + 105*(x[1]-x[0]**2)**2
-    Hfun = Hessian(rosen, delta=[1e-6], step_num=1)
-    print Hfun([1, 1])
-    print Hfun.final_delta
-    print Hfun.error_estimate
+    # _test_rosen()
     # test_dea()
-    # _example()
-    # test_docstrings()
+    # _example(x=0.001, fun_name='log', n=1, method='c', step_max=10.,
+    #         step_ratio=2., step_num=26, romberg_terms=3, use_dea=True)
+
+    test_docstrings()
