@@ -6,6 +6,8 @@ requirements.txt
 setup.py
 tox.ini
 versioneer.py
+docs\DERIVEST.pdf
+docs\DERIVEST.tex
 docs\conf.py
 docs\index.rst
 docs\license.rst
@@ -14,3 +16,6 @@ numdifftools\_version.py
 numdifftools\core.py
 numdifftools\info.py
 numdifftools\nd_algopy.py
+numdifftools\tests\test_hessian.py
+numdifftools\tests\test_numdifftools.py
+numdifftools\tests\test_numdifftools_docstrings.py
