@@ -19,3 +19,4 @@ numdifftools\nd_algopy.py
 numdifftools\tests\test_hessian.py
 numdifftools\tests\test_numdifftools.py
 numdifftools\tests\test_numdifftools_docstrings.py
+numdifftools\tests\travis_install.sh
