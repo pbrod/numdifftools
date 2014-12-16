@@ -36,27 +36,27 @@ _TINY = np.finfo(float).tiny
 _EPS = np.finfo(float).eps
 
 
-def _extrapolate(h1, der_romb, errest):
-    i0 = np.argmin(errest)-1
-    x = h1[:i0]
-    try:
-        y = der_romb[:i0] - der_romb[i0]
-        # val, abserr = dea3(y[:-2], y[1:-1], y[2:])
-        # return val +der_romb[i0], abserr
-        sy = np.sign(y[-1])
-        k = np.flatnonzero(sy == np.sign(y))
-        logy = np.log(sy * y[k])[::-1]
-        logx = np.log(x[k])[::-1]
-        logxi = np.log(h1[i0:])[::-1]
-        tck = si.splrep(logx, logy, k=1, s=0, xb=logxi[0])
-        der_romb = (sy * np.exp(si.splev(np.log(h1[::-1]), tck))[::-1] +
-                    der_romb[i0])
-        # return der_romb, errest
-        val, abserr = dea3(der_romb[2:], der_romb[1:-1], der_romb[2:],
-                           symmetric=True)
-        return val[:i0], abserr[:i0]
-    except:
-        return der_romb, errest
+# def _extrapolate(h1, der_romb, errest):
+#     i0 = np.argmin(errest)-1
+#     x = h1[:i0]
+#     try:
+#         y = der_romb[:i0] - der_romb[i0]
+#         # val, abserr = dea3(y[:-2], y[1:-1], y[2:])
+#         # return val +der_romb[i0], abserr
+#         sy = np.sign(y[-1])
+#         k = np.flatnonzero(sy == np.sign(y))
+#         logy = np.log(sy * y[k])[::-1]
+#         logx = np.log(x[k])[::-1]
+#         logxi = np.log(h1[i0:])[::-1]
+#         tck = si.splrep(logx, logy, k=1, s=0, xb=logxi[0])
+#         der_romb = (sy * np.exp(si.splev(np.log(h1[::-1]), tck))[::-1] +
+#                     der_romb[i0])
+#         # return der_romb, errest
+#         val, abserr = dea3(der_romb[2:], der_romb[1:-1], der_romb[2:],
+#                            symmetric=True)
+#         return val[:i0], abserr[:i0]
+#     except:
+#         return der_romb, errest
 
 
 class Dea(object):
