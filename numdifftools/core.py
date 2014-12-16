@@ -457,22 +457,22 @@ class _Derivative(object):
 
         return der_init, h[:ne]
 
-    def _trim_estimates(self, der_romb, errors, h):
-        '''
-        trim off the estimates at each end of the scale
-        '''
-        trimdelta = h.copy()
-        der_romb = np.atleast_1d(der_romb)
-        num_vals = len(der_romb)
-        nr_rem_min = int((num_vals - 1) / 2)
-        nr_rem = min(2 * max((self.n - 1), 1), nr_rem_min)
-        if nr_rem > 0:
-            tags = der_romb.argsort()
-            tags = tags[nr_rem:-nr_rem]
-            der_romb = der_romb[tags]
-            errors = errors[tags]
-            trimdelta = trimdelta[tags]
-        return der_romb, errors, trimdelta
+#     def _trim_estimates(self, der_romb, errors, h):
+#         '''
+#         trim off the estimates at each end of the scale
+#         '''
+#         trimdelta = h.copy()
+#         der_romb = np.atleast_1d(der_romb)
+#         num_vals = len(der_romb)
+#         nr_rem_min = int((num_vals - 1) / 2)
+#         nr_rem = min(2 * max((self.n - 1), 1), nr_rem_min)
+#         if nr_rem > 0:
+#             tags = der_romb.argsort()
+#             tags = tags[nr_rem:-nr_rem]
+#             der_romb = der_romb[tags]
+#             errors = errors[tags]
+#             trimdelta = trimdelta[tags]
+#         return der_romb, errors, trimdelta
 
     def _plot_errors(self, h2, errors, step_nom_i, der_romb):
         i = np.argsort(h2)
