@@ -1,6 +1,5 @@
-import numpy
 try:
-    import adolc
+    import adolc  # @UnresolvedImport
 except:
     adolc = None
 import numpy as np

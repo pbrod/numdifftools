@@ -6,7 +6,7 @@ import numdifftools
 import numdifftools.nd_algopy as algopy
 import numdifftools.nd_scientific as scientific
 
-options = dict(step_ratio=3., step_num=21)
+options = dict(step_ratio=3., step_num=7)
 method = {'numdifftools': 0, 'scientific': 1,
           'algopy_reverse': 2, 'algopy_forward': 3}
 
@@ -233,13 +233,13 @@ pyplot.savefig('gradient_errors.png', format='png')
 pyplot.figure()
 pyplot.title('Hessian Correctness')
 
-ref_sol = 1  # results_hessians[:, method['algopy_forward'], 1]
+ref_sol = results_hessians[:, method['algopy_forward'], 1]
 plotfun(hessian_N_list, results_hessians[:, method['numdifftools'], 1]/ref_sol,
         '--ks', markerfacecolor='None', label='numdifftools')
 plotfun(hessian_N_list, results_hessians[:, method['scientific'], 1]/ref_sol,
         '-.k+', markerfacecolor='None', label='scientific')
 plotfun(hessian_N_list, results_hessians[:, method['algopy_forward'], 1]/ref_sol,
-         '-.k>', markerfacecolor='None', label='algopy (fo)')
+        '-.k>', markerfacecolor='None', label='algopy (fo)')
 # plotfun(hessian_N_list, results_hessians[:,method['algopy_reverse'],1],
 #      '-.k<', markerfacecolor='None', label = 'algopy (fo/rev)')
 pyplot.ylabel(r'relative error $\|H_{ref} - H\|/\|H_{ref}\|$')
