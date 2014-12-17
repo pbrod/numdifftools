@@ -2,9 +2,6 @@
 Numdifftools
 ============
 
-[![Build Status](https://travis-ci.org/pbrod/numdifftools.svg?branch=master)](https://travis-ci.org/pbrod/numdifftools)
-
-
 .. image:: https://travis-ci.org/pbrod/numdifftools.svg?branch=master
     :target: https://travis-ci.org/pbrod/numdifftools
 
