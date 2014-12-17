@@ -21,7 +21,7 @@ class TestDerivative(unittest.TestCase):
         txt = 'First differing element %d\n value = %g,\n true value = %g'
         for i, (val, tval) in enumerate(zip(dx.ravel(), (3*x**2).ravel())):
             assert_array_almost_equal(val, tval, decimal=12,
-                                   err_msg=txt % (i, val, tval))
+                                      err_msg=txt % (i, val, tval))
 
     def test_derivative_exp(self):
         # derivative of exp(x), at x == 0
