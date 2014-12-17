@@ -24,7 +24,7 @@ class TestDerivative(unittest.TestCase):
     def test_derivative_exp(self):
         # derivative of exp(x), at x == 0
         dexp = nd.Derivative(np.exp)
-        self.assertAlmostEqual(dexp(0), np.exp(0))
+        self.assertAlmostEqual(dexp(0), np.exp(0), places=8)
         dexp.n = 2
         t = dexp(0)
         self.assertAlmostEqual(t, np.exp(0))
@@ -42,7 +42,7 @@ class TestDerivative(unittest.TestCase):
         # Higher order derivatives (second derivative)
         # Truth: 0
         d2sin = nd.Derivative(np.sin, n=2, step_max=0.5)
-        self.assertAlmostEqual(d2sin(np.pi), 0.0)
+        self.assertAlmostEqual(d2sin(np.pi), 0.0, places=8)
 
         # Higher order derivatives (up to the fourth derivative)
         # Truth: sqrt(2)/2 = 0.707106781186548
@@ -87,13 +87,13 @@ class TestDerivative(unittest.TestCase):
         y = dtan(np.pi)
         abserr = dtan.error_estimate
         self.assertTrue(np.abs(y - 1.0) < abserr)
-        self.assertAlmostEqual(y, 1.0)
+        self.assertAlmostEqual(y, 1.0, places=8)
 
     def test_derivative_poly1d(self):
         p0 = np.poly1d(range(1, 6))
         fd = nd.Derivative(p0, n=4, romberg_terms=0)
         p4 = p0.deriv(4)
-        self.assertAlmostEqual(fd(1), p4(1), places=5)
+        self.assertAlmostEqual(fd(1), p4(1), places=4)
 
     def test_vectorized_derivative_of_x2(self):
         # Functions should be vectorized for speed, but its not
@@ -168,7 +168,7 @@ class TestGlobalFunctions(unittest.TestCase):
             Ei[k] = np.trapz(np.sin(x), x)
         [En, err] = nd.dea3(Ei[0], Ei[1], Ei[2])
         self.assertTrue(np.abs(En - 1) < err)
-        self.assertAlmostEqual(En, 1.0)
+        self.assertAlmostEqual(En, 1.0, places=8)
 
 if __name__ == '__main__':
     unittest.main()
