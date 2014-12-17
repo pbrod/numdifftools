@@ -1,5 +1,13 @@
+
 Numdifftools
 ============
+
+[![Build Status](https://travis-ci.org/pbrod/numdifftools.svg?branch=master)](https://travis-ci.org/pbrod/numdifftools)
+
+
+.. image:: https://travis-ci.org/pbrod/numdifftools.svg?branch=master
+    :target: https://travis-ci.org/pbrod/numdifftools
+
 Suite of tools written in `_Python <http://www.python.org/>`_ to solve automatic
 numerical differentiation problems in one or more variables. Finite differences
 are used in an adaptive manner, coupled with a Romberg extrapolation methodology
