@@ -180,7 +180,7 @@ def setup_package():
     docs_build_path = os.path.join(docs_path, "_build")
     install_reqs = get_install_requirements("requirements.txt")
 
-    tests_path = 'tests'  # os.path.join(MAIN_PACKAGE, 'tests')
+    tests_path = os.path.join(MAIN_PACKAGE, 'tests')
     command_options = {
         'docs': {'project': ('setup.py', MAIN_PACKAGE),
                  'version': ('setup.py', version.split('-', 1)[0]),
