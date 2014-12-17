@@ -16,6 +16,7 @@ numdifftools\_version.py
 numdifftools\core.py
 numdifftools\info.py
 numdifftools\nd_algopy.py
+numdifftools\tests\__init__.py
 numdifftools\tests\test_hessian.py
 numdifftools\tests\test_numdifftools.py
 numdifftools\tests\test_numdifftools_docstrings.py

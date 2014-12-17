@@ -36,6 +36,11 @@ News
 """"
 2014
 ----
+December 18
+^^^^^^^^^^^
+`New release of Numdifftools 0.7.7. <http://pypi.python.org/pypi/Numdifftools/0.7.7>`_
+
+
 December 17
 ^^^^^^^^^^^
 `New release of Numdifftools 0.7.3. <http://pypi.python.org/pypi/Numdifftools/0.7.3>`_
