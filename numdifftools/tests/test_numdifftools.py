@@ -15,7 +15,9 @@ class TestDerivative(unittest.TestCase):
         shape = (3, 2)
         x = np.ones(shape)*2
         dx = dcube(x)
-        self.assertListEqual(list(dx.shape), list(shape), 'Shape mismatch')
+        assert_array_almost_equal(list(dx.shape), list(shape),
+                                  decimal=12,
+                                  err_msg='Shape mismatch')
         txt = 'First differing element %d\n value = %g,\n true value = %g'
         for i, (val, tval) in enumerate(zip(dx.ravel(), (3*x**2).ravel())):
             self.assertAlmostEqual(val, tval, places=12,
@@ -153,12 +155,14 @@ class TestHessdiag(unittest.TestCase):
 class TestGlobalFunctions(unittest.TestCase):
     def test_vec2mat(self):
         mat = nd.core.vec2mat(np.arange(6), n=2, m=3)
-        self.assertListEqual(mat.tolist(), [[0, 1, 2], [1, 2, 3]])
+        assert_array_almost_equal(mat.tolist(), [[0, 1, 2], [1, 2, 3]],
+                                  decimal=12)
 
         mat = nd.core.vec2mat(np.arange(12), 3, 4)
-        self.assertListEqual(mat.tolist(), [[0, 1, 2, 3],
-                                            [1, 2, 3, 4],
-                                            [2, 3, 4, 5]])
+        assert_array_almost_equal(mat.tolist(), [[0, 1, 2, 3],
+                                                 [1, 2, 3, 4],
+                                                 [2, 3, 4, 5]],
+                                  decimal=12)
 
     def testdea3(self):
         Ei = np.zeros(3)
