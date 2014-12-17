@@ -20,11 +20,11 @@ Numdifftools implementation
 
 # !/usr/bin/env python
 
-from __future__ import division
+from __future__ import division, print_function
 import numpy as np
 import scipy.linalg as linalg
 import scipy.misc as misc
-import scipy.interpolate as si
+# import scipy.interpolate as si
 import warnings
 import matplotlib.pyplot as plt
 
@@ -822,7 +822,7 @@ class _PartialDerivative(_Derivative):
         '''
         x0 = np.atleast_1d(x00)
         nx = len(x0)
-        der, err, delta = np.zeros(nx), np.zeros(nx), np.zeros(nx)
+        df, err, delta = np.zeros(nx), np.zeros(nx), np.zeros(nx)
 
         step_nom = [None, ] * nx if self.step_nom is None else self.step_nom
 
@@ -830,12 +830,12 @@ class _PartialDerivative(_Derivative):
         self._x = np.asarray(x0, dtype=float)
         for i in range(nx):
             self._ix = i
-            der[i], err[i], delta[i] = self._derivative(fun, x0[i], step_nom[i])
+            df[i], err[i], delta[i] = self._derivative(fun, x0[i], step_nom[i])
             # err[i] = self.error_estimate
             # delta[i] = self.final_delta
         # self.error_estimate = err
         # self.final_delta = delta
-        return der, err, delta
+        return df, err, delta
 
     def _fun(self, xi):
         x = self._x.copy()
@@ -1355,9 +1355,9 @@ def _example(x=0.0001, fun_name='inv', n=1, method='central', step_max=100,
 def _test_rosen():
     rosen = lambda x: (1.-x[0])**2 + 105*(x[1]-x[0]**2)**2
     Hfun = Hessian(rosen, delta=[1e-6], step_num=1)
-    print Hfun([1, 1])
-    print Hfun.final_delta
-    print Hfun.error_estimate
+    print(Hfun([1, 1]))
+    print(Hfun.final_delta)
+    print(Hfun.error_estimate)
 
 
 def test_docstrings():
