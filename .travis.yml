@@ -1,7 +1,7 @@
 # Travis configuration file using the build matrix feature
 # Read more under http://docs.travis-ci.com/user/build-configuration/
 # THIS SCRIPT IS SUPPOSED TO BE AN EXAMPLE. MODIFY IT ACCORDING TO YOUR NEEDS!
-
+# - source numdifftools/tests/install.sh
 language: python
 virtualenv:
   system_site_packages: true
@@ -12,7 +12,6 @@ env:
     - DISTRIB="conda" PYTHON_VERSION="3.3" COVERAGE="false"
     - DISTRIB="conda" PYTHON_VERSION="3.4" COVERAGE="false"
 install:
-  - source numdifftools/tests/install.sh
   - pip install -r requirements.txt
 before_script:
   - git config --global user.email "per.andreas.brodtkorb@gmail.com"

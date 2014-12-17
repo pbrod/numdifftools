@@ -42,6 +42,7 @@ URL = "https://github.com/pbrod/numdifftools/"
 AUTHOR = "pbrod"
 EMAIL = "per.andreas.brodtkorb@gmail.com"
 
+TESTS_PATH = os.path.join(MAIN_PACKAGE, 'tests')
 COVERAGE_XML = False
 COVERAGE_HTML = True
 JUNIT_XML = False
@@ -180,7 +181,6 @@ def setup_package():
     docs_build_path = os.path.join(docs_path, "_build")
     install_reqs = get_install_requirements("requirements.txt")
 
-    tests_path = os.path.join(MAIN_PACKAGE, 'tests')
     command_options = {
         'docs': {'project': ('setup.py', MAIN_PACKAGE),
                  'version': ('setup.py', version.split('-', 1)[0]),
@@ -195,7 +195,7 @@ def setup_package():
                     'config_dir': ('setup.py', docs_path),
                     'source_dir': ('setup.py', docs_path),
                     'builder': ('setup.py', 'doctest')},
-        'test': {'test_suite': ('setup.py', tests_path),
+        'test': {'test_suite': ('setup.py', TESTS_PATH),
                  'cov': ('setup.py', 'numdifftools')}}
     if JUNIT_XML:
         command_options['test']['junitxml'] = ('setup.py', 'junit.xml')
@@ -213,7 +213,7 @@ def setup_package():
           license=LICENSE,
           long_description=read('README.rst'),
           classifiers=CLASSIFIERS,
-          test_suite='tests',
+          test_suite=TESTS_PATH,
           packages=setuptools.find_packages(exclude=['tests', 'tests.*']),
           install_requires=install_reqs,
           setup_requires=['six'],
