@@ -1,18 +1,22 @@
 # Travis configuration file using the build matrix feature
 # Read more under http://docs.travis-ci.com/user/build-configuration/
 # THIS SCRIPT IS SUPPOSED TO BE AN EXAMPLE. MODIFY IT ACCORDING TO YOUR NEEDS!
-# - source numdifftools/tests/install.sh
+
 language: python
-virtualenv:
-  system_site_packages: true
-env:
-  matrix:
-    - DISTRIB="ubuntu" PYTHON_VERSION="2.7" COVERAGE="true"
-    - DISTRIB="conda" PYTHON_VERSION="2.7" COVERAGE="false"
-    - DISTRIB="conda" PYTHON_VERSION="3.3" COVERAGE="false"
-    - DISTRIB="conda" PYTHON_VERSION="3.4" COVERAGE="false"
+python:
+  - "2.7"
+  - "3.3"
 install:
-  - pip install -r requirements.txt
+  # Install conda
+  - sudo pip install conda
+  # install deps
+  - sudo conda init
+  - sudo conda update conda --yes
+  - deps='pip numpy pandas requests nose numpydoc sphinx'
+  - conda create -p $HOME/py --yes $deps "python=$TRAVIS_PYTHON_VERSION"
+  - export PATH=$HOME/py/bin:$PATH
+  # install your own package into the environment
+  # - python setup.py install
 before_script:
   - git config --global user.email "per.andreas.brodtkorb@gmail.com"
   - git config --global user.name "pbrod"
