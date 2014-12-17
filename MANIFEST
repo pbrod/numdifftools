@@ -16,7 +16,7 @@ numdifftools\_version.py
 numdifftools\core.py
 numdifftools\info.py
 numdifftools\nd_algopy.py
-numdifftools\tests\test_hessian.py
-numdifftools\tests\test_numdifftools.py
-numdifftools\tests\test_numdifftools_docstrings.py
-numdifftools\tests\travis_install.sh
+tests\test_hessian.py
+tests\test_numdifftools.py
+tests\test_numdifftools_docstrings.py
+tests\travis_install.sh

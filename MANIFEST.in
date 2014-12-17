@@ -2,5 +2,6 @@ include versioneer.py
 include *.txt
 include *.rst
 include tox.ini
+recursive-include tests *.py *.sh
 recursive-include numdifftools *.py *.sh
 recursive-include docs *.rst *.py *.tex *.pdf
