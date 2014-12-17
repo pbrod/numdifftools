@@ -43,6 +43,9 @@ AUTHOR = "pbrod"
 EMAIL = "per.andreas.brodtkorb@gmail.com"
 
 TESTS_PATH = os.path.join(MAIN_PACKAGE, 'tests')
+TESTSCRIPTS = [os.path.join(TESTS_PATH, f) for f in os.listdir(TESTS_PATH)
+               if f.endswith('.py')]
+
 COVERAGE_XML = False
 COVERAGE_HTML = True
 JUNIT_XML = False
@@ -214,7 +217,8 @@ def setup_package():
           long_description=read('README.rst'),
           classifiers=CLASSIFIERS,
           test_suite=TESTS_PATH,
-          packages=setuptools.find_packages(), #exclude=['tests', 'tests.*']),
+          packages=setuptools.find_packages(),
+          package_data = {'': TESTSCRIPTS}, 
           install_requires=install_reqs,
           setup_requires=['six'],
           cmdclass=cmdclass,
