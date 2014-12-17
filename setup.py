@@ -218,7 +218,7 @@ def setup_package():
           classifiers=CLASSIFIERS,
           test_suite=TESTS_PATH,
           packages=setuptools.find_packages(),
-          package_data = {'': TESTSCRIPTS}, 
+          package_data = {MAIN_PACKAGE: TESTSCRIPTS}, 
           install_requires=install_reqs,
           setup_requires=['six'],
           cmdclass=cmdclass,
