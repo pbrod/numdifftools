@@ -20,16 +20,16 @@ class TestDerivative(unittest.TestCase):
                                   err_msg='Shape mismatch')
         txt = 'First differing element %d\n value = %g,\n true value = %g'
         for i, (val, tval) in enumerate(zip(dx.ravel(), (3*x**2).ravel())):
-            self.assertAlmostEqual(val, tval, places=12,
-                                   msg=txt % (i, val, tval))
+            assert_array_almost_equal(val, tval, decimal=12,
+                                   err_msg=txt % (i, val, tval))
 
     def test_derivative_exp(self):
         # derivative of exp(x), at x == 0
         dexp = nd.Derivative(np.exp)
-        self.assertAlmostEqual(dexp(0), np.exp(0), places=8)
+        assert_array_almost_equal(dexp(0), np.exp(0), decimal=8)
         dexp.n = 2
         t = dexp(0)
-        self.assertAlmostEqual(t, np.exp(0))
+        assert_array_almost_equal(t, np.exp(0))
 
     def test_derivative_sin(self):
         # Evaluate the indicated (default = first)
@@ -44,7 +44,7 @@ class TestDerivative(unittest.TestCase):
         # Higher order derivatives (second derivative)
         # Truth: 0
         d2sin = nd.Derivative(np.sin, n=2, step_max=0.5)
-        self.assertAlmostEqual(d2sin(np.pi), 0.0, places=8)
+        assert_array_almost_equal(d2sin(np.pi), 0.0, decimal=8)
 
         # Higher order derivatives (up to the fourth derivative)
         # Truth: sqrt(2)/2 = 0.707106781186548
@@ -89,13 +89,13 @@ class TestDerivative(unittest.TestCase):
         y = dtan(np.pi)
         abserr = dtan.error_estimate
         self.assertTrue(np.abs(y - 1.0) < abserr)
-        self.assertAlmostEqual(y, 1.0, places=8)
+        assert_array_almost_equal(y, 1.0, decimal=8)
 
     def test_derivative_poly1d(self):
         p0 = np.poly1d(range(1, 6))
         fd = nd.Derivative(p0, n=4, romberg_terms=0)
         p4 = p0.deriv(4)
-        self.assertAlmostEqual(fd(1), p4(1), places=4)
+        assert_array_almost_equal(fd(1), p4(1), decimal=4)
 
     def test_vectorized_derivative_of_x2(self):
         # Functions should be vectorized for speed, but its not
@@ -115,7 +115,7 @@ class TestJacobian(unittest.TestCase):
         Jfun = nd.Jacobian(fun)
         J = Jfun([1, 2, 0.75])  # should be numerically zero
         for ji in J.ravel():
-            self.assertAlmostEqual(ji, 0.0)
+            assert_array_almost_equal(ji, 0.0)
 
 
 class TestGradient(unittest.TestCase):
@@ -125,7 +125,7 @@ class TestGradient(unittest.TestCase):
         d = dfun([1, 2, 3])
         dtrue = [2., 4., 6.]
         for (di, dit) in zip(d, dtrue):
-            self.assertAlmostEqual(di, dit)
+            assert_array_almost_equal(di, dit)
 
 
 class TestHessian(unittest.TestCase):
@@ -138,7 +138,7 @@ class TestHessian(unittest.TestCase):
         h2 = Hfun2([0, 0])  # h2 = [-1 1; 1 -1];
         htrue = [-1., 1., 1., -1.]
         for (hi, hit) in zip(h2.ravel(), htrue):
-            self.assertAlmostEqual(hi, hit)
+            assert_array_almost_equal(hi, hit)
 
 
 class TestHessdiag(unittest.TestCase):
@@ -149,7 +149,7 @@ class TestHessdiag(unittest.TestCase):
         hd = Hfun([1, 2, 3])
         htrue = [0., 2., 18.]
         for (hi, hit) in zip(hd, htrue):
-            self.assertAlmostEqual(hi, hit)
+            assert_array_almost_equal(hi, hit)
 
 
 class TestGlobalFunctions(unittest.TestCase):
@@ -172,7 +172,7 @@ class TestGlobalFunctions(unittest.TestCase):
             Ei[k] = np.trapz(np.sin(x), x)
         [En, err] = nd.dea3(Ei[0], Ei[1], Ei[2])
         self.assertTrue(np.abs(En - 1) < err)
-        self.assertAlmostEqual(En, 1.0, places=8)
+        assert_array_almost_equal(En, 1.0, decimal=8)
 
 if __name__ == '__main__':
     unittest.main()
