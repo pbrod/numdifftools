@@ -3,21 +3,17 @@
 # THIS SCRIPT IS SUPPOSED TO BE AN EXAMPLE. MODIFY IT ACCORDING TO YOUR NEEDS!
 
 language: python
+
 python:
-  - "2.7"
-  - "3.3"
-install:
-  # Install conda
-  - sudo pip install conda
-  # install deps
-  - sudo conda init
-  - sudo conda update conda --yes
-  - deps='pip numpy pandas requests nose numpydoc sphinx'
-  - conda create -p $HOME/py --yes $deps "python=$TRAVIS_PYTHON_VERSION"
-  - export PATH=$HOME/py/bin:$PATH
-  # install your own package into the environment
-  # - python setup.py install
+  - "2.7_with_system_site_packages"
+  - "3.2_with_system_site_packages"
+
 before_script:
+  # add ppa with more recent scipy version
+  - sudo add-apt-repository ppa:pylab/stable  -y
+  - sudo apt-get update -qq
+  - sudo apt-get install -y python-sphinx python-nose python-numpy python-scipy
+  - sudo apt-get install -y python3-sphinx python3-nose python3-numpy python3-scipy
   - git config --global user.email "per.andreas.brodtkorb@gmail.com"
   - git config --global user.name "pbrod"
 script:
