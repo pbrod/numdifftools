@@ -15,15 +15,15 @@ backward differences are used.
 
 The methods provided are:
 
-- **Derivative**: Computate derivatives of order 1 through 4 on any scalar function.
+- **Derivative**: Compute the derivatives of order 1 through 4 on any scalar function.
 
-- **Gradient**: Computes the gradient vector of a scalar function of one or more variables.
+- **Gradient**: Compute the gradient vector of a scalar function of one or more variables.
 
-- **Jacobian**: Computes the Jacobian matrix of a vector valued function of one or more variables.
+- **Jacobian**: Compute the Jacobian matrix of a vector valued function of one or more variables.
 
-- **Hessian**: Computes the Hessian matrix of all 2nd partial derivatives of a scalar function of one or more variables.
+- **Hessian**: Compute the Hessian matrix of all 2nd partial derivatives of a scalar function of one or more variables.
 
-- **Hessdiag**: Computes only the diagonal elements of the Hessian matrix 
+- **Hessdiag**: Compute only the diagonal elements of the Hessian matrix 
 
 All of these methods also produce error estimates on the result.
 
