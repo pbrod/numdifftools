@@ -1,8 +1,8 @@
-====================
-git_numdifftools_new
-====================
+============
+Numdifftools
+============
 
-This is the documentation of **git_numdifftools_new**.
+This is the documentation of **Numdifftools**.
 
 .. note::
 
@@ -28,10 +28,13 @@ Contents
 ========
 
 .. toctree::
-   :maxdepth: 2
+    :maxdepth: 3
+	 
+	 Introduction <src/intro>
+	 Theory <src/derivest>
 
-   License <license>
-   Module Reference <_rst/modules>
+    License <license>
+    Module Reference <_rst/modules>
 
 
 Indices and tables

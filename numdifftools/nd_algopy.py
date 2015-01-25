@@ -84,6 +84,7 @@ class Derivative(_Common):
     Examples
     --------
     # 1'st and 2'nd derivative of exp(x), at x == 1
+
     >>> import numpy as np
     >>> import numdifftools.nd_algopy as nda
     >>> fd = nda.Derivative(np.exp)              # 1'st derivative
@@ -91,6 +92,7 @@ class Derivative(_Common):
     array(2.718281828459045)
 
     # 1'st derivative of x.^3+x.^4, at x = [0,1]
+
     >>> fun = lambda x: x**3 + x**4
     >>> fd3 = nda.Derivative(fun)
     >>> fd3([0,1])          #  True derivatives: [0,7]
@@ -131,6 +133,7 @@ class Jacobian(_Common):
     >>> import numdifftools.nd_algopy as nda
 
     #(nonlinear least squares)
+
     >>> xdata = np.reshape(np.arange(0,1,0.1),(-1,1))
     >>> ydata = 1+2*np.exp(0.75*xdata)
     >>> fun = lambda c: (c[0]+c[1]*np.exp(c[2]*xdata) - ydata)**2
@@ -279,7 +282,8 @@ class Hessian(_Common):
     --------
     >>> import numdifftools.nd_algopy as nda
 
-    #Rosenbrock function, minimized at [1,1]
+    # Rosenbrock function, minimized at [1,1]
+
     >>> rosen = lambda x : (1.-x[0])**2 + 105*(x[1]-x[0]**2)**2
     >>> Hfun = nda.Hessian(rosen)
     >>> h = Hfun([1, 1]) #  h =[ 842 -420; -420, 210];
@@ -287,7 +291,8 @@ class Hessian(_Common):
     array([[ 842., -420.],
            [-420.,  210.]])
 
-    #cos(x-y), at (0,0)
+    # cos(x-y), at (0,0)
+
     >>> cos = np.cos
     >>> fun = lambda xy : cos(xy[0]-xy[1])
     >>> Hfun2 = nda.Hessian(fun)

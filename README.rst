@@ -2,8 +2,15 @@
 Numdifftools
 ============
 
+.. image:: https://badge.fury.io/py/numdifftools.png
+    :target: https://pypi.python.org/pypi/Numdifftools/
+
 .. image:: https://travis-ci.org/pbrod/numdifftools.svg?branch=master
     :target: https://travis-ci.org/pbrod/numdifftools
+
+.. image:: https://pypip.in/d/numdifftools/badge.png
+        :target: https://pypi.python.org/pypi/Numdifftools/
+
 
 Suite of tools written in `_Python <http://www.python.org/>`_ to solve automatic
 numerical differentiation problems in one or more variables. Finite differences

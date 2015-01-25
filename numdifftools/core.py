@@ -324,7 +324,7 @@ class _Derivative(object):
     step_num : integer  (Default 26)
         The minimum step_num for making romberg extrapolation work is
             7 + np.ceil(self.n/2.) + self.order + self.romberg_terms
-    delta : vector default step_max*step_ratio**(-arange(steps_num))
+    delta : vector default step_max*step_ratio**(-arange(step_num))
         Defines the steps sizes used in derivation: h_i = step_nom[i] * delta
     vectorized : Bool
         True  - if your function is vectorized.
@@ -348,7 +348,7 @@ class _Derivative(object):
     def __init__(self, fun, n=1, order=2, method='central', romberg_terms=2,
                  step_max=2.0, step_nom=None, step_ratio=2.0, step_num=26,
                  delta=None, vectorized=False, verbose=False,
-                 use_dea=True):
+                 use_dea=True, transform=None):
         self.fun = fun
         self.n = n
         self.order = order
@@ -362,6 +362,7 @@ class _Derivative(object):
         self.vectorized = vectorized
         self.verbose = verbose
         self.use_dea = use_dea
+        self.transform = transform
 
         self._check_params()
 
@@ -749,10 +750,21 @@ class _Derivative(object):
         i_nonfinite, = isnonfinite.ravel().nonzero()
         if i_nonfinite.size > 0:
             i = np.max(i_nonfinite)
-            allfinite_start = i + 1
-            warnings.warn('The stepsize (%g) is possibly too large!' % h1[i])
-            der_init = der_init[allfinite_start:]
-            h1 = h1[allfinite_start:]
+            im = np.min(i_nonfinite)
+            if i < der_init.size - 1:
+                msg = 'The stepsize (%g) is possibly too large!' % h1[i]
+                der_init = der_init[i+1:]
+                h1 = h1[i+1:]
+            elif 0 < im:
+                msg = 'The stepsize (%g) is possibly too small!' % h1[im]
+                der_init = der_init[:im]
+                h1 = h1[:im]
+            else:
+                msg = ''
+                k, = (1-isnonfinite).nonzero()
+                der_init = der_init[k]
+                h1 = h1[k]
+            warnings.warn(msg)
         return der_init, h1
 
     def _predict_uncertainty(self, rombcoefs):
@@ -844,7 +856,7 @@ class _PartialDerivative(_Derivative):
 
 
 class Derivative(_Derivative):
-    __doc__ = ('''Estimate n'th derivative of fun at x0, with error estimate
+    __doc__ = '''Estimate n'th derivative of fun at x0, with error estimate
 
     %s
 
@@ -854,6 +866,7 @@ class Derivative(_Derivative):
      >>> import numdifftools as nd
 
      # 1'st and 2'nd derivative of exp(x), at x == 1
+
      >>> fd = nd.Derivative(np.exp)       # 1'st derivative
      >>> fdd = nd.Derivative(np.exp,n=2)  # 2'nd derivative
      >>> fd(1)
@@ -867,6 +880,7 @@ class Derivative(_Derivative):
      array([ True,  True], dtype=bool)
 
      # 3'rd derivative of x.^3+x.^4, at x = [0,1]
+
      >>> fun = lambda x: x**3 + x**4
      >>> dfun = lambda x: 6 + 4*3*2*np.asarray(x)
      >>> fd3 = nd.Derivative(fun,n=3)
@@ -882,10 +896,22 @@ class Derivative(_Derivative):
      Hessdiag,
      Hessian,
      Jacobian
-    ''' % _Derivative.__doc__.partition('\n')[2])
+    ''' % _Derivative.__doc__.partition('\n')[2] if _Derivative.__doc__ else ''
 
     def __call__(self, x):
         return self.derivative(x)
+
+    def _get_transformed_fun(self, x):
+        if self.transform is None:
+            fun = self.fun
+            f = 1
+        elif self.transform == 'exp':
+            fun = lambda x: np.exp(self.fun(x))
+            f = np.exp(-self.fun(x))
+        elif self.transform == 'log':
+            fun = lambda x: np.log(np.abs(self.fun(x)))
+            f = self.fun(x)
+        return fun, f
 
     def derivative(self, x):
         ''' Return estimate of n'th derivative of fun at x
@@ -894,10 +920,11 @@ class Derivative(_Derivative):
         self._initialize()
         x0 = np.atleast_1d(x)
         shape = x0.shape
-        der, err, delta = self._derivative(self.fun, x0.ravel(), self.step_nom)
-        self.error_estimate = err.reshape(shape)
+        fun, f0 = self._get_transformed_fun(x0)
+        der, err, delta = self._derivative(fun, x0.ravel(), self.step_nom)
+        self.error_estimate = err.reshape(shape) * f0
         self.final_delta = delta.reshape(shape)
-        return der.reshape(shape)
+        return der.reshape(shape) * f0
 
 
 class Jacobian(_Derivative):
@@ -923,6 +950,7 @@ class Jacobian(_Derivative):
     >>> import numdifftools as nd
 
     #(nonlinear least squares)
+
     >>> xdata = np.reshape(np.arange(0,1,0.1),(-1,1))
     >>> ydata = 1+2*np.exp(0.75*xdata)
     >>> fun = lambda c: (c[0]+c[1]*np.exp(c[2]*xdata) - ydata)**2
@@ -961,7 +989,7 @@ class Jacobian(_Derivative):
     ''' % _Derivative.__doc__.partition('\n')[2].replace(
         'Integer from 1 to 4             (Default 1)', '1').replace(
         'defining derivative order.',
-        'Derivative order is always 1.'))
+        'Derivative order is always 1.') if _Derivative.__doc__ else '')
 
     def __call__(self, x):
         return self.jacobian(x)
@@ -1096,7 +1124,7 @@ class Gradient(_PartialDerivative):
     ''' % _Derivative.__doc__.partition('\n')[2].replace(
         'Integer from 1 to 4             (Default 1)', '1').replace(
         'defining derivative order.',
-        'Derivative order is always 1.'))
+        'Derivative order is always 1.') if _Derivative.__doc__ else '')
 
     def __call__(self, x):
         return self.gradient(x)
@@ -1155,7 +1183,7 @@ class Hessdiag(_PartialDerivative):
     ''' % _Derivative.__doc__.partition('\n')[2].replace(
         'Integer from 1 to 4             (Default 1)', '2').replace(
         'defining derivative order.',
-        'Derivative order is always 2.'))
+        'Derivative order is always 2.') if _Derivative.__doc__ else '')
 
     def __call__(self, x):
         return self.hessdiag(x)
@@ -1199,6 +1227,7 @@ class Hessian(Hessdiag):
     >>> import numdifftools as nd
 
     # Rosenbrock function, minimized at [1,1]
+
     >>> rosen = lambda x : (1.-x[0])**2 + 105*(x[1]-x[0]**2)**2
     >>> Hfun = nd.Hessian(rosen)
     >>> h = Hfun([1, 1])
@@ -1210,6 +1239,7 @@ class Hessian(Hessdiag):
            [ True,  True]], dtype=bool)
 
     # cos(x-y), at (0,0)
+
     >>> cos = np.cos
     >>> fun = lambda xy : cos(xy[0]-xy[1])
     >>> Hfun2 = nd.Hessian(fun)
@@ -1240,7 +1270,7 @@ class Hessian(Hessdiag):
     ''' % _Derivative.__doc__.partition('\n')[2].replace(
         'Integer from 1 to 4             (Default 1)', '2').replace(
         'defining derivative order.',
-        'Derivative order is always 2.'))
+        'Derivative order is always 2.') if _Derivative.__doc__ else '')
 
     def __call__(self, x):
         return self.hessian(x)
@@ -1301,7 +1331,8 @@ class Hessian(Hessdiag):
 
 
 def _example(x=0.0001, fun_name='inv', n=1, method='central', step_max=100,
-             step_ratio=2, step_num=30, romberg_terms=2, use_dea=True):
+             step_ratio=2, step_num=30, romberg_terms=2, use_dea=True,
+             transform=None):
     '''
     '''
     sinh, cosh, tanh = np.sinh, np.cosh, np.tanh
@@ -1334,7 +1365,8 @@ def _example(x=0.0001, fun_name='inv', n=1, method='central', step_max=100,
     fd = Derivative(fun0, n=n, method=method, step_max=step_max,
                     step_ratio=step_ratio,
                     step_num=step_num, verbose=True, vectorized=True,
-                    romberg_terms=romberg_terms, use_dea=use_dea)
+                    romberg_terms=romberg_terms, use_dea=use_dea,
+                    transform=transform)
 
     t = fd(x)
     txt = ''
@@ -1368,7 +1400,8 @@ def test_docstrings():
 if __name__ == '__main__':
     # _test_rosen()
     # test_dea()
-    # _example(x=0.001, fun_name='tanh', n=1, method='c', step_max=20.,
-    #         step_ratio=3., step_num=15, romberg_terms=3, use_dea=True)
+    # _example(x=0.00000001, fun_name='inv', n=1, method='c', step_max=20.,
+    #          step_ratio=3., step_num=25, romberg_terms=3, use_dea=True,
+    #          transform=None)
 
     test_docstrings()
