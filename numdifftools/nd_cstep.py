@@ -105,6 +105,12 @@ def _get_epsilon(x, s, epsilon, n):
     return _make_exact(h)
 
 
+def _get_step_nom(x0, step_nom=None):
+    if step_nom is None:
+        step_nom = np.maximum(np.log1p(np.abs(x0)), 0.02)
+    return _make_exact(np.atleast_1d(step_nom)) * np.ones(x0.shape)
+
+
 _der_doc = """
     Calculate %(derivative)s with finite difference approximation
 
@@ -313,6 +319,51 @@ class Gradient(_Derivative):
         partials = [f(x + ih, *args, **kwds).imag / epsilon[i]
                     for i, ih in enumerate(increments)]
         return np.array(partials).T
+
+
+class Jacobian(Gradient):
+    __doc__ = _der_doc % dict(derivative='Gradient or Jacobian',
+                              scale_complex='1',
+                              scale_forward='2',
+                              scale_backward='2',
+                              scale_central='3',
+                              extra_method="'backward' : backward difference "
+                              "derivative (scale=2)", returns="""
+    Returns
+    -------
+    jacob : array
+        gradient or Jacobian
+    """, extra_note="""
+    If f returns a 1d array, it returns a Jacobian. If a 2d array is returned
+    by f (e.g., with a value for each observation), it returns a 3d array
+    with the Jacobian of each observation with shape xk x nobs x xk. I.e.,
+    the Jacobian of the first observation would be [:, 0, :]
+    """, example='''
+     Examples
+    --------
+    >>> import numdifftools.nd_cstep as ndc
+
+    #(nonlinear least squares)
+
+    >>> xdata = np.reshape(np.arange(0,1,0.1),(-1,1))
+    >>> ydata = 1+2*np.exp(0.75*xdata)
+    >>> fun = lambda c: (c[0]+c[1]*np.exp(c[2]*xdata) - ydata)**2
+
+    Jfun = ndc.Jacobian(fun)
+    Jfun([1,2,0.75]).T # should be numerically zero
+    array([[ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
+           [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
+           [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]])
+
+    >>> fun2 = lambda x : x[0]*x[1]*x[2] + np.exp(x[0])*x[1]
+    >>> Jfun3 = ndc.Jacobian(fun2)
+    >>> Jfun3([3.,5.,7.])
+    array([ 135.42768462,   41.08553692,   15.        ])
+    ''', see_also="""
+    See also
+    --------
+    Derivative, Hessian
+    """)
 
 
 class Hessian(_Derivative):
