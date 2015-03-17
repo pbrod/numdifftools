@@ -1,5 +1,6 @@
 """numerical differentiation function, gradient, Jacobian, and Hessian
-Author : josef-pkt
+
+Author : pbrod, josef-pkt
 License : BSD
 Notes
 -----
@@ -42,8 +43,8 @@ without dependencies.
 #    similar to
 #    http://en.wikipedia.org/wiki/Levenberg%E2%80%93Marquardt_algorithm
 from __future__ import print_function
-# from statsmodels.compat.python import range
 import numpy as np
+from numdifftools import dea3
 
 # NOTE: we only do double precision internally so far
 EPS = np.MachAr().eps * 10
@@ -157,16 +158,44 @@ _der_doc = """
 
 
 class _Derivative(object):
-    def __init__(self, f, epsilon=None, method='complex'):
+    def __init__(self, f, epsilon=None, method='complex', adaptive=False):
         self.f = f
         self.epsilon = epsilon
         self._method = self._get_method(method)
+        self._scale = self._get_scale(method)
+        self.adaptive = adaptive
 
     def _get_method(self, method):
         pass
 
+    def _get_scale(self, method):
+        return dict(complex=1, central=3).get(method, 2)
+
+    def _get_shape(self, x):
+        return x.shape
+
     def __call__(self, x, *args, **kwds):
-        return self._method(self.f, np.asarray(x), self.epsilon, *args, **kwds)
+        xi = np.asarray(x)
+        if self.adaptive:
+            return self._adaptive(self.f, xi, self.epsilon, *args, **kwds)
+        else:
+            epsilon = _get_epsilon(xi, self._scale, self.epsilon,
+                                   self._get_shape(xi))
+            return self._method(self.f, xi, epsilon, *args, **kwds)
+
+    def _adaptive(self, f, x, epsilon, *args, **kwds):
+        delta = _get_epsilon(x.ravel(), self._scale, epsilon, n=x.size)
+        res = []
+        for step_nom in 2.0**np.arange(-2, 10):
+            h = _make_exact(delta * step_nom)
+            if (h>0).all():
+                res.append(self._method(f, x, h, *args, **kwds))
+        org_shape = res[0].shape
+        res = np.vstack([r.ravel() for r in res])
+        der, errest = dea3(res[0:-2], res[1:-1], res[2:])
+        i = np.nanargmin(errest, axis=0)
+        ix = np.ravel_multi_index((i, np.arange(der.shape[1])), der.shape)
+        return der.flat[ix].reshape(org_shape)
 
 
 class Derivative(_Derivative):
@@ -209,26 +238,38 @@ class Derivative(_Derivative):
                     forward=self._forward,
                     backward=self._backward).get(method)
 
-    def _central(self, f, x, epsilon, *args, **kwds):
-        h = _get_epsilon(x, 3, epsilon, n=x.shape) / 2.0
-        return (f(x + h, *args, **kwds) - f(x - h, *args, **kwds)) / (2.0 * h)
+    def _central(self, f, x, h2, *args, **kwds):
+        h = h2 / 2.0
+        return (f(x + h, *args, **kwds) - f(x - h, *args, **kwds)) / h2
 
-    def _forward(self, f, x, epsilon, *args, **kwds):
-        h = _get_epsilon(x, 2, epsilon, n=x.shape)
+    def _forward(self, f, x, h, *args, **kwds):
         return (f(x + h, *args, **kwds) - f(x, *args, **kwds)) / h
 
-    def _backward(self, f, x, epsilon, *args, **kwds):
-        h = _get_epsilon(x, 2, epsilon, n=x.shape)
+    def _backward(self, f, x, h, *args, **kwds):
         return (f(x, *args, **kwds) - f(x - h, *args, **kwds)) / h
 
-    def _complex(self, f, x, epsilon, *args, **kwds):
-        epsilon = _get_epsilon(x, 1, epsilon, n=x.shape)
-        ih = 1j * epsilon
-        return f(x + ih, *args, **kwds).imag / epsilon
+    def _complex(self, f, x, h, *args, **kwds):
+        ih = 1j * h
+        return f(x + ih, *args, **kwds).imag / h
+
+    def _adaptive(self, f, x, epsilon, *args, **kwds):
+        org_shape = x.shape
+
+        delta = _get_epsilon(x.ravel(), self._scale, epsilon, n=x.size)
+        res = []
+        for step_nom in 10.0**np.arange(-2, 10):
+            h = _make_exact(delta * step_nom)
+            if (h>0).all():
+                res.append(self._method(f, x, h, *args, **kwds))
+        res = np.vstack(res)
+        der, errest = dea3(res[0:-2], res[1:-1], res[2:])
+        i = np.nanargmin(errest, axis=0)
+        ix = np.ravel_multi_index((i, np.arange(der.shape[1])), der.shape)
+        return der.flat[ix].reshape(org_shape)
 
 
 class Gradient(_Derivative):
-    __doc__ = _der_doc % dict(derivative='Gradient or Jacobian',
+    __doc__ = _der_doc % dict(derivative='Gradient',
                               scale_complex='1',
                               scale_forward='2',
                               scale_backward='2',
@@ -238,7 +279,7 @@ class Gradient(_Derivative):
     Returns
     -------
     grad : array
-        gradient or Jacobian
+        gradient
     """, extra_note="""
     If f returns a 1d array, it returns a Jacobian. If a 2d array is returned
     by f (e.g., with a value for each observation), it returns a 3d array
@@ -282,18 +323,19 @@ class Gradient(_Derivative):
                     backward=self._backward,
                     central=self._central).get(method)
 
-    def _central(self, f, x, epsilon, *args, **kwds):
+    def _get_shape(self, x):
+        return len(x)
+
+    def _central(self, f, x, h2, *args, **kwds):
         n = len(x)
-        epsilon = _get_epsilon(x, 3, epsilon, n) / 2.0
-        increments = np.identity(n) * epsilon
+        increments = np.identity(n) * h2 / 2.0
         partials = [(f(x + h, *args, **kwds) -
-                     f(x - h, *args, **kwds)) / (2.0 * epsilon[i])
+                     f(x - h, *args, **kwds)) / (h2[i])
                     for i, h in enumerate(increments)]
         return np.array(partials).T
 
     def _backward(self, f, x, epsilon, *args, **kwds):
         n = len(x)
-        epsilon = _get_epsilon(x, 2, epsilon, n)
         increments = np.identity(n) * epsilon
         f0 = f(x, *args, **kwds)
         partials = [(f0 - f(x - h, *args, **kwds)) / epsilon[i]
@@ -302,7 +344,6 @@ class Gradient(_Derivative):
 
     def _forward(self, f, x, epsilon, *args, **kwds):
         n = len(x)
-        epsilon = _get_epsilon(x, 2, epsilon, n)
         increments = np.identity(n) * epsilon
         f0 = f(x, *args, **kwds)
         partials = [(f(x + h, *args, **kwds) - f0) / epsilon[i]
@@ -311,10 +352,8 @@ class Gradient(_Derivative):
 
     def _complex(self, f, x, epsilon, *args, **kwds):
         # From Guilherme P. de Freitas, numpy mailing list
-        # May 04 2010 thread "Improvement of performance"
         # http://mail.scipy.org/pipermail/numpy-discussion/2010-May/050250.html
         n = len(x)
-        epsilon = _get_epsilon(x, 1, epsilon, n)
         increments = np.identity(n) * 1j * epsilon
         partials = [f(x + ih, *args, **kwds).imag / epsilon[i]
                     for i, ih in enumerate(increments)]
@@ -322,7 +361,7 @@ class Gradient(_Derivative):
 
 
 class Jacobian(Gradient):
-    __doc__ = _der_doc % dict(derivative='Gradient or Jacobian',
+    __doc__ = _der_doc % dict(derivative='Jacobian',
                               scale_complex='1',
                               scale_forward='2',
                               scale_backward='2',
@@ -332,7 +371,7 @@ class Jacobian(Gradient):
     Returns
     -------
     jacob : array
-        gradient or Jacobian
+        Jacobian
     """, extra_note="""
     If f returns a 1d array, it returns a Jacobian. If a 2d array is returned
     by f (e.g., with a value for each observation), it returns a 3d array
@@ -349,11 +388,11 @@ class Jacobian(Gradient):
     >>> ydata = 1+2*np.exp(0.75*xdata)
     >>> fun = lambda c: (c[0]+c[1]*np.exp(c[2]*xdata) - ydata)**2
 
-    Jfun = ndc.Jacobian(fun)
-    Jfun([1,2,0.75]).T # should be numerically zero
-    array([[ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
-           [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
-           [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]])
+    >>> Jfun = ndc.Jacobian(fun)
+    >>> Jfun([1,2,0.75]).T # should be numerically zero
+    >>> array([[ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
+    ...       [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
+    ...       [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]])
 
     >>> fun2 = lambda x : x[0]*x[1]*x[2] + np.exp(x[0])*x[1]
     >>> Jfun3 = ndc.Jacobian(fun2)
@@ -500,14 +539,16 @@ class Hessian(_Derivative):
                     central2=self._central2,
                     central=self._central).get(method)
 
-    def _complex(self, f, x, epsilon, *args, **kwargs):
-        '''Calculate Hessian with complex-step derivative approximation
+    def _get_scale(self, method):
+        return dict(central=4).get(method, 3)
 
+    def _complex(self, f, x, h, *args, **kwargs):
+        '''Calculate Hessian with complex-step derivative approximation
         The stepsize is the same for the complex and the finite difference part
         '''
         # TODO: might want to consider lowering the step for pure derivatives
         n = len(x)
-        h = _get_epsilon(x, 3, epsilon, n)
+        # h = _get_epsilon(x, 3, epsilon, n)
         ee = np.diag(h)
         hess = np.outer(h, h)
 
@@ -519,10 +560,10 @@ class Hessian(_Derivative):
                 hess[j, i] = hess[i, j]
         return hess
 
-    def _central(self, f, x, epsilon, *args, **kwargs):
+    def _central(self, f, x, h, *args, **kwargs):
         '''Eq 9.'''
         n = len(x)
-        h = _get_epsilon(x, 4, epsilon, n)
+        # h = _get_epsilon(x, 4, epsilon, n)
         ee = np.diag(h)
         hess = np.outer(h, h)
 
@@ -536,11 +577,11 @@ class Hessian(_Derivative):
                 hess[j, i] = hess[i, j]
         return hess
 
-    def _central2(self, f, x, epsilon, *args, **kwargs):
+    def _central2(self, f, x, h, *args, **kwargs):
         '''Eq. 8'''
         n = len(x)
         # NOTE: ridout suggesting using eps**(1/4)*theta
-        h = _get_epsilon(x, 3, epsilon, n)
+        # h = _get_epsilon(x, 3, epsilon, n)
         ee = np.diag(h)
         f0 = f(x, *args, **kwargs)
         # Compute forward step
@@ -562,10 +603,10 @@ class Hessian(_Derivative):
 
         return hess
 
-    def _forward(self, f, x, epsilon, *args, **kwargs):
+    def _forward(self, f, x, h, *args, **kwargs):
         '''Eq. 7'''
         n = len(x)
-        h = _get_epsilon(x, 3, epsilon, n)
+        # h = _get_epsilon(x, 3, epsilon, n)
         ee = np.diag(h)
 
         f0 = f(x, *args, **kwargs)
@@ -693,8 +734,8 @@ def main():
     print(nd.Derivative(np.cosh)(0))
 
 if __name__ == '__main__':  # pragma : no cover
-    main()
+#    main()
 #     import nxs
-#     d = Derivative(np.cos, method='complex')
-#     print(d(0))
+    d = Derivative(np.cos, method='central', adaptive=True)
+    print(d([0, 1e5*np.pi*2]))
 #     print(d(1e10*np.pi*2))
