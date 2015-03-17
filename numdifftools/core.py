@@ -281,8 +281,8 @@ def dea3(v0, v1, v2, symmetric=False):
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")  # ignore division by zero and overflow
         ss = 1.0 / delta2 - 1.0 / delta1
-        smalle2 = (abs(ss * E1) <= 1.0e-3).ravel()
-    converged = (err1 <= tol1) & (err2 <= tol2).ravel() | smalle2
+        smalle2 = (abs(ss * E1) <= 1.0e-3)
+    converged = (err1 <= tol1) & (err2 <= tol2) | smalle2
     result = np.where(converged, E2 * 1.0, E1 + 1.0 / ss)
     abserr = err1 + err2 + np.where(converged, tol2 * 10, abs(result-E2))
     if symmetric and len(result) > 1:

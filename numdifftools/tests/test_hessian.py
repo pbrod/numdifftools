@@ -1,7 +1,5 @@
 # -*- coding:utf-8 -*-
-"""
-
-"""
+""""""
 
 from __future__ import division
 import unittest
@@ -57,8 +55,7 @@ class classicalHamiltonian:
         return Vx
 
     def initialposition(self):
-        '''Defines initial position as an estimate for the minimize process
-        '''
+        """Defines initial position as an estimate for the minimize process."""
         N = self.N
         x_0 = r_[-(N - 1) / 2:(N - 1) / 2:N * 1j]
         return x_0
