@@ -619,7 +619,7 @@ class Hessian(_Derivative):
         # Compute "double" forward step
         for i in range(n):
             for j in range(i, n):
-                hess[i, j] = (f(x + ee[i, :] + ee[j, :], args, **kwargs) -
+                hess[i, j] = (f(x + ee[i, :] + ee[j, :], *args, **kwargs) -
                               g[i] - g[j] + f0) / hess[j, i]
                 hess[j, i] = hess[i, j]
         return hess
