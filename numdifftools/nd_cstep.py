@@ -106,12 +106,6 @@ def _get_epsilon(x, s, epsilon, n):
     return _make_exact(h)
 
 
-def _get_step_nom(x0, step_nom=None):
-    if step_nom is None:
-        step_nom = np.maximum(np.log1p(np.abs(x0)), 0.02)
-    return _make_exact(np.atleast_1d(step_nom)) * np.ones(x0.shape)
-
-
 _der_doc = """
     Calculate %(derivative)s with finite difference approximation
 
@@ -625,117 +619,117 @@ class Hessian(_Derivative):
         return hess
 
 
-def main():
-    import statsmodels.api as sm
-
-    data = sm.datasets.spector.load()
-    data.exog = sm.add_constant(data.exog, prepend=False)
-    mod = sm.Probit(data.endog, data.exog)
-    _res = mod.fit(method="newton")
-    _test_params = [1, 0.25, 1.4, -7]
-    _llf = mod.loglike
-    _score = mod.score
-    _hess = mod.hessian
-
-    def fun(beta, x):
-        return np.dot(x, beta).sum(0)
-
-    def fun1(beta, y, x):
-        # print(beta.shape, x.shape)
-        xb = np.dot(x, beta)
-        return (y - xb) ** 2  # (xb-xb.mean(0))**2
-
-    def fun2(beta, y, x):
-        # print(beta.shape, x.shape)
-        return fun1(beta, y, x).sum(0)
-
-    nobs = 200
-    x = np.random.randn(nobs, 3)
-
-    # xk = np.array([1, 2, 3])
-    xk = np.array([1., 1., 1.])
-    # xk = np.zeros(3)
-    beta = xk
-    y = np.dot(x, beta) + 0.1 * np.random.randn(nobs)
-    xk = np.dot(np.linalg.pinv(x), y)
-
-    epsilon = 1e-6
-    args = (y, x)
-    from scipy import optimize
-    _xfmin = optimize.fmin(fun2, (0, 0, 0), args)
-    # print(approx_fprime((1, 2, 3), fun, epsilon, x))
-    jac = Gradient(fun1, epsilon, method='forward')(xk, *args)
-    jacmin = Gradient(fun1, -epsilon, method='forward')(xk, *args)
-    # print(jac)
-    print(jac.sum(0))
-    print('\nnp.dot(jac.T, jac)')
-    print(np.dot(jac.T, jac))
-    print('\n2*np.dot(x.T, x)')
-    print(2 * np.dot(x.T, x))
-    jac2 = (jac + jacmin) / 2.
-    print(np.dot(jac2.T, jac2))
-
-    # he = approx_hess(xk,fun2,epsilon,*args)
-    print(Hessian(fun2, 1e-3, method='central2')(xk, *args))
-    he = Hessian(fun2, method='central2')(xk, *args)
-    print('hessfd')
-    print(he)
-    print('epsilon =', None)
-    print(he[0] - 2 * np.dot(x.T, x))
-
-    for eps in [1e-3, 1e-4, 1e-5, 1e-6]:
-        print('eps =', eps)
-        print(Hessian(fun2, eps, method='central2')(xk, *args) -
-              2 * np.dot(x.T, x))
-
-    hcs2 = Hessian(fun2, method='complex')(xk, *args)
-    print('hcs2')
-    print(hcs2 - 2 * np.dot(x.T, x))
-
-    hfd3 = Hessian(fun2, method='central')(xk, *args)
-    print('hfd3')
-    print(hfd3 - 2 * np.dot(x.T, x))
-
-    hfi = []
-    epsi = np.array([1e-1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6]) * 10.
-    for eps in epsi:
-        h = eps * np.maximum(np.log1p(np.abs(xk)), 0.1)
-        hfi.append(Hessian(fun2, h, method='complex')(xk, *args))
-        print('hfi, eps =', eps)
-        print(hfi[-1] - 2 * np.dot(x.T, x))
-
-    import numdifftools as nd
-    print('Dea3')
-    err = 1000 * np.ones(hfi[0].shape)
-    val = np.zeros(err.shape)
-    errt = []
-    for i in range(len(hfi) - 2):
-        tval, terr = nd.dea3(hfi[i], hfi[i + 1], hfi[i + 2])
-        errt.append(terr)
-        k = np.flatnonzero(terr < err)
-        if k.size > 0:
-            np.put(val, k, tval.flat[k])
-            np.put(err, k, terr.flat[k])
-    print(val - 2 * np.dot(x.T, x))
-    print(err)
-    erri = [v.max() for v in errt]
-    import matplotlib.pyplot as plt
-    plt.loglog(epsi[1:-1], erri)
-    plt.show('hold')
-    hnd = nd.Hessian(lambda a: fun2(a, y, x))
-    hessnd = hnd(xk)
-    print('numdiff')
-    print(hessnd - 2 * np.dot(x.T, x))
-    # assert_almost_equal(hessnd, he[0])
-    gnd = nd.Gradient(lambda a: fun2(a, y, x))
-    _gradnd = gnd(xk)
-
-    print(Derivative(np.cosh)(0))
-    print(nd.Derivative(np.cosh)(0))
-
-if __name__ == '__main__':  # pragma : no cover
-#    main()
-#     import nxs
-    d = Derivative(np.cos, method='central', adaptive=True)
-    print(d([0, 1e5*np.pi*2]))
-#     print(d(1e10*np.pi*2))
+# def main():
+#     import statsmodels.api as sm
+#
+#     data = sm.datasets.spector.load()
+#     data.exog = sm.add_constant(data.exog, prepend=False)
+#     mod = sm.Probit(data.endog, data.exog)
+#     _res = mod.fit(method="newton")
+#     _test_params = [1, 0.25, 1.4, -7]
+#     _llf = mod.loglike
+#     _score = mod.score
+#     _hess = mod.hessian
+#
+#     def fun(beta, x):
+#         return np.dot(x, beta).sum(0)
+#
+#     def fun1(beta, y, x):
+#         # print(beta.shape, x.shape)
+#         xb = np.dot(x, beta)
+#         return (y - xb) ** 2  # (xb-xb.mean(0))**2
+#
+#     def fun2(beta, y, x):
+#         # print(beta.shape, x.shape)
+#         return fun1(beta, y, x).sum(0)
+#
+#     nobs = 200
+#     x = np.random.randn(nobs, 3)
+#
+#     # xk = np.array([1, 2, 3])
+#     xk = np.array([1., 1., 1.])
+#     # xk = np.zeros(3)
+#     beta = xk
+#     y = np.dot(x, beta) + 0.1 * np.random.randn(nobs)
+#     xk = np.dot(np.linalg.pinv(x), y)
+#
+#     epsilon = 1e-6
+#     args = (y, x)
+#     from scipy import optimize
+#     _xfmin = optimize.fmin(fun2, (0, 0, 0), args)
+#     # print(approx_fprime((1, 2, 3), fun, epsilon, x))
+#     jac = Gradient(fun1, epsilon, method='forward')(xk, *args)
+#     jacmin = Gradient(fun1, -epsilon, method='forward')(xk, *args)
+#     # print(jac)
+#     print(jac.sum(0))
+#     print('\nnp.dot(jac.T, jac)')
+#     print(np.dot(jac.T, jac))
+#     print('\n2*np.dot(x.T, x)')
+#     print(2 * np.dot(x.T, x))
+#     jac2 = (jac + jacmin) / 2.
+#     print(np.dot(jac2.T, jac2))
+#
+#     # he = approx_hess(xk,fun2,epsilon,*args)
+#     print(Hessian(fun2, 1e-3, method='central2')(xk, *args))
+#     he = Hessian(fun2, method='central2')(xk, *args)
+#     print('hessfd')
+#     print(he)
+#     print('epsilon =', None)
+#     print(he[0] - 2 * np.dot(x.T, x))
+#
+#     for eps in [1e-3, 1e-4, 1e-5, 1e-6]:
+#         print('eps =', eps)
+#         print(Hessian(fun2, eps, method='central2')(xk, *args) -
+#               2 * np.dot(x.T, x))
+#
+#     hcs2 = Hessian(fun2, method='complex')(xk, *args)
+#     print('hcs2')
+#     print(hcs2 - 2 * np.dot(x.T, x))
+#
+#     hfd3 = Hessian(fun2, method='central')(xk, *args)
+#     print('hfd3')
+#     print(hfd3 - 2 * np.dot(x.T, x))
+#
+#     hfi = []
+#     epsi = np.array([1e-1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6]) * 10.
+#     for eps in epsi:
+#         h = eps * np.maximum(np.log1p(np.abs(xk)), 0.1)
+#         hfi.append(Hessian(fun2, h, method='complex')(xk, *args))
+#         print('hfi, eps =', eps)
+#         print(hfi[-1] - 2 * np.dot(x.T, x))
+#
+#     import numdifftools as nd
+#     print('Dea3')
+#     err = 1000 * np.ones(hfi[0].shape)
+#     val = np.zeros(err.shape)
+#     errt = []
+#     for i in range(len(hfi) - 2):
+#         tval, terr = nd.dea3(hfi[i], hfi[i + 1], hfi[i + 2])
+#         errt.append(terr)
+#         k = np.flatnonzero(terr < err)
+#         if k.size > 0:
+#             np.put(val, k, tval.flat[k])
+#             np.put(err, k, terr.flat[k])
+#     print(val - 2 * np.dot(x.T, x))
+#     print(err)
+#     erri = [v.max() for v in errt]
+#     import matplotlib.pyplot as plt
+#     plt.loglog(epsi[1:-1], erri)
+#     plt.show('hold')
+#     hnd = nd.Hessian(lambda a: fun2(a, y, x))
+#     hessnd = hnd(xk)
+#     print('numdiff')
+#     print(hessnd - 2 * np.dot(x.T, x))
+#     # assert_almost_equal(hessnd, he[0])
+#     gnd = nd.Gradient(lambda a: fun2(a, y, x))
+#     _gradnd = gnd(xk)
+#
+#     print(Derivative(np.cosh)(0))
+#     print(nd.Derivative(np.cosh)(0))
+#
+# if __name__ == '__main__':  # pragma : no cover
+# #    main()
+# #     import nxs
+#     d = Derivative(np.cos, method='central', adaptive=True)
+#     print(d([0, 1e5*np.pi*2]))
+# #     print(d(1e10*np.pi*2))
