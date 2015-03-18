@@ -1,0 +1,2 @@
+.. automodule:: numdifftools
+   :members: info
