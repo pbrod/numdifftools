@@ -650,6 +650,7 @@ def main():
 if __name__ == '__main__':  # pragma : no cover
 #    main()
 #     import nxs
-    d = Derivative(np.cos, method='central', adaptive=True)
+    epsilon = StepsGenerator(num_steps=7)
+    d = Derivative(np.cos, method='central', epsilon=epsilon, full_output=True)
     print(d([0, 1e5*np.pi*2]))
 #     print(d(1e10*np.pi*2))
