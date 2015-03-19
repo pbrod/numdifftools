@@ -165,7 +165,7 @@ class StepsGenerator(object):
             offset = self.offset
             for i in range(num_steps):
                 h = _make_exact(delta * step_ratio**(i + offset))
-                if (h > 0).all():
+                if (np.abs(h) > 0).all():
                     yield h
         else:
             yield delta
@@ -174,9 +174,17 @@ class StepsGenerator(object):
 class _Derivative(object):
     def __init__(self, f, epsilon=None, method='complex', full_output=False):
         self.f = f
-        self.epsilon = epsilon
+        self.epsilon = self._make_callable(epsilon)
         self.method = method
         self.full_output = full_output
+
+    def _make_callable(self, epsilon):
+        def _epsilon(xi, scale):
+            yield _get_epsilon(xi, scale, epsilon, n=xi.shape)
+        if hasattr(epsilon, '__call__'):
+            return epsilon
+        else:
+            return _epsilon
 
     def _get_method(self):
         return getattr(self, '_' + self.method)
@@ -186,11 +194,8 @@ class _Derivative(object):
 
     def _stepsizes(self, xi):
         scale = self._get_scale()
-        if hasattr(self.epsilon, '__call__'):
-            for h in self.epsilon(xi, scale):
-                yield h
-        else:
-            yield _get_epsilon(xi, scale, self.epsilon, n=xi.shape)
+        for h in self.epsilon(xi, scale):
+            yield h
 
     def __call__(self, x, *args, **kwds):
         xi = np.asarray(x)
