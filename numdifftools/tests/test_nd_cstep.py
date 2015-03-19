@@ -27,9 +27,6 @@ class TestDerivative(unittest.TestCase):
         # derivative of exp(x), at x == 0
         dexp = nd.Derivative(np.exp)
         assert_array_almost_equal(dexp(0), np.exp(0), decimal=8)
-        dexp.n = 2
-        t = dexp(0)
-        assert_array_almost_equal(t, np.exp(0))
 
     def test_derivative_sin(self):
         # Evaluate the indicated (default = first)
@@ -48,12 +45,13 @@ class TestDerivative(unittest.TestCase):
     def test_central_and_forward_derivative_on_log(self):
         # Although a central rule may put some samples in the wrong places, it
         # may still succeed
-        dlog = nd.Derivative(np.log, method='central', adaptive=True)
+        epsilon = nd.StepsGenerator(num_steps=10)
+        dlog = nd.Derivative(np.log, method='central', epsilon=epsilon)
         x = 0.001
         self.assertAlmostEqual(dlog(x), 1.0 / x)
 
         # But forcing the use of a one-sided rule may be smart anyway
-        dlog = nd.Derivative(np.log, method='forward', adaptive=True)
+        dlog = nd.Derivative(np.log, method='forward', epsilon=epsilon)
         self.assertAlmostEqual(dlog(x), 1 / x, places=4)
 
 
@@ -73,8 +71,9 @@ class TestGradient(unittest.TestCase):
     def testgradient(self):
         fun = lambda x: np.sum(x ** 2)
         dtrue = [2., 4., 6.]
+        epsilon = nd.StepsGenerator(num_steps=10)
         for method in ['complex', 'central', 'backward', 'forward']:
-            dfun = nd.Gradient(fun, method=method, adaptive=True)
+            dfun = nd.Gradient(fun, method=method, epsilon=epsilon)
             d = dfun([1, 2, 3])
 
             for (di, dit) in zip(d, dtrue):
@@ -85,11 +84,12 @@ class TestHessian(unittest.TestCase):
 
     def testhessian(self):
         # cos(x-y), at (0,0)
+        epsilon = nd.StepsGenerator(num_steps=10)
         cos = np.cos
         fun = lambda xy: cos(xy[0] - xy[1])
         htrue = [-1., 1., 1., -1.]
         for method in ['complex', 'central', 'central2', 'forward']:
-            Hfun2 = nd.Hessian(fun, method=method, adaptive=True)
+            Hfun2 = nd.Hessian(fun, method=method, epsilon=epsilon)
             h2 = Hfun2([0, 0])  # h2 = [-1 1; 1 -1];
             for (hi, hit) in zip(h2.ravel(), htrue):
                 assert_array_almost_equal(hi, hit)

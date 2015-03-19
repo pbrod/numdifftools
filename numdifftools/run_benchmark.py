@@ -5,6 +5,7 @@ import numdifftools as nd
 import numdifftools.nd_algopy as nda
 import numdifftools.nd_cstep as ndc
 from collections import OrderedDict
+from numdifftools.nd_cstep import StepsGenerator
 
 options = dict(step_ratio=3., step_num=15)
 method = {'numdifftools': 0, 'scientific': 1,
@@ -21,18 +22,18 @@ class BenchmarkFunction(object):
         tmp = np.dot(self.A, x)
         return 0.5 * np.dot(x * x, tmp)
 
-
+epsilon = StepsGenerator(num_steps=5, offset=0)
 gradient_funs = OrderedDict()
 gradient_funs['algopy_forward'] = lambda f: nda.Gradient(f, method='forward')
 gradient_funs['complex'] = lambda f: ndc.Gradient(f, method='complex')
-gradient_funs['central'] = lambda f: ndc.Gradient(f, method='central', adaptive=False)
-gradient_funs['central_adaptive'] = lambda f: ndc.Gradient(f, method='central', adaptive=True)
+gradient_funs['central'] = lambda f: ndc.Gradient(f, method='central')
+gradient_funs['central_adaptive'] = lambda f: ndc.Gradient(f, method='central', epsilon=epsilon)
 gradient_funs['numdifftools'] = lambda f: nd.Gradient(f, **options)
 hessian_funs = OrderedDict()
 hessian_funs['algopy_forward'] = lambda f: nda.Hessian(f, method='forward')
 hessian_funs['complex'] = lambda f: ndc.Hessian(f, method='complex')
-hessian_funs['central'] = lambda f: ndc.Hessian(f, method='central', adaptive=False)
-hessian_funs['central_adaptive'] = lambda f: ndc.Hessian(f, method='central', adaptive=True)
+hessian_funs['central'] = lambda f: ndc.Hessian(f, method='central')
+hessian_funs['complex_adaptive'] = lambda f: ndc.Hessian(f, method='complex', epsilon=epsilon)
 hessian_funs['numdifftools'] = lambda f: nd.Hessian(f, **options)
 
 
@@ -110,13 +111,13 @@ symbols = ['-.k+', '-.k>', '--ks', '-k^', '-ko']
 plottime = pyplot.plot
 ploterror = pyplot.semilogy
 # plot gradient run times
-for title, results in [('Gradient run times', results_gradients[..., 0].T),
-                       ('Hessian run times', results_hessians[..., 0].T)]:
+for title, funcs, results in [('Gradient run times', gradient_funs, results_gradients[..., 0].T),
+                       ('Hessian run times',hessian_funs, results_hessians[..., 0].T)]:
     ref_sol = results[0]
     pyplot.figure()
     pyplot.title(title)
 
-    for i, method in enumerate(gradient_funs):
+    for i, method in enumerate(funcs):
         plottime(problem_sizes, results[i] / ref_sol,
                  symbols[i], markerfacecolor='None', label=method)
     pyplot.ylabel('Relative time $t$')
@@ -171,17 +172,17 @@ for title, results in [('Gradient run times', results_gradients[..., 0].T),
 # pyplot.savefig('hessian_preprocessingtimes.png', format='png')
 
 # plot gradient errors
-for title, results in [('Gradient errors', results_gradients[..., 1].T),
-                       ('Hessian errors', results_hessians[..., 1].T)]:
+for title, funcs, results in [('Gradient errors', gradient_funs, results_gradients[..., 1].T),
+                       ('Hessian errors', hessian_funs, results_hessians[..., 1].T)]:
 
     pyplot.figure()
     pyplot.title(title)
     ref_sol = results[0]
-    for i, method in enumerate(gradient_funs):
+    for i, method in enumerate(funcs):
         ploterror(problem_sizes, results[i],
                   symbols[i], markerfacecolor='None', label=method)
 
-    pyplot.ylabel(r'Absolute error $\|g_{ref} - g\|\}$')
+    pyplot.ylabel(r'Absolute error $\|g_{ref} - g\|$')
     pyplot.xlabel('problem size $N$')
     pyplot.grid()
     leg = pyplot.legend(loc=0)
