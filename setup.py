@@ -8,6 +8,8 @@
     http://pyscaffold.readthedocs.org/
 
 Usage:
+Run all tests:
+python setup.py test
 
 python setup.py install [, --prefix=$PREFIX]
 

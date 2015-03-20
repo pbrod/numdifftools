@@ -43,7 +43,7 @@ problem_sizes = [4, 8, 16, 32, 64, 96]
 
 results_gradient_list = []
 for N in problem_sizes:
-    print 'N=', N
+    print('N=', N)
     num_methods = len(gradient_funs)
     results_gradient = np.zeros((num_methods, 3))
     ref_g = None
@@ -64,16 +64,16 @@ for N in problem_sizes:
     results_gradient_list.append(results_gradient)
 
 results_gradients = np.array(results_gradient_list) + 1e-16
-print 'results_gradients=\n', results_gradients
+print('results_gradients=\n', results_gradients)
 
 # HESSIAN COMPUTATION
 # -------------------
-print 'starting hessian computation '
+print('starting hessian computation ')
 results_hessian_list = []
 hessian_N_list = problem_sizes
 
 for N in hessian_N_list:
-    print 'N=', N
+    print('N=', N)
     num_methods = len(hessian_funs)
     results_hessian = np.zeros((num_methods, 3))
     ref_h = None
@@ -96,13 +96,13 @@ for N in hessian_N_list:
 
 results_hessians = np.array(results_hessian_list) + 1e-16
 
-print hessian_N_list
-print 'results_hessians=\n', results_hessians
+print(hessian_N_list)
+print('results_hessians=\n', results_hessians)
 
 
 # PLOT RESULTS
 
-print results_gradients.shape
+print(results_gradients.shape)
 
 import matplotlib.pyplot as pyplot
 # import prettyplotting
