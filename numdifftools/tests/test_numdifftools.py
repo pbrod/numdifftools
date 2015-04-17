@@ -56,10 +56,12 @@ class TestDerivative(unittest.TestCase):
     def test_high_order_derivative_cos(self):
         # Higher order derivatives (third derivative)
         # Truth: 1
-        d3cos = nd.Derivative(np.cos, n=3)
-        y = d3cos(np.pi / 2.0)
-        small = np.abs(y - 1.0) < d3cos.error_estimate
-        self.assertTrue(small)
+        for n, true_val in zip([1, 2, 3, 4], (-1.0, 0.0, 1.0, 0.0)):
+            for order in [1, 2, 3, 4]:
+                d3cos = nd.Derivative(np.cos, n=n, order=order, method='forward')
+                y = d3cos(np.pi / 2.0)
+                small = np.abs(y - true_val) < 10 * d3cos.error_estimate
+                self.assertTrue(small)
 
     def test_backward_derivative_on_sinh(self):
         # Compute the derivative of a function using a backward difference

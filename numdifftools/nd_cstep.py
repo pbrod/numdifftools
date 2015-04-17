@@ -91,6 +91,7 @@ _cmn_doc = """
         defines method used in the approximation
         'complex': complex-step derivative (scale=%(scale_complex)s)
         'central': central difference derivative (scale=%(scale_central)s)
+        'backward': forward difference derivative (scale=%(scale_backward)s)
         'forward': forward difference derivative (scale=%(scale_forward)s)
         %(extra_method)s
     full_output : bool, optional
@@ -149,7 +150,7 @@ class StepsGenerator(object):
     offset : real scalar, optional
         offset
     '''
-    def __init__(self, epsilon=None, num_steps=7, step_ratio=5, offset=-2):
+    def __init__(self, epsilon=None, num_steps=10, step_ratio=5, offset=-1):
         self.epsilon = epsilon
         self.num_steps = num_steps
         self.step_ratio = step_ratio
@@ -163,7 +164,7 @@ class StepsGenerator(object):
         if num_steps > 2:
             step_ratio = float(self.step_ratio)
             offset = self.offset
-            for i in range(num_steps):
+            for i in range(num_steps, -1, -1):
                 h = _make_exact(delta * step_ratio**(i + offset))
                 if (np.abs(h) > 0).all():
                     yield h
@@ -172,37 +173,52 @@ class StepsGenerator(object):
 
 
 class _Derivative(object):
-    def __init__(self, f, epsilon=None, method='complex', full_output=False):
+    @staticmethod
+    def _get_scale(method):
+        return dict(complex=1.5, central=3).get(method, 2)
+
+    def __init__(self, f, epsilon=None, method='complex', full_output=False,
+                 scale=None):
         self.f = f
         self.epsilon = self._make_callable(epsilon)
         self.method = method
         self.full_output = full_output
+        self.scale = scale
 
     def _make_callable(self, epsilon):
         def _epsilon(xi, scale):
             yield _get_epsilon(xi, scale, epsilon, n=xi.shape)
         if hasattr(epsilon, '__call__'):
             return epsilon
-        else:
-            return _epsilon
+        return _epsilon
 
     def _get_method(self):
         return getattr(self, '_' + self.method)
 
-    def _get_scale(self):
-        return dict(complex=1, central=3).get(self.method, 2)
-
     def _stepsizes(self, xi):
-        scale = self._get_scale()
+        scale = self.scale
+        if scale is None:
+            scale = self._get_scale(self.method)
+
         for h in self.epsilon(xi, scale):
             yield h
 
     def __call__(self, x, *args, **kwds):
         xi = np.asarray(x)
-        derivate = self._get_method()
-        results = [derivate(self.f, xi, h, *args, **kwds)
+        derivative = self._get_method()
+        results = [derivative(self.f, xi, h, *args, **kwds)
                    for h in self._stepsizes(xi)]
         return self._extrapolate(results)
+
+    def _get_arg_min(self, errors):
+        shape = errors.shape
+        arg_mins = np.nanargmin(errors, axis=0)
+        min_errors = np.nanmin(errors, axis=0)
+        for i, min_error in enumerate(min_errors):
+            idx = np.flatnonzero(errors[:, i] == min_error)
+            arg_mins[i] = idx[idx.size//2]
+        ix = np.ravel_multi_index((arg_mins, np.arange(shape[1])), shape)
+        return ix
 
     def _extrapolate(self, sequence):
         dont_extrapolate = len(sequence) < 3
@@ -210,29 +226,28 @@ class _Derivative(object):
             if self.full_output:
                 err = np.empty_like(sequence[0]).fill(np.NaN)
                 return 0.5*(sequence[0] + sequence[-1]), {'error': err}
-            else:
-                return 0.5*(sequence[0] + sequence[-1])
+            return 0.5*(sequence[0] + sequence[-1])
         original_shape = sequence[0].shape
         res = np.vstack(r.ravel() for r in sequence)
-        der, error_estimate = dea3(res[0:-2], res[1:-1], res[2:])
-        i = np.nanargmin(error_estimate, axis=0)
-        ix = np.ravel_multi_index((i, np.arange(der.shape[1])), der.shape)
+        der, errors = dea3(res[0:-2], res[1:-1], res[2:], symmetric=True)
+        if len(der) > 2:
+            der, errors = dea3(der[0:-2], der[1:-1], der[2:])
+        ix = self._get_arg_min(errors)
         if self.full_output:
-            err = error_estimate.flat[ix].reshape(original_shape)
+            err = errors.flat[ix].reshape(original_shape)
             return der.flat[ix].reshape(original_shape), {'error': err}
-        else:
-            return der.flat[ix].reshape(original_shape)
+        return der.flat[ix].reshape(original_shape)
 
 
 class Derivative(_Derivative):
-    __doc__ = _cmn_doc % dict(derivative='first order derivative',
-                              scale_complex='1',
-                              scale_forward='2',
-                              scale_backward='2',
-                              scale_central='3',
-                              extra_method="'backward': backward difference "
-                              "derivative (scale=2)",
-                              extra_note='', returns="""
+    __doc__ = _cmn_doc % dict(
+        derivative='first order derivative',
+        scale_backward=str(_Derivative._get_scale('backward')),
+        scale_central=str(_Derivative._get_scale('central')),
+        scale_complex=str(_Derivative._get_scale('complex')),
+        scale_forward=str(_Derivative._get_scale('forward')),
+        extra_method="",
+        extra_note='', returns="""
     Returns
     -------
     der : ndarray
@@ -258,8 +273,8 @@ class Derivative(_Derivative):
     Hessian
     """)
 
-    def _central(self, f, x, h2, *args, **kwds):
-        h = h2 / 2.0
+    def _central(self, f, x, h, *args, **kwds):
+        h2 = h * 2.0
         return (f(x + h, *args, **kwds) - f(x - h, *args, **kwds)) / h2
 
     def _forward(self, f, x, h, *args, **kwds):
@@ -273,13 +288,14 @@ class Derivative(_Derivative):
 
 
 class Gradient(_Derivative):
-    __doc__ = _cmn_doc % dict(derivative='Gradient',
-                              scale_complex='1',
-                              scale_forward='2',
-                              scale_backward='2',
-                              scale_central='3',
-                              extra_method="'backward' : backward difference "
-                              "derivative (scale=2)", returns="""
+    __doc__ = _cmn_doc % dict(
+        derivative='Gradient',
+        scale_backward=str(_Derivative._get_scale('backward')),
+        scale_central=str(_Derivative._get_scale('central')),
+        scale_complex=str(_Derivative._get_scale('complex')),
+        scale_forward=str(_Derivative._get_scale('forward')),
+        extra_method="",
+        returns="""
     Returns
     -------
     grad : array
@@ -321,12 +337,13 @@ class Gradient(_Derivative):
     Derivative, Hessian, Jacobian
     """)
 
-    def _central(self, f, x, h2, *args, **kwds):
+    def _central(self, f, x, h, *args, **kwds):
         n = len(x)
-        increments = np.identity(n) * h2 / 2.0
-        partials = [(f(x + h, *args, **kwds) -
-                     f(x - h, *args, **kwds)) / (h2[i])
-                    for i, h in enumerate(increments)]
+        increments = np.identity(n) * h
+        h2 = h * 2.0
+        partials = [(f(x + hi, *args, **kwds) -
+                     f(x - hi, *args, **kwds)) / (h2[i])
+                    for i, hi in enumerate(increments)]
         return np.array(partials).T
 
     def _backward(self, f, x, epsilon, *args, **kwds):
@@ -356,13 +373,14 @@ class Gradient(_Derivative):
 
 
 class Jacobian(Gradient):
-    __doc__ = _cmn_doc % dict(derivative='Jacobian',
-                              scale_complex='1',
-                              scale_forward='2',
-                              scale_backward='2',
-                              scale_central='3',
-                              extra_method="'backward' : backward difference "
-                              "derivative (scale=2)", returns="""
+    __doc__ = _cmn_doc % dict(
+        derivative='Jacobian',
+        scale_backward=str(_Derivative._get_scale('backward')),
+        scale_central=str(_Derivative._get_scale('central')),
+        scale_complex=str(_Derivative._get_scale('complex')),
+        scale_forward=str(_Derivative._get_scale('forward')),
+        extra_method="",
+        returns="""
     Returns
     -------
     jacob : array
@@ -400,13 +418,22 @@ class Jacobian(Gradient):
     """)
 
 
-class Hessian(_Derivative):
-    __doc__ = _cmn_doc % dict(derivative='Hessian',
-                              scale_complex='3',
-                              scale_forward='3',
-                              scale_central='4',
-                              extra_method="'central2' : central difference "
-                              "derivative (scale=3)", returns="""
+class _Hessian(_Derivative):
+    @staticmethod
+    def _get_scale(method):
+        return dict(central=6, central2=6, complex=9).get(method, 3)
+
+
+class Hessian(_Hessian):
+    __doc__ = _cmn_doc % dict(
+        derivative='Hessian',
+        scale_backward=str(_Hessian._get_scale('backward')),
+        scale_central=str(_Hessian._get_scale('central')),
+        scale_complex=str(_Hessian._get_scale('complex')),
+        scale_forward=str(_Hessian._get_scale('forward')),
+        extra_method="'central2' : central difference derivative "
+        "(scale=%s)" % _Hessian._get_scale('central2'),
+        returns="""
     Returns
     -------
     hess : ndarray
@@ -458,9 +485,6 @@ class Hessian(_Derivative):
     Derivative, Hessian
     """)
 
-    def _get_scale(self):
-        return dict(central=5, central2=4, complex=6).get(self.method, 3)
-
     def _complex(self, f, x, h, *args, **kwargs):
         '''Calculate Hessian with complex-step derivative approximation
         The stepsize is the same for the complex and the finite difference part
@@ -473,8 +497,9 @@ class Hessian(_Derivative):
 
         for i in range(n):
             for j in range(i, n):
-                hess[i, j] = (f(x + 1j * ee[i, :] + ee[j, :], *args, **kwargs)
-                              - f(*((x + 1j * ee[i, :] - ee[j, :],) + args),
+                hess[i, j] = (f(x + 1j * ee[i, :] + ee[j, :], *args,
+                                **kwargs) -
+                              f(*((x + 1j * ee[i, :] - ee[j, :],) + args),
                                   **kwargs)).imag / hess[j, i]
                 hess[j, i] = hess[i, j]
         return hess
@@ -488,10 +513,10 @@ class Hessian(_Derivative):
 
         for i in range(n):
             for j in range(i, n):
-                hess[i, j] = (f(x + ee[i, :] + ee[j, :], *args, **kwargs)
-                              - f(x + ee[i, :] - ee[j, :], *args, **kwargs)
-                              - f(x - ee[i, :] + ee[j, :], *args, **kwargs)
-                              + f(x - ee[i, :] - ee[j, :], *args, **kwargs)
+                hess[i, j] = (f(x + ee[i, :] + ee[j, :], *args, **kwargs) -
+                              f(x + ee[i, :] - ee[j, :], *args, **kwargs) -
+                              f(x - ee[i, :] + ee[j, :], *args, **kwargs) +
+                              f(x - ee[i, :] - ee[j, :], *args, **kwargs)
                               ) / (4.*hess[j, i])
                 hess[j, i] = hess[i, j]
         return hess
@@ -503,15 +528,15 @@ class Hessian(_Derivative):
         # h = _get_epsilon(x, 3, epsilon, n)
         ee = np.diag(h)
         f0 = f(x, *args, **kwargs)
-        # Compute forward step
-        g = np.zeros(n)
-        gg = np.zeros(n)
+        dtype = np.result_type(f0)
+        g = np.empty(n, dtype=dtype)
+        gg = np.empty(n, dtype=dtype)
         for i in range(n):
             g[i] = f(x + ee[i, :], *args, **kwargs)
             gg[i] = f(x - ee[i, :], *args, **kwargs)
 
-        hess = np.outer(h, h)  # this is now epsilon**2
-        # Compute "double" forward step
+        hess = np.empty((n, n), dtype=dtype)
+        np.outer(h, h, out=hess)
         for i in range(n):
             for j in range(i, n):
                 hess[i, j] = (f(x + ee[i, :] + ee[j, :], *args, **kwargs) -
@@ -525,23 +550,25 @@ class Hessian(_Derivative):
     def _forward(self, f, x, h, *args, **kwargs):
         '''Eq. 7'''
         n = len(x)
-        # h = _get_epsilon(x, 3, epsilon, n)
         ee = np.diag(h)
 
         f0 = f(x, *args, **kwargs)
-        # Compute forward step
-        g = np.zeros(n)
+        dtype = np.result_type(f0)
+        g = np.empty(n, dtype=dtype)
         for i in range(n):
             g[i] = f(x + ee[i, :], *args, **kwargs)
 
-        hess = np.outer(h, h)  # this is now epsilon**2
-        # Compute "double" forward step
+        hess = np.empty((n, n), dtype=dtype)
+        np.outer(h, h, out=hess)
         for i in range(n):
             for j in range(i, n):
                 hess[i, j] = (f(x + ee[i, :] + ee[j, :], *args, **kwargs) -
                               g[i] - g[j] + f0) / hess[j, i]
                 hess[j, i] = hess[i, j]
         return hess
+
+    def _backward(self, f, x, h, *args, **kwargs):
+        return self._forward(f, x, -h, *args, **kwargs)
 
 
 def main():
@@ -581,7 +608,7 @@ def main():
     epsilon = 1e-6
     args = (y, x)
     from scipy import optimize
-    _xfmin = optimize.fmin(fun2, (0, 0, 0), args)
+    _xfmin = optimize.fmin(fun2, (0, 0, 0), args)  # @UndefinedVariable
     # print(approx_fprime((1, 2, 3), fun, epsilon, x))
     jac = Gradient(fun1, epsilon, method='forward')(xk, *args)
     jacmin = Gradient(fun1, -epsilon, method='forward')(xk, *args)
@@ -653,9 +680,10 @@ def main():
     print(nd.Derivative(np.cosh)(0))
 
 if __name__ == '__main__':  # pragma : no cover
-#    main()
-#     import nxs
-    epsilon = StepsGenerator(num_steps=7)
-    d = Derivative(np.cos, method='central', epsilon=epsilon, full_output=True)
-    print(d([0, 1e5*np.pi*2]))
+    main()
+    #     import nxs
+#     epsilon = StepsGenerator(num_steps=7)
+#     d = Derivative(np.cos, method='central', epsilon=epsilon,
+#                    full_output=True)
+#     print(d([0, 1e5*np.pi*2]))
 #     print(d(1e10*np.pi*2))

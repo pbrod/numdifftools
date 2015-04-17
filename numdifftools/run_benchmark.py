@@ -22,19 +22,23 @@ class BenchmarkFunction(object):
         tmp = np.dot(self.A, x)
         return 0.5 * np.dot(x * x, tmp)
 
-epsilon = StepsGenerator(num_steps=5, offset=0)
+epsilon = StepsGenerator(num_steps=10, step_ratio=5., offset=-1)
+adaptiv_txt = '_adaptive_%d' % epsilon.num_steps
 gradient_funs = OrderedDict()
 gradient_funs['algopy_forward'] = lambda f: nda.Gradient(f, method='forward')
-gradient_funs['complex'] = lambda f: ndc.Gradient(f, method='complex')
 gradient_funs['central'] = lambda f: ndc.Gradient(f, method='central')
-gradient_funs['central_adaptive'] = lambda f: ndc.Gradient(f, method='central', epsilon=epsilon)
+gradient_funs['central'+adaptiv_txt] = lambda f: ndc.Gradient(f, method='central', epsilon=epsilon)
 gradient_funs['numdifftools'] = lambda f: nd.Gradient(f, **options)
+gradient_funs['complex'] = lambda f: ndc.Gradient(f, method='complex')
+gradient_funs['complex'+adaptiv_txt] = lambda f: ndc.Gradient(f, method='complex', epsilon=epsilon)
+
 hessian_funs = OrderedDict()
 hessian_funs['algopy_forward'] = lambda f: nda.Hessian(f, method='forward')
-hessian_funs['complex'] = lambda f: ndc.Hessian(f, method='complex')
 hessian_funs['central'] = lambda f: ndc.Hessian(f, method='central')
-hessian_funs['complex_adaptive'] = lambda f: ndc.Hessian(f, method='complex', epsilon=epsilon)
+hessian_funs['central'+adaptiv_txt] = lambda f: ndc.Hessian(f, method='central', epsilon=epsilon)
 hessian_funs['numdifftools'] = lambda f: nd.Hessian(f, **options)
+hessian_funs['complex'] = lambda f: ndc.Hessian(f, method='complex')
+hessian_funs['complex'+adaptiv_txt] = lambda f: ndc.Hessian(f, method='complex', epsilon=epsilon)
 
 
 # GRADIENT COMPUTATION
@@ -106,7 +110,7 @@ print(results_gradients.shape)
 
 import matplotlib.pyplot as pyplot
 # import prettyplotting
-symbols = ['-.k+', '-.k>', '--ks', '-k^', '-ko']
+symbols = ['-.k+', '-.k>', '--ks', '-k^', '-ko', '-k.']
 
 plottime = pyplot.plot
 ploterror = pyplot.semilogy

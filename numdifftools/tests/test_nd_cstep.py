@@ -10,7 +10,8 @@ from numpy.testing import assert_array_almost_equal
 class TestDerivative(unittest.TestCase):
     def test_derivative_cube(self):
         '''Test for Issue 7'''
-        cube = lambda x: x * x * x
+        def cube(x):
+            return x * x * x
         dcube = nd.Derivative(cube)
         shape = (3, 2)
         x = np.ones(shape)*2
@@ -52,7 +53,7 @@ class TestDerivative(unittest.TestCase):
 
         # But forcing the use of a one-sided rule may be smart anyway
         dlog = nd.Derivative(np.log, method='forward', epsilon=epsilon)
-        self.assertAlmostEqual(dlog(x), 1 / x, places=4)
+        self.assertAlmostEqual(dlog(x), 1 / x)
 
 
 class TestJacobian(unittest.TestCase):
@@ -60,7 +61,9 @@ class TestJacobian(unittest.TestCase):
     def testjacobian(self):
         xdata = np.reshape(np.arange(0, 1, 0.1), (-1, 1))
         ydata = 1 + 2 * np.exp(0.75 * xdata)
-        fun = lambda c: (c[0] + c[1] * np.exp(c[2] * xdata) - ydata) ** 2
+
+        def fun(c):
+            return (c[0] + c[1] * np.exp(c[2] * xdata) - ydata) ** 2
         Jfun = nd.Jacobian(fun)
         J = Jfun([1, 2, 0.75])  # should be numerically zero
         for ji in J.ravel():
@@ -69,7 +72,8 @@ class TestJacobian(unittest.TestCase):
 
 class TestGradient(unittest.TestCase):
     def testgradient(self):
-        fun = lambda x: np.sum(x ** 2)
+        def fun(x):
+            return np.sum(x ** 2)
         dtrue = [2., 4., 6.]
         epsilon = nd.StepsGenerator(num_steps=10)
         for method in ['complex', 'central', 'backward', 'forward']:
@@ -82,13 +86,16 @@ class TestGradient(unittest.TestCase):
 
 class TestHessian(unittest.TestCase):
 
-    def testhessian(self):
+    def test_hessian_cosIx_yI_at_I0_0I(self):
         # cos(x-y), at (0,0)
         epsilon = nd.StepsGenerator(num_steps=10)
         cos = np.cos
-        fun = lambda xy: cos(xy[0] - xy[1])
+
+        def fun(xy):
+            return cos(xy[0] - xy[1])
         htrue = [-1., 1., 1., -1.]
-        for method in ['complex', 'central', 'central2', 'forward']:
+        methods = ['complex', 'central', 'central2', 'forward', 'backward']
+        for method in methods:
             Hfun2 = nd.Hessian(fun, method=method, epsilon=epsilon)
             h2 = Hfun2([0, 0])  # h2 = [-1 1; 1 -1];
             for (hi, hit) in zip(h2.ravel(), htrue):
