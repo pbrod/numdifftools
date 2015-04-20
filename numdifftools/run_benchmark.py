@@ -7,7 +7,7 @@ import numdifftools.nd_cstep as ndc
 from collections import OrderedDict
 from numdifftools.nd_cstep import StepsGenerator
 
-options = dict(step_ratio=3., step_num=15)
+options = dict(step_ratio=2., step_num=15)
 method = {'numdifftools': 0, 'scientific': 1,
           'algopy_reverse': 2, 'algopy_forward': 3}
 
@@ -22,23 +22,25 @@ class BenchmarkFunction(object):
         tmp = np.dot(self.A, x)
         return 0.5 * np.dot(x * x, tmp)
 
-epsilon = StepsGenerator(num_steps=10, step_ratio=5., offset=-1)
-adaptiv_txt = '_adaptive_%d' % epsilon.num_steps
+fixed_step = StepsGenerator(num_steps=1, step_ratio=4., offset=0)
+epsilon = StepsGenerator(num_steps=7, step_ratio=4., offset=3)
+adaptiv_txt = '_adaptive_%d_%s_%d' % (epsilon.num_steps,
+                                      str(epsilon.step_ratio), epsilon.offset)
 gradient_funs = OrderedDict()
 gradient_funs['algopy_forward'] = lambda f: nda.Gradient(f, method='forward')
-gradient_funs['central'] = lambda f: ndc.Gradient(f, method='central')
-gradient_funs['central'+adaptiv_txt] = lambda f: ndc.Gradient(f, method='central', epsilon=epsilon)
+gradient_funs['central'] = lambda f: ndc.Gradient(f, method='central', steps=fixed_step)
+gradient_funs['central'+adaptiv_txt] = lambda f: ndc.Gradient(f, method='central', steps=epsilon)
 gradient_funs['numdifftools'] = lambda f: nd.Gradient(f, **options)
 gradient_funs['complex'] = lambda f: ndc.Gradient(f, method='complex')
-gradient_funs['complex'+adaptiv_txt] = lambda f: ndc.Gradient(f, method='complex', epsilon=epsilon)
+gradient_funs['complex'+adaptiv_txt] = lambda f: ndc.Gradient(f, method='complex', steps=epsilon)
 
 hessian_funs = OrderedDict()
 hessian_funs['algopy_forward'] = lambda f: nda.Hessian(f, method='forward')
-hessian_funs['central'] = lambda f: ndc.Hessian(f, method='central')
-hessian_funs['central'+adaptiv_txt] = lambda f: ndc.Hessian(f, method='central', epsilon=epsilon)
+hessian_funs['central'] = lambda f: ndc.Hessian(f, method='central', steps=fixed_step)
+hessian_funs['central'+adaptiv_txt] = lambda f: ndc.Hessian(f, method='central', steps=epsilon)
 hessian_funs['numdifftools'] = lambda f: nd.Hessian(f, **options)
 hessian_funs['complex'] = lambda f: ndc.Hessian(f, method='complex')
-hessian_funs['complex'+adaptiv_txt] = lambda f: ndc.Hessian(f, method='complex', epsilon=epsilon)
+hessian_funs['complex'+adaptiv_txt] = lambda f: ndc.Hessian(f, method='complex', steps=epsilon)
 
 
 # GRADIENT COMPUTATION

@@ -19,7 +19,7 @@ without dependencies.
 #   - gradient and Hessian agree with numdifftools when evaluated away from
 #     minimum
 #   - forward gradient, Jacobian evaluated at minimum is inaccurate, centered
-#     (+/- epsilon) is ok
+#     (+/- base_step) is ok
 # * dot product of Jacobian is different from Hessian, either wrong example or
 #   a bug (unlikely), or a real difference
 #
@@ -45,27 +45,27 @@ without dependencies.
 from __future__ import print_function
 import numpy as np
 from numdifftools import dea3
-
+from collections import namedtuple
+from matplotlib import pyplot as plt
 # NOTE: we only do double precision internally so far
 EPS = np.MachAr().eps
 
 
 def _make_exact(h):
-        '''Make sure h is an exact representable number
-        This is important when calculating numerical derivatives and is
-        accomplished by adding 1 and then subtracting 1..
-        '''
-        return (h + 1.0) - 1.0
+    '''Make sure h is an exact representable number
+    This is important when calculating numerical derivatives and is
+    accomplished by adding 1 and then subtracting 1..
+    '''
+    return (h + 1.0) - 1.0
 
 
-def _get_epsilon(x, s, epsilon, n):
+def _default_base_step(x, scale, epsilon=None):
     if epsilon is None:
-        h = (10 * EPS) ** (1. / s) * np.maximum(np.log1p(np.abs(x)), 0.1)
+        h = (10*EPS) ** (1. / scale) * np.maximum(np.log1p(np.abs(x)), 0.1)
     else:
         if np.isscalar(epsilon):
-            h = np.empty(n)
-            h.fill(epsilon)
-        else:  # pragma : no cover
+            h = np.ones(x.shape) * epsilon
+        else:
             h = np.asarray(epsilon)
             if h.shape != x.shape:
                 raise ValueError("If h is not a scalar it must have the same"
@@ -80,9 +80,9 @@ _cmn_doc = """
     ----------
     f : function
        function of one array f(x, `*args`, `**kwargs`)
-    epsilon : float, array-like or StepsGenerator object, optional
+    steps : float, array-like or StepsGenerator object, optional
        Stepsize used, if None, then stepsize is automatically chosen
-       according to 10*EPS**(1/scale)*max(log(1+|x|), 0.1) where scale is
+       according to (10*EPS)**(1/scale)*max(log(1+|x|), 0.1) where scale is
        depending on method.
        A StepsGenerator can be used to extrapolate the results. However,
        the generator must generate minimum 3 steps in order to extrapolate
@@ -110,10 +110,10 @@ _cmn_doc = """
     %(returns)s
     Notes
     -----
-    The complex-step derivative has truncation error O(epsilon**2), so
-    truncation error can be eliminated by choosing epsilon to be very small.
+    The complex-step derivative has truncation error O(steps**2), so
+    truncation error can be eliminated by choosing steps to be very small.
     The complex-step derivative avoids the problem of round-off error with
-    small epsilon because there is no subtraction. However, the function
+    small steps because there is no subtraction. However, the function
     needs to be analytic. This method does not work if f(x) involves non-
     analytic functions such as e.g.: abs, max, min
     %(extra_note)s
@@ -131,83 +131,124 @@ class StepsGenerator(object):
     Generates a sequence of steps
 
     where
-        steps = epsilon if num_steps < 3
-    otherwise
-        steps = epsilon * step_ratio ** (np.arange(num_steps) + offset)
+        steps = base_step * step_ratio ** (np.arange(num_steps) + offset)
 
     Parameters
     ----------
-    epsilon : float, array-like, optional
-       Defines the base step, if None, then epsilon is set to
+    base_step : float, array-like, optional
+       Defines the base step, if None, then base_step is set to
            (10*EPS)**(1/scale)*max(log(1+|x|), 0.1)
        where x and scale are supplied at runtime through the __call__ method.
     num_steps : scalar integer, optional
         defines number of steps generated.
-        Note: num_steps < 3 will only return one step.
     step_ratio : real scalar, optional
         Ratio between sequential steps generated.
         Note: Ratio > 1
     offset : real scalar, optional
         offset
     '''
-    def __init__(self, epsilon=None, num_steps=10, step_ratio=5, offset=-1):
-        self.epsilon = epsilon
+
+    def __init__(self, base_step=None, num_steps=10, step_ratio=4, offset=-1):
+        self.base_step = base_step
         self.num_steps = num_steps
         self.step_ratio = step_ratio
         self.offset = offset
 
-    def __call__(self, x, scale=1):
+    def __call__(self, x, scale=1.5):
         xi = np.asarray(x)
-        delta = _get_epsilon(xi, scale, self.epsilon, n=xi.shape)
+        delta = _default_base_step(xi, scale, self.base_step)
 
-        num_steps = int(self.num_steps)
-        if num_steps > 2:
-            step_ratio = float(self.step_ratio)
-            offset = self.offset
-            for i in range(num_steps, -1, -1):
-                h = _make_exact(delta * step_ratio**(i + offset))
-                if (np.abs(h) > 0).all():
-                    yield h
-        else:
-            yield delta
+        step_ratio, offset = float(self.step_ratio), self.offset
+        for i in range(int(self.num_steps), -1, -1):
+            h = _make_exact(delta * step_ratio**(i + offset))
+            if (np.abs(h) > 0).all():
+                yield h
+
+
+class StepsGenerator2(object):
+    '''
+    Generates a sequence of steps
+
+    where
+        steps = logspace(np.log10(step_min),np.log10(step_max), num_steps)
+
+    Parameters
+    ----------
+    step_min : float, array-like, optional
+       Defines the minimim step if None, then base_step is set to
+           (10*EPS)**(1/scale)*max(log(1+|x|), 0.1)
+       where x and scale are supplied at runtime through the __call__ method.
+    num_steps : scalar integer, optional
+        defines number of steps generated.
+    step_max : real scalar, optional
+        maximum step generated.
+
+    '''
+
+    def __init__(self, step_min=None, num_steps=10, step_max=None):
+        self.step_min = step_min
+        self.num_steps = num_steps
+        self.step_max = step_max
+
+    def __call__(self, x, scale=1.5):
+        xi = np.asarray(x)
+        step_min, step_max = self.step_min, self.step_max
+        delta = _default_base_step(xi, scale, step_min)
+        if step_min is None:
+            step_min = (10*EPS)**(1./scale)
+        if step_max is None:
+            step_max = (10*EPS)**(1./(scale + 1.5))
+        steps = np.logspace(0, -np.log10(step_min)+np.log10(step_max),
+                            self.num_steps)[::-1]
+
+        for step in steps:
+            h = _make_exact(delta * step)
+            if (np.abs(h) > 0).all():
+                yield h
 
 
 class _Derivative(object):
+
     @staticmethod
-    def _get_scale(method):
+    def default_scale(method):
         return dict(complex=1.5, central=3).get(method, 2)
 
-    def __init__(self, f, epsilon=None, method='complex', full_output=False,
+    info = namedtuple('info', ['error_estimate', 'index'])
+
+    @property
+    def scale(self):
+        if self._scale is None:
+            return self.default_scale(self.method)
+        return self._scale
+
+    @scale.setter
+    def scale(self, scale):
+        self._scale = scale
+
+    def __init__(self, f, steps=None, method='complex', full_output=False,
                  scale=None):
         self.f = f
-        self.epsilon = self._make_callable(epsilon)
+        self.scale = scale
+        self.steps = self._make_callable(steps)
         self.method = method
         self.full_output = full_output
-        self.scale = scale
 
-    def _make_callable(self, epsilon):
-        def _epsilon(xi, scale):
-            yield _get_epsilon(xi, scale, epsilon, n=xi.shape)
-        if hasattr(epsilon, '__call__'):
-            return epsilon
-        return _epsilon
+    def _make_callable(self, steps):
+        if hasattr(steps, '__call__'):
+            return steps
 
-    def _get_method(self):
-        return getattr(self, '_' + self.method)
+        def _step_generator(xi, scale):
+            yield _default_base_step(xi, scale, steps)
+        return _step_generator
 
-    def _stepsizes(self, xi):
-        scale = self.scale
-        if scale is None:
-            scale = self._get_scale(self.method)
-
-        for h in self.epsilon(xi, scale):
-            yield h
+    def _get_functions(self, method):
+        return getattr(self, '_' + self.method), self.f, self.steps
 
     def __call__(self, x, *args, **kwds):
         xi = np.asarray(x)
-        derivative = self._get_method()
-        results = [derivative(self.f, xi, h, *args, **kwds)
-                   for h in self._stepsizes(xi)]
+        derivative, f, steps = self._get_functions(self.method)
+        results = [derivative(f, xi, h, *args, **kwds)
+                   for h in steps(xi, self.scale)]
         return self._extrapolate(results)
 
     def _get_arg_min(self, errors):
@@ -216,17 +257,19 @@ class _Derivative(object):
         min_errors = np.nanmin(errors, axis=0)
         for i, min_error in enumerate(min_errors):
             idx = np.flatnonzero(errors[:, i] == min_error)
-            arg_mins[i] = idx[idx.size//2]
+            arg_mins[i] = idx[idx.size // 2]
         ix = np.ravel_multi_index((arg_mins, np.arange(shape[1])), shape)
         return ix
 
     def _extrapolate(self, sequence):
+
         dont_extrapolate = len(sequence) < 3
         if dont_extrapolate:
             if self.full_output:
-                err = np.empty_like(sequence[0]).fill(np.NaN)
-                return 0.5*(sequence[0] + sequence[-1]), {'error': err}
-            return 0.5*(sequence[0] + sequence[-1])
+                err = np.empty_like(sequence[0])
+                err.fill(np.NaN)
+                return 0.5 * (sequence[0] + sequence[-1]), self.info(err, 0)
+            return 0.5 * (sequence[0] + sequence[-1])
         original_shape = sequence[0].shape
         res = np.vstack(r.ravel() for r in sequence)
         der, errors = dea3(res[0:-2], res[1:-1], res[2:], symmetric=True)
@@ -235,17 +278,17 @@ class _Derivative(object):
         ix = self._get_arg_min(errors)
         if self.full_output:
             err = errors.flat[ix].reshape(original_shape)
-            return der.flat[ix].reshape(original_shape), {'error': err}
+            return der.flat[ix].reshape(original_shape), self.info(err, ix)
         return der.flat[ix].reshape(original_shape)
 
 
 class Derivative(_Derivative):
     __doc__ = _cmn_doc % dict(
         derivative='first order derivative',
-        scale_backward=str(_Derivative._get_scale('backward')),
-        scale_central=str(_Derivative._get_scale('central')),
-        scale_complex=str(_Derivative._get_scale('complex')),
-        scale_forward=str(_Derivative._get_scale('forward')),
+        scale_backward=str(_Derivative.default_scale('backward')),
+        scale_central=str(_Derivative.default_scale('central')),
+        scale_complex=str(_Derivative.default_scale('complex')),
+        scale_forward=str(_Derivative.default_scale('forward')),
         extra_method="",
         extra_note='', returns="""
     Returns
@@ -274,7 +317,7 @@ class Derivative(_Derivative):
     """)
 
     def _central(self, f, x, h, *args, **kwds):
-        h2 = h * 2.0
+        h2 = h * 2
         return (f(x + h, *args, **kwds) - f(x - h, *args, **kwds)) / h2
 
     def _forward(self, f, x, h, *args, **kwds):
@@ -290,10 +333,10 @@ class Derivative(_Derivative):
 class Gradient(_Derivative):
     __doc__ = _cmn_doc % dict(
         derivative='Gradient',
-        scale_backward=str(_Derivative._get_scale('backward')),
-        scale_central=str(_Derivative._get_scale('central')),
-        scale_complex=str(_Derivative._get_scale('complex')),
-        scale_forward=str(_Derivative._get_scale('forward')),
+        scale_backward=str(_Derivative.default_scale('backward')),
+        scale_central=str(_Derivative.default_scale('central')),
+        scale_complex=str(_Derivative.default_scale('complex')),
+        scale_forward=str(_Derivative.default_scale('forward')),
         extra_method="",
         returns="""
     Returns
@@ -375,10 +418,10 @@ class Gradient(_Derivative):
 class Jacobian(Gradient):
     __doc__ = _cmn_doc % dict(
         derivative='Jacobian',
-        scale_backward=str(_Derivative._get_scale('backward')),
-        scale_central=str(_Derivative._get_scale('central')),
-        scale_complex=str(_Derivative._get_scale('complex')),
-        scale_forward=str(_Derivative._get_scale('forward')),
+        scale_backward=str(_Derivative.default_scale('backward')),
+        scale_central=str(_Derivative.default_scale('central')),
+        scale_complex=str(_Derivative.default_scale('complex')),
+        scale_forward=str(_Derivative.default_scale('forward')),
         extra_method="",
         returns="""
     Returns
@@ -419,20 +462,21 @@ class Jacobian(Gradient):
 
 
 class _Hessian(_Derivative):
+
     @staticmethod
-    def _get_scale(method):
+    def default_scale(method):
         return dict(central=6, central2=6, complex=9).get(method, 3)
 
 
 class Hessian(_Hessian):
     __doc__ = _cmn_doc % dict(
         derivative='Hessian',
-        scale_backward=str(_Hessian._get_scale('backward')),
-        scale_central=str(_Hessian._get_scale('central')),
-        scale_complex=str(_Hessian._get_scale('complex')),
-        scale_forward=str(_Hessian._get_scale('forward')),
+        scale_backward=str(_Hessian.default_scale('backward')),
+        scale_central=str(_Hessian.default_scale('central')),
+        scale_complex=str(_Hessian.default_scale('complex')),
+        scale_forward=str(_Hessian.default_scale('forward')),
         extra_method="'central2' : central difference derivative "
-        "(scale=%s)" % _Hessian._get_scale('central2'),
+        "(scale=%s)" % _Hessian.default_scale('central2'),
         returns="""
     Returns
     -------
@@ -455,7 +499,7 @@ class Hessian(_Hessian):
         1/(2*d_j*d_k) * imag(f(x + i*d[j]*e[j] + d[k]*e[k]) -
                             f(x + i*d[j]*e[j] - d[k]*e[k]))
     where e[j] is a vector with element j == 1 and the rest are zero and
-    d[i] is epsilon[i].
+    d[i] is steps[i].
     """, example="""
     Examples
     --------
@@ -491,7 +535,7 @@ class Hessian(_Hessian):
         '''
         # TODO: might want to consider lowering the step for pure derivatives
         n = len(x)
-        # h = _get_epsilon(x, 3, epsilon, n)
+        # h = _default_base_step(x, 3, base_step, n)
         ee = np.diag(h)
         hess = 2. * np.outer(h, h)
 
@@ -507,7 +551,7 @@ class Hessian(_Hessian):
     def _central(self, f, x, h, *args, **kwargs):
         '''Eq 9.'''
         n = len(x)
-        # h = _get_epsilon(x, 4, epsilon, n)
+        # h = _default_base_step(x, 4, base_step, n)
         ee = np.diag(h)
         hess = np.outer(h, h)
 
@@ -517,7 +561,7 @@ class Hessian(_Hessian):
                               f(x + ee[i, :] - ee[j, :], *args, **kwargs) -
                               f(x - ee[i, :] + ee[j, :], *args, **kwargs) +
                               f(x - ee[i, :] - ee[j, :], *args, **kwargs)
-                              ) / (4.*hess[j, i])
+                              ) / (4. * hess[j, i])
                 hess[j, i] = hess[i, j]
         return hess
 
@@ -525,7 +569,7 @@ class Hessian(_Hessian):
         '''Eq. 8'''
         n = len(x)
         # NOTE: ridout suggesting using eps**(1/4)*theta
-        # h = _get_epsilon(x, 3, epsilon, n)
+        # h = _default_base_step(x, 3, base_step, n)
         ee = np.diag(h)
         f0 = f(x, *args, **kwargs)
         dtype = np.result_type(f0)
@@ -609,7 +653,7 @@ def main():
     args = (y, x)
     from scipy import optimize
     _xfmin = optimize.fmin(fun2, (0, 0, 0), args)  # @UndefinedVariable
-    # print(approx_fprime((1, 2, 3), fun, epsilon, x))
+    # print(approx_fprime((1, 2, 3), fun, steps, x))
     jac = Gradient(fun1, epsilon, method='forward')(xk, *args)
     jacmin = Gradient(fun1, -epsilon, method='forward')(xk, *args)
     # print(jac)
@@ -621,12 +665,12 @@ def main():
     jac2 = (jac + jacmin) / 2.
     print(np.dot(jac2.T, jac2))
 
-    # he = approx_hess(xk,fun2,epsilon,*args)
+    # he = approx_hess(xk,fun2,steps,*args)
     print(Hessian(fun2, 1e-3, method='central2')(xk, *args))
     he = Hessian(fun2, method='central2')(xk, *args)
     print('hessfd')
     print(he)
-    print('epsilon =', None)
+    print('base_step =', None)
     print(he[0] - 2 * np.dot(x.T, x))
 
     for eps in [1e-3, 1e-4, 1e-5, 1e-6]:
@@ -665,7 +709,7 @@ def main():
     print(val - 2 * np.dot(x.T, x))
     print(err)
     erri = [v.max() for v in errt]
-    import matplotlib.pyplot as plt
+
     plt.loglog(epsi[1:-1], erri)
     plt.show('hold')
     hnd = nd.Hessian(lambda a: fun2(a, y, x))
@@ -679,11 +723,89 @@ def main():
     print(Derivative(np.cosh)(0))
     print(nd.Derivative(np.cosh)(0))
 
+
+def _get_test_function(fun_name):
+    sinh, cosh, tanh = np.sinh, np.cosh, np.tanh
+    f_dic = dict(exp=(np.exp, np.exp, np.exp, np.exp),
+                 cos=(np.cos, lambda x: -np.sin(x),
+                      lambda x: -np.cos(x),
+                      lambda x: np.sin(x),
+                      lambda x: np.cos(x)),
+                 tanh=(tanh,
+                       lambda x: 1. / cosh(x) ** 2,
+                       lambda x: -2 * sinh(x) / cosh(x) ** 3,
+                       lambda x: 2. * (3 * tanh(x) ** 2 - 1) / cosh(x) ** 2,
+                       lambda x: (6 + 4 * sinh(x) *
+                                  (cosh(x) - 3 * tanh(x))) / cosh(x) ** 4),
+                 log=(np.log,
+                      lambda x: 1. / x,
+                      lambda x: -1. / x ** 2,
+                      lambda x: 2. / x ** 3,
+                      lambda x: -6. / x ** 4),
+                 inv=(lambda x: 1. / x,
+                      lambda x: -1. / x ** 2,
+                      lambda x: 2. / x ** 3,
+                      lambda x: -6. / x ** 4,
+                      lambda x: 24. / x ** 5))
+    funs = f_dic.get(fun_name)
+    fun0 = funs[0]
+    dfun = funs[1]
+    return fun0, dfun
+
+
+def _example2(x=0.0001, fun_name='inv', epsilon=None, method='central',
+              scale=None):
+    fun0, dfun = _get_test_function(fun_name)
+
+    fd = Derivative(fun0, steps=epsilon, method=method)
+    t = []
+    scales = np.linspace(1, 8)
+    for scale in scales:
+        fd.scale = scale
+        t.append(fd(x))
+    t = np.array(t)
+    tt = dfun(x)
+    plt.semilogy(scales, np.abs(t-tt)/(np.abs(tt)+1e-17) + 1e-17)
+    plt.vlines(fd.default_scale(fd.method), 1e-16, 1)
+    plt.show('hold')
+
+
+def _example(x=0.0001, fun_name='inv', epsilon=None, method='central',
+             scale=None):
+    '''
+    '''
+    fun0, dfun = _get_test_function(fun_name)
+
+    h = _default_base_step(x, scale=2, epsilon=None)  # 1e-4
+
+    fd = Derivative(fun0, steps=epsilon, method=method, scale=scale,
+                    full_output=True)
+
+    t, res = fd(x)
+
+    txt = (' (f(x+h)-f(x))/h = %g\n' %
+           ((fun0(x + h) - fun0(x)) / h))
+    deltas = np.array([h for h in epsilon(x, fd.scale)])
+
+    print((txt +
+           '      true df(x) = %20.15g\n' +
+           ' estimated df(x) = %20.15g\n' +
+           ' true err = %g\n err estimate = %g\n relative err = %g\n'
+           ' delta = %g\n') % (dfun(x), t, dfun(x) - t,
+                               res.error_estimate,
+                               res.error_estimate / t,
+                               deltas.flat[res.index]))
+    # plt.show('hold')
+
 if __name__ == '__main__':  # pragma : no cover
-    main()
+    # main()
+    epsilon = StepsGenerator(num_steps=1, step_ratio=4, offset=0)
+    # epsilon = StepsGenerator2(num_steps=5)
+    _example2(x=1, fun_name='cos', epsilon=epsilon, method='central',
+              scale=None)
     #     import nxs
-#     epsilon = StepsGenerator(num_steps=7)
-#     d = Derivative(np.cos, method='central', epsilon=epsilon,
+#     steps = StepsGenerator(num_steps=7)
+#     d = Derivative(np.cos, method='central', steps=steps,
 #                    full_output=True)
 #     print(d([0, 1e5*np.pi*2]))
 #     print(d(1e10*np.pi*2))
