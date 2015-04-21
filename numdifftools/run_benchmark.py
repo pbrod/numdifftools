@@ -28,17 +28,21 @@ adaptiv_txt = '_adaptive_%d_%s_%d' % (epsilon.num_steps,
                                       str(epsilon.step_ratio), epsilon.offset)
 gradient_funs = OrderedDict()
 gradient_funs['algopy_forward'] = lambda f: nda.Gradient(f, method='forward')
+gradient_funs['numdifftools'] = lambda f: nd.Gradient(f, **options)
+gradient_funs['forward'] = lambda f: ndc.Gradient(f, method='forward', steps=fixed_step)
+gradient_funs['forward'+adaptiv_txt] = lambda f: ndc.Gradient(f, method='forward', steps=epsilon)
 gradient_funs['central'] = lambda f: ndc.Gradient(f, method='central', steps=fixed_step)
 gradient_funs['central'+adaptiv_txt] = lambda f: ndc.Gradient(f, method='central', steps=epsilon)
-gradient_funs['numdifftools'] = lambda f: nd.Gradient(f, **options)
 gradient_funs['complex'] = lambda f: ndc.Gradient(f, method='complex')
 gradient_funs['complex'+adaptiv_txt] = lambda f: ndc.Gradient(f, method='complex', steps=epsilon)
 
 hessian_funs = OrderedDict()
 hessian_funs['algopy_forward'] = lambda f: nda.Hessian(f, method='forward')
+hessian_funs['numdifftools'] = lambda f: nd.Hessian(f, **options)
+hessian_funs['forward'] = lambda f: ndc.Hessian(f, method='forward', steps=fixed_step)
+hessian_funs['forward'+adaptiv_txt] = lambda f: ndc.Hessian(f, method='forward', steps=epsilon)
 hessian_funs['central'] = lambda f: ndc.Hessian(f, method='central', steps=fixed_step)
 hessian_funs['central'+adaptiv_txt] = lambda f: ndc.Hessian(f, method='central', steps=epsilon)
-hessian_funs['numdifftools'] = lambda f: nd.Hessian(f, **options)
 hessian_funs['complex'] = lambda f: ndc.Hessian(f, method='complex')
 hessian_funs['complex'+adaptiv_txt] = lambda f: ndc.Hessian(f, method='complex', steps=epsilon)
 
@@ -112,7 +116,7 @@ print(results_gradients.shape)
 
 import matplotlib.pyplot as pyplot
 # import prettyplotting
-symbols = ['-.k+', '-.k>', '--ks', '-k^', '-ko', '-k.']
+symbols = ['-kx','-k+', ':k>', ':k<', '--k^', '--kv', '-kp', '-ks']
 
 plottime = pyplot.plot
 ploterror = pyplot.semilogy
@@ -132,6 +136,7 @@ for title, funcs, results in [('Gradient run times', gradient_funs, results_grad
     leg = pyplot.legend(loc=0)
     frame = leg.get_frame()
     frame.set_alpha(0.4)
+    pyplot.gca().set_ylim(0, 10)
     pyplot.savefig(title.lower().replace(' ', '_') + '.png', format='png')
 
 

@@ -160,7 +160,7 @@ class StepsGenerator(object):
 
         step_ratio, offset = float(self.step_ratio), self.offset
         for i in range(int(self.num_steps), -1, -1):
-            h = _make_exact(delta * step_ratio**(i + offset))
+            h = (delta * step_ratio**(i + offset))
             if (np.abs(h) > 0).all():
                 yield h
 
@@ -211,7 +211,7 @@ class _Derivative(object):
 
     @staticmethod
     def default_scale(method):
-        return dict(complex=1.5, central=3).get(method, 2)
+        return dict(complex=1, central=3).get(method, 2)
 
     info = namedtuple('info', ['error_estimate', 'index'])
 
@@ -228,7 +228,7 @@ class _Derivative(object):
     def __init__(self, f, steps=None, method='complex', full_output=False,
                  scale=None):
         self.f = f
-        self.scale = scale
+        self._scale = scale
         self.steps = self._make_callable(steps)
         self.method = method
         self.full_output = full_output
@@ -249,7 +249,10 @@ class _Derivative(object):
         derivative, f, steps = self._get_functions(self.method)
         results = [derivative(f, xi, h, *args, **kwds)
                    for h in steps(xi, self.scale)]
-        return self._extrapolate(results)
+        derivative, info = self._extrapolate(results)
+        if self.full_output:
+            return derivative, info
+        return derivative
 
     def _get_arg_min(self, errors):
         shape = errors.shape
@@ -265,21 +268,19 @@ class _Derivative(object):
 
         dont_extrapolate = len(sequence) < 3
         if dont_extrapolate:
-            if self.full_output:
-                err = np.empty_like(sequence[0])
-                err.fill(np.NaN)
-                return 0.5 * (sequence[0] + sequence[-1]), self.info(err, 0)
-            return 0.5 * (sequence[0] + sequence[-1])
+            err = np.empty_like(sequence[0])
+            err.fill(np.NaN)
+            return 0.5 * (sequence[0] + sequence[-1]), self.info(err, 0)
+
         original_shape = sequence[0].shape
         res = np.vstack(r.ravel() for r in sequence)
         der, errors = dea3(res[0:-2], res[1:-1], res[2:], symmetric=True)
         if len(der) > 2:
             der, errors = dea3(der[0:-2], der[1:-1], der[2:])
         ix = self._get_arg_min(errors)
-        if self.full_output:
-            err = errors.flat[ix].reshape(original_shape)
-            return der.flat[ix].reshape(original_shape), self.info(err, ix)
-        return der.flat[ix].reshape(original_shape)
+
+        err = errors.flat[ix].reshape(original_shape)
+        return der.flat[ix].reshape(original_shape), self.info(err, ix)
 
 
 class Derivative(_Derivative):
@@ -465,7 +466,7 @@ class _Hessian(_Derivative):
 
     @staticmethod
     def default_scale(method):
-        return dict(central=6, central2=6, complex=9).get(method, 3)
+        return dict(central=8, central2=8, complex=6).get(method, 4)
 
 
 class Hessian(_Hessian):
