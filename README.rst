@@ -34,7 +34,8 @@ The methods provided are:
 
 All of these methods also produce error estimates on the result.
 
-A pdf file is also provided to explain the theory behind these tools.
+
+The documentation for numdifftools is available here http://numdifftools.readthedocs.org/
 Download the toolbox here: http://pypi.python.org/pypi/Numdifftools
 
 ----
