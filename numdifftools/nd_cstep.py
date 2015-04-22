@@ -61,7 +61,7 @@ def _make_exact(h):
 
 def _default_base_step(x, scale, epsilon=None):
     if epsilon is None:
-        h = (10*EPS) ** (1. / scale) * np.maximum(np.log1p(np.abs(x)), 0.1)
+        h = (10 * EPS) ** (1. / scale) * np.maximum(np.log1p(np.abs(x)), 0.1)
     else:
         if np.isscalar(epsilon):
             h = np.ones(x.shape) * epsilon
@@ -70,7 +70,7 @@ def _default_base_step(x, scale, epsilon=None):
             if h.shape != x.shape:
                 raise ValueError("If h is not a scalar it must have the same"
                                  " shape as x.")
-    return _make_exact(h)
+    return h
 
 
 _cmn_doc = """
@@ -81,7 +81,7 @@ _cmn_doc = """
     f : function
        function of one array f(x, `*args`, `**kwargs`)
     steps : float, array-like or StepsGenerator object, optional
-       Stepsize used, if None, then stepsize is automatically chosen
+       Spacing used, if None, then the spacing is automatically chosen
        according to (10*EPS)**(1/scale)*max(log(1+|x|), 0.1) where scale is
        depending on method.
        A StepsGenerator can be used to extrapolate the results. However,
@@ -148,15 +148,23 @@ class StepsGenerator(object):
         offset
     '''
 
-    def __init__(self, base_step=None, num_steps=10, step_ratio=4, offset=-1):
+    def __init__(self, base_step=None, num_steps=10, step_ratio=4, offset=-1,
+                 use_exact_steps=True):
         self.base_step = base_step
         self.num_steps = num_steps
         self.step_ratio = step_ratio
         self.offset = offset
+        self.use_exact_steps = use_exact_steps
+
+    def _default_base_step(self, xi, scale):
+        delta = _default_base_step(xi, scale, self.base_step)
+        if self.use_exact_steps:
+            return _make_exact(delta)
+        return delta
 
     def __call__(self, x, scale=1.5):
         xi = np.asarray(x)
-        delta = _default_base_step(xi, scale, self.base_step)
+        delta = self._default_base_step(xi, scale)
 
         step_ratio, offset = float(self.step_ratio), self.offset
         for i in range(int(self.num_steps), -1, -1):
@@ -195,10 +203,10 @@ class StepsGenerator2(object):
         step_min, step_max = self.step_min, self.step_max
         delta = _default_base_step(xi, scale, step_min)
         if step_min is None:
-            step_min = (10*EPS)**(1./scale)
+            step_min = (10 * EPS)**(1. / scale)
         if step_max is None:
-            step_max = (10*EPS)**(1./(scale + 1.5))
-        steps = np.logspace(0, -np.log10(step_min)+np.log10(step_max),
+            step_max = (10 * EPS)**(1. / (scale + 1.5))
+        steps = np.logspace(0, -np.log10(step_min) + np.log10(step_max),
                             self.num_steps)[::-1]
 
         for step in steps:
@@ -210,15 +218,15 @@ class StepsGenerator2(object):
 class _Derivative(object):
 
     @staticmethod
-    def default_scale(method):
-        return dict(complex=1, central=3).get(method, 2)
+    def default_scale(method, n=1):
+        return dict(complex=1, central=3).get(method, 2) + (n-1)
 
     info = namedtuple('info', ['error_estimate', 'index'])
 
     @property
     def scale(self):
         if self._scale is None:
-            return self.default_scale(self.method)
+            return self.default_scale(self.method, self.n)
         return self._scale
 
     @scale.setter
@@ -227,6 +235,7 @@ class _Derivative(object):
 
     def __init__(self, f, steps=None, method='complex', full_output=False,
                  scale=None):
+        self.n = 1
         self.f = f
         self._scale = scale
         self.steps = self._make_callable(steps)
@@ -283,6 +292,133 @@ class _Derivative(object):
         return der.flat[ix].reshape(original_shape), self.info(err, ix)
 
 
+class NDerivative(_Derivative):
+    """
+    Find the n-th derivative of a function at a point.
+
+    Given a function, use a central difference formula with spacing `dx` to
+    compute the `n`-th derivative at `x0`.
+
+    Parameters
+    ----------
+    f : function
+        Input function.
+    x0 : float
+        The point at which `n`-th derivative is found.
+    dx : float, optional
+        Spacing.
+    n : int, optional
+        Order of the derivative. Default is 1.
+    order : int, optional
+        Number of points to use, must be odd.
+
+    Notes
+    -----
+    Decreasing the step size too small can result in round-off error.
+
+    Examples
+    --------
+    >>> def f(x):
+    ...     return x**3 + x**2
+
+    >>> df = NDerivative(f)
+    >>> np.allclose(df(1), 5)
+    True
+    >>> ddf = NDerivative(f, n=2)
+    >>> np.allclose(ddf(1), 8)
+    True
+    """
+
+    def __init__(self, f, steps=None, method='central', full_output=False,
+                 scale=None, n=1, order=3):
+        super(NDerivative, self).__init__(f, steps, method, full_output, scale)
+        self.order = order
+        self.n = n
+        self.weights = self._weights(n, order)
+
+    @staticmethod
+    def central_diff_weights(Np, ndiv=1):
+        """
+        Return weights for an Np-point central derivative.
+
+        Assumes equally-spaced function points.
+
+        If weights are in the vector w, then
+        derivative is w[0] * f(x-ho*dx) + ... + w[-1] * f(x+h0*dx)
+
+        Parameters
+        ----------
+        Np : int
+            Number of points for the central derivative.
+        ndiv : int, optional
+            Number of divisions.  Default is 1.
+
+        Notes
+        -----
+        Can be inaccurate for large number of points.
+
+        """
+        if Np < ndiv + 1:
+            raise ValueError(
+                "Number of points must be at least the derivative order + 1.")
+        if Np % 2 == 0:
+            raise ValueError("The number of points must be odd.")
+        from scipy import linalg
+        ho = Np >> 1
+        x = np.arange(-ho, ho + 1.0)
+        x = x[:, np.newaxis]
+        X = x**0.0
+        for k in range(1, Np):
+            X = np.hstack([X, x**k])
+        w = np.product(np.arange(1, ndiv + 1), axis=0) * linalg.inv(X)[ndiv]
+        return w
+
+    def _weights(self, n, order):
+        array = np.array
+        if order < n + 1:
+            raise ValueError("'order' (the number of points used to compute "
+                             "the derivative), must be at least the "
+                             "derivative order 'n' + 1.")
+        if order % 2 == 0:
+            raise ValueError("'order' (the number of points used to compute "
+                             "the derivative)  must be odd.")
+            # pre-computed for n=1 and 2 and low-order for speed.
+        if n == 1:
+            if order == 3:
+                weights = array([-1, 0, 1]) / 2.0
+            elif order == 5:
+                weights = array([1, -8, 0, 8, -1]) / 12.0
+            elif order == 7:
+                weights = array([-1, 9, -45, 0, 45, -9, 1]) / 60.0
+            elif order == 9:
+                weights = array(
+                    [3, -32, 168, -672, 0, 672, -168, 32, -3]) / 840.0
+            else:
+                weights = self.central_diff_weights(order, 1)
+        elif n == 2:
+            if order == 3:
+                weights = array([1, -2.0, 1])
+            elif order == 5:
+                weights = array([-1, 16, -30, 16, -1]) / 12.0
+            elif order == 7:
+                weights = array([2, -27, 270, -490, 270, -27, 2]) / 180.0
+            elif order == 9:
+                weights = array([-9, 128, -1008, 8064, -14350,
+                                 8064, -1008, 128, -9]) / 5040.0
+            else:
+                weights = self.central_diff_weights(order, 2)
+        else:
+            weights = self.central_diff_weights(order, n)
+        return weights
+
+    def _central(self, f, x0, dx, *args, **kwds):
+        val = 0.0
+        ho = self.order >> 1
+        for k, w in enumerate(self.weights):
+            val += w * f(x0 + (k - ho) * dx, *args, **kwds)
+        return val / np.product((dx,) * self.n, axis=0)
+
+
 class Derivative(_Derivative):
     __doc__ = _cmn_doc % dict(
         derivative='first order derivative',
@@ -305,8 +441,8 @@ class Derivative(_Derivative):
     # 1'st derivative of exp(x), at x == 1
 
     >>> fd = ndc.Derivative(np.exp)       # 1'st derivative
-    >>> fd(1)
-    array([ 2.71828183])
+    >>> np.allclose(fd(1), 2.71828183)
+    True
 
     >>> d2 = fd([1, 2])
     >>> d2
@@ -375,7 +511,8 @@ class Gradient(_Derivative):
     >>> rosen = lambda x : (1-x[0])**2 + 105.*(x[1]-x[0]**2)**2
     >>> rd = ndc.Gradient(rosen)
     >>> grad3 = rd([1,1])
-    >>> grad3""", see_also="""
+    >>> np.allclose(grad3,[0, 0])
+    True""", see_also="""
     See also
     --------
     Derivative, Hessian, Jacobian
@@ -446,10 +583,10 @@ class Jacobian(Gradient):
     >>> fun = lambda c: (c[0]+c[1]*np.exp(c[2]*xdata) - ydata)**2
 
     >>> Jfun = ndc.Jacobian(fun)
-    >>> Jfun([1,2,0.75]).T # should be numerically zero
-    >>> array([[ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
-    ...       [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
-    ...       [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]])
+    >>> Jfun([1,2,0.75]).reshape((3,-1)) # should be numerically zero
+    array([[ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
+           [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
+           [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]])
 
     >>> fun2 = lambda x : x[0]*x[1]*x[2] + np.exp(x[0])*x[1]
     >>> Jfun3 = ndc.Jacobian(fun2)
@@ -465,7 +602,7 @@ class Jacobian(Gradient):
 class _Hessian(_Derivative):
 
     @staticmethod
-    def default_scale(method):
+    def default_scale(method, n=2):
         return dict(central=8, central2=8, complex=6).get(method, 4)
 
 
@@ -520,7 +657,7 @@ class Hessian(_Hessian):
 
     >>> cos = np.cos
     >>> fun = lambda xy : cos(xy[0]-xy[1])
-    >>> Hfun2 = nd.Hessian(fun)
+    >>> Hfun2 = ndc.Hessian(fun)
     >>> h2 = Hfun2([0, 0])
     >>> h2
     array([[-1.,  1.],
@@ -725,7 +862,7 @@ def main():
     print(nd.Derivative(np.cosh)(0))
 
 
-def _get_test_function(fun_name):
+def _get_test_function(fun_name, n=1):
     sinh, cosh, tanh = np.sinh, np.cosh, np.tanh
     f_dic = dict(exp=(np.exp, np.exp, np.exp, np.exp),
                  cos=(np.cos, lambda x: -np.sin(x),
@@ -743,6 +880,11 @@ def _get_test_function(fun_name):
                       lambda x: -1. / x ** 2,
                       lambda x: 2. / x ** 3,
                       lambda x: -6. / x ** 4),
+                 sqrt=(np.sqrt,
+                       lambda x: 0.5/np.sqrt(x),
+                       lambda x: -0.25/x**(1.5),
+                       lambda x: 1.5*0.25/x**(1.5),
+                       lambda x: -2.5*1.5*0.25/x**(2.5)),
                  inv=(lambda x: 1. / x,
                       lambda x: -1. / x ** 2,
                       lambda x: 2. / x ** 3,
@@ -750,24 +892,24 @@ def _get_test_function(fun_name):
                       lambda x: 24. / x ** 5))
     funs = f_dic.get(fun_name)
     fun0 = funs[0]
-    dfun = funs[1]
+    dfun = funs[n]
     return fun0, dfun
 
 
 def _example2(x=0.0001, fun_name='inv', epsilon=None, method='central',
-              scale=None):
-    fun0, dfun = _get_test_function(fun_name)
+              scale=None, n=1):
+    fun0, dfun = _get_test_function(fun_name, n)
 
-    fd = Derivative(fun0, steps=epsilon, method=method)
+    fd = NDerivative(fun0, steps=epsilon, method=method, n=n, order=5)
     t = []
-    scales = np.linspace(1, 8)
+    scales = np.linspace(1, 12)
     for scale in scales:
         fd.scale = scale
         t.append(fd(x))
     t = np.array(t)
     tt = dfun(x)
-    plt.semilogy(scales, np.abs(t-tt)/(np.abs(tt)+1e-17) + 1e-17)
-    plt.vlines(fd.default_scale(fd.method), 1e-16, 1)
+    plt.semilogy(scales, np.abs(t - tt) / (np.abs(tt) + 1e-17) + 1e-17)
+    plt.vlines(fd.default_scale(fd.method, n), 1e-16, 1)
     plt.show('hold')
 
 
@@ -798,12 +940,20 @@ def _example(x=0.0001, fun_name='inv', epsilon=None, method='central',
                                deltas.flat[res.index]))
     # plt.show('hold')
 
+
+def test_docstrings():
+    import doctest
+    doctest.testmod(optionflags=doctest.NORMALIZE_WHITESPACE)
+
+
 if __name__ == '__main__':  # pragma : no cover
+    # test_docstrings()
     # main()
-    epsilon = StepsGenerator(num_steps=1, step_ratio=4, offset=0)
+    epsilon = StepsGenerator(num_steps=1, step_ratio=4, offset=0,
+                             use_exact_steps=False)
     # epsilon = StepsGenerator2(num_steps=5)
     _example2(x=1, fun_name='cos', epsilon=epsilon, method='central',
-              scale=None)
+              scale=None, n=4)
     #     import nxs
 #     steps = StepsGenerator(num_steps=7)
 #     d = Derivative(np.cos, method='central', steps=steps,

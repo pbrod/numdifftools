@@ -1568,8 +1568,8 @@ if __name__ == '__main__':
     # _test_rosen()
     # test_dea()
     # test_epsal()
-    _example(x=0.01, fun_name='inv', n=1, method='c', step_max=1.,
-              step_ratio=2., step_num=15, romberg_terms=2, use_dea=True,
-              transform=None)
+    # _example(x=0.01, fun_name='inv', n=1, method='c', step_max=1.,
+    #          step_ratio=2., step_num=15, romberg_terms=2, use_dea=True,
+    #          transform=None)
 
-    #test_docstrings()
+    test_docstrings()

@@ -19,7 +19,7 @@ perhaps to an interpolating spline or a least squares spline fit.
 
 The third class of differentiation problems is where Numdifftools is valuable.
 This document will describe the methods used in Numdifftools and in particular
-the Derivate class.
+the Derivative class.
 
 
 Numerical differentiation of a general function of one variable
@@ -184,8 +184,8 @@ The linear extrapolant for this interval halving scheme as
 :math:`\delta \to 0` is given by:
 
 .. math::
-    f'_0 = 2f'_{\delta/2} - f'_{\delta}
-   :label: 13
+    f^{'}_{0} = 2 f^{'}_{\delta/2} - f^{'}_{\delta}
+    :label: 13
 
 Since I've always been a big fan of convincing myself that something
 will work before I proceed too far, lets try this out in Python.
@@ -207,7 +207,7 @@ exactly 1. How well will we do?
    True
 
    >>> allclose(2*df2 - df1, 0.999134674284488)
-    True
+   True
 
 
 In fact, this worked very nicely, reducing the error to roughly 1
@@ -324,7 +324,7 @@ dominate the problem.
    >>> allclose(f(1), 2.71828093)
    True
    >>> allclose(f(1) - exp(1), -8.97648138e-07)
-    True
+   True
    >>> allclose(f.final_delta, 1.00000008e-10)
    True
 
@@ -374,9 +374,9 @@ Gradient and Hessian  estimation
 ================================
 
 Estimation of the gradient vector (numdifftools.Gradient) of a function of multiple variables
-is a simple task, requiring merely repeated calls to numdifftools.Derivate. Likewise, the
+is a simple task, requiring merely repeated calls to numdifftools.Derivative. Likewise, the
 diagonal elements of the hessian matrix are merely pure second partial
-derivatives of a function. numdifftools.Hessdiag accomplishes this task, again calling numdifftools.Derivate multiple
+derivatives of a function. numdifftools.Hessdiag accomplishes this task, again calling numdifftools.Derivative multiple
 times. Efficient computation of the off-diagonal (mixed partial derivative) elements of the
 Hessian matrix uses a scheme much like that of numdifftools.Derivative, wherein
 numdifftools.Derivative is called to determine an initial step size, then Romberg extrapolation
