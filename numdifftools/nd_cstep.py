@@ -47,8 +47,23 @@ import numpy as np
 from numdifftools import dea3
 from collections import namedtuple
 from matplotlib import pyplot as plt
+from multicomplex import bicomplex
 # NOTE: we only do double precision internally so far
 EPS = np.MachAr().eps
+
+
+def c_atan2(x, y):
+    a, b = np.real(x), np.imag(x)
+    c, d = np.real(y), np.imag(y)
+    return np.arctan2(a, c) + 1j*(c*b-a*d)/(a**2+c**2)
+
+
+def c_max(x, y):
+    return np.where(x.real < y.real, y, x)
+
+
+def c_min(x, y):
+    return np.where(x.real > y.real, y, x)
 
 
 def _make_exact(h):
@@ -155,6 +170,12 @@ class StepsGenerator(object):
         self.step_ratio = step_ratio
         self.offset = offset
         self.use_exact_steps = use_exact_steps
+
+    def __repr__(self):
+        class_name = self.__class__.__name__
+        kwds = ['%s=%s' % (name, str(getattr(self, name)))
+                for name in self.__dict__.keys()]
+        return """%s(%s)""" % (class_name, ','.join(kwds))
 
     def _default_base_step(self, xi, scale):
         delta = _default_base_step(xi, scale, self.base_step)
@@ -686,6 +707,22 @@ class Hessian(_Hessian):
                 hess[j, i] = hess[i, j]
         return hess
 
+    def _complex_(self, f, x, h, *args, **kwargs):
+        '''Calculate Hessian with complex-step derivative approximation
+        '''
+        # TODO: might want to consider lowering the step for pure derivatives
+        n = len(x)
+        # h = _default_base_step(x, 3, base_step, n)
+        ee = np.diag(h)
+        hess = 2. * np.outer(h, h)
+
+        for i in range(n):
+            for j in range(i, n):
+                zph = bicomplex(x + 1j * ee[i, :], ee[j, :])
+                hess[i, j] = (f(zph, *args, **kwargs)).imag12 / hess[j, i]
+                hess[j, i] = hess[i, j]
+        return hess
+
     def _central(self, f, x, h, *args, **kwargs):
         '''Eq 9.'''
         n = len(x)
@@ -865,6 +902,11 @@ def main():
 def _get_test_function(fun_name, n=1):
     sinh, cosh, tanh = np.sinh, np.cosh, np.tanh
     f_dic = dict(exp=(np.exp, np.exp, np.exp, np.exp),
+                 arctan=(np.arctan,
+                         lambda x: 1./(1+x**2),
+                         lambda x: -2*x/(1+x**2)**2,
+                         lambda x: 1./(1+x**2),
+                         ),
                  cos=(np.cos, lambda x: -np.sin(x),
                       lambda x: -np.cos(x),
                       lambda x: np.sin(x),
