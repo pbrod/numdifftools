@@ -118,6 +118,13 @@ def _get_test_function(fun_name, n=1):
     dfun = funs[n]
     return fun0, dfun
 
+EPS = np.MachAr().eps
+
+
+def _default_base_step(x, scale, epsilon=None):
+    h = (10 * EPS) ** (1. / scale) * np.maximum(np.log1p(np.abs(x)), 0.1)
+    return h
+
 
 class BicomplexTester(unittest.TestCase):
 
@@ -177,6 +184,13 @@ class BicomplexTester(unittest.TestCase):
         np.testing.assert_array_equal(z2.z1, z0.z1 - z1.z1)
         np.testing.assert_array_equal(z2.z2, z0.z2 - z1.z2)
 
+    def test_rsub(self):
+        z1 = bicomplex(2, 1)
+        a = 1 + 1j
+        z2 = a - z1
+        np.testing.assert_array_equal(z2.z1, a - z1.z1)
+        np.testing.assert_array_equal(z2.z2, -z1.z2)
+
     def test_repr(self):
         z = bicomplex(1, 2)
         txt = repr(z)
@@ -189,13 +203,46 @@ class BicomplexTester(unittest.TestCase):
         np.testing.assert_array_equal(z3.z1, z1.z1 * z2.z1 - z1.z2 * z2.z2)
         np.testing.assert_array_equal(z3.z2, z1.z1 * z2.z2 + z1.z2 * z2.z1)
 
+    def test_pow(self):
+        z1 = bicomplex(1, 2)
+        z2 = z1 ** 2
+        z3 = z1 * z1
+        np.testing.assert_allclose(z2.z1, z1.z1 * z1.z1 - z1.z2 * z1.z2)
+        np.testing.assert_allclose(z2.z2, z1.z1 * z1.z2 + z1.z2 * z1.z1)
+        np.testing.assert_allclose(z3.z1, z1.z1 * z1.z1 - z1.z2 * z1.z2)
+        np.testing.assert_allclose(z3.z2, z1.z1 * z1.z2 + z1.z2 * z1.z1)
+
+        z1 = bicomplex(z1=(-1j), z2=(-1-0j))
+
+        z2 = z1 * z1
+        z3 = z1 ** 2
+        np.testing.assert_allclose(z2.z1, z1.z1 * z1.z1 - z1.z2 * z1.z2)
+        np.testing.assert_allclose(z2.z2, z1.z1 * z1.z2 + z1.z2 * z1.z1)
+        np.testing.assert_allclose(z3.z1, z1.z1 * z1.z1 - z1.z2 * z1.z2)
+        np.testing.assert_allclose(z3.z2, z1.z1 * z1.z2 + z1.z2 * z1.z1)
+
     def test_division(self):
         z1 = bicomplex(1, 2)
         z2 = bicomplex(3, 4)
         z3 = z1 / z2
         z4 = z1 * (z2**-1)
+        np.testing.assert_allclose(z3.z1, z4.z1)
+        np.testing.assert_allclose(z3.z2, z4.z2)
+
+    def test_rdivision(self):
+
+        z2 = bicomplex(3, 4)
+        z3 = 1. / z2
+        z4 = (z2**-1)
         np.testing.assert_array_equal(z3.z1, z4.z1)
         np.testing.assert_array_equal(z3.z2, z4.z2)
+
+    def test_rpow(self):
+        z2 = bicomplex(3, 4)
+        z3 = 2. ** z2
+        z4 = np.exp(z2*np.log(2))
+        np.testing.assert_allclose(z3.z1, z4.z1)
+        np.testing.assert_allclose(z3.z2, z4.z2)
 
     def test_dot(self):
         z1 = bicomplex(1, 2)
@@ -251,12 +298,13 @@ class BicomplexTester(unittest.TestCase):
     def test_der_arccos(self):
         x = np.linspace(-0.98, 0.98, 5)
         h = 1e-8
-        der1 = bicomplex(x + h * 1j, 0).arccos().imag1 / h
+        der1 = np.arccos(bicomplex(x + h * 1j, 0)).imag1 / h
         np.testing.assert_allclose(der1, -1. / np.sqrt(1 - x**2))
-        der2 = bicomplex(x + h * 1j, h).arccos().imag12 / h**2
+
+        h = (_default_base_step(x, scale=2.5) +1) -1
+        der2 = np.arccos(bicomplex(x + h * 1j, h)).imag12 / h**2
         true_der2 = -x / (1 - x**2)**(3. / 2)
-        np.testing.assert_allclose(der2, true_der2, atol=1e-6)
-        pass
+        np.testing.assert_allclose(der2, true_der2, atol=1e-5)
 
     def test_der_abs(self):
         x = np.linspace(-0.98, 0.98, 5)
@@ -283,7 +331,7 @@ class DerivativeTester(unittest.TestCase):
 
 def _test_first_derivative(name):
     x = np.linspace(0.0001, 0.98, 5)
-    h = 1e-8
+    h = _default_base_step(x, scale=2)
     f, df = _get_test_function(name, n=1)
 
     der = f(bicomplex(x + h * 1j, 0)).imag1 / h
@@ -293,7 +341,8 @@ def _test_first_derivative(name):
 
 def _test_second_derivative(name):
     x = np.linspace(0.01, 0.98, 5)
-    h = 1e-7
+    h = _default_base_step(x, scale=2.5)
+    # h = 1e-8
     f, df = _get_test_function(name, n=2)
 
     der = f(bicomplex(x + h * 1j, h)).imag12 / h**2

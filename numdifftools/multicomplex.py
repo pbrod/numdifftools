@@ -52,7 +52,10 @@ class bicomplex(object):
 
     def mod_c(self):
         '''Complex modulus'''
-        return np.sqrt(self.z1**2 + self.z2**2)
+        r12, r22 = self.z1*self.z1, self.z2*self.z2
+        r = np.sqrt(r12 + r22)
+        return r
+        return np.where(r == 0, np.sqrt(r12 - r22), r)
 
     def norm(self):
         z1, z2 = self.z1, self.z2
@@ -159,9 +162,16 @@ class bicomplex(object):
         other = self._coerce(other)
         return bicomplex(self.z1 - other.z1, self.z2 - other.z2)
 
+    def __rsub__(self, other):
+        return - self.__sub__(other)
+
     def __div__(self, other):
         '''elementwise division'''
-        return self * ((-np.log(other)).exp())
+        return self * other ** -1  # np.exp(-np.log(other))
+
+    def __rdiv__(self, other):
+        '''elementwise division'''
+        return other * self ** -1
 
     def __mul__(self, other):
         '''elementwise multiplication'''
@@ -169,17 +179,30 @@ class bicomplex(object):
         return bicomplex(self.z1 * other.z1 - self.z2 * other.z2,
                          (self.z1 * other.z2 + self.z2 * other.z1))
 
-    def __pow__(self, other):
-        return (self.log() * other).exp()
+    def _pow_singular(self, other):
+        z1, z2 = self.z1, self.z2
+        z01 = 0.5 * (z1 - 1j * z2) ** other
+        z02 = 0.5 * (z1 + 1j * z2) ** other
+        return bicomplex(z01 + z02, (z01 - z02) * 1j)
 
-    __rpow__ = __pow__
+    def __pow__(self, other):
+        out = (self.log()*other).exp()
+        non_invertible = self.mod_c() == 0
+        if non_invertible.any():
+            out[non_invertible] = self[non_invertible]._pow_singular(other)
+        return out
+
+    def __rpow__(self, other):
+        return (np.log(other) * self).exp()
+
     __radd__ = __add__
-    __rsub__ = __sub__
     __rmul__ = __mul__
-    __rdiv__ = __div__
 
     def __len__(self):
         return len(self.z1)
+
+    def conjugate(self):
+        return bicomplex(self.z1, -self.z2)
 
     def flat(self, index):
         return bicomplex(self.z1.flat[index], self.z2.flat[index])
@@ -204,8 +227,6 @@ class bicomplex(object):
         return bicomplex(z1, z2)
 
     def cos(self):
-        #         J = bicomplex(0, 1)
-        #         return ((J*self).exp() + (-J*self).exp())*0.5
         z1 = np.cosh(self.z2) * np.cos(self.z1)
         z2 = -np.sinh(self.z2) * np.sin(self.z1)
         return bicomplex(z1, z2)
@@ -248,7 +269,7 @@ class bicomplex(object):
         return np.exp(self * np.log(2))
 
     def sqrt(self):
-        return self**0.5
+        return self.__pow__(0.5)
 
     def log10(self):
         return bicomplex(np.log10(self.mod_c() + _TINY), self.arg_c())
@@ -268,7 +289,10 @@ class bicomplex(object):
         return bicomplex(expz1 * np.cos(self.z2), expz1 * np.sin(self.z2))
 
     def log(self):
-        return bicomplex(np.log(self.mod_c() + _TINY), self.arg_c())
+        mod_c = self.mod_c()
+#         if (mod_c == 0).any():
+#             raise ValueError('mod_c is zero -> number not invertable!')
+        return bicomplex(np.log(mod_c + _TINY), self.arg_c())
 
 #     def _log_m(self, m=0):
 #         return np.log(self.mod_c() + _TINY) + 1j * \
@@ -280,12 +304,14 @@ class bicomplex(object):
 #         return bicomplex(log_m, arg_c + 2 * n * np.pi)
 
     def arcsin(self):
-        return -(np.pi/2 - self.arccos())
+        J = bicomplex(0, 1)
+        return -J * ((J*self + (1-self**2)**0.5).log())
+        return (np.pi/2 - self.arccos())
 
     def arccos(self):
+        return (np.pi/2 - self.arcsin())
         J = bicomplex(0, 1)
-        sign1 = np.where(self.z1.real >= 0, -1, 1)
-        return J * ((self + sign1 * (self**2-1)**0.5).log())
+        return J * ((self - J * (1-self**2)**0.5).log())
 
     def arctan(self):
         J = bicomplex(0, 1)

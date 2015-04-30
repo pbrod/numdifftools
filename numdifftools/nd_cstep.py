@@ -113,6 +113,9 @@ _cmn_doc = """
         If `full_output` is False, only the derivative is returned.
         If `full_output` is True, then (der, r) is returned `der` is the
         derivative, and `r` is a Results object.
+    scale : real scalar, optional
+        scale used in base step. If None the value used is depending on the
+        method.
 
     Call Parameters
     ---------------
@@ -154,21 +157,25 @@ class StepsGenerator(object):
        Defines the base step, if None, then base_step is set to
            (10*EPS)**(1/scale)*max(log(1+|x|), 0.1)
        where x and scale are supplied at runtime through the __call__ method.
-    num_steps : scalar integer, optional
-        defines number of steps generated.
-    step_ratio : real scalar, optional
+    step_ratio : real scalar, optional, default 4
         Ratio between sequential steps generated.
         Note: Ratio > 1
-    offset : real scalar, optional
+    num_steps : scalar integer, optional, default 10
+        defines number of steps generated.
+    offset : real scalar, optional, default -1
         offset
+    scale : real scalar, optional
+        scale used in base step. If set to a value it will override the scale
+        supplied at runtime.
     '''
 
-    def __init__(self, base_step=None, num_steps=10, step_ratio=4, offset=-1,
-                 use_exact_steps=True):
+    def __init__(self, base_step=None, step_ratio=4, num_steps=10, offset=-1,
+                 use_exact_steps=True, scale=None):
         self.base_step = base_step
         self.num_steps = num_steps
         self.step_ratio = step_ratio
         self.offset = offset
+        self.scale = scale
         self.use_exact_steps = use_exact_steps
 
     def __repr__(self):
@@ -178,6 +185,8 @@ class StepsGenerator(object):
         return """%s(%s)""" % (class_name, ','.join(kwds))
 
     def _default_base_step(self, xi, scale):
+        if self.scale is not None:
+            scale = self.scale
         delta = _default_base_step(xi, scale, self.base_step)
         if self.use_exact_steps:
             return _make_exact(delta)
@@ -199,34 +208,40 @@ class StepsGenerator2(object):
     Generates a sequence of steps
 
     where
-        steps = logspace(np.log10(step_min),np.log10(step_max), num_steps)
+        steps = logspace(log10(step_min), log10(step_max), num_steps)
 
     Parameters
     ----------
     step_min : float, array-like, optional
-       Defines the minimim step if None, then base_step is set to
+       Defines the minimim step. Default value is:
            (10*EPS)**(1/scale)*max(log(1+|x|), 0.1)
        where x and scale are supplied at runtime through the __call__ method.
+    step_max : real scalar, optional
+        maximum step generated. Default value is:
+            exp(log(step_min) * scale / (scale + 1.5))
     num_steps : scalar integer, optional
         defines number of steps generated.
-    step_max : real scalar, optional
-        maximum step generated.
-
+    scale : real scalar, optional
+        scale used in base step. If set to a value it will override the scale
+        supplied at runtime.
     '''
 
-    def __init__(self, step_min=None, num_steps=10, step_max=None):
+    def __init__(self, step_min=None, step_max=None, num_steps=10, scale=None):
         self.step_min = step_min
         self.num_steps = num_steps
         self.step_max = step_max
+        self.scale = scale
 
     def __call__(self, x, scale=1.5):
+        if self.scale is not None:
+            scale = self.scale
         xi = np.asarray(x)
         step_min, step_max = self.step_min, self.step_max
         delta = _default_base_step(xi, scale, step_min)
         if step_min is None:
             step_min = (10 * EPS)**(1. / scale)
         if step_max is None:
-            step_max = (10 * EPS)**(1. / (scale + 1.5))
+            step_max = np.exp(np.log(step_min) * scale / (scale + 1.5))
         steps = np.logspace(0, -np.log10(step_min) + np.log10(step_max),
                             self.num_steps)[::-1]
 
@@ -624,7 +639,9 @@ class _Hessian(_Derivative):
 
     @staticmethod
     def default_scale(method, n=2):
-        return dict(central=8, central2=8, complex=6).get(method, 4)
+        return dict(central=8, central2=8, complex=6,
+                    complex_=2.5,
+                    hybrid=6).get(method, 4)
 
 
 class Hessian(_Hessian):
@@ -710,12 +727,9 @@ class Hessian(_Hessian):
     def _complex_(self, f, x, h, *args, **kwargs):
         '''Calculate Hessian with complex-step derivative approximation
         '''
-        # TODO: might want to consider lowering the step for pure derivatives
         n = len(x)
-        # h = _default_base_step(x, 3, base_step, n)
         ee = np.diag(h)
-        hess = 2. * np.outer(h, h)
-
+        hess = np.outer(h, h)
         for i in range(n):
             for j in range(i, n):
                 zph = bicomplex(x + 1j * ee[i, :], ee[j, :])
@@ -989,13 +1003,13 @@ def test_docstrings():
 
 
 if __name__ == '__main__':  # pragma : no cover
-    # test_docstrings()
+    test_docstrings()
     # main()
-    epsilon = StepsGenerator(num_steps=1, step_ratio=4, offset=0,
-                             use_exact_steps=False)
-    # epsilon = StepsGenerator2(num_steps=5)
-    _example2(x=1, fun_name='cos', epsilon=epsilon, method='central',
-              scale=None, n=4)
+#     epsilon = StepsGenerator(num_steps=1, step_ratio=4, offset=0,
+#                              use_exact_steps=False)
+#     # epsilon = StepsGenerator2(num_steps=5)
+#     _example2(x=1, fun_name='cos', epsilon=epsilon, method='central',
+#               scale=None, n=4)
     #     import nxs
 #     steps = StepsGenerator(num_steps=7)
 #     d = Derivative(np.cos, method='central', steps=steps,
