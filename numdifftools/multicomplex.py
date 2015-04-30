@@ -27,7 +27,9 @@ Adriaen Verheyleweghen, (2014)
 Project report, NTNU
 
 '''
+from __future__ import division
 import numpy as np
+
 _TINY = np.finfo(float).machar.tiny
 
 
@@ -168,6 +170,8 @@ class bicomplex(object):
     def __div__(self, other):
         '''elementwise division'''
         return self * other ** -1  # np.exp(-np.log(other))
+
+    __truediv__ = __div__
 
     def __rdiv__(self, other):
         '''elementwise division'''
