@@ -47,7 +47,7 @@ import numpy as np
 from numdifftools import dea3
 from collections import namedtuple
 from matplotlib import pyplot as plt
-from multicomplex import bicomplex
+from numdifftools.multicomplex import bicomplex
 # NOTE: we only do double precision internally so far
 EPS = np.MachAr().eps
 
