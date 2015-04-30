@@ -232,7 +232,7 @@ class BicomplexTester(unittest.TestCase):
     def test_rdivision(self):
 
         z2 = bicomplex(3, 4)
-        z3 = 1. / z2
+        z3 = 1 / z2
         z4 = (z2**-1)
         np.testing.assert_array_equal(z3.z1, z4.z1)
         np.testing.assert_array_equal(z3.z2, z4.z2)
