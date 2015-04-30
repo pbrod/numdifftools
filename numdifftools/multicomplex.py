@@ -107,9 +107,9 @@ class bicomplex(object):
             return result
         shape = result.shape
         result = np.atleast_1d(result)
-        z1 = np.array(map(lambda cls: cls.z1, result)).reshape(shape)
-        z2 = np.array(map(lambda cls: cls.z2, result)).reshape(shape)
-        return bicomplex(z1, z2)
+        z1 = np.array([cls.z1 for cls in result.ravel()])
+        z2 = np.array([cls.z2 for cls in result.ravel()])
+        return bicomplex(z1.reshape(shape), z2.reshape(shape))
 
     def __repr__(self):
         name = self.__class__.__name__

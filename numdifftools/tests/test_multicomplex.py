@@ -5,7 +5,7 @@ Created on 22. apr. 2015
 '''
 import unittest
 # from functools import partial
-from ..multicomplex import bicomplex
+from numdifftools.multicomplex import bicomplex
 import numpy as np
 
 
