@@ -325,10 +325,6 @@ class BicomplexTester(unittest.TestCase):
 #         pass
 
 
-class DerivativeTester(unittest.TestCase):
-    pass
-
-
 def _test_first_derivative(name):
     x = np.linspace(0.0001, 0.98, 5)
     h = _default_base_step(x, scale=2)
@@ -349,13 +345,24 @@ def _test_second_derivative(name):
     der_true = df(x)
     np.testing.assert_allclose(der, der_true, err_msg=('%s' % name))
 
-for name in _function_names:
-    for i, derivative in enumerate([_test_first_derivative,
-                                    _test_second_derivative]):
-        testname = 'test_n%d_derivative_%s' % (i+1, name)
-        testfunc = partial(derivative, name)
-        testfunc.__doc__ = testname
-        setattr(DerivativeTester, testname, testfunc)
+
+class DerivativeTester(unittest.TestCase):
+    def test_all_first_derivatives(self):
+        for name in _function_names:
+            _test_first_derivative(name)
+
+    def test_all_second_derivatives(self):
+        for name in _function_names:
+            _test_second_derivative(name)
+
+
+# for name in _function_names:
+#     for i, derivative in enumerate([_test_first_derivative,
+#                                     _test_second_derivative]):
+#         testname = 'test_n%d_derivative_%s' % (i+1, name)
+#         testfunc = partial(derivative, name)
+#         testfunc.__doc__ = testname
+#         setattr(DerivativeTester, testname, testfunc)
 
 
 if __name__ == "__main__":
