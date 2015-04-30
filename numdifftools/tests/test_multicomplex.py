@@ -4,7 +4,7 @@ Created on 22. apr. 2015
 @author: pab
 '''
 import unittest
-from functools import partial
+# from functools import partial
 from ..multicomplex import bicomplex
 import numpy as np
 
