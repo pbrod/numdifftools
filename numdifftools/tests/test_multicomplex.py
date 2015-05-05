@@ -302,7 +302,7 @@ class BicomplexTester(unittest.TestCase):
         der1 = np.arccos(bicomplex(x + h * 1j, 0)).imag1 / h
         np.testing.assert_allclose(der1, -1. / np.sqrt(1 - x**2))
 
-        h = (_default_base_step(x, scale=2.5) +1) -1
+        h = (_default_base_step(x, scale=2.5) + 1) - 1
         der2 = np.arccos(bicomplex(x + h * 1j, h)).imag12 / h**2
         true_der2 = -x / (1 - x**2)**(3. / 2)
         np.testing.assert_allclose(der2, true_der2, atol=1e-5)
