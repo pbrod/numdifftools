@@ -10,7 +10,8 @@ from numpy.testing import assert_array_almost_equal
 class TestDerivative(unittest.TestCase):
     def test_derivative_cube(self):
         '''Test for Issue 7'''
-        cube = lambda x: x * x * x
+        def cube(x):
+            return x * x * x
         dcube = nd.Derivative(cube)
         shape = (3, 2)
         x = np.ones(shape)*2
@@ -54,14 +55,15 @@ class TestDerivative(unittest.TestCase):
         self.assertTrue(small)
 
     def test_high_order_derivative_cos(self):
-        # Higher order derivatives (third derivative)
-        # Truth: 1
-        for n, true_val in zip([1, 2, 3, 4], (-1.0, 0.0, 1.0, 0.0)):
-            for order in [1, 2, 3, 4]:
-                d3cos = nd.Derivative(np.cos, n=n, order=order, method='forward')
-                y = d3cos(np.pi / 2.0)
-                small = np.abs(y - true_val) < 10 * d3cos.error_estimate
-                self.assertTrue(small)
+        for method in ['central', 'forward']:
+            for n, true_val in zip([1, 2, 3, 4, 5, 6],
+                                   (-1.0, 0.0, 1.0, 0.0, -1.0, 0.0)):
+                for order in [1, 2, 3, 4]:
+                    d3cos = nd.Derivative(np.cos, n=n, order=order,
+                                          method=method)
+                    y = d3cos(np.pi / 2.0)
+                    small = np.abs(y - true_val) < 10 * d3cos.error_estimate
+                    self.assertTrue(small)
 
     def test_backward_derivative_on_sinh(self):
         # Compute the derivative of a function using a backward difference
@@ -102,7 +104,8 @@ class TestDerivative(unittest.TestCase):
     def test_vectorized_derivative_of_x2(self):
         # Functions should be vectorized for speed, but its not
         # always easy to do.
-        fun = lambda x: x**2
+        def fun(x):
+            return x**2
         df = nd.Derivative(fun, vectorized=True)
         x = np.linspace(0, 5, 6)
         assert_array_almost_equal(df(x), 2*x)
@@ -113,7 +116,9 @@ class TestJacobian(unittest.TestCase):
     def testjacobian(self):
         xdata = np.reshape(np.arange(0, 1, 0.1), (-1, 1))
         ydata = 1 + 2 * np.exp(0.75 * xdata)
-        fun = lambda c: (c[0] + c[1] * np.exp(c[2] * xdata) - ydata) ** 2
+
+        def fun(c):
+            return (c[0] + c[1] * np.exp(c[2] * xdata) - ydata) ** 2
         Jfun = nd.Jacobian(fun)
         J = Jfun([1, 2, 0.75])  # should be numerically zero
         for ji in J.ravel():
@@ -122,7 +127,8 @@ class TestJacobian(unittest.TestCase):
 
 class TestGradient(unittest.TestCase):
     def testgradient(self):
-        fun = lambda x: np.sum(x ** 2)
+        def fun(x):
+            return np.sum(x ** 2)
         dfun = nd.Gradient(fun)
         d = dfun([1, 2, 3])
         dtrue = [2., 4., 6.]
@@ -135,7 +141,9 @@ class TestHessian(unittest.TestCase):
     def testhessian(self):
         # cos(x-y), at (0,0)
         cos = np.cos
-        fun = lambda xy: cos(xy[0] - xy[1])
+
+        def fun(xy):
+            return cos(xy[0] - xy[1])
         Hfun2 = nd.Hessian(fun)
         h2 = Hfun2([0, 0])  # h2 = [-1 1; 1 -1];
         htrue = [-1., 1., 1., -1.]
@@ -146,7 +154,8 @@ class TestHessian(unittest.TestCase):
 class TestHessdiag(unittest.TestCase):
 
     def testhessdiag(self):
-        fun = lambda x: x[0] + x[1] ** 2 + x[2] ** 3
+        def fun(x):
+            return x[0] + x[1] ** 2 + x[2] ** 3
         Hfun = nd.Hessdiag(fun)
         hd = Hfun([1, 2, 3])
         htrue = [0., 2., 18.]
@@ -167,8 +176,9 @@ class TestGlobalFunctions(unittest.TestCase):
                                   decimal=12)
 
     def testdea3(self):
+        def linfun(k):
+            return np.linspace(0, np.pi / 2., 2. ** (k + 5) + 1)
         Ei = np.zeros(3)
-        linfun = lambda k: np.linspace(0, np.pi / 2., 2. ** (k + 5) + 1)
         for k in np.arange(3):
             x = linfun(k)
             Ei[k] = np.trapz(np.sin(x), x)

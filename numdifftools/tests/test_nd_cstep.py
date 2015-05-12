@@ -32,6 +32,29 @@ class TestStepGenerator(unittest.TestCase):
         assert_array_almost_equal((h[0] - desired) / desired, 0)
 
 
+class TestFornbergWeights(unittest.TestCase):
+    def test_weights(self):
+        x = np.r_[-1,0, 1]
+        xbar = 0
+        k = 1
+        #weights = nd.fornberg_weights(k, xbar, x)
+        weights = nd.fornberg_weights(x, xbar, k)
+        pass
+
+
+class TestNDerivative(unittest.TestCase):
+    def test_high_order_derivative_cos(self):
+        for n, true_val in zip([1, 2, 3, 4, 5, 6],
+                               (-1.0, 0.0, 1.0, 0.0, -1.0, 0.0)):
+            start = n + 1 + (n % 2)
+            for order in range(start, start + 4 * 2, 2):
+                d3cos = nd.NDerivative(np.cos, n=n, order=order,
+                                       method='central')
+                y = d3cos(np.pi / 2.0)
+                small = np.abs(y - true_val) < 10**n*1e-9
+                self.assertTrue(small)
+
+
 class TestDerivative(unittest.TestCase):
 
     def test_set_scale(self):

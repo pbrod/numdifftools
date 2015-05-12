@@ -332,21 +332,20 @@ class bicomplex(object):
     def arctanh(self):
         return 0.5 * (((1+self)/(1-self)).log())
 
+    def _arg_c(self, z1, z2):
+        sign = np.where((z1.real == 0) * (z2.real == 0), 0,
+                        np.where(0 <= z2.real, 1, -1))
+    # clip to avoid nans for complex args
+        arg = z2 / (z1 + _TINY).clip(min=-1e150, max=1e150)
+        arg_c = np.arctan(arg) + sign * np.pi * (z1.real <= 0)
+        return arg_c
+
     def arg_c1p(self):
         z1, z2 = 1+self.z1, self.z2
-        sign = np.where((z1.real == 0) * (z2.real == 0), 0,
-                        np.where(0 <= z2.real, 1, -1))
-        # clip to avoid nans for complex args
-        arg = (z2 / (z1 + _TINY)).clip(min=-1e150, max=1e150)
-        return np.arctan(arg) + sign * np.pi * (z1.real <= 0)
+        return self._arg_c(z1, z2)
 
     def arg_c(self):
-        z1, z2 = self.z1, self.z2
-        sign = np.where((z1.real == 0) * (z2.real == 0), 0,
-                        np.where(0 <= z2.real, 1, -1))
-        # clip to avoid nans for complex args
-        arg = (z2 / (z1 + _TINY)).clip(min=-1e150, max=1e150)
-        return np.arctan(arg) + sign * np.pi * (z1.real <= 0)
+        return self._arg_c(self.z1, self.z2)
 
 
 def example_derivative():

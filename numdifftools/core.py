@@ -211,7 +211,8 @@ class Dea(object):
 
 
 def test_dea():
-    linfun = lambda i: np.linspace(0, np.pi/2., 2**i+1)
+    def linfun(i):
+        return np.linspace(0, np.pi/2., 2**i+1)
     dea = Dea(limexp=11)
     print('NO. PANELS      TRAP. APPROX          APPROX W/EA           ABSERR')
     for k in np.arange(10):
@@ -226,7 +227,7 @@ def test_epsal():
     TINY = 1.E-60
     ZERO = 0.E0
     ONE = 1.E0
-    true_vals = [0.78539816 , 0.94805945, 0.99945672]
+    true_vals = [0.78539816, 0.94805945, 0.99945672]
     E = []
     for N, SOFN in enumerate([0.78539816, 0.94805945, 0.98711580]):
         E.append(SOFN)
@@ -376,17 +377,16 @@ class RombergExtrapolation(object):
         step_ratio
         '''
         srinv = 1.0 / self.step_ratio
-        factorial = misc.factorial
-        arange = np.arange
         [i, j] = np.ogrid[0:nterms, 0:nterms]
-        if parity == 0:
-            c = 1.0 / factorial(arange(1, nterms + 1))
-            mat = c[j] * srinv ** (i * (j + 1))
-        elif parity == 1 or parity == 2:
-            c = 1.0 / factorial(arange(parity, 2 * nterms + 1, 2))
-            mat = c[j] * srinv ** (i * (2 * j + parity))
-        else:
-            raise ValueError('Parity must be 0, 1 or 2! (%d)' % parity)
+
+        try:
+            fact = {0: 1, 1: 2, 2: 2}[parity]
+        except Exception as msg:
+            raise ValueError('%s. Parity must be 0, 1 or 2! (%d)' % (str(msg),
+                                                                     parity))
+        offset = max(1, parity)
+        c = 1.0 / misc.factorial(np.arange(offset, fact * nterms + 1, fact))
+        mat = c[j] * srinv ** (i * (fact * j + offset))
         return np.matrix(mat)
 
     def _set_fd_rule(self):
@@ -438,8 +438,6 @@ class RombergExtrapolation(object):
                 v[der_order - 1] = 1
             dpm = der_order + met_order - 1
             fd_rule = matrix(v) * pinv(self._fd_mat(0, dpm))
-            if method == 'b':  # 'backward' rule
-                fd_rule = -fd_rule
         self._fd_rule = fd_rule.ravel()
 
     def _get_min_num_steps(self):
@@ -536,7 +534,7 @@ class _Derivative(object):
         self.use_dea = use_dea
         self.transform = transform
 
-        self._check_params()
+        # self._check_params()
 
         self.error_estimate = None
         self.final_delta = None
@@ -562,7 +560,7 @@ class _Derivative(object):
                 num_steps = max(self.step_num, 1)
             step1 = self._make_exact(self.step_max)
             self._delta = step1 * step_ratio ** (-np.arange(num_steps))
-            #self._delta = step1 * step_ratio ** (np.arange(num_steps)[::-1]+self.offset)
+            # self._delta = step1 * step_ratio ** (np.arange(num_steps)[::-1]+self.offset)
         else:
             self._delta = np.atleast_1d(delta)
 
@@ -688,8 +686,8 @@ class _Derivative(object):
         return arg_mins[n // 2]
 
     def _get_step_nom(self, step_nom, x0):
-#         s = np.sqrt(4*self.n)
-#         return _get_epsilon(x0, s, step_nom, x0.shape)
+        #         s = np.sqrt(4*self.n)
+        #         return _get_epsilon(x0, s, step_nom, x0.shape)
         if step_nom is None:
             step_nom = np.maximum(np.log1p(np.abs(x0)), 0.1)
         return self._make_exact(np.atleast_1d(step_nom)) * np.ones(x0.shape)
@@ -767,7 +765,7 @@ class _Derivative(object):
         [i, j] = np.ogrid[0:nterms, 0:nterms]
 
         try:
-            fact = {0: 1, 1: 2, 2: 2}[parity]
+            fact = [1, 2, 2][parity]
         except Exception as msg:
             raise ValueError('%s. Parity must be 0, 1 or 2! (%d)' % (str(msg),
                                                                      parity))
@@ -797,32 +795,26 @@ class _Derivative(object):
         met_order = self.order
         method = self.method[0]
 
-        matrix = np.matrix
-        fd_rule = matrix(der_order)
+        fd_rule = np.matrix(der_order)
 
         pinv = linalg.pinv
         if method == 'c':  # 'central'
+            parity = ((der_order + 1) % 2) + 1
             if met_order == 2:
-                if der_order == 3:
-                    fd_rule = matrix([0, 1]) * pinv(self._fd_mat(1, 2))
-                elif der_order == 4:
-                    fd_rule = matrix([0, 1]) * pinv(self._fd_mat(2, 2))
-            elif der_order == 1:
-                fd_rule = matrix([1, 0]) * pinv(self._fd_mat(1, 2))
-            elif der_order == 2:
-                fd_rule = matrix([1, 0]) * pinv(self._fd_mat(2, 2))
-            elif der_order == 3:
-                fd_rule = matrix([0, 1, 0]) * pinv(self._fd_mat(1, 3))
-            elif der_order == 4:
-                fd_rule = matrix([0, 1, 0]) * pinv(self._fd_mat(2, 3))
+                if der_order in [3, 4]:
+                    fd_rule = pinv(self._fd_mat(parity, 2))[1]
+                elif der_order in [5, 6]:
+                    fd_rule = pinv(self._fd_mat(parity, 3))[2]
+            elif der_order in [1, 2]:
+                fd_rule = pinv(self._fd_mat(parity, 2))[0]
+            elif der_order in [3, 4]:
+                fd_rule = pinv(self._fd_mat(parity, 3))[1]
+            elif der_order in [5, 6]:
+                fd_rule = pinv(self._fd_mat(parity, 4))[2]
         else:
-            v = np.zeros(der_order + met_order - 1)
-            v[der_order - 1] = 1
             dpm = der_order + met_order - 1
-            fd_rule = matrix(v) * pinv(self._fd_mat(0, dpm))
-            if method == 'b':  # 'backward' rule
-                fd_rule = -fd_rule
-        self._fd_rule = fd_rule.ravel()
+            fd_rule = pinv(self._fd_mat(0, dpm))[der_order - 1]
+        self._fd_rule = np.matrix(fd_rule).ravel()
 
     def _get_min_num_steps(self):
         n0 = 5 if self.method[0] == 'c' else 7
@@ -851,67 +843,55 @@ class _Derivative(object):
     def _set_difference_function(self):
         ''' Set _diff_fun function according to method
         '''
-        get_diff_fun = dict(c=self._central, b=self._backward,
-                            f=self._forward)[self.method[0]]
-        self._diff_fun = get_diff_fun()
+        vectorized = ' v'[int(self.vectorized)].rstrip()
+        even_order = 'oe'[(np.remainder(self.n, 2) == 0)]
+        code = (self.method[0] + even_order + vectorized)
+        self._diff_fun = dict(cov=self._central_odd_vectorized,
+                              cev=self._central_even_vectorized,
+                              bov=self._backward_vectorized,
+                              bev=self._backward_vectorized,
+                              fov=self._forward_vectorized,
+                              fev=self._forward_vectorized,
+                              co=self._central_odd,
+                              ce=self._central_even,
+                              bo=self._backward,
+                              be=self._backward,
+                              fo=self._forward,
+                              fe=self._forward)[code]
 
-    def _central(self):
-        ''' Return central difference function
+    @staticmethod
+    def _central_even_vectorized(fun, f_x0i, x0i, h):
+        return (fun(x0i + h) + fun(x0i - h)).ravel() / 2.0 - f_x0i
 
-        Member variables used
-            n
-            fun
-            vectorized
-        '''
-        even_order = (np.remainder(self.n, 2) == 0)
+    @staticmethod
+    def _central_odd_vectorized(fun, f_x0i, x0i, h):
+        return (fun(x0i + h) - fun(x0i - h)).ravel() / 2.0
 
-        if self.vectorized:
-            if even_order:
-                f_del = lambda fun, f_x0i, x0i, h: (
-                    fun(x0i + h) + fun(x0i - h)).ravel() / 2.0 - f_x0i
-            else:
-                f_del = lambda fun, f_x0i, x0i, h: (
-                    fun(x0i + h) - fun(x0i - h)).ravel() / 2.0
-        else:
-            if even_order:
-                f_del = lambda fun, f_x0i, x0i, h: np.asfarray(
-                    [fun(x0i + h_j) + fun(x0i - h_j)
-                     for h_j in h]).ravel() / 2.0 - f_x0i
-            else:
-                f_del = lambda fun, f_x0i, x0i, h: np.asfarray(
-                    [fun(x0i + h_j) - fun(x0i - h_j)
-                     for h_j in h]).ravel() / 2.0
-        return f_del
+    @staticmethod
+    def _central_even(fun, f_x0i, x0i, h):
+        return np.asfarray([fun(x0i + h_j) + fun(x0i - h_j)
+                            for h_j in h]).ravel() / 2.0 - f_x0i
 
-    def _forward(self):
-        ''' Return forward difference function
+    @staticmethod
+    def _central_odd(fun, f_x0i, x0i, h):
+        return np.asfarray([fun(x0i + h_j) - fun(x0i - h_j)
+                            for h_j in h]).ravel() / 2.0
 
-        Member variables used
-            fun
-            vectorized
-        '''
-        if self.vectorized:
-            f_del = lambda fun, f_x0i, x0i, h: (fun(x0i + h) - f_x0i).ravel()
-        else:
-            f_del = lambda fun, f_x0i, x0i, h: np.asfarray(
-                [fun(x0i + h_j) - f_x0i for h_j in h]).ravel()
-        return f_del
+    @staticmethod
+    def _forward_vectorized(fun, f_x0i, x0i, h):
+        return (fun(x0i + h) - f_x0i).ravel()
 
-    def _backward(self):
-        ''' Return backward difference function
+    @staticmethod
+    def _forward(fun, f_x0i, x0i, h):
+        return np.asfarray([fun(x0i + h_j) - f_x0i for h_j in h]).ravel()
 
-        Member variables used
-        ---------------------
-        fun
-        vectorized
+    @staticmethod
+    def _backward_vectorized(fun, f_x0i, x0i, h):
+        return (f_x0i - fun(x0i - h)).ravel()
 
-        '''
-        if self.vectorized:
-            f_del = lambda fun, f_x0i, x0i, h: (fun(x0i - h) - f_x0i).ravel()
-        else:
-            f_del = lambda fun, f_x0i, x0i, h: np.asfarray(
-                [fun(x0i - h_j) - f_x0i for h_j in h]).ravel()
-        return f_del
+    @staticmethod
+    def _backward(fun, f_x0i, x0i, h):
+        return np.asfarray([f_x0i - fun(x0i - h_j) for h_j in h]).ravel()
 
     def _remove_non_finite(self, der_init, h1):
         isnonfinite = 1 - np.isfinite(der_init)
@@ -1552,7 +1532,8 @@ def _example(x=0.0001, fun_name='inv', n=1, method='central', step_max=100,
 
 
 def _test_rosen():
-    rosen = lambda x: (1.-x[0])**2 + 105*(x[1]-x[0]**2)**2
+    def rosen(x):
+        return (1.-x[0])**2 + 105*(x[1]-x[0]**2)**2
     Hfun = Hessian(rosen, delta=[1e-6], step_num=1)
     print(Hfun([1, 1]))
     print(Hfun.final_delta)

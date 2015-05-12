@@ -7,7 +7,7 @@ import numdifftools.nd_cstep as ndc
 from collections import OrderedDict
 from numdifftools.nd_cstep import StepsGenerator
 
-options = dict(step_ratio=2., step_num=15)
+options = dict(step_ratio=2., step_num=15, vectorized=True)
 method = {'numdifftools': 0, 'scientific': 1,
           'algopy_reverse': 2, 'algopy_forward': 3}
 
