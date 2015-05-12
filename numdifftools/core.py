@@ -795,26 +795,17 @@ class _Derivative(object):
         met_order = self.order
         method = self.method[0]
 
-        fd_rule = np.matrix(der_order)
-
         pinv = linalg.pinv
         if method == 'c':  # 'central'
+            half_der_order = (der_order + 1) // 2
+            half_met_order = met_order // 2
             parity = ((der_order + 1) % 2) + 1
-            if met_order == 2:
-                if der_order in [3, 4]:
-                    fd_rule = pinv(self._fd_mat(parity, 2))[1]
-                elif der_order in [5, 6]:
-                    fd_rule = pinv(self._fd_mat(parity, 3))[2]
-            elif der_order in [1, 2]:
-                fd_rule = pinv(self._fd_mat(parity, 2))[0]
-            elif der_order in [3, 4]:
-                fd_rule = pinv(self._fd_mat(parity, 3))[1]
-            elif der_order in [5, 6]:
-                fd_rule = pinv(self._fd_mat(parity, 4))[2]
+            dpm = half_der_order + half_met_order - 1
+            fd_rule = pinv(self._fd_mat(parity, dpm))[half_der_order-1]
         else:
             dpm = der_order + met_order - 1
             fd_rule = pinv(self._fd_mat(0, dpm))[der_order - 1]
-        self._fd_rule = np.matrix(fd_rule).ravel()
+        self._fd_rule = np.matrix(fd_rule)
 
     def _get_min_num_steps(self):
         n0 = 5 if self.method[0] == 'c' else 7

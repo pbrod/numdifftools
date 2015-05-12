@@ -55,10 +55,10 @@ class TestDerivative(unittest.TestCase):
         self.assertTrue(small)
 
     def test_high_order_derivative_cos(self):
-        for method in ['central', 'forward']:
+        for method, orders in zip(['central', 'forward'], [[2, 4], [1, 2, 3, 4]]):
             for n, true_val in zip([1, 2, 3, 4, 5, 6],
                                    (-1.0, 0.0, 1.0, 0.0, -1.0, 0.0)):
-                for order in [1, 2, 3, 4]:
+                for order in orders:
                     d3cos = nd.Derivative(np.cos, n=n, order=order,
                                           method=method)
                     y = d3cos(np.pi / 2.0)
