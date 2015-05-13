@@ -534,7 +534,7 @@ class _Derivative(object):
         self.use_dea = use_dea
         self.transform = transform
 
-        # self._check_params()
+        self._check_params()
 
         self.error_estimate = None
         self.final_delta = None
@@ -574,8 +574,8 @@ class _Derivative(object):
         kwds = self.__dict__
         for name in ['n', 'order']:
             val = np.atleast_1d(kwds[name])
-            if ((len(val) != 1) or (val not in (1, 2, 3, 4))):
-                raise ValueError('%s must be scalar, one of [1 2 3 4].' % name)
+            if ((len(val) != 1) or (val != int(val)) or val < 0):
+                raise ValueError('%s must be positive scalar integer.' % name)
         name = 'romberg_terms'
         val = atleast_1d(kwds[name])
         if not ((len(val) == 1) and (val in (0, 1, 2, 3))):
@@ -791,20 +791,17 @@ class _Derivative(object):
         order
         method
         '''
-        der_order = self.n
-        met_order = self.order
-        method = self.method[0]
 
-        pinv = linalg.pinv
-        if method == 'c':  # 'central'
-            half_der_order = (der_order + 1) // 2
-            half_met_order = met_order // 2
-            parity = ((der_order + 1) % 2) + 1
-            dpm = half_der_order + half_met_order - 1
-            fd_rule = pinv(self._fd_mat(parity, dpm))[half_der_order-1]
+        order, method_order = self.n - 1, self.order
+
+        if self.method[0] == 'c':  # 'central'
+            parity = (order % 2) + 1
+            order = order // 2
+            num_terms = order + method_order // 2
         else:
-            dpm = der_order + met_order - 1
-            fd_rule = pinv(self._fd_mat(0, dpm))[der_order - 1]
+            parity = 0
+            num_terms = order + method_order
+        fd_rule = linalg.pinv(self._fd_mat(parity, num_terms))[order]
         self._fd_rule = np.matrix(fd_rule)
 
     def _get_min_num_steps(self):
