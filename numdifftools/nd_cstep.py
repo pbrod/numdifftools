@@ -356,7 +356,7 @@ def fornberg_weights_all(x, x0, M=1):
 
     Parameters
     ----------
-    x : vector
+    x : vector, length n
         x-coordinates for grid points
     x0 : scalar
         location where approximations are to be accurate
@@ -365,11 +365,8 @@ def fornberg_weights_all(x, x0, M=1):
 
     Returns
     -------
-    C :  array, shape len(x) X m+1
-            containing (as output) in
-        successive rows the weights_and_points for derivatives 0,1,...,m.
-        The array C contains the coefficients for the j'th derivative in
-        column j (0 <= j <= m).
+    C :  array, shape n x m+1
+        contains coefficients for the j'th derivative in column j (0 <= j <= m)
 
     See also:
     ---------
@@ -377,8 +374,9 @@ def fornberg_weights_all(x, x0, M=1):
 
     References
     ----------
-    B. Fornberg, "Calculation of weights_and_points in finite difference formulas",
-    SIAM Review 40 (1998), pp. 685-691.
+    B. Fornberg (1998)
+    "Calculation of weights_and_points in finite difference formulas",
+    SIAM Review 40, pp. 685-691.
 
     http://www.scholarpedia.org/article/Finite_difference_method
     '''
@@ -404,10 +402,10 @@ def fornberg_weights_all(x, x0, M=1):
 
 def fornberg_weights(x, x0, m=1):
     '''
-    Return weights_and_points for finite difference approximation of the m'th derivative
+    Return weights for finite difference approximation of the m'th derivative
     U^m(x0), evaluated at x0, based on n values of U at x[0], x[1],... x[n-1]:
 
-        U^m(x0) = sum weights_and_points[i] * U(x[i])
+        U^m(x0) = sum weights[i] * U(x[i])
 
     Parameters
     ----------
