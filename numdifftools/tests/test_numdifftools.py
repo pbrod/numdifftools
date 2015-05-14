@@ -89,8 +89,8 @@ class TestDerivative(unittest.TestCase):
     def test_forward_derivative_on_tan(self):
         # Control the behavior of Derivative - forward 2nd order method, with
         # only 1 Romberg term.
-        dtan = nd.Derivative(np.tan, n=1, order=2, method='forward',
-                             romberg_terms=1)
+        dtan = nd.Derivative(np.tan, n=1, order=2, method='central',
+                             romberg_terms=1, step_num=2+1+3, step_max = 2**6*1e-15**(1./3))
         y = dtan(np.pi)
         abserr = dtan.error_estimate
         self.assertTrue(np.abs(y - 1.0) < abserr)

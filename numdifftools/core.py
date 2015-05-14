@@ -36,29 +36,6 @@ _TINY = np.finfo(float).tiny
 _EPS = np.finfo(float).eps
 
 
-# def _extrapolate(h1, der_romb, errest):
-#     i0 = np.argmin(errest)-1
-#     x = h1[:i0]
-#     try:
-#         y = der_romb[:i0] - der_romb[i0]
-#         # val, abserr = dea3(y[:-2], y[1:-1], y[2:])
-#         # return val +der_romb[i0], abserr
-#         sy = np.sign(y[-1])
-#         k = np.flatnonzero(sy == np.sign(y))
-#         logy = np.log(sy * y[k])[::-1]
-#         logx = np.log(x[k])[::-1]
-#         logxi = np.log(h1[i0:])[::-1]
-#         tck = si.splrep(logx, logy, k=1, s=0, xb=logxi[0])
-#         der_romb = (sy * np.exp(si.splev(np.log(h1[::-1]), tck))[::-1] +
-#                     der_romb[i0])
-#         # return der_romb, errest
-#         val, abserr = dea3(der_romb[2:], der_romb[1:-1], der_romb[2:],
-#                            symmetric=True)
-#         return val[:i0], abserr[:i0]
-#     except:
-#         return der_romb, errest
-
-
 class Dea(object):
     '''
     LIMEXP  is the maximum number of elements the
@@ -452,12 +429,11 @@ class RombergExtrapolation(object):
         romberg_terms
         '''
         num_terms = self.romberg_terms
-        add1 = self.method[0] == 'c'
-        rombexpon = (1 + add1) * np.arange(num_terms) + self.order
-
-        srinv = self._make_exact(1.0 / self.step_ratio)
         rmat = np.ones((num_terms + 2, num_terms + 1))
         if num_terms > 0:
+            add1 = self.method[0] == 'c'
+            rombexpon = (1 + add1) * np.arange(num_terms) + self.order
+            srinv = self._make_exact(1.0 / self.step_ratio)
             for n in range(1, num_terms + 2):
                 rmat[n, 1:] = srinv ** (n * rombexpon)
         rmat = np.matrix(rmat)
@@ -591,9 +567,10 @@ class _Derivative(object):
         if method is None:
             t = 'Invalid method: Must start with one of c, f, b characters!'
             raise ValueError(t)
-        if method[0] == 'c' and kwds['method'] in (1, 3):
-            t = 'order 1 or 3 is not possible for central difference methods'
-            raise ValueError(t)
+        order = kwds['order']
+        if method[0] == 'c' and (order % 2) == 1:
+            raise ValueError('order %d is not possible for central '
+                             'difference methods' % order)
 
     def _initialize(self):
         '''Set derivative parameters:
@@ -793,14 +770,12 @@ class _Derivative(object):
         '''
 
         order, method_order = self.n - 1, self.order
-
+        parity = 0
+        num_terms = order + method_order
         if self.method[0] == 'c':  # 'central'
             parity = (order % 2) + 1
-            order = order // 2
-            num_terms = order + method_order // 2
-        else:
-            parity = 0
-            num_terms = order + method_order
+            num_terms, order = num_terms // 2, order // 2
+
         fd_rule = linalg.pinv(self._fd_mat(parity, num_terms))[order]
         self._fd_rule = np.matrix(fd_rule)
 
@@ -816,12 +791,12 @@ class _Derivative(object):
         romberg_terms
         '''
         num_terms = self.romberg_terms
-        add1 = self.method[0] == 'c'
-        rombexpon = (1 + add1) * np.arange(num_terms) + self.order
-
-        srinv = self._make_exact(1.0 / self.step_ratio)
         rmat = np.ones((num_terms + 2, num_terms + 1))
         if num_terms > 0:
+            add1 = self.method[0] == 'c'
+            rombexpon = (1 + add1) * np.arange(num_terms) + self.order
+
+            srinv = self._make_exact(1.0 / self.step_ratio)
             for n in range(1, num_terms + 2):
                 rmat[n, 1:] = srinv ** (n * rombexpon)
         rmat = np.matrix(rmat)
@@ -956,7 +931,7 @@ class _Derivative(object):
 
         if self.use_dea and der_romb.size > 2:
             der_romb, errest = dea3(der_romb[0:-2], der_romb[1:-1], der_romb[2:], symmetric=True)
-            hout = hout[2:-1]
+            hout = hout[2:]
             # der_romb, errest = _extrapolate(hout, der_romb, errest)
 
         return der_romb, errest + _EPS, hout
@@ -978,10 +953,7 @@ class _PartialDerivative(_Derivative):
         for i in range(nx):
             self._ix = i
             df[i], err[i], delta[i] = self._derivative(fun, x0[i], step_nom[i])
-            # err[i] = self.error_estimate
-            # delta[i] = self.final_delta
-        # self.error_estimate = err
-        # self.final_delta = delta
+
         return df, err, delta
 
     def _fun(self, xi):

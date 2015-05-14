@@ -12,7 +12,7 @@ class TestStepGenerator(unittest.TestCase):
     def test_default_generator(self):
         step_gen = nd.StepsGenerator(base_step=None, num_steps=10,
                                      step_ratio=4, offset=-1)
-        h = np.array([h for h in step_gen(0, scale=2)])
+        h = np.array([h for h in step_gen(0)])
         desired = np.array([1.235265e-03, 3.088162e-04, 7.720404e-05,
                             1.930101e-05, 4.825253e-06, 1.206313e-06,
                             3.015783e-07, 7.539457e-08,
@@ -21,52 +21,58 @@ class TestStepGenerator(unittest.TestCase):
 
     def test_default_base_step(self):
         step_gen = nd.StepsGenerator(num_steps=1)
-        h = [h for h in step_gen(0, scale=2)]
+        h = [h for h in step_gen(0)]
         desired = (10 * nd.EPS) ** (1. / 2) * 0.1
         assert_array_almost_equal((h[0] - desired) / desired, 0)
 
     def test_fixed_base_step(self):
         desired = 0.1
-        step_gen = nd.StepsGenerator(base_step=desired, num_steps=1)
-        h = [h for h in step_gen(0, scale=2)]
+        step_gen = nd.StepsGenerator(base_step=desired, num_steps=1, scale=2)
+        h = [h for h in step_gen(0)]
         assert_array_almost_equal((h[0] - desired) / desired, 0)
 
 
 class TestFornbergWeights(unittest.TestCase):
     def test_weights(self):
-        x = np.r_[-1,0, 1]
+        x = np.r_[-1, 0, 1]
         xbar = 0
         k = 1
-        #weights = nd.fornberg_weights(k, xbar, x)
         weights = nd.fornberg_weights(x, xbar, k)
-        pass
+        np.testing.assert_allclose(weights, [-.5, 0, .5])
 
 
 class TestNDerivative(unittest.TestCase):
     def test_high_order_derivative_cos(self):
         for n, true_val in zip([1, 2, 3, 4, 5, 6],
                                (-1.0, 0.0, 1.0, 0.0, -1.0, 0.0)):
-            start = n + 1 + (n % 2)
+            start = n + (n % 2)  # n + 1 + (n % 2)
             for order in range(start, start + 4 * 2, 2):
                 d3cos = nd.NDerivative(np.cos, n=n, order=order,
                                        method='central')
                 y = d3cos(np.pi / 2.0)
-                small = np.abs(y - true_val) < 10**n*1e-9
+                small = np.abs(y - true_val) < 50**n*1e-7
                 self.assertTrue(small)
+
+    def test_derivative_of_cos_x(self):
+        x = np.r_[0, np.pi / 6.0, np.pi / 2.0]
+        true_vals = (-np.sin(x), -np.cos(x), np.sin(x), np.cos(x), -np.sin(x),
+                     -np.cos(x))
+        for n, true_val in zip([1, 2, 3, 4, 5, 6], true_vals):
+            start = n + (n % 2)
+            for order in range(start, start + 4 * 2, 2):
+                d3cos = nd.NDerivative(np.cos, n=n, order=order,
+                                       method='central')
+                y = d3cos(x)
+                np.testing.assert_allclose(y, true_val, atol=50**n*1e-7)
 
 
 class TestDerivative(unittest.TestCase):
 
-    def test_set_scale(self):
-        def cube(x):
-            return x * x * x
-        dcube = nd.Derivative(cube)
-        for method in ['complex', 'central', 'forward', 'backward']:
-            dcube.method = method
-            np.testing.assert_allclose(dcube.scale,
-                                       dcube.default_scale(dcube.method))
-        dcube.scale = 10
-        np.testing.assert_allclose(dcube.scale, 10)
+    def test_default_scale(self):
+        for method, scale in zip(['complex', 'central', 'forward', 'backward'],
+                                 [1, 3, 2, 2]):
+            np.testing.assert_allclose(scale,
+                                       nd.default_scale(method, n=1))
 
     def test_derivative_cube(self):
         '''Test for Issue 7'''
