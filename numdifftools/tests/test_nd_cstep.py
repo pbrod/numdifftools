@@ -65,14 +65,14 @@ class TestDerivative(unittest.TestCase):
             n_max = dict(complex=2, central=6).get(method, 5)
             for n in range(1, n_max+1):
                 true_val = true_vals[n-1]
-                start, stop, step = dict(central=(2, 9, 2)).get(method,
+                start, stop, step = dict(central=(2, 7, 2)).get(method,
                                                                 (1, 5, 1))
                 for order in range(start, stop, step):
                     d3cos = nd.Derivative(np.cos, n=n, order=order,
                                           method=method, full_output=True)
                     y, info = d3cos(x)
                     error = np.abs(y - true_val)
-                    small = error < np.maximum(info.error_estimate*10,
+                    small = error < np.maximum(info.error_estimate*15,
                                                10**n*1e-12)
                     self.assertTrue(small.all())
 
@@ -91,11 +91,11 @@ class TestDerivative(unittest.TestCase):
         x = np.ones(shape) * 2
         dx = dcube(x)
         assert_array_almost_equal(list(dx.shape), list(shape),
-                                  decimal=12,
+                                  decimal=8,
                                   err_msg='Shape mismatch')
         txt = 'First differing element %d\n value = %g,\n true value = %g'
         for i, (val, tval) in enumerate(zip(dx.ravel(), (3 * x**2).ravel())):
-            assert_array_almost_equal(val, tval, decimal=12,
+            assert_array_almost_equal(val, tval, decimal=8,
                                       err_msg=txt % (i, val, tval))
 
     def test_derivative_exp(self):
@@ -109,7 +109,7 @@ class TestDerivative(unittest.TestCase):
         dsin = nd.Derivative(np.sin)
         x = np.linspace(0, 2. * np.pi, 13)
         y = dsin(x)
-        np.testing.assert_almost_equal(y, np.cos(x), decimal=10)
+        np.testing.assert_almost_equal(y, np.cos(x), decimal=8)
 
     def test_backward_derivative_on_sinh(self):
         # Compute the derivative of a function using a backward difference

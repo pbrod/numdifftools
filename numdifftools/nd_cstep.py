@@ -380,7 +380,7 @@ class _Derivative(object):
     def _make_callable(self, steps):
         if hasattr(steps, '__call__'):
             return steps
-        num_steps = self.n+self.order-1 + 10*int(steps is not None)
+        num_steps = self.n+self.order-1 + 10*int(steps is None)
         return StepsGenerator(base_step=steps, step_ratio=4.0**(1./self.n),
                               num_steps=num_steps)
 
