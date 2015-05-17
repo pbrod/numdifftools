@@ -276,10 +276,10 @@ class bicomplex(object):
         return self.__pow__(0.5)
 
     def log10(self):
-        return bicomplex(np.log10(self.mod_c() + _TINY), self.arg_c())
+        return self.log()/np.log(10)
 
     def log2(self):
-        return bicomplex(np.log2(self.mod_c() + _TINY), self.arg_c())
+        return self.log()/np.log(2)
 
     def log1p(self):
         return bicomplex(np.log1p(self.mod_c()), self.arg_c1p())
