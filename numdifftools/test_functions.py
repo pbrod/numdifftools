@@ -6,21 +6,26 @@ Created on 17. mai 2015
 from __future__ import division
 import numpy as np
 
-function_names = ['cos', 'sin', 'tan', 'arccos', 'arcsin', 'arctan', 'cosh',
-                  'sinh', 'tanh', 'exp', 'log', 'exp2', 'square', 'sqrt',
-                  'log1p', 'expm1', 'log10', 'log2', 'arcsinh', 'arctanh']
+function_names = ['cos', 'sin', 'tan',
+                  'cosh', 'sinh', 'tanh',
+                  'arcsinh',
+                  'exp', 'expm1', 'exp2', 'square',
+                  'sqrt',
+                  'log', 'log1p', 'log10', 'log2',
+                  'arccos', 'arcsin', 'arctan', ]
 
 
 def get_test_function(fun_name, n=1):
 
     sinh, cosh, tanh = np.sinh, np.cosh, np.tanh
+    sin, cos, tan = np.sin, np.cos, np.tan
     f_dic = dict(sinh=(sinh, cosh, sinh, cosh, sinh),
                  cosh=(cosh, sinh, cosh, sinh, cosh),
                  arccosh=(np.arccosh,
                           lambda x: 1./np.sqrt(x**2-1),
-                          lambda x: -x/(x**2-1)**(3./2),
-                          lambda x: -1./(x**2-1)**(3./2) +
-                          3*x**2/(x**2-1)**(5./2),
+                          lambda x: -x/(x**2-1)**(1.5),
+                          lambda x: -1./(x**2-1)**(1.5) +
+                          3*x**2/(x**2-1)**(2.5),
                           ),
                  arcsinh=(np.arcsinh,
                           lambda x: 1./np.sqrt(1+x**2),
@@ -53,7 +58,7 @@ def get_test_function(fun_name, n=1):
                          lambda x: np.zeros_like(x),
                          ),
                  exp=(np.exp,)*7,
-                 expm1=(np.expm1, np.exp, np.exp, np.exp),
+                 expm1=(np.expm1,) + (np.exp,)*6,
                  exp2=(np.exp2,
                        lambda x: np.exp2(x)*np.log(2),
                        lambda x: np.exp2(x)*np.log(2)**2,
@@ -66,15 +71,23 @@ def get_test_function(fun_name, n=1):
                          lambda x: 8.0*x**2/(1+x**2)**3 - 2./(1+x**2)**2,
                          lambda x: 24*x/(1+x**2)**3 - 48*x**3./(1+x**2)**4,
                          ),
-                 cos=(np.cos, lambda x: -np.sin(x),
+                 cos=(cos, lambda x: -np.sin(x),
+                      lambda x: -np.cos(x),
+                      np.sin,  np.cos,
+                      lambda x: -np.sin(x),
                       lambda x: -np.cos(x),
                       np.sin,  np.cos),
-                 sin=(np.sin, np.cos, lambda x: -np.sin(x),
+                 sin=(sin, np.cos, lambda x: -np.sin(x),
                       lambda x: -np.cos(x),
-                      np.sin),
-                 tan=(np.tan, lambda x: 1./np.cos(x)**2,
+                      np.sin, np.cos, lambda x: -np.sin(x),
+                      lambda x: -np.cos(x)),
+                 tan=(tan,
+                      lambda x: 1./np.cos(x)**2,
                       lambda x: 2*np.tan(x)/np.cos(x)**2,
-                      None, None
+                      lambda x: (4*(tan(x)**2 + 1)*tan(x)**2 +
+                                 2*(tan(x)**2 + 1)**2),
+                      lambda x: (8*(tan(x)**2 + 1)*tan(x)**3 +
+                                 16*(tan(x)**2 + 1)**2*tan(x))
                       ),
                  tanh=(tanh,
                        lambda x: 1. / cosh(x) ** 2,

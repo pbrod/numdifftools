@@ -10,25 +10,31 @@ from numpy.testing import assert_array_almost_equal
 class TestStepGenerator(unittest.TestCase):
 
     def test_default_generator(self):
-        step_gen = nd.StepsGenerator(base_step=None, num_steps=10,
-                                     step_ratio=4, offset=-1)
+        step_gen = nd.StepGenerator(base_step=None, num_steps=10,
+                                    step_ratio=4, offset=-1)
         h = np.array([h for h in step_gen(0)])
-        desired = np.array([3.088162e-04, 7.720404e-05,
-                            1.930101e-05, 4.825253e-06, 1.206313e-06,
-                            3.015783e-07, 7.539457e-08,
-                            1.884864e-08, 4.712161e-09, 1.178040e-09])
+        print(h)
+        desired = np.array([[9.01687441e-02, 2.25421860e-02, 5.63554651e-03,
+                             1.40888663e-03, 3.52221657e-04, 8.80554142e-05,
+                             2.20138535e-05, 5.50346339e-06, 1.37586585e-06,
+                             3.43966462e-07]])
+        # desired = np.array([3.08816177e-03, 7.72040443e-04, 1.93010111e-04,
+        #                    4.82525277e-05, 1.20631319e-05, 3.01578298e-06,
+        #                    7.53945745e-07, 1.88486436e-07, 4.71216091e-08,
+        #                    1.17804023e-08])
+
         assert_array_almost_equal((h - desired) / desired, 0)
 
     def test_default_base_step(self):
-        step_gen = nd.StepsGenerator(num_steps=1, offset=0)
+        step_gen = nd.StepGenerator(num_steps=1, offset=0)
         h = [h for h in step_gen(0)]
-        desired = (10 * nd.EPS) ** (1. / 2) * 0.1
+        desired = (10 * nd.EPS) ** (1. / 2.5)
         assert_array_almost_equal((h[0] - desired) / desired, 0)
 
     def test_fixed_base_step(self):
         desired = 0.1
-        step_gen = nd.StepsGenerator(base_step=desired, num_steps=1, scale=2,
-                                     offset=0)
+        step_gen = nd.StepGenerator(base_step=desired, num_steps=1, scale=2,
+                                    offset=0)
         h = [h for h in step_gen(0)]
         assert_array_almost_equal((h[0] - desired) / desired, 0)
 
@@ -77,10 +83,10 @@ class TestDerivative(unittest.TestCase):
                     self.assertTrue(small.all())
 
     def test_default_scale(self):
-        for method, scale in zip(['complex', 'central', 'forward', 'backward'],
-                                 [1, 3, 2, 2]):
-            np.testing.assert_allclose(scale,
-                                       nd.default_scale(method, n=1))
+        for method, scale in zip(['complex', 'central', 'forward', 'backward',
+                                  'hybrid'],
+                                 [1.35, 2.5, 2.5, 2.5, 5]):
+            np.testing.assert_allclose(scale, nd.default_scale(method, n=1))
 
     def test_derivative_cube(self):
         '''Test for Issue 7'''
@@ -120,13 +126,13 @@ class TestDerivative(unittest.TestCase):
     def test_central_and_forward_derivative_on_log(self):
         # Although a central rule may put some samples in the wrong places, it
         # may still succeed
-        epsilon = nd.StepsGenerator(num_steps=10, offset=-1, step_ratio=2)
-        dlog = nd.Derivative(np.log, method='central', steps=epsilon)
-        x = 0.001
+        epsilon = nd.StepGenerator(num_steps=15, offset=0, step_ratio=2)
+        dlog = nd.Derivative(np.log, method='central', step=epsilon)
+        x = 0.01
         self.assertAlmostEqual(dlog(x), 1.0 / x)
 
         # But forcing the use of a one-sided rule may be smart anyway
-        dlog = nd.Derivative(np.log, method='forward', steps=epsilon)
+        dlog = nd.Derivative(np.log, method='forward', step=epsilon)
         self.assertAlmostEqual(dlog(x), 1 / x)
 
 
@@ -160,11 +166,27 @@ class TestGradient(unittest.TestCase):
                 assert_array_almost_equal(d, dtrue)
 
 
+class TestHessdiag(unittest.TestCase):
+
+    def testhessdiag(self):
+        def fun(x):
+            return x[0] + x[1] ** 2 + x[2] ** 3
+        htrue = np.array([0., 2., 18.])
+        methods = ['hybrid', 'complex', 'central', 'forward', 'backward']
+        for order in range(2, 7, 2):
+            for method in methods:
+                Hfun = nd.Hessdiag(fun, method=method, order=order,
+                                   full_output=True)
+                hd, _info = Hfun([1, 2, 3])
+                _error = hd - htrue
+                assert_array_almost_equal(hd, htrue)
+
+
 class TestHessian(unittest.TestCase):
 
     def test_hessian_cosIx_yI_at_I0_0I(self):
         # cos(x-y), at (0,0)
-        epsilon = nd.StepsGenerator(num_steps=10)
+        step = nd.StepGenerator(num_steps=10)
         cos = np.cos
 
         def fun(xy):
@@ -173,8 +195,8 @@ class TestHessian(unittest.TestCase):
         methods = ['hybrid', 'complex', 'central', 'central2', 'forward',
                    'backward']
         for method in methods:
-            Hfun2 = nd.Hessian(fun, method=method, steps=epsilon)
-            h2 = Hfun2([0, 0])
+            Hfun2 = nd.Hessian(fun, method=method, step=step, full_output=True)
+            h2, _info = Hfun2([0, 0])
             assert_array_almost_equal(h2, htrue)
 
 

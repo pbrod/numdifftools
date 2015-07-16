@@ -5,7 +5,7 @@ import numdifftools as nd
 import numdifftools.nd_algopy as nda
 import numdifftools.nd_cstep as ndc
 from collections import OrderedDict
-from numdifftools.nd_cstep import StepsGenerator
+from numdifftools.nd_cstep import StepGenerator, MaxStepGenerator
 import matplotlib.pyplot as pyplot
 # import prettyplotting
 
@@ -24,45 +24,52 @@ class BenchmarkFunction(object):
         tmp = np.dot(self.A, x)
         return 0.5 * np.dot(x * x, tmp)
 
-fixed_step = StepsGenerator(num_steps=1, use_exact_steps=True) #, step_ratio=2., offset=3)
-epsilon = StepsGenerator(num_steps=7, use_exact_steps=True) #, step_ratio=4., offset=3)
+fixed_step = StepGenerator(num_steps=1, use_exact_steps=True, offset=4) #, step_ratio=2., offset=3)
+epsilon = StepGenerator(num_steps=7, use_exact_steps=True, offset=5) #, step_ratio=4., offset=3)
+fixed_step = StepGenerator(num_steps=2, use_exact_steps=True, step_ratio=2., offset=0)
+fixed_step2 = StepGenerator(num_steps=1, use_exact_steps=True, step_ratio=2, offset=0)
+epsilon = StepGenerator(num_steps=10, use_exact_steps=True, step_ratio=2, offset=0)
+epsilon = MaxStepGenerator(num_steps=15, use_exact_steps=False, step_ratio=2)
 adaptiv_txt = '_adaptive_%d_%s_%d' % (epsilon.num_steps,
                                       str(epsilon.step_ratio), epsilon.offset)
 gradient_funs = OrderedDict()
 gradient_funs['algopy_forward'] = lambda f: nda.Gradient(f, method='forward')
 gradient_funs['numdifftools'] = lambda f: nd.Gradient(f, **options)
-gradient_funs['forward'] = lambda f: ndc.Gradient(f, method='forward', order=1,
-                                                  steps=fixed_step)
+gradient_funs['forward'] = lambda f: ndc.Gradient(f, method='forward',
+                                                  step=fixed_step)
 gradient_funs['forward'+adaptiv_txt] = lambda f: ndc.Gradient(f,
                                                               method='forward',
-                                                              order=1,
-                                                              steps=epsilon)
+                                                              step=epsilon)
 gradient_funs['central'] = lambda f: ndc.Gradient(f, method='central',
-                                                  steps=fixed_step)
+                                                  step=fixed_step2)
 gradient_funs['central'+adaptiv_txt] = lambda f: ndc.Gradient(f,
                                                               method='central',
-                                                              steps=epsilon)
-gradient_funs['complex'] = lambda f: ndc.Gradient(f, method='complex')
+                                                              step=epsilon)
+gradient_funs['complex'] = lambda f: ndc.Gradient(f, method='complex',
+                                                  step=fixed_step2)
 gradient_funs['complex'+adaptiv_txt] = lambda f: ndc.Gradient(f,
                                                               method='complex',
-                                                              steps=epsilon)
+                                                              step=epsilon)
 
 hessian_funs = OrderedDict()
 hessian_funs['algopy_forward'] = lambda f: nda.Hessian(f, method='forward')
 hessian_funs['numdifftools'] = lambda f: nd.Hessian(f, **options)
 hessian_funs['forward'] = lambda f: ndc.Hessian(f, method='forward',
-                                                steps=fixed_step)
+                                                step=fixed_step2)
 hessian_funs['forward'+adaptiv_txt] = lambda f: ndc.Hessian(f,
                                                             method='forward',
-                                                            steps=epsilon)
-hessian_funs['central'] = lambda f: ndc.Hessian(f, method='central',
-                                                steps=fixed_step)
-hessian_funs['central'+adaptiv_txt] = lambda f: ndc.Hessian(f,
-                                                            method='central',
-                                                            steps=epsilon)
-hessian_funs['hybrid'] = lambda f: ndc.Hessian(f, method='hybrid')
+                                                            step=epsilon)
+hessian_funs['central2'] = lambda f: ndc.Hessian(f, method='central2',
+                                                 step=fixed_step2)
+hessian_funs['central2'+adaptiv_txt] = lambda f: ndc.Hessian(f,
+                                                             method='central2',
+                                                             step=epsilon)
+hessian_funs['hybrid'] = lambda f: ndc.Hessian(f, method='hybrid',
+                                               step=fixed_step2)
 hessian_funs['hybrid'+adaptiv_txt] = lambda f: ndc.Hessian(f, method='hybrid',
-                                                           steps=epsilon)
+                                                           step=epsilon)
+# hessian_funs['complex'] = lambda f: ndc.Hessian(f, method='complex',
+#                                                step=fixed_step)
 
 
 # GRADIENT COMPUTATION
@@ -137,7 +144,7 @@ print('results_hessians=\n', results_hessians)
 print(results_gradients.shape)
 
 
-symbols = ['-kx', '-k+', ':k>', ':k<', '--k^', '--kv', '-kp', '-ks']
+symbols = ['-kx', '-k+', ':k>', ':k<', '--k^', '--kv', '-kp', '-ks', 'b']
 
 plottime = pyplot.plot
 ploterror = pyplot.semilogy
@@ -157,7 +164,7 @@ for title, funcs, results in [('Gradient run times',
     pyplot.ylabel('Relative time $t$')
     pyplot.xlabel('problem size $N$')
     pyplot.grid()
-    leg = pyplot.legend(loc=0)
+    leg = pyplot.legend(loc=1)
     frame = leg.get_frame()
     frame.set_alpha(0.4)
     pyplot.gca().set_ylim(0, 10)
@@ -180,7 +187,8 @@ for title, funcs, results in [('Gradient errors',
     pyplot.ylabel(r'Absolute error $\|g_{ref} - g\|$')
     pyplot.xlabel('problem size $N$')
     pyplot.grid()
-    leg = pyplot.legend(loc=0)
+    leg = pyplot.legend(loc=1)
     frame = leg.get_frame()
     frame.set_alpha(0.4)
+    pyplot.gca().set_ylim(1e-16, 1e-3)
     pyplot.savefig(title.lower().replace(' ', '_') + '.png', format='png')
