@@ -24,6 +24,7 @@ from __future__ import division, print_function
 import numpy as np
 import scipy.linalg as linalg
 import scipy.misc as misc
+from scipy.ndimage.filters import convolve1d
 # import scipy.interpolate as si
 import warnings
 import matplotlib.pyplot as plt
@@ -329,116 +330,57 @@ def _get_epsilon(x, s, epsilon, n):
 
 
 class RombergExtrapolation(object):
-    def __init__(self, n=1, method='central', order=2,
-                 romberg_terms=2, step_ratio=2.0):
-        self.n = n
-        self.romberg_terms = romberg_terms
+    '''
+
+    '''
+    def __init__(self, step_ratio=2.0, method='central', order=2, num_terms=2):
+        self.num_terms = num_terms
         self.order = order
         self.method = method
         self.step_ratio = step_ratio
 
-    def _fd_mat(self, parity, nterms):
-        ''' Return matrix for finite difference derivation.
-
-        Parameters
-        ----------
-        parity : scalar, integer
-            0 (one sided, all terms included but zeroth order)
-            1 (only odd terms included)
-            2 (only even terms included)
-        nterms : scalar, integer
-            number of terms
-
-        Member variables used
-        ---------------------
-        step_ratio
-        '''
-        srinv = 1.0 / self.step_ratio
-        [i, j] = np.ogrid[0:nterms, 0:nterms]
-
-        try:
-            fact = {0: 1, 1: 2, 2: 2}[parity]
-        except Exception as msg:
-            raise ValueError('%s. Parity must be 0, 1 or 2! (%d)' % (str(msg),
-                                                                     parity))
-        offset = max(1, parity)
-        c = 1.0 / misc.factorial(np.arange(offset, fact * nterms + 1, fact))
-        mat = c[j] * srinv ** (i * (fact * j + offset))
-        return np.matrix(mat)
-
-    def _set_fd_rule(self):
-        '''
-        Generate finite differencing rule in advance.
-
-        The rule is for a nominal unit step size, and will
-        be scaled later to reflect the local step size.
-
-        Member methods used
-        -------------------
-        _fd_mat
-
-        Member variables used
-        ---------------------
-        n
-        order
-        method
-        '''
-        der_order = self.n
-        met_order = self.order
-        method = self.method[0]
-
-        matrix = np.matrix
-        zeros = np.zeros
-        fd_rule = matrix(der_order)
-
-        pinv = linalg.pinv
-        if method == 'c':  # 'central'
-            if met_order == 2:
-                if der_order == 3:
-                    fd_rule = matrix([0, 1]) * pinv(self._fd_mat(1, 2))
-                elif der_order == 4:
-                    fd_rule = matrix([0, 1]) * pinv(self._fd_mat(2, 2))
-            elif der_order == 1:
-                fd_rule = matrix([1, 0]) * pinv(self._fd_mat(1, 2))
-            elif der_order == 2:
-                fd_rule = matrix([1, 0]) * pinv(self._fd_mat(2, 2))
-            elif der_order == 3:
-                fd_rule = matrix([0, 1, 0]) * pinv(self._fd_mat(1, 3))
-            elif der_order == 4:
-                fd_rule = matrix([0, 1, 0]) * pinv(self._fd_mat(2, 3))
-        else:
-            v = zeros(der_order + met_order - 1)
-            if met_order == 1:
-                if der_order != 1:
-                    v[der_order - 1] = 1
-            else:
-                v[der_order - 1] = 1
-            dpm = der_order + met_order - 1
-            fd_rule = matrix(v) * pinv(self._fd_mat(0, dpm))
-        self._fd_rule = fd_rule.ravel()
-
-    def _get_min_num_steps(self):
-        n0 = 5 if self.method[0] == 'c' else 7
-        return int(n0 + np.ceil(self.n / 2.) + self.order + self.romberg_terms)
-
-    def _set_romb_qr(self):
-        '''
-        Member variables used
-        order
-        method
-        romberg_terms
-        '''
-        num_terms = self.romberg_terms
+    def _get_romberg_rule(self):
+        num_terms = self.num_terms
         rmat = np.ones((num_terms + 2, num_terms + 1))
         if num_terms > 0:
-            add1 = self.method[0] == 'c'
-            rombexpon = (1 + add1) * np.arange(num_terms) + self.order
-            srinv = self._make_exact(1.0 / self.step_ratio)
-            for n in range(1, num_terms + 2):
-                rmat[n, 1:] = srinv ** (n * rombexpon)
-        rmat = np.matrix(rmat)
-        self._qromb, self._rromb = linalg.qr(rmat)
-        # self._rmat = rmat
+            fact = dict(central=2).get(self.method, 1)
+            i, j = np.ogrid[0:num_terms + 2, 0:num_terms]
+            srinv = _make_exact(1.0 / self.step_ratio)
+            rmat[:, 1:] = srinv ** (i*(fact*j + self.order))
+        romberg_rule = linalg.pinv(rmat)[0]
+        return romberg_rule
+
+    def _estimate_error(self, der_romb):
+        m, n = der_romb.shape
+        z = np.zeros((n, ))
+        tmperr = np.abs(np.diff(np.vstack((z, der_romb, z)), axis=0)) * (m > 1)
+        abserr = tmperr[:-1] + tmperr[1:] + np.abs(der_romb) * _EPS * 10.0
+        return abserr
+
+    def __call__(self, der, steps):
+        ne = der.shape[0]
+        if ne < self.num_terms + 2:
+            der_romb = der
+            nr = 0
+        else:
+            rr_rule = self._get_romberg_rule()
+            nr = rr_rule.size - 1
+            m = ne - nr
+            der_romb = convolve1d(der, rr_rule[::-1], axis=0,
+                                  origin=(nr//2))[:m]
+        abserr = self._estimate_error(der_romb)
+        return der_romb, abserr, steps[nr:]
+
+
+def romberg_rule(step_ratio, order, method, num_terms=2):
+    rmat = np.ones((num_terms + 2, num_terms + 1))
+    if num_terms > 0:
+        fact = dict(central=2).get(method, 1)
+        i, j = np.ogrid[0:num_terms + 2, 0:num_terms]
+        srinv = _make_exact(1.0 / step_ratio)
+        rmat[:, 1:] = srinv ** (i*(fact*j + order))
+    romberg_rule = linalg.pinv(rmat)[0]
+    return romberg_rule
 
 
 class _Derivative(object):
@@ -536,7 +478,6 @@ class _Derivative(object):
                 num_steps = max(self.step_num, 1)
             step1 = self._make_exact(self.step_max)
             self._delta = step1 * step_ratio ** (-np.arange(num_steps))
-            # self._delta = step1 * step_ratio ** (np.arange(num_steps)[::-1]+self.offset)
         else:
             self._delta = np.atleast_1d(delta)
 
@@ -793,15 +734,18 @@ class _Derivative(object):
         num_terms = self.romberg_terms
         rmat = np.ones((num_terms + 2, num_terms + 1))
         if num_terms > 0:
-            add1 = self.method[0] == 'c'
-            rombexpon = (1 + add1) * np.arange(num_terms) + self.order
-
+            i, j = np.ogrid[0:num_terms + 2, 0:num_terms]
+            fact = dict(c=2).get(self.method[0], 1)
             srinv = self._make_exact(1.0 / self.step_ratio)
-            for n in range(1, num_terms + 2):
-                rmat[n, 1:] = srinv ** (n * rombexpon)
+            rmat[:, 1:] = srinv ** (i * (fact*j + self.order))
+#             add1 = self.method[0] == 'c'
+#             rombexpon = (1 + add1) * np.arange(num_terms) + self.order
+#             for n in range(1, num_terms + 2):
+#                 rmat[n, 1:] = srinv ** (n * rombexpon)
         rmat = np.matrix(rmat)
         self._qromb, self._rromb = linalg.qr(rmat)
-        # self._rmat = rmat
+        self._rmat = rmat
+        self._romberg_rule = linalg.pinv(rmat)[0]
 
     def _set_difference_function(self):
         ''' Set _diff_fun function according to method
@@ -922,6 +866,9 @@ class _Derivative(object):
         if ne < num_terms + 2:
             errest = np.ones(der_init.shape) * hout
         else:
+            rr_rule = self._romberg_rule
+            der_romb1 = convolve1d(der_romb, rr_rule[::-1],
+                                   origin=(rr_rule.size-1)//2)
             rhs = vec2mat(der_romb, num_terms + 2, max(1, ne - num_terms - 2))
 
             rombcoefs = linalg.lstsq(self._rromb, (self._qromb.T * rhs))
@@ -930,9 +877,8 @@ class _Derivative(object):
             errest = self._predict_uncertainty(rombcoefs)
 
         if self.use_dea and der_romb.size > 2:
-            der_romb, errest = dea3(der_romb[0:-2], der_romb[1:-1], der_romb[2:], symmetric=True)
+            der_romb, errest = dea3(der_romb[0:-2], der_romb[1:-1], der_romb[2:], symmetric=False)
             hout = hout[2:]
-            # der_romb, errest = _extrapolate(hout, der_romb, errest)
 
         return der_romb, errest + _EPS, hout
 
@@ -1509,8 +1455,8 @@ if __name__ == '__main__':
     # _test_rosen()
     # test_dea()
     # test_epsal()
-    # _example(x=0.01, fun_name='inv', n=1, method='c', step_max=1.,
-    #          step_ratio=2., step_num=15, romberg_terms=2, use_dea=True,
-    #          transform=None)
+    _example(x=0.01, fun_name='inv', n=1, method='c', step_max=1.,
+              step_ratio=2., step_num=15, romberg_terms=2, use_dea=True,
+              transform=None)
 
-    test_docstrings()
+    #test_docstrings()

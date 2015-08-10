@@ -1,13 +1,14 @@
 """
 NUMDIFFTOOLS
-============ 
+============
+
 Suite of tools written in Python to solve automatic numerical differentiation
-problems in one or more variables. Finite differences are used in an adaptive manner,
-coupled with a Romberg extrapolation methodology to provide a maximally accurate
-result. The user can configure many options like; changing
-the order of the method or the extrapolation, even allowing the user to
-specify whether central, forward or backward differences are used.
-The methods provided are:
+problems in one or more variables. Finite differences are used in an adaptive
+manner, coupled with a Richardson extrapolation methodology to provide a
+maximally accurate result. The user can configure many options like; changing
+the order of the method or the extrapolation, even allowing the user to specify
+whether central, forward or backward differences are used. The methods provided
+are:
 
 *Derivative:* Computate derivatives of order 1 through 4 on any scalar function.
 
@@ -20,7 +21,9 @@ The methods provided are:
 *Hessdiag:* Computes only the diagonal elements of the Hessian matrix
 
 All of these methods also produce error estimates on the result.
-A pdf file is also provided to explain the theory behind these tools.
+
+Documentation is at: http://numdifftools.readthedocs.org/
+Code and issue tracker is at https://github.com/pbrod/numdifftools .
 
 To test if the toolbox is working paste the following in an interactive
 python session::
@@ -34,7 +37,7 @@ Compute 1'st and 2'nd derivative of exp(x), at x == 1::
 
     >>> import numpy as np
     >>> import numdifftools as nd
-    >>> fd = nd.Derivative(np.exp)              # 1'st derivative
+    >>> fd = nd.Derivative(np.exp)        # 1'st derivative
     >>> fdd = nd.Derivative(np.exp, n=2)  # 2'nd derivative
     >>> fd(1)
     array([ 2.71828183])
@@ -63,7 +66,6 @@ Compute gradient of sum(x**2)::
     >>> dfun = nd.Gradient(fun)
     >>> dfun([1,2,3])
     array([ 2.,  4.,  6.])
-
 
 See also
 --------

@@ -12,8 +12,9 @@ Contents
 .. toctree::
     :maxdepth: 3
 	 
-	 Introduction <src/intro>
-	 Theory <src/derivest>
+	 Overview <src/overview>
+
+	 Theory <src/theory>
 
     License <license>
     Module Reference <_rst/modules>
