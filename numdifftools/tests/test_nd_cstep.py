@@ -82,7 +82,7 @@ class TestRichardson(unittest.TestCase):
                                                          order)])
         # self.assert_(False)
 
-    def test_central(self):
+    def test_central_complex(self):
         method = 'central'
         true_vals = {(1, 1): [-0.33333333,  1.33333333],
                      (1, 2): [-0.33333333,  1.33333333],
@@ -96,31 +96,29 @@ class TestRichardson(unittest.TestCase):
                      (2, 4): [1.05820106e-03, -8.46560847e-02, 1.08359788e+00],
                      (2, 5): [1.05820106e-03, -8.46560847e-02, 1.08359788e+00],
                      (2, 6): [6.22471211e-05, -1.99190787e-02, 1.01985683e+00]}
-        for num_terms in [1, 2]:
-            for order in range(1, 7):
-                d = nd.Derivative(np.exp, method=method, order=order)
-                d._set_richardson_rule(step_ratio=2.0, num_terms=num_terms)
-                rule = d._richardson_extrapolate._get_richardson_rule()
-#                 r_extrap = nd.Richardson(step_ratio=2.0, method=method,
-#                                          num_terms=num_terms, order=order)
-#                 rule = r_extrap._get_richardson_rule()
-                assert_array_almost_equal(rule, true_vals[(num_terms, order)])
-
-    def test_complex_hybrid(self):
-        true_vals = {(1, 'complex'): [-0.33333333, 1.33333333],
-                     (1, 'hybrid'): [-0.33333333, 1.33333333],
-                     (2, 'complex'): [0.04761905, -0.57142857, 1.52380952],
-                     (2, 'hybrid'): [0.04761905, -0.57142857, 1.52380952]}
-        # (2, 'hybrid'): [0.02222222, -0.44444444,  1.42222222]}
-        for method in ['complex', 'hybrid']:
+        for method in ['central', 'complex']:
             for num_terms in [1, 2]:
                 for order in range(1, 7):
                     d = nd.Derivative(np.exp, method=method, order=order)
                     d._set_richardson_rule(step_ratio=2.0, num_terms=num_terms)
                     rule = d._richardson_extrapolate._get_richardson_rule()
-
                     assert_array_almost_equal(rule,
-                                              true_vals[(num_terms, method)])
+                                              true_vals[(num_terms, order)])
+
+#     def test_complex(self):
+#         true_vals = {1: [-0.33333333, 1.33333333],
+#                      2: [0.02222222, -0.44444444,  1.42222222],
+#                      }
+#         for n in [1, 2]:
+#             for num_terms in [1, 2]:
+#                 for order in range(1, 7):
+#                     d = nd.Derivative(np.exp, n=n, method='complex', order=order)
+#                     d._set_richardson_rule(step_ratio=2.0, num_terms=num_terms)
+#                     rule = d._richardson_extrapolate._get_richardson_rule()
+#                     print((num_terms, order, rule))
+# #                     assert_array_almost_equal(rule,
+# #                                               true_vals[num_terms])
+#         self.assert_(False)
 
     def test_forward_backward(self):
         true_vals = {(1, 1): [-1.,  2.],
@@ -176,7 +174,7 @@ class TestStepGenerator(unittest.TestCase):
 
     def test_default_generator(self):
         step_gen = nd.MinStepGenerator(base_step=None, num_steps=10,
-                                    step_ratio=4, offset=-1)
+                                       step_ratio=4, offset=-1)
         h = np.array([h for h in step_gen(0)])
         print(h)
         desired = np.array([[9.01687441e-02, 2.25421860e-02, 5.63554651e-03,
@@ -199,7 +197,7 @@ class TestStepGenerator(unittest.TestCase):
     def test_fixed_base_step(self):
         desired = 0.1
         step_gen = nd.MinStepGenerator(base_step=desired, num_steps=1, scale=2,
-                                    offset=0)
+                                       offset=0)
         h = [h for h in step_gen(0)]
         assert_array_almost_equal((h[0] - desired) / desired, 0)
 
@@ -214,6 +212,13 @@ class TestFornbergWeights(unittest.TestCase):
 
 
 class TestDerivative(unittest.TestCase):
+    def test_infinite_functions(self):
+        def finf(x):
+            return np.inf
+        df = nd.Derivative(finf)
+        val = df(0)
+        self.assert_(np.isnan(val))
+
     def _example_fd_mat(self):
         fdmat = nd.Derivative._fd_matrix(step_ratio=2.0, parity=1, nterms=3)
         _fd_rules = np.linalg.pinv(fdmat)
@@ -221,8 +226,10 @@ class TestDerivative(unittest.TestCase):
 
     def test_high_order_derivative_cos(self):
         true_vals = (-1.0, 0.0, 1.0, 0.0, -1.0, 0.0)
-        for method in ['complex', 'central', 'forward', 'backward']:
-            n_max = dict(complex=2, central=6).get(method, 5)
+        methods = ['complex', 'multicomplex',  'central',
+                   'forward', 'backward']
+        for method in methods:
+            n_max = dict(multicomplex=2, central=6).get(method, 5)
             for n in range(1, n_max+1):
                 true_val = true_vals[n-1]
                 for order in range(2, 9, 2):
@@ -255,7 +262,7 @@ class TestDerivative(unittest.TestCase):
                     error = np.abs(y - true_val)
                     small = error <= info.error_estimate
                     if not small.all():
-                        small = error <= 10**(-11+n)
+                        small = np.where(small, small, error <= 10**(-11+n))
                     self.assertTrue(small.all())
 
     def test_default_scale(self):
@@ -343,11 +350,11 @@ class TestGradient(unittest.TestCase):
 
 
 class TestHessdiag(unittest.TestCase):
-    def test_hybrid(self):
+    def test_complex(self):
         def fun(x):
             return x[0] + x[1] ** 2 + x[2] ** 3
         htrue = np.array([0., 2., 18.])
-        method = 'hybrid'
+        method = 'complex'
         for num_steps in range(3, 7, 1):
             steps = nd.MinStepGenerator(num_steps=num_steps,
                                         use_exact_steps=True,
@@ -363,10 +370,11 @@ class TestHessdiag(unittest.TestCase):
             return x[0] + x[1] ** 2 + x[2] ** 3
         htrue = np.array([0., 2., 18.])
 
-        methods = ['hybrid', 'complex', 'central', 'forward', 'backward']
+        methods = ['multicomplex', 'complex', 'central', 'forward', 'backward']
         for order in range(2, 7, 2):
-            steps = nd.MinStepGenerator(num_steps=order+1, use_exact_steps=True,
-                                     step_ratio=3., offset=0)
+            steps = nd.MinStepGenerator(num_steps=order+1,
+                                        use_exact_steps=True,
+                                        step_ratio=3., offset=0)
             for method in methods:
                 Hfun = nd.Hessdiag(fun, step=steps, method=method, order=order,
                                    full_output=True)
@@ -378,7 +386,7 @@ class TestHessdiag(unittest.TestCase):
         def fun(x):
             return x[0] + x[1] ** 2 + x[2] ** 3
         htrue = np.array([0., 2., 18.])
-        methods = ['hybrid', 'complex', 'central', 'forward', 'backward']
+        methods = ['multicomplex', 'complex', 'central', 'forward', 'backward']
         for order in range(2, 7, 2):
             for method in methods:
                 Hfun = nd.Hessdiag(fun, method=method, order=order,
@@ -398,7 +406,7 @@ class TestHessian(unittest.TestCase):
         def fun(xy):
             return cos(xy[0] - xy[1])
         htrue = [[-1., 1.], [1., -1.]]
-        methods = ['hybrid', 'complex', 'central', 'central2', 'forward',
+        methods = ['multicomplex', 'complex', 'central', 'central2', 'forward',
                    'backward']
         for method in methods:
             Hfun2 = nd.Hessian(fun, method=method, step=step, full_output=True)

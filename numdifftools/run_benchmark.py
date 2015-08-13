@@ -66,47 +66,28 @@ method = {'numdifftools': 0, 'scientific': 1,
 
 
 fixed_step = MinStepGenerator(num_steps=1, use_exact_steps=True, offset=0)
-epsilon = MaxStepGenerator(num_steps=7, use_exact_steps=True, step_ratio=1.4)
+epsilon = MaxStepGenerator(num_steps=14, use_exact_steps=True,
+                           step_ratio=1.6, offset=0)
 adaptiv_txt = '_adaptive_%d_%s_%d' % (epsilon.num_steps,
                                       str(epsilon.step_ratio), epsilon.offset)
 gradient_funs = OrderedDict()
-gradient_funs['algopy_forward'] = lambda f: nda.Gradient(f, method='forward')
-gradient_funs['numdifftools'] = lambda f: nd.Gradient(f, **options)
-gradient_funs['forward'] = lambda f: ndc.Gradient(f, method='forward',
-                                                  step=fixed_step)
-gradient_funs['forward'+adaptiv_txt] = lambda f: ndc.Gradient(f,
-                                                              method='forward',
-                                                              step=epsilon)
-gradient_funs['central'] = lambda f: ndc.Gradient(f, method='central',
-                                                  step=fixed_step)
-gradient_funs['central'+adaptiv_txt] = lambda f: ndc.Gradient(f,
-                                                              method='central',
-                                                              step=epsilon)
-gradient_funs['complex'] = lambda f: ndc.Gradient(f, method='complex',
-                                                  step=fixed_step)
-gradient_funs['complex'+adaptiv_txt] = lambda f: ndc.Gradient(f,
-                                                              method='complex',
-                                                              step=epsilon)
+gradient_funs['algopy_forward'] = nda.Gradient(1, method='forward')
+gradient_funs['numdifftools'] = nd.Gradient(1, **options)
+for method in ['forward', 'central', 'complex']:
+    method2 = method + adaptiv_txt
+    gradient_funs[method] = ndc.Gradient(1, method=method, step=fixed_step)
+    gradient_funs[method2] = ndc.Gradient(1, method=method, step=epsilon)
+
 ndcHessian = ndc.Hessdiag  # ndc.Hessian #
 hessian_funs = OrderedDict()
-hessian_funs['algopy_forward'] = lambda f: nda.Hessdiag(f, method='forward')
-hessian_funs['numdifftools'] = lambda f: nd.Hessdiag(f, **options)
-hessian_funs['forward'] = lambda f: ndcHessian(f, method='forward',
-                                               step=fixed_step)
-hessian_funs['forward'+adaptiv_txt] = lambda f: ndcHessian(f,
-                                                           method='forward',
-                                                           step=epsilon)
-hessian_funs['central'] = lambda f: ndcHessian(f, method='central',
-                                               step=fixed_step)
-hessian_funs['central'+adaptiv_txt] = lambda f: ndcHessian(f,
-                                                           method='central',
-                                                           step=epsilon)
-hessian_funs['hybrid'] = lambda f: ndcHessian(f, method='hybrid',
-                                              step=fixed_step)
-hessian_funs['hybrid'+adaptiv_txt] = lambda f: ndcHessian(f, method='hybrid',
-                                                          step=epsilon)
-# hessian_funs['complex'] = lambda f: ndc.Hessian(f, method='complex',
-#                                                step=fixed_step)
+hessian_funs['algopy_forward'] = nda.Hessdiag(1, method='forward')
+hessian_funs['numdifftools'] = nd.Hessdiag(1, **options)
+for method in ['forward', 'central', 'complex']:
+    method2 = method + adaptiv_txt
+    hessian_funs[method] = ndcHessian(1, method=method, step=fixed_step)
+    hessian_funs[method2] = ndcHessian(1, method=method, step=epsilon)
+
+# hessian_funs['complex'] = ndc.Hessian(f, method='complex', step=fixed_step)
 
 
 def compute_gradients(gradient_funs, problem_sizes):
@@ -118,9 +99,9 @@ def compute_gradients(gradient_funs, problem_sizes):
         results_gradient = np.zeros((num_methods, 3))
         ref_g = None
         f = BenchmarkFunction(N)
-        for i, (_key, Gradient) in enumerate(gradient_funs.iteritems()):
+        for i, (_key, gradient_f) in enumerate(gradient_funs.iteritems()):
             t = time.time()
-            gradient_f = Gradient(f)
+            gradient_f.fun = f
             preproc_time = time.time() - t
             t = time.time()
             x = 3 * np.ones(N)
@@ -151,9 +132,9 @@ def compute_hessians(hessian_funs, problem_sizes):
         results_hessian = np.zeros((num_methods, 3))
         ref_h = None
         f = BenchmarkFunction(N)
-        for i, (_key, Hessian) in enumerate(hessian_funs.iteritems()):
+        for i, (_key, hessian_f) in enumerate(hessian_funs.iteritems()):
             t = time.time()
-            hessian_f = Hessian(f)
+            hessian_f.fun = f
             preproc_time = time.time() - t
             t = time.time()
             x = 3 * np.ones(N)
@@ -176,8 +157,9 @@ def compute_hessians(hessian_funs, problem_sizes):
 
 
 if __name__ == '__main__':
-    problem_sizes = [4, 8, 16, 32, 64, 96]
-    symbols = ['-kx', '-k+', ':k>', ':k<', '--k^', '--kv', '-kp', '-ks', 'b']
+    problem_sizes = (4, 8, 16, 32, 64, 96)
+    symbols = ('-kx', '-k+', ':k>', ':k<', '--k^', '--kv', '-kp', '-ks',
+               'b', '--b')
 
     results_gradients = compute_gradients(gradient_funs, problem_sizes)
     results_hessians = compute_hessians(hessian_funs, problem_sizes)

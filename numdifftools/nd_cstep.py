@@ -53,6 +53,7 @@ from numdifftools.test_functions import get_test_function, function_names
 from numpy import linalg
 from scipy import misc
 from scipy.ndimage.filters import convolve1d
+import warnings
 # NOTE: we only do double precision internally so far
 EPS = np.MachAr().eps
 
@@ -66,8 +67,12 @@ def _make_exact(h):
 
 
 def default_scale(method='forward', n=1):
-    return (dict(complex=1.35, hybrid=5).get(method, 2.5) +
-            int((n - 1)) * dict(complex=0, hybrid=0).get(method, 1.3))
+    is_odd = (n % 2) == 1
+    is_even = (not is_odd)
+    return (dict(multicomplex=1.35, complex=1.35, hybrid=5).get(method, 2.5) +
+            int((n - 1)) * dict(multicomplex=0, complex=1.0).get(method, 1.3) +
+            int(n > 1) * is_odd * dict(complex=2.65).get(method, 0) +
+            int(n > 1) * is_even * dict(complex=7.65).get(method, 0))
 
 
 def _default_base_step(x, scale, epsilon=None):
@@ -270,7 +275,7 @@ class MinStepGenerator(object):
     step_ratio : real scalar, optional, default 2
         Ratio between sequential steps generated.
         Note: Ratio > 1
-        If None then step_ratio is 2 for n=1 otherwise step_ratio is 1.4
+        If None then step_ratio is 2 for n=1 otherwise step_ratio is 1.6
     num_steps : scalar integer, optional, default  n + order - 1 + num_extrap
         defines number of steps generated. It should be larger than
         n + order - 1
@@ -308,11 +313,9 @@ class MinStepGenerator(object):
         return delta
 
     def _min_num_steps(self, method, n, order):
-        num_steps = 1
-        if method not in ['complex', 'hybrid']:
-            num_steps = n + order - 1
-            if method.startswith('central'):
-                num_steps = (n + order-1) // 2
+        num_steps = n + order - 1
+        if method in ['central', 'central2', 'complex', 'hybrid']:
+            num_steps = (n + order-1) // 2
         return int(num_steps)
 
     def _default_num_steps(self, method, n, order):
@@ -326,7 +329,7 @@ class MinStepGenerator(object):
 
     def _default_step_ratio(self, n):
         if self.step_ratio is None:
-            return {1: 2.0}.get(n, 1.4)
+            return {1: 2.0}.get(n, 1.6)
         return float(self.step_ratio)
 
     def __call__(self, x, method='central', n=1, order=2):
@@ -452,7 +455,7 @@ class MaxStepGenerator(MinStepGenerator):
 
     def _default_step_nom(self, x):
         if self.step_nom is None:
-            return np.maximum(np.log1p(np.abs(x)), 0.1)
+            return np.maximum(np.log1p(np.abs(x)), 1)
         return self.step_nom
 
     def __call__(self, x, method='forward', n=1, order=None):
@@ -485,6 +488,7 @@ class Richardson(object):
 
     If we evaluate the right hand side for different stepsizes h
     we can fit a polynomial to that sequence of approximations.
+    This is exactly what this class does.
 
     Example
     -------
@@ -504,9 +508,6 @@ class Richardson(object):
     (array([[ -2.00805680e-04],
            [ -5.01999079e-05],
            [ -1.25498825e-05]]), array([[ 0.00111851]]), array([[ 1.]]))
-
-    (array([ -2.00805680e-04,  -5.01999079e-05,  -1.25498825e-05]),
-    array([ 0.00020081]), array([ 1.]))
 
     '''
     def __init__(self, step_ratio=2.0, step=1, order=1, num_terms=2):
@@ -543,7 +544,7 @@ class Richardson(object):
                          np.abs(new_sequence[:-1])) * EPS * fact
         converged = err <= tol
         abserr = err + np.where(converged, tol * 10,
-                                abs(new_sequence[:-1]-old_sequence[1:]))
+                                abs(new_sequence[:-1]-old_sequence[1:])*fact)
         # abserr = err1 + err2 + np.where(converged, tol2 * 10, abs(result-E2))
         # abserr = s * fact + np.abs(new_sequence) * EPS * 10.0
         return abserr
@@ -567,7 +568,7 @@ class _Derivative(object):
 
     def __init__(self, f, step=None, method='central',  order=2, n=1,
                  full_output=False):
-        self.f = f
+        self.fun = f
         self.n = n
         self.order = order
         self.method = method
@@ -579,13 +580,19 @@ class _Derivative(object):
         if hasattr(step, '__call__'):
             return step
         if step is None and self.method not in ['complex', 'hybrid']:
-            return MaxStepGenerator(step_ratio=None, num_extrap=15)
+            return MaxStepGenerator(step_ratio=None, num_extrap=7)
         return MinStepGenerator(base_step=step, step_ratio=None, num_extrap=0)
 
     def _get_arg_min(self, errors):
         shape = errors.shape
-        arg_mins = np.nanargmin(errors, axis=0)
-        min_errors = np.nanmin(errors, axis=0)
+        try:
+            arg_mins = np.nanargmin(errors, axis=0)
+            min_errors = np.nanmin(errors, axis=0)
+        except ValueError as msg:
+            warnings.warn(str(msg))
+            ix = np.arange(shape[1])
+            return ix
+
         for i, min_error in enumerate(min_errors):
             idx = np.flatnonzero(errors[:, i] == min_error)
             arg_mins[i] = idx[idx.size // 2]
@@ -600,15 +607,15 @@ class _Derivative(object):
 
     @property
     def _method_order(self):
-        if self.method.startswith('central'):
-            # Make sure it is even and at least 2
-            return max((self.order // 2) * 2, 2)
-        elif self.method in ['complex', 'hybrid']:
-            return 2
-        return self.order
+        step = self._richardson_step()
+        # Make sure it is even and at least 2 or 4
+        order = max((self.order // step) * step, step)
+        return order
 
     def _richardson_step(self):
-        return dict(central=2, central2=2).get(self.method, 1)
+        complex_step = 4 if self.n % 2 == 0 else 2
+        return dict(central=2, central2=2, complex=complex_step,
+                    multicomplex=2).get(self.method, 1)
 
     def _set_richardson_rule(self, step_ratio, num_terms=2):
         order = self._method_order
@@ -630,20 +637,44 @@ class _Derivative(object):
         return der, info
 
     def _get_function_name(self):
-        return '_%s' % self.method
+        name = '_%s' % self.method
+        even_derivative_order = (self.n % 2) == 0
+        if even_derivative_order and self.method in ('central', 'complex'):
+            name = name + '_even'
+            if self.method in ('complex'):
+                is_multiplum_of_4 = (self.n % 4) == 0
+                if is_multiplum_of_4:
+                    name = name + '_higher'
+        elif self.method == 'multicomplex' and self.n > 1:
+            if self.n == 2:
+                name = name + '2'
+            else:
+                raise ValueError('Multicomplex method only support first and'
+                                 'second order derivatives.')
+        return name
 
     def _get_functions(self):
         name = self._get_function_name()
-        return getattr(self, name), self.f
+        return getattr(self, name), self.fun
 
     def _get_steps(self, xi):
         method, n, order = self.method, self.n, self._method_order
         return [step for step in self.step(xi, method, n, order)]
 
+    def _is_odd_derivative(self):
+        return self.n % 2 == 1
+
+    def _is_even_derivative(self):
+        return self.n % 2 == 0
+
+    def _is_fourth_derivative(self):
+        return self.n % 4 == 0
+
     def _eval_first_condition(self):
-        even_order = (self.n % 2 == 0)
-        return ((even_order and self.method == 'central') or
-                self.method in ['forward', 'backward'])
+        even_derivative = self._is_even_derivative()
+        return ((even_derivative and self.method == 'central') or
+                self.method in ['forward', 'backward'] or
+                self.method == 'complex' and self._is_fourth_derivative())
 
     def _eval_first(self, f, x, *args, **kwds):
         if self._eval_first_condition():
@@ -651,9 +682,10 @@ class _Derivative(object):
         return 0.0
 
     def _vstack(self, sequence, steps):
-        original_shape = sequence[0].shape
-        f_del = np.vstack(list(r.ravel()) for r in sequence)
-        h = np.vstack(list((np.ones(original_shape)*step).ravel())
+        # sequence = np.atleast_2d(sequence)
+        original_shape = np.shape(sequence[0])
+        f_del = np.vstack(list(np.ravel(r)) for r in sequence)
+        h = np.vstack(list(np.ravel(np.ones(original_shape)*step))
                       for step in steps)
         if f_del.size != h.size:
             raise ValueError('fun did not return data of correct size ' +
@@ -755,7 +787,7 @@ class Derivative(_Derivative):
     """
     @staticmethod
     def _fd_matrix(step_ratio, parity, nterms):
-        ''' Return matrix for finite difference derivation.
+        ''' Return matrix for finite difference and complex step derivation.
 
         Parameters
         ----------
@@ -765,19 +797,28 @@ class Derivative(_Derivative):
             0 (one sided, all terms included but zeroth order)
             1 (only odd terms included)
             2 (only even terms included)
+            3 (only every 4'th order terms included starting from order 2)
+            4 (only every 4'th order terms included starting from order 4)
         nterms : scalar, integer
             number of terms
         '''
         try:
-            fact = [1, 2, 2][parity]
+            step = [1, 2, 2, 4, 4][parity]
         except Exception as msg:
-            raise ValueError('%s. Parity must be 0, 1 or 2! (%d)' % (str(msg),
-                                                                     parity))
+            raise ValueError('%s. Parity must be 0, 1, 2, 3 or 4! ' +
+                             '(%d)' % (str(msg), parity))
         inv_sr = 1.0 / step_ratio
-        offset = max(1, parity)
-        c = 1.0 / misc.factorial(np.arange(offset, fact * nterms + 1, fact))
+        offset = [1, 1, 2, 2, 4][parity]
+        c0 = [1.0, 1.0, 1.0, 2.0, 24.0][parity]
+        c = c0/misc.factorial(np.arange(offset, step * nterms + offset, step))
         [i, j] = np.ogrid[0:nterms, 0:nterms]
-        return np.atleast_2d(c[j] * inv_sr ** (i * (fact * j + offset)))
+        return np.atleast_2d(c[j] * inv_sr ** (i * (step * j + offset)))
+
+    def _flip_fd_rule(self):
+        n = self.n
+        return ((self._is_even_derivative() and (self.method == 'backward')) or
+                 (self.method == 'complex' and ((n % 8 in [4, 6]) or (n % 4 ==3)))
+                                                )
 
     def _get_finite_difference_rule(self, step_ratio):
         '''
@@ -796,18 +837,24 @@ class Derivative(_Derivative):
         order
         method
         '''
-        if self.method in ['complex', 'hybrid']:
+        method = self.method
+        if method in ('multicomplex', ):
             return np.ones((1,))
 
         order, method_order = self.n - 1, self._method_order
         parity = 0
-        num_terms = order + method_order
-        if self.method.startswith('central'):
+        if (method.startswith('central') or
+            method.startswith('complex') and self._is_odd_derivative()):
             parity = (order % 2) + 1
-            num_terms, order = num_terms // 2, order // 2
+        elif self.method == 'complex':
+            parity = 4 if self.n % 4 == 0 else 3
+
+        step = self._richardson_step()
+        num_terms, ix = (order + method_order) // step, order // step
         fd_mat = self._fd_matrix(step_ratio, parity, num_terms)
-        fd_rule = linalg.pinv(fd_mat)[order]
-        if self.method == 'backward' and self.n % 2 == 0:
+        fd_rule = linalg.pinv(fd_mat)[ix]
+
+        if self._flip_fd_rule():
             fd_rule *= -1
         return fd_rule
 
@@ -869,21 +916,26 @@ class Derivative(_Derivative):
         return f(x + 1j * h, *args, **kwds).imag
 
     @staticmethod
-    def _complex2(f, fx, x, h, *args, **kwds):
+    def _complex_even(f, fx, x, h, *args, **kwargs):
+        ih = h * (1j + 1) / np.sqrt(2)
+        return (f(x + ih, *args, **kwargs) +
+                f(x - ih, *args, **kwargs)).imag
+
+    @staticmethod
+    def _complex_even_higher(f, fx, x, h, *args, **kwargs):
+        ih = h * (1j + 1) / np.sqrt(2)
+        return (f(x + ih, *args, **kwargs) +
+                f(x - ih, *args, **kwargs) - 2 * fx).real * 12
+
+    @staticmethod
+    def _multicomplex(f, fx, x, h, *args, **kwds):
+        z = bicomplex(x + 1j * h, 0)
+        return f(z, *args, **kwds).imag1
+
+    @staticmethod
+    def _multicomplex2(f, fx, x, h, *args, **kwds):
         z = bicomplex(x + 1j * h, h)
         return f(z, *args, **kwds).imag12
-
-    def _get_function_name(self):
-        name = '_%s' % self.method
-        if self.method == 'central' and (self.n % 2) == 0:
-            name = name + '_even'
-        elif self.method == 'complex' and self.n > 1:
-            if self.n == 2:
-                name = name + '2'
-            else:
-                raise ValueError('Complex method only support first and'
-                                 'second order derivatives.')
-        return name
 
 
 class Gradient(Derivative):
@@ -1074,7 +1126,7 @@ class Hessdiag(Derivative):
         return np.array(partials)
 
     @staticmethod
-    def _complex2(f, fx, x, h, *args, **kwds):
+    def _multicomplex2(f, fx, x, h, *args, **kwds):
         n = len(x)
         increments = np.identity(n) * h
         partials = [f(bicomplex(x + 1j * hi, hi), *args, **kwds).imag12
@@ -1082,17 +1134,14 @@ class Hessdiag(Derivative):
         return np.array(partials)
 
     @staticmethod
-    def _hybrid(f, fx, x, h, *args, **kwargs):
-        '''Calculate Hessian with hybrid finite difference and complex-step
-        derivative approximation
-        The stepsize is the same for the complex and the finite difference part
-        '''
+    def _complex_even(f, fx, x, h, *args, **kwargs):
         n = len(x)
-        increments = np.identity(n) * h
-        partials = [(f(x + (1j + 1) * hi, *args, **kwargs) -
-                    f(x + (1j - 1) * hi, *args, **kwargs)).imag/2.0
+        increments = np.identity(n) * h * (1j+1) / np.sqrt(2)
+        partials = [(f(x + hi, *args, **kwargs) +
+                     f(x - hi, *args, **kwargs)).imag
                     for hi in increments]
         return np.array(partials)
+
 
 # class _Hessian(_Derivative):
 #
@@ -1180,7 +1229,7 @@ class Hessian(_Derivative):
         return self._vstack(results, steps)
 
     @staticmethod
-    def _hybrid(f, fx, x, h, *args, **kwargs):
+    def _complex_even(f, fx, x, h, *args, **kwargs):
         '''Calculate Hessian with hybrid finite difference and complex-step
         derivative approximation
         The stepsize is the same for the complex and the finite difference part
@@ -1199,8 +1248,8 @@ class Hessian(_Derivative):
         return hes
 
     @staticmethod
-    def _complex(f, fx, x, h, *args, **kwargs):
-        '''Calculate Hessian with complex-step derivative approximation
+    def _multicomplex2(f, fx, x, h, *args, **kwargs):
+        '''Calculate Hessian with bicomplex-step derivative approximation
         '''
         n = len(x)
         ee = np.diag(h)
@@ -1231,7 +1280,7 @@ class Hessian(_Derivative):
         return hess
 
     @staticmethod
-    def _central(f, fx, x, h, *args, **kwargs):
+    def _central_even(f, fx, x, h, *args, **kwargs):
         '''Eq. 8'''
         n = len(x)
         # NOTE: ridout suggesting using eps**(1/4)*theta
@@ -1391,7 +1440,7 @@ def main():
     print(nd.Derivative(np.cosh)(0))
 
 
-def _example3(x=0.0001, fun_name='inv', epsilon=None, method='central',
+def _example3(x=0.0001, fun_name='cos', epsilon=None, method='central',
               scale=None, n=1, order=2):
     fun0, dfun = get_test_function(fun_name, n)
     if dfun is None:
@@ -1399,7 +1448,7 @@ def _example3(x=0.0001, fun_name='inv', epsilon=None, method='central',
                     error=np.nan, scale=np.nan)
     fd = Derivative(fun0, step=epsilon, method=method, n=n, order=order)
     t = []
-    scales = np.arange(1.0, 25, 0.25)
+    scales = np.arange(1.0, 35, 0.25)
     for scale in scales:
         fd.step.scale = scale
         try:
@@ -1422,7 +1471,9 @@ def _example3(x=0.0001, fun_name='inv', epsilon=None, method='central',
         plt.vlines(default_scale(fd.method, n), np.nanmin(relativ_error), 1)
         plt.xlabel('scales')
         plt.ylabel('Relative error')
-        txt = ['', "1'st", "2'nd", "3'rd", "4'th", "5'th", "6'th"]
+        txt = ['', "1'st", "2'nd", "3'rd", "4'th", "5'th", "6'th",
+               "7th"] + ["%d'th" % i for i in range(8, 15)]
+
         plt.title("The %s derivative of %s using %s, order=%d" % (txt[n],
                                                                   fun_name,
                                                                   method,
@@ -1508,20 +1559,18 @@ def test_docstrings():
 
 def main2():
     import pandas as pd
-    num_extrap = 0
-    method = 'central'
+    num_extrap = 5
+    method = 'complex'
     data = []
-    for name in function_names[:-3]:
+    for name in ['exp', 'expm1']:  # function_names[:-3]:
         for order in range(2, 3, 1):
             #  order = 1
-            for n in range(1, 5):
-                if method not in ['complex', 'hybrid']:
-                    num_steps = n + order - 1 + num_extrap
-                    if method == 'central':
-                        num_steps = (n + order-1) // 2 + num_extrap
-                else:
-                    num_steps = 1 + num_extrap
-                step_ratio = 4**(1./n)
+            for n in range(1, 12, 1):
+                num_steps = n + order - 1 + num_extrap
+                if method in ['central', 'complex']:
+                    num_steps = (n + order-1) // 2 + num_extrap
+
+                step_ratio = 1.4 #4**(1./n)
                 epsilon = MinStepGenerator(num_steps=num_steps,
                                            step_ratio=step_ratio,
                                            offset=0, use_exact_steps=True)
@@ -1538,9 +1587,9 @@ def main2():
     plt.show('hold')
 
 if __name__ == '__main__':  # pragma : no cover
-    test_docstrings()
+    # test_docstrings()
     # main()
-    # main2()
+    main2()
 
 # Method = 'central
 #               error  order     scale
