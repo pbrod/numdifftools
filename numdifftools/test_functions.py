@@ -15,6 +15,14 @@ function_names = ['cos', 'sin', 'tan',
                   'arccos', 'arcsin', 'arctan', ]
 
 
+def dcos(x):
+    return -np.sin(x)
+
+
+def ddcos(x):
+    return -np.cos(x)
+
+
 def get_test_function(fun_name, n=1):
 
     sinh, cosh, tanh = np.sinh, np.cosh, np.tanh
@@ -57,8 +65,8 @@ def get_test_function(fun_name, n=1):
                          lambda x: np.zeros_like(x),
                          lambda x: np.zeros_like(x),
                          ),
-                 exp=(np.exp,)*7,
-                 expm1=(np.expm1,) + (np.exp,)*6,
+                 exp=(np.exp,)*20,
+                 expm1=(np.expm1,) + (np.exp,)*20,
                  exp2=(np.exp2,
                        lambda x: np.exp2(x)*np.log(2),
                        lambda x: np.exp2(x)*np.log(2)**2,
@@ -71,16 +79,8 @@ def get_test_function(fun_name, n=1):
                          lambda x: 8.0*x**2/(1+x**2)**3 - 2./(1+x**2)**2,
                          lambda x: 24*x/(1+x**2)**3 - 48*x**3./(1+x**2)**4,
                          ),
-                 cos=(cos, lambda x: -np.sin(x),
-                      lambda x: -np.cos(x),
-                      np.sin,  np.cos,
-                      lambda x: -np.sin(x),
-                      lambda x: -np.cos(x),
-                      np.sin,  np.cos),
-                 sin=(sin, np.cos, lambda x: -np.sin(x),
-                      lambda x: -np.cos(x),
-                      np.sin, np.cos, lambda x: -np.sin(x),
-                      lambda x: -np.cos(x)),
+                 cos=(cos, dcos, ddcos, sin) * 6,
+                 sin=(sin, np.cos, dcos, ddcos) * 6,
                  tan=(tan,
                       lambda x: 1./np.cos(x)**2,
                       lambda x: 2*np.tan(x)/np.cos(x)**2,

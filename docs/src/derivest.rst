@@ -180,11 +180,19 @@ The linear extrapolant for this interval halving scheme as :math:`\delta \to 0` 
 
 Since I've always been a big fan of convincing myself that something will work before I proceed too far, lets try this out in Python. Consider the function :math:`e^x`. Generate a pair of approximations to :math:`f'(0)`, once at :math:`\delta` of 0.1, and the second approximation at :math:`1/2` that value. Recall that :math:`\frac{d(e^x)}{dx} = e^x`, so at x = 0, the derivative should be exactly 1. How well will we do?
 
-   >>> from numpy import exp, allclose >>> f = exp >>> dx = 0.1 >>> df1 = (f(dx) - f(0))/dx >>> allclose(df1, 1.05170918075648) True
+   >>> from numpy import exp, allclose
+   >>> f = exp
+   >>> dx = 0.1
+   >>> df1 = (f(dx) - f(0))/dx
+   >>> allclose(df1, 1.05170918075648)
+   True
 
-   >>> df2 = (f(dx/2) - f(0))/(dx/2) >>> allclose(df2, 1.02542192752048) True
+   >>> df2 = (f(dx/2) - f(0))/(dx/2)
+   >>> allclose(df2, 1.02542192752048)
+   True
 
-   >>> allclose(2*df2 - df1, 0.999134674284488) True
+   >>> allclose(2*df2 - df1, 0.999134674284488)
+   True
 
 
 In fact, this worked very nicely, reducing the error to roughly 1 percent of our initial estimates. Should we be surprised at this reduction? Not if we recall that last term in :eq:`3`. We saw there that the next term in the expansion was :math:`O(\delta^2)`. Since :math:`\delta` was 0.1 in our experiment, that 1 percent number makes perfect sense.
@@ -197,15 +205,24 @@ The Richardson extrapolant in :eq:`16` assumed a linear process, with a specific
 
 A quick test in Python yields much better results yet.
 
-    >>> from numpy import exp, allclose >>> f = exp >>> dx = 0.1
+    >>> from numpy import exp, allclose
+    >>> f = exp
+    >>> dx = 0.1
 
-    >>> df1 = (f(dx) - f(0))/dx >>> allclose(df1,  1.05170918075648) True
+    >>> df1 = (f(dx) - f(0))/dx
+    >>> allclose(df1,  1.05170918075648)
+    True
 
-    >>> df2 = (f(dx/2) - f(0))/(dx/2) >>> allclose(df2, 1.02542192752048) True
+    >>> df2 = (f(dx/2) - f(0))/(dx/2)
+    >>> allclose(df2, 1.02542192752048)
+    True
 
-    >>> df3 = (f(dx/4) - f(0))/(dx/4) >>> allclose(df3, 1.01260482097715) True
+    >>> df3 = (f(dx/4) - f(0))/(dx/4)
+    >>> allclose(df3, 1.01260482097715)
+    True
 
-    >>> allclose(1./3*df1 - 2*df2 + 8./3*df3, 1.00000539448361) True
+    >>> allclose(1./3*df1 - 2*df2 + 8./3*df3, 1.00000539448361) 
+    True
 
 Again, Derivative uses the appropriate multiple term Richardson extrapolants for all derivatives of :math:`f` up to the fourth order. This, combined with the use of high order approximations for the derivatives, allows the use of quite large step sizes. See [LynessMoler1966]_ and [LynessMoler1969]_.
 
@@ -278,22 +295,43 @@ We can view the Richardson extrapolation step as a polynomial curve fit in the s
 
 A neat trick to compute the statistical uncertainty in the estimate of our desired derivative is to use statistical methodology for that error estimate. While I do appreciate that there is nothing truly statistical or stochastic in this estimate, the approach still works nicely, providing a very reasonable estimate in practice. A three term Richardson-like extrapolant, then evaluated at four distinct values for :math:`\delta`, will yield an estimate of the standard error of the constant term, with one spare degree of freedom. The uncertainty is then derived by multiplying that standard error by the appropriate percentile from the Students-t distribution.
 
-   >>> import scipy.stats as ss >>> allclose(ss.t.cdf(12.7062047361747, 1), 0.975) True
+   >>> import scipy.stats as ss
+   >>> allclose(ss.t.cdf(12.7062047361747, 1), 0.975)
+   True
 
 This critical level will yield a two-sided confidence interval of 95 percent.
 
 These error estimates are also of value in a different sense. Since they are efficiently generated at all the different scales, the particular spacing which yields the minimum predicted error is chosen as the best derivative estimate. This has been shown to work consistently well. A spacing too large tends to have large errors of approximation due to the finite difference schemes used. But a too small spacing is bad also, in that we see a significant amplification of least significant fit errors in the approximation. A middle value generally seems to yield quite good results. For example, Derivative will estimate the derivative of :math:`e^x` automatically. As we see, the final overall spacing used was 0.02166085.
 
-    >>> import numdifftools as nd >>> from numpy import exp, allclose >>> f = nd.Derivative(exp) >>> allclose(f(1), 2.71828183) True >>> allclose(f.error_estimate, 5.21804822e-14) True >>> allclose(f.final_delta, 0.02166085) True
+    >>> import numdifftools as nd
+    >>> from numpy import exp, allclose
+    >>> f = nd.Derivative(exp)
+    >>> allclose(f(1), 2.71828183)
+    True       
+    >>> allclose(f.error_estimate, 5.21804822e-14)
+    True
+    >>> allclose(f.final_delta, 0.02166085)
+    True
 
 
 However, if we force the step size to be artificially large, then approximation error takes over.
 
-    >>> f = nd.Derivative(exp, delta=1, step_nom=1) >>> allclose(f(1), 3.19452805) True >>> allclose(f(1)-exp(1), 0.47624622) True >>> f.final_delta array([ 1.])
+    >>> f = nd.Derivative(exp, delta=1, step_nom=1) 
+    >>> allclose(f(1), 3.19452805)
+    True
+    >>> allclose(f(1)-exp(1), 0.47624622)
+    True
+    >>> f.final_delta array([ 1.])
 
 And if the step size is forced to be too small, then we see noise dominate the problem.
 
-   >>> f = nd.Derivative(exp, delta=.0000000001, step_nom=1) >>> allclose(f(1), 2.71828093) True >>> allclose(f(1) - exp(1), -8.97648138e-07) True >>> allclose(f.final_delta, 1.00000008e-10) True
+   >>> f = nd.Derivative(exp, delta=.0000000001, step_nom=1)
+   >>> allclose(f(1), 2.71828093)
+   True
+   >>> allclose(f(1) - exp(1), -8.97648138e-07)
+   True
+   >>> allclose(f.final_delta, 1.00000008e-10)
+   True
 
 
 Numdifftools, like Goldilocks in the fairy tale bearing her name, stays comfortably in the middle ground.
@@ -304,19 +342,32 @@ Derivative in action
 
 How does numdifftools.Derivative work in action? A simple nonlinear function with a well known derivative is :math:`e^x`. At :math:`x = 0`, the derivative should be 1.
 
-   >>> f = nd.Derivative(exp) >>> f(0) array([ 1.])
+   >>> f = nd.Derivative(exp)
+   >>> f(0)
+   array([ 1.])
 
-   >>> allclose(f.error_estimate, 5.28466160e-14) True
+   >>> allclose(f.error_estimate, 5.28466160e-14)
+   True
 
 A second simple example comes from trig functions. The first four derivatives of the sine function, evaluated at :math:`x = 0`, should be respectively :math:`[cos(0), -sin(0), -cos(0), sin(0)]`, or :math:`[1,0,-1,0]`.
 
-    >>> from numpy import sin, allclose >>> import numdifftools as nd >>> df = nd.Derivative(sin, 1) >>> allclose(df(0), 1.) True
+    >>> from numpy import sin, allclose
+    >>> import numdifftools as nd
+    >>> df = nd.Derivative(sin, 1)
+    >>> allclose(df(0), 1.)
+    True
 
-    >>> ddf = nd.Derivative(sin, 2) >>> allclose(ddf(0), 0.) True
+    >>> ddf = nd.Derivative(sin, 2)
+    >>> allclose(ddf(0), 0.)
+    True
 
-    >>> dddf = nd.Derivative(sin, 3) >>> allclose(dddf(0), -1.) True
+    >>> dddf = nd.Derivative(sin, 3)
+    >>> allclose(dddf(0), -1.)
+    True
 
-    >>> ddddf = nd.Derivative(sin, 4) >>> allclose(ddddf(0), 0.) True
+    >>> ddddf = nd.Derivative(sin, 4)
+    >>> allclose(ddddf(0), 0.)
+    True
 
 
 Gradient and Hessian  estimation
@@ -342,6 +393,13 @@ References
 
 .. [LynessMoler1969] Lyness, J. M., Moler, C. B. (1969). Generalized Romberg Methods for
                      Integrals of Derivatives. *Numerische Mathematik*.
+
+.. [LaiCrassidisCheng2005] K.-L. Lai, J.L. Crassidis, Y. Cheng, J. Kim (2005), New complex step derivative approximations with 										application to second-order kalman filtering, 
+									AIAA Guidance, *Navigation and Control Conference*,
+									San Francisco, California, August 2005, AIAA-2005-5944.
+
+.. [Ridout2009] Ridout, M.S. (2009) Statistical applications of the complex-step method
+        of numerical differentiation. *The American Statistician*, 63, 66-74
 
 .. [NAG] *NAG Library*. NAG Fortran Library Document: D04AAF
 

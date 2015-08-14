@@ -68,11 +68,12 @@ def _make_exact(h):
 
 def default_scale(method='forward', n=1):
     is_odd = (n % 2) == 1
-    is_even = (not is_odd)
-    return (dict(multicomplex=1.35, complex=1.35, hybrid=5).get(method, 2.5) +
-            int((n - 1)) * dict(multicomplex=0, complex=1.0).get(method, 1.3) +
-            int(n > 1) * is_odd * dict(complex=2.65).get(method, 0) +
-            int(n > 1) * is_even * dict(complex=7.65).get(method, 0))
+    return (dict(multicomplex=1.35, complex=1.35).get(method, 2.5) +
+            int((n - 1)) * dict(multicomplex=0, complex=0.0).get(method, 1.3) +
+            is_odd * dict(complex=2.65*int(n//2)).get(method, 0) +
+            (n % 4 == 2) * dict(complex=3.65 + (n//4) * 8).get(method, 0) +
+            (n % 4 == 0) * dict(complex=(n//4) * (10 + 1.5*int(n > 10))
+                                ).get(method, 0))
 
 
 def _default_base_step(x, scale, epsilon=None):
@@ -202,16 +203,12 @@ _cmn_doc = """
        the values.
     method : string, optional
         defines method used in the approximation
-        'complex': complex-step derivative (scale=%(scale_complex)s)
-        'central': central difference derivative (scale=%(scale_central)s)
-        'backward': backward difference derivative (scale=%(scale_backward)s)
-        'forward': forward difference derivative (scale=%(scale_forward)s)
-        %(extra_method)s
-    order : int, optional
-        defining order of basic method used.
-        For 'central' methods, it must be an even number eg. [2,4].
-    n : int, optional
-        Order of the derivative.
+        'central': central difference derivative
+        'complex': complex-step derivative
+        'backward': backward difference derivative
+        'forward': forward difference derivative
+        'multicomplex': multicomplex derivative
+    %(extra_parameter)s
     full_output : bool, optional
         If `full_output` is False, only the derivative is returned.
         If `full_output` is True, then (der, r) is returned `der` is the
@@ -228,19 +225,21 @@ _cmn_doc = """
     %(returns)s
     Notes
     -----
-    The complex-step derivative has truncation error O(steps**2), so
+    The complex-step derivative has truncation error O(steps**2) and
+    O(steps**4) for odd and even order derivatives respectively, so
     truncation error can be eliminated by choosing steps to be very small.
-    The complex-step derivative avoids the problem of round-off error with
-    small steps because there is no subtraction. However, the function
-    needs to be analytic. This method does not work if f(x) involves non-
-    analytic functions such as e.g.: abs, max, min or the derivative-order is 2
-    or greater. For this reason the 'central' method is the default method.
+    Especially the first order complex-step derivative avoids the problem of
+    round-off error with small steps because there is no subtraction. However,
+    the function needs to be analytic. This method does not work if f(x) does
+    not support complex numbers or involves non-analytic functions such as
+    e.g.: abs, max, min.
+    For this reason the 'central' method is the default method.
     This method is usually very accurate, but sometimes one can only allow
     evaluation in forward or backward direction.
 
-    Higher order methods will generally be more accurate, but may also suffer
-    more from numerical problems. First order methods is usually not
-    recommended.
+    Higher order approximation methods will generally be more accurate, but may
+    also suffer more from numerical problems. First order methods is usually
+    not recommended.
     Be careful in decreasing the step size too much due to round-off errors.
 
     %(extra_note)s
@@ -248,6 +247,11 @@ _cmn_doc = """
     ----------
     Ridout, M.S. (2009) Statistical applications of the complex-step method
         of numerical differentiation. The American Statistician, 63, 66-74
+
+    K.-L. Lai, J.L. Crassidis, Y. Cheng, J. Kim (2005), New complex step
+        derivative approximations with application to second-order
+        kalman filtering, AIAA Guidance, Navigation and Control Conference,
+        San Francisco, California, August 2005, AIAA-2005-5944.
 
     Lyness, J. M., Moler, C. B. (1966). Vandermonde Systems and Numerical
                      Differentiation. *Numerische Mathematik*.
@@ -314,8 +318,12 @@ class MinStepGenerator(object):
 
     def _min_num_steps(self, method, n, order):
         num_steps = n + order - 1
-        if method in ['central', 'central2', 'complex', 'hybrid']:
-            num_steps = (n + order-1) // 2
+
+        if method in ['central', 'central2', 'complex']:
+            step = 2
+            if method == 'complex':
+                step = 4 if n % 2 == 0 else 2
+            num_steps = (n + order-1) // step
         return int(num_steps)
 
     def _default_num_steps(self, method, n, order):
@@ -672,7 +680,7 @@ class _Derivative(object):
 
     def _eval_first_condition(self):
         even_derivative = self._is_even_derivative()
-        return ((even_derivative and self.method == 'central') or
+        return ((even_derivative and self.method in ('central', 'central2')) or
                 self.method in ['forward', 'backward'] or
                 self.method == 'complex' and self._is_fourth_derivative())
 
@@ -709,11 +717,11 @@ class _Derivative(object):
 class Derivative(_Derivative):
     __doc__ = _cmn_doc % dict(
         derivative='n-th derivative',
-        scale_backward=str(default_scale('backward')),
-        scale_central=str(default_scale('central')),
-        scale_complex=str(default_scale('complex')),
-        scale_forward=str(default_scale('forward')),
-        extra_method="",
+        extra_parameter="""order : int, optional
+        defines the order of the error term in the Taylor approximation used.
+        For 'central' and 'complex' methods, it must be an even number.
+    n : int, optional
+        Order of the derivative.""",
         extra_note='', returns="""
     Returns
     -------
@@ -817,8 +825,8 @@ class Derivative(_Derivative):
     def _flip_fd_rule(self):
         n = self.n
         return ((self._is_even_derivative() and (self.method == 'backward')) or
-                 (self.method == 'complex' and ((n % 8 in [4, 6]) or (n % 4 ==3)))
-                                                )
+                (self.method == 'complex' and ((n % 8 in [4, 6]) or
+                                               (n % 4 == 3))))
 
     def _get_finite_difference_rule(self, step_ratio):
         '''
@@ -844,7 +852,7 @@ class Derivative(_Derivative):
         order, method_order = self.n - 1, self._method_order
         parity = 0
         if (method.startswith('central') or
-            method.startswith('complex') and self._is_odd_derivative()):
+                method.startswith('complex') and self._is_odd_derivative()):
             parity = (order % 2) + 1
         elif self.method == 'complex':
             parity = 4 if self.n % 4 == 0 else 3
@@ -917,20 +925,20 @@ class Derivative(_Derivative):
 
     @staticmethod
     def _complex_even(f, fx, x, h, *args, **kwargs):
-        ih = h * (1j + 1) / np.sqrt(2)
+        ih = h * (1j + 1.0) / np.sqrt(2)
         return (f(x + ih, *args, **kwargs) +
                 f(x - ih, *args, **kwargs)).imag
 
     @staticmethod
     def _complex_even_higher(f, fx, x, h, *args, **kwargs):
-        ih = h * (1j + 1) / np.sqrt(2)
+        ih = h * (1j + 1.0) / np.sqrt(2)
         return (f(x + ih, *args, **kwargs) +
                 f(x - ih, *args, **kwargs) - 2 * fx).real * 12
 
     @staticmethod
     def _multicomplex(f, fx, x, h, *args, **kwds):
         z = bicomplex(x + 1j * h, 0)
-        return f(z, *args, **kwds).imag1
+        return f(z, *args, **kwds).imag
 
     @staticmethod
     def _multicomplex2(f, fx, x, h, *args, **kwds):
@@ -945,11 +953,9 @@ class Gradient(Derivative):
                                        order=order, full_output=full_output)
     __doc__ = _cmn_doc % dict(
         derivative='Gradient',
-        scale_backward=str(default_scale('backward')),
-        scale_central=str(default_scale('central')),
-        scale_complex=str(default_scale('complex')),
-        scale_forward=str(default_scale('forward')),
-        extra_method="",
+        extra_parameter="""order : int, optional
+        defines the order of the error term in the Taylor approximation used.
+        For 'central' and 'complex' methods, it must be an even number.""",
         returns="""
     Returns
     -------
@@ -1019,15 +1025,21 @@ class Gradient(Derivative):
         partials = [f(x + ih, *args, **kwds).imag for ih in increments]
         return np.array(partials).T
 
+    @staticmethod
+    def _multicomplex(f, fx, x, h, *args, **kwds):
+        n = len(x)
+        increments = np.identity(n) * 1j * h
+        partials = [f(bicomplex(x + hi, 0), *args, **kwds).imag
+                    for hi in increments]
+        return np.array(partials).T
+
 
 class Jacobian(Gradient):
     __doc__ = _cmn_doc % dict(
         derivative='Jacobian',
-        scale_backward=str(default_scale('backward')),
-        scale_central=str(default_scale('central')),
-        scale_complex=str(default_scale('complex')),
-        scale_forward=str(default_scale('forward')),
-        extra_method="",
+        extra_parameter="""order : int, optional
+        defines the order of the error term in the Taylor approximation used.
+        For 'central' and 'complex' methods, it must be an even number.""",
         returns="""
     Returns
     -------
@@ -1072,12 +1084,10 @@ class Hessdiag(Derivative):
                                        order=order, full_output=full_output)
     __doc__ = _cmn_doc % dict(
         derivative='Hessian diagonal',
-        scale_backward=str(default_scale('backward', n=2)),
-        scale_central=str(default_scale('central', n=2)),
-        scale_complex=str(default_scale('complex', n=2)),
-        scale_forward=str(default_scale('forward', n=2)),
-        extra_method="""'hybrid' : finite difference and complex-step (scale=%s)
-        """ % (default_scale('hybrid', n=2)),
+        extra_parameter="""    'central2' : central difference derivative
+    order : int, optional
+        defines the order of the error term in the Taylor approximation used.
+        For 'central' and 'complex' methods, it must be an even number.""",
         returns="""
     Returns
     -------
@@ -1103,7 +1113,20 @@ class Hessdiag(Derivative):
     """)
 
     @staticmethod
+    def _central2(f, fx, x, h, *args, **kwds):
+        '''Eq. 8'''
+        n = len(x)
+        increments = np.identity(n) * h
+        partials = [(f(x + 2*hi, *args, **kwds) +
+                    f(x - 2*hi, *args, **kwds) + 2*fx -
+                    2*f(x + hi, *args, **kwds) -
+                    2*f(x - hi, *args, **kwds)) / 4.0
+                    for hi in increments]
+        return np.array(partials)
+
+    @staticmethod
     def _central_even(f, fx, x, h, *args, **kwds):
+        '''Eq. 9'''
         n = len(x)
         increments = np.identity(n) * h
         partials = [(f(x + hi, *args, **kwds) +
@@ -1143,29 +1166,15 @@ class Hessdiag(Derivative):
         return np.array(partials)
 
 
-# class _Hessian(_Derivative):
-#
-#     @staticmethod
-#     def default_scale(method, n=2):
-#         return dict(central=8, central2=8, complex=2.5,
-#                     hybrid=6).get(method, 4)
-
-
 class Hessian(_Derivative):
-    def __init__(self, f, step=None, method='central2', full_output=False):
-        order = dict(backward=1, forward=1).get(method, 2)
+    def __init__(self, f, step=None, method='central', full_output=False):
+        order = dict(backward=1, forward=1, complex=4).get(method, 2)
         super(Hessian, self).__init__(f, n=2, step=step, method=method,
                                       order=order, full_output=full_output)
 
     __doc__ = _cmn_doc % dict(
         derivative='Hessian',
-        scale_backward=str(default_scale('backward', 2)),
-        scale_central=str(default_scale('central', 2)),
-        scale_complex=str(default_scale('complex', 2)),
-        scale_forward=str(default_scale('forward', 2)),
-        extra_method="""'central2' : central difference derivative (scale=%s)
-             'hybrid' : finite difference and complex-step (scale=%s)
-        """ % (default_scale('central2', n=2), default_scale('hybrid', n=2)),
+        extra_parameter="    'central2' : central difference derivative",
         returns="""
     Returns
     -------
@@ -1174,17 +1183,17 @@ class Hessian(_Derivative):
     """, extra_note="""Computes the Hessian according to method as:
     'forward', Eq. (7):
         1/(d_j*d_k) * ((f(x + d[j]*e[j] + d[k]*e[k]) - f(x + d[j]*e[j])))
-    'central', Eq. (8):
+    'central2', Eq. (8):
         1/(2*d_j*d_k) * ((f(x + d[j]*e[j] + d[k]*e[k]) - f(x + d[j]*e[j])) -
                          (f(x + d[k]*e[k]) - f(x)) +
                          (f(x - d[j]*e[j] - d[k]*e[k]) - f(x + d[j]*e[j])) -
                          (f(x - d[k]*e[k]) - f(x)))
-    'central2', Eq. (9):
+    'central', Eq. (9):
         1/(4*d_j*d_k) * ((f(x + d[j]*e[j] + d[k]*e[k]) -
                           f(x + d[j]*e[j] - d[k]*e[k])) -
                          (f(x - d[j]*e[j] + d[k]*e[k]) -
                           f(x - d[j]*e[j] - d[k]*e[k]))
-    'hybrid', Eq. (10):
+    'complex', Eq. (10):
         1/(2*d_j*d_k) * imag(f(x + i*d[j]*e[j] + d[k]*e[k]) -
                             f(x + i*d[j]*e[j] - d[k]*e[k]))
     where e[j] is a vector with element j == 1 and the rest are zero and
@@ -1230,8 +1239,7 @@ class Hessian(_Derivative):
 
     @staticmethod
     def _complex_even(f, fx, x, h, *args, **kwargs):
-        '''Calculate Hessian with hybrid finite difference and complex-step
-        derivative approximation
+        '''Calculate Hessian with complex-step derivative approximation
         The stepsize is the same for the complex and the finite difference part
         '''
         n = len(x)
@@ -1262,7 +1270,7 @@ class Hessian(_Derivative):
         return hess
 
     @staticmethod
-    def _central2(f, fx, x, h, *args, **kwargs):
+    def _central_even(f, fx, x, h, *args, **kwargs):
         '''Eq 9.'''
         n = len(x)
         # h = _default_base_step(x, 4, base_step, n)
@@ -1270,7 +1278,10 @@ class Hessian(_Derivative):
         hess = np.outer(h, h)
 
         for i in range(n):
-            for j in range(i, n):
+            hess[i, i] = (f(x + 2*ee[i, :], *args, **kwargs) - 2*fx +
+                          f(x - 2*ee[i, :], *args, **kwargs)
+                          ) / (4. * hess[i, i])
+            for j in range(i+1, n):
                 hess[i, j] = (f(x + ee[i, :] + ee[j, :], *args, **kwargs) -
                               f(x + ee[i, :] - ee[j, :], *args, **kwargs) -
                               f(x - ee[i, :] + ee[j, :], *args, **kwargs) +
@@ -1280,13 +1291,12 @@ class Hessian(_Derivative):
         return hess
 
     @staticmethod
-    def _central_even(f, fx, x, h, *args, **kwargs):
+    def _central2(f, fx, x, h, *args, **kwargs):
         '''Eq. 8'''
         n = len(x)
         # NOTE: ridout suggesting using eps**(1/4)*theta
         # h = _default_base_step(x, 3, base_step, n)
         ee = np.diag(h)
-        # fx = f(x, *args, **kwargs)
         dtype = np.result_type(fx)
         g = np.empty(n, dtype=dtype)
         gg = np.empty(n, dtype=dtype)
@@ -1312,7 +1322,6 @@ class Hessian(_Derivative):
         n = len(x)
         ee = np.diag(h)
 
-        # fx = f(x, *args, **kwargs)
         dtype = np.result_type(fx)
         g = np.empty(n, dtype=dtype)
         for i in range(n):
@@ -1448,7 +1457,7 @@ def _example3(x=0.0001, fun_name='cos', epsilon=None, method='central',
                     error=np.nan, scale=np.nan)
     fd = Derivative(fun0, step=epsilon, method=method, n=n, order=order)
     t = []
-    scales = np.arange(1.0, 35, 0.25)
+    scales = np.arange(1.0, 45, 0.25)
     for scale in scales:
         fd.step.scale = scale
         try:
@@ -1472,7 +1481,7 @@ def _example3(x=0.0001, fun_name='cos', epsilon=None, method='central',
         plt.xlabel('scales')
         plt.ylabel('Relative error')
         txt = ['', "1'st", "2'nd", "3'rd", "4'th", "5'th", "6'th",
-               "7th"] + ["%d'th" % i for i in range(8, 15)]
+               "7th"] + ["%d'th" % i for i in range(8, 25)]
 
         plt.title("The %s derivative of %s using %s, order=%d" % (txt[n],
                                                                   fun_name,
@@ -1559,18 +1568,21 @@ def test_docstrings():
 
 def main2():
     import pandas as pd
-    num_extrap = 5
+    num_extrap = 0
     method = 'complex'
     data = []
-    for name in ['exp', 'expm1']:  # function_names[:-3]:
+    for name in ['exp', 'expm1', 'sin', 'cos']:  # function_names[:-3]:
         for order in range(2, 3, 1):
             #  order = 1
-            for n in range(1, 12, 1):
+            for n in range(1, 16, 2):
                 num_steps = n + order - 1 + num_extrap
                 if method in ['central', 'complex']:
-                    num_steps = (n + order-1) // 2 + num_extrap
+                    step = 2
+                    if n % 2 == 0 and method == 'complex':
+                        step = 4
+                    num_steps = (n + order-1) // step + num_extrap
 
-                step_ratio = 1.4 #4**(1./n)
+                step_ratio = 1.6  # 4**(1./n)
                 epsilon = MinStepGenerator(num_steps=num_steps,
                                            step_ratio=step_ratio,
                                            offset=0, use_exact_steps=True)

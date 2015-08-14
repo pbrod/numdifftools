@@ -267,8 +267,8 @@ class TestDerivative(unittest.TestCase):
 
     def test_default_scale(self):
         for method, scale in zip(['complex', 'central', 'forward', 'backward',
-                                  'hybrid'],
-                                 [1.35, 2.5, 2.5, 2.5, 5]):
+                                  'multicomplex'],
+                                 [1.35, 2.5, 2.5, 2.5, 1.35]):
             np.testing.assert_allclose(scale, nd.default_scale(method, n=1))
 
     def test_derivative_cube(self):
@@ -386,7 +386,8 @@ class TestHessdiag(unittest.TestCase):
         def fun(x):
             return x[0] + x[1] ** 2 + x[2] ** 3
         htrue = np.array([0., 2., 18.])
-        methods = ['multicomplex', 'complex', 'central', 'forward', 'backward']
+        methods = ['central2', 'central', 'multicomplex', 'complex', 'forward',
+                   'backward']
         for order in range(2, 7, 2):
             for method in methods:
                 Hfun = nd.Hessdiag(fun, method=method, order=order,
