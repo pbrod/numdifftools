@@ -26,15 +26,15 @@ Surely you recall the traditional definition of a derivative, in terms of a limi
 For small :math:`\delta`, the limit approaches :math:`f'(x)`. This is a one-sided approximation for the derivative. For a fixed value of :math:`\delta`, this is also known as a finite difference approximation (a forward difference.) Other approximations for the derivative are also available. We will see the origin of these approximations in the Taylor series expansion of a function :math:`f(x)` around some point :math:`x_0`.
 
 .. math::
-    f(x) &= f(x_0) + (x - x_0)f'(x_0) + \frac{(x - x_0)^2}{2} f''(x_0) +
+    f(x_0+\delta) &= f(x_0) + \delta f'(x_0) + \frac{\delta^2}{2} f''(x_0) +
     :label: 2
 
-    & \frac{(x - x_0)^3}{6} f^{(3)}(x_0) + \frac{(x - x_0)^4}{24} f^{(4)}(x_0) + \\
+    & \frac{\delta^3}{6} f^{(3)}(x_0) + \frac{\delta^4}{24} f^{(4)}(x_0) + \\
 
 
-    & \frac{(x - x_0)^5}{120} f^{(5)}(x_0) + \frac{(x - x_0)^6}{720} f^{(6)}(x_0) +...\\
+    & \frac{\delta^5}{120} f^{(5)}(x_0) + \frac{\delta^6}{720} f^{(6)}(x_0) +...\\
 
-Truncate the series in :eq:`2` to the first three terms, then form the forward difference approximation :eq:`1`, where :math:`x = x_0 + \delta`.
+Truncate the series in :eq:`2` to the first three terms, divide by :math:`\delta` and rearrange yields the forward difference approximation :eq:`1`:
 
 .. math::
     f'(x_0) = \frac{f(x_0+\delta) - f(x_0)}{\delta} - \frac{\delta}{2} f''(x_0) - \frac{\delta^2}{6} f'''(x_0) + ...
@@ -106,7 +106,62 @@ Again, the next non-zero term :eq:`11` in that expansion has a higher power of :
     \frac{\delta^6}{252} f^{(7)}(x_0)
     :label: 11
 
-Derivative uses similar approximations for all derivatives of :math:`f` up to any order. Of course, it is not always possible for evaluation of a function on both sides of a point, as central difference rules will require. In these cases, you can specify forward or backward difference rules as appropriate.
+Derivative uses similar approximations for all derivatives of :math:`f` up to any order. Of course, it is not always possible for evaluation of a function on both sides of a point, as central difference rules will require. In these cases, you can specify forward or backward difference rules as appropriate. You can also specify to use the complex step derivative, which we will outline in the next section.
+
+Complex step derivative
+#######################
+The derivation of the complex-step derivative approximation is accomplished by replacing :math:`\delta` in :Eq:`2` 
+with a complex step :math:`i h`:
+
+.. math::
+    f(x_0+ i h) &= f(x_0) + i h f'(x_0) - \frac{h^2}{2} f''(x_0) - \frac{i h^3}{6} f^{(3)}(x_0) + \frac{h^4}{24} f^{(4)}(x_0) + \\
+    :label: 12a
+
+    & \frac{i h^5}{120} f^{(5)}(x_0) - \frac{h^6}{720} f^{(6)}(x_0) +...\\
+
+
+Taking only the imaginary parts of both sides gives
+
+.. math::
+    \Im(f(x_0+ i h)) &= h f'(x_0)  - \frac{i h^3}{6} f^{(3)}(x_0) - ...
+    :label: 12b
+
+Dividing with :math:`h` and rearranging yields:
+
+.. math::
+    f'(x_0) = \Im(f(x_0+ i h))/ h   + \frac{h^2}{6} f^{(3)}(x_0) - ...
+    :label: 12c
+
+Terms with order :math:`h^2` or higher can safely be ignored since the interval :math:`h` can be chosen up to machine precision
+without fear of rounding errors stemming from subtraction (since there are not any). Thus to within first-order the complex-step derivative approximation is given by:
+
+.. math::
+    f'(x_0) = \Im(f(x_0 + i h))/ h
+    :label: 12d
+
+
+Next, consider replacing the step :math:`\delta` in :Eq:`8` with a complex step :math:`i^\frac{1}{2}  h`
+
+.. math::
+    f_{even}(i^\frac{1}{2} h) &= \frac{i h^2}{2} f^{(2)}(x_0) - \frac{h^4}{24} f^{(4)}(x_0) -
+    :label: 12e
+
+    & \frac{i h^6}{720} f^{(6)}(x_0) + \frac{h^8}{40320} f^{(8)}(x_0) + ...\\
+
+Similarly dividing with :math:`h` and taking only the imaginary components yields:
+
+.. math::
+    f^{(2)}(x_0) = 2 \Im(f_{even}(i^\frac{1}{2} h)) / h^2 + \frac{h^4}{360} f^{(6)}(x_0) + ...
+    :label: 12f
+
+This approximation is still subject to difference errors, but the error associated with this approximation is proportional to 
+:math:`h^4`. Neglecting these higher order terms yields:
+
+.. math::
+    f^{(2)}(x_0) = 2 \Im(f_{even}(i^\frac{1}{2} h)) / h^2 = Im(f(x_0 + i^\frac{1}{2} h) + f(x_0-i^\frac{1}{2} h)) / h^2
+    :label: 12g
+
+See [LaiCrassidisCheng2005]_ and [Ridout2009]_ for more details.
 
 High order derivative
 #####################

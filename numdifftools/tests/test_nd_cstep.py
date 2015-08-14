@@ -176,22 +176,17 @@ class TestStepGenerator(unittest.TestCase):
         step_gen = nd.MinStepGenerator(base_step=None, num_steps=10,
                                        step_ratio=4, offset=-1)
         h = np.array([h for h in step_gen(0)])
-        print(h)
-        desired = np.array([[9.01687441e-02, 2.25421860e-02, 5.63554651e-03,
-                             1.40888663e-03, 3.52221657e-04, 8.80554142e-05,
-                             2.20138535e-05, 5.50346339e-06, 1.37586585e-06,
-                             3.43966462e-07]])
-        # desired = np.array([3.08816177e-03, 7.72040443e-04, 1.93010111e-04,
-        #                    4.82525277e-05, 1.20631319e-05, 3.01578298e-06,
-        #                    7.53945745e-07, 1.88486436e-07, 4.71216091e-08,
-        #                    1.17804023e-08])
+        desired = np.array([3.58968236e-02, 8.97420590e-03, 2.24355147e-03,
+                            5.60887869e-04, 1.40221967e-04, 3.50554918e-05,
+                            8.76387295e-06, 2.19096824e-06, 5.47742059e-07,
+                            1.36935515e-07])
 
         assert_array_almost_equal((h - desired) / desired, 0)
 
     def test_default_base_step(self):
         step_gen = nd.MinStepGenerator(num_steps=1, offset=0)
         h = [h for h in step_gen(0)]
-        desired = (10 * nd.EPS) ** (1. / 2.5)
+        desired = nd.EPS ** (1. / 2.5)
         assert_array_almost_equal((h[0] - desired) / desired, 0)
 
     def test_fixed_base_step(self):

@@ -78,10 +78,11 @@ for method in ['forward', 'central', 'complex']:
     gradient_funs[method] = ndc.Gradient(1, method=method, step=fixed_step)
     gradient_funs[method2] = ndc.Gradient(1, method=method, step=epsilon)
 
-ndcHessian = ndc.Hessdiag  # ndc.Hessian #
+HessianFun = 'Hessdiag'
+ndcHessian = getattr(ndc, HessianFun)  # ndc.Hessian #
 hessian_funs = OrderedDict()
-hessian_funs['algopy_forward'] = nda.Hessdiag(1, method='forward')
-hessian_funs['numdifftools'] = nd.Hessdiag(1, **options)
+hessian_funs['algopy_forward'] = getattr(nda, HessianFun)(1, method='forward')
+hessian_funs['numdifftools'] = getattr(nd, HessianFun)(1, **options)
 for method in ['forward', 'central', 'complex']:
     method2 = method + adaptiv_txt
     hessian_funs[method] = ndcHessian(1, method=method, step=fixed_step)
