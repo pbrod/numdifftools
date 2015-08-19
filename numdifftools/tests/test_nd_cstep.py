@@ -5,10 +5,10 @@ import unittest
 import numdifftools.nd_cstep as nd
 import numpy as np
 from numpy.testing import assert_array_almost_equal
-from cgitb import small
 
 
 class TestRichardson(unittest.TestCase):
+
     def test_order_step_combinations(self):
         true_vals = {
             (1, 1, 1): [-0.9999999999999998, 1.9999999999999998],
@@ -82,57 +82,106 @@ class TestRichardson(unittest.TestCase):
                                                          order)])
         # self.assert_(False)
 
-    def test_central_complex(self):
+    def test_central(self):
         method = 'central'
-        true_vals = {(1, 1): [-0.33333333,  1.33333333],
-                     (1, 2): [-0.33333333,  1.33333333],
-                     (1, 3): [-0.33333333,  1.33333333],
-                     (1, 4): [-0.06666667,  1.06666667],
-                     (1, 5): [-0.06666667,  1.06666667],
-                     (1, 6): [-0.01587302,  1.01587302],
-                     (2, 1): [0.02222222, -0.44444444,  1.42222222],
-                     (2, 2): [0.02222222, -0.44444444,  1.42222222],
-                     (2, 3): [0.02222222, -0.44444444,  1.42222222],
+        true_vals = {(1, 1): [-0.33333333, 1.33333333],
+                     (1, 2): [-0.33333333, 1.33333333],
+                     (1, 3): [-0.33333333, 1.33333333],
+                     (1, 4): [-0.06666667, 1.06666667],
+                     (1, 5): [-0.06666667, 1.06666667],
+                     (1, 6): [-0.01587302, 1.01587302],
+                     (2, 1): [0.02222222, -0.44444444, 1.42222222],
+                     (2, 2): [0.02222222, -0.44444444, 1.42222222],
+                     (2, 3): [0.02222222, -0.44444444, 1.42222222],
                      (2, 4): [1.05820106e-03, -8.46560847e-02, 1.08359788e+00],
                      (2, 5): [1.05820106e-03, -8.46560847e-02, 1.08359788e+00],
                      (2, 6): [6.22471211e-05, -1.99190787e-02, 1.01985683e+00]}
-        for method in ['central', 'complex']:
+
+        for num_terms in [1, 2]:
+            for order in range(1, 7):
+                d = nd.Derivative(np.exp, method=method, order=order)
+                d._set_richardson_rule(step_ratio=2.0, num_terms=num_terms)
+                rule = d._richardson_extrapolate._get_richardson_rule()
+                assert_array_almost_equal(rule,
+                                          true_vals[(num_terms, order)])
+
+    def test_complex(self):
+        truth = {
+            (1, 2, 8): [9.576480164718605e-07, -0.004167684167715291,
+                        1.004166726519699],
+            (4, 2, 2): [0.0002614379084968331, -0.07111111111111235,
+                        1.070849673202616],
+            (1, 2, 4): [0.0002614379084968331, -0.07111111111111235,
+                        1.070849673202616],
+            (4, 1, 8): [-0.0039215686274510775, 1.0039215686274505],
+            (2, 2, 4): [0.0002614379084968331, -0.07111111111111235,
+                        1.070849673202616],
+            (4, 2, 8): [9.576480164718605e-07, -0.004167684167715291,
+                        1.004166726519699],
+            (3, 1, 8): [-0.0039215686274510775, 1.0039215686274505],
+            (4, 1, 2): [-0.06666666666666654, 1.0666666666666664],
+            (3, 1, 6): [-0.06666666666666654, 1.0666666666666664],
+            (1, 1, 8): [-0.0039215686274510775, 1.0039215686274505],
+            (2, 1, 8): [-0.0039215686274510775, 1.0039215686274505],
+            (4, 1, 4): [-0.06666666666666654, 1.0666666666666664],
+            (3, 1, 4): [-0.06666666666666654, 1.0666666666666664],
+            (2, 1, 4): [-0.06666666666666654, 1.0666666666666664],
+            (3, 2, 2): [0.0002614379084968331, -0.07111111111111235,
+                        1.070849673202616],
+            (2, 2, 8): [9.576480164718605e-07, -0.004167684167715291,
+                        1.004166726519699],
+            (2, 1, 6): [-0.06666666666666654, 1.0666666666666664],
+            (3, 1, 2): [-0.06666666666666654, 1.0666666666666664],
+            (4, 1, 6): [-0.06666666666666654, 1.0666666666666664],
+            (1, 1, 6): [-0.06666666666666654, 1.0666666666666664],
+            (1, 2, 2): [0.022222222222222185, -0.444444444444444,
+                        1.4222222222222216],
+            (3, 2, 6): [0.0002614379084968331, -0.07111111111111235,
+                        1.070849673202616],
+            (1, 1, 4): [-0.06666666666666654, 1.0666666666666664],
+            (2, 1, 2): [-0.06666666666666654, 1.0666666666666664],
+            (4, 2, 4): [0.0002614379084968331, -0.07111111111111235,
+                        1.070849673202616],
+            (3, 2, 4): [0.0002614379084968331, -0.07111111111111235,
+                        1.070849673202616],
+            (2, 2, 2): [0.0002614379084968331, -0.07111111111111235,
+                        1.070849673202616],
+            (1, 2, 6): [0.0002614379084968331, -0.07111111111111235,
+                        1.070849673202616],
+            (4, 2, 6): [0.0002614379084968331, -0.07111111111111235,
+                        1.070849673202616],
+            (1, 1, 2): [-0.33333333333333304, 1.333333333333333],
+            (3, 2, 8): [9.576480164718605e-07, -0.004167684167715291,
+                        1.004166726519699],
+            (2, 2, 6): [0.0002614379084968331, -0.07111111111111235,
+                        1.070849673202616]}
+        # t = dict()
+        for n in [1, 2, 3, 4]:
             for num_terms in [1, 2]:
-                for order in range(1, 7):
-                    d = nd.Derivative(np.exp, method=method, order=order)
+                for order in range(2, 9, 2):
+                    d = nd.Derivative(np.exp, n=n, method='complex',
+                                      order=order)
                     d._set_richardson_rule(step_ratio=2.0, num_terms=num_terms)
                     rule = d._richardson_extrapolate._get_richardson_rule()
+                    # t[(n, num_terms, order)] = rule.tolist()
                     assert_array_almost_equal(rule,
-                                              true_vals[(num_terms, order)])
-
-#     def test_complex(self):
-#         true_vals = {1: [-0.33333333, 1.33333333],
-#                      2: [0.02222222, -0.44444444,  1.42222222],
-#                      }
-#         for n in [1, 2]:
-#             for num_terms in [1, 2]:
-#                 for order in range(1, 7):
-#                     d = nd.Derivative(np.exp, n=n, method='complex', order=order)
-#                     d._set_richardson_rule(step_ratio=2.0, num_terms=num_terms)
-#                     rule = d._richardson_extrapolate._get_richardson_rule()
-#                     print((num_terms, order, rule))
-# #                     assert_array_almost_equal(rule,
-# #                                               true_vals[num_terms])
-#         self.assert_(False)
+                                              truth[(n, num_terms, order)])
+        # print(t)
+        # self.assert_(False)
 
     def test_forward_backward(self):
-        true_vals = {(1, 1): [-1.,  2.],
-                     (1, 2): [-0.33333333, 1.33333333],
-                     (1, 3): [-0.14285714, 1.14285714],
-                     (1, 4): [-0.06666667, 1.06666667],
-                     (1, 5): [-0.03225806, 1.03225806],
-                     (1, 6): [-0.01587302, 1.01587302],
-                     (2, 1): [0.33333333, -2., 2.66666667],
-                     (2, 2): [0.04761905, -0.57142857, 1.52380952],
-                     (2, 3): [0.00952381, -0.22857143, 1.21904762],
-                     (2, 4): [0.00215054, -0.10322581, 1.10107527],
-                     (2, 5): [5.12032770e-04, -4.91551459e-02, 1.04864311e+00],
-                     (2, 6): [1.24984377e-04, -2.39970004e-02, 1.02387202e+00]}
+        truth = {(1, 1): [-1., 2.],
+                 (1, 2): [-0.33333333, 1.33333333],
+                 (1, 3): [-0.14285714, 1.14285714],
+                 (1, 4): [-0.06666667, 1.06666667],
+                 (1, 5): [-0.03225806, 1.03225806],
+                 (1, 6): [-0.01587302, 1.01587302],
+                 (2, 1): [0.33333333, -2., 2.66666667],
+                 (2, 2): [0.04761905, -0.57142857, 1.52380952],
+                 (2, 3): [0.00952381, -0.22857143, 1.21904762],
+                 (2, 4): [0.00215054, -0.10322581, 1.10107527],
+                 (2, 5): [5.12032770e-04, -4.91551459e-02, 1.04864311e+00],
+                 (2, 6): [1.24984377e-04, -2.39970004e-02, 1.02387202e+00]}
         for method in ['forward', 'backward']:
             for num_terms in [1, 2]:
                 for order in range(1, 7):
@@ -140,15 +189,15 @@ class TestRichardson(unittest.TestCase):
                     d._set_richardson_rule(step_ratio=2.0, num_terms=num_terms)
                     rule = d._richardson_extrapolate._get_richardson_rule()
                     assert_array_almost_equal(rule,
-                                              true_vals[(num_terms, order)])
+                                              truth[(num_terms, order)])
 
     def _example_(self):
         def f(x, h):
-            return (np.exp(x+h)-np.exp(x-h))/(2.)
+            return (np.exp(x + h) - np.exp(x - h)) / (2.)
         # f = lambda x, h: (np.exp(x+h)-np.exp(x))
         steps = [h for h in 2.0**-np.arange(10)]
         df = [f(1, h) for h in steps]
-        print([dfi/hi for dfi, hi in zip(df, steps)])
+        print([dfi / hi for dfi, hi in zip(df, steps)])
         step = nd.MaxStepGenerator(step_ratio=2.0)
         for method in ['central']:
             d = nd.Derivative(np.exp, step=step, method=method)
@@ -198,6 +247,7 @@ class TestStepGenerator(unittest.TestCase):
 
 
 class TestFornbergWeights(unittest.TestCase):
+
     def test_weights(self):
         x = np.r_[-1, 0, 1]
         xbar = 0
@@ -207,6 +257,7 @@ class TestFornbergWeights(unittest.TestCase):
 
 
 class TestDerivative(unittest.TestCase):
+
     def test_infinite_functions(self):
         def finf(x):
             return np.inf
@@ -221,12 +272,12 @@ class TestDerivative(unittest.TestCase):
 
     def test_high_order_derivative_cos(self):
         true_vals = (-1.0, 0.0, 1.0, 0.0, -1.0, 0.0)
-        methods = ['complex', 'multicomplex',  'central',
+        methods = ['complex', 'multicomplex', 'central',
                    'forward', 'backward']
         for method in methods:
             n_max = dict(multicomplex=2, central=6).get(method, 5)
-            for n in range(1, n_max+1):
-                true_val = true_vals[n-1]
+            for n in range(1, n_max + 1):
+                true_val = true_vals[n - 1]
                 for order in range(2, 9, 2):
                     d3cos = nd.Derivative(np.cos, n=n, order=order,
                                           method=method, full_output=True)
@@ -234,10 +285,12 @@ class TestDerivative(unittest.TestCase):
                     error = np.abs(y - true_val)
                     small = error <= info.error_estimate
                     if not small:
-                        small = error < 10**(-12+n)
+                        small = error < 10**(-12 + n)
                     if not small:
                         print('method=%s, n=%d, order=%d' % (method, n, order))
+                        print error, info.error_estimate
                     self.assertTrue(small)
+        # self.assert_(False)
 
     def test_derivative_of_cos_x(self):
         x = np.r_[0, np.pi / 6.0, np.pi / 2.0]
@@ -245,8 +298,8 @@ class TestDerivative(unittest.TestCase):
                      -np.cos(x))
         for method in ['complex', 'central', 'forward', 'backward']:
             n_max = dict(complex=2, central=6).get(method, 5)
-            for n in range(1, n_max+1):
-                true_val = true_vals[n-1]
+            for n in range(1, n_max + 1):
+                true_val = true_vals[n - 1]
                 start, stop, step = dict(central=(2, 7, 2),
                                          complex=(2, 3, 1)).get(method,
                                                                 (1, 5, 1))
@@ -257,7 +310,7 @@ class TestDerivative(unittest.TestCase):
                     error = np.abs(y - true_val)
                     small = error <= info.error_estimate
                     if not small.all():
-                        small = np.where(small, small, error <= 10**(-11+n))
+                        small = np.where(small, small, error <= 10**(-11 + n))
                     self.assertTrue(small.all())
 
     def test_default_scale(self):
@@ -342,9 +395,11 @@ class TestGradient(unittest.TestCase):
                 dfun = nd.Gradient(fun, method=method, order=order)
                 d = dfun([1, 2, 3])
                 assert_array_almost_equal(d, dtrue)
+        # self.assert_(False)
 
 
 class TestHessdiag(unittest.TestCase):
+
     def test_complex(self):
         def fun(x):
             return x[0] + x[1] ** 2 + x[2] ** 3
@@ -367,7 +422,7 @@ class TestHessdiag(unittest.TestCase):
 
         methods = ['multicomplex', 'complex', 'central', 'forward', 'backward']
         for order in range(2, 7, 2):
-            steps = nd.MinStepGenerator(num_steps=order+1,
+            steps = nd.MinStepGenerator(num_steps=order + 1,
                                         use_exact_steps=True,
                                         step_ratio=3., offset=0)
             for method in methods:
@@ -396,18 +451,20 @@ class TestHessian(unittest.TestCase):
 
     def test_hessian_cosIx_yI_at_I0_0I(self):
         # cos(x-y), at (0,0)
-        step = nd.MinStepGenerator(num_steps=10)
-        cos = np.cos
 
         def fun(xy):
-            return cos(xy[0] - xy[1])
+            return np.cos(xy[0] - xy[1])
         htrue = [[-1., 1.], [1., -1.]]
         methods = ['multicomplex', 'complex', 'central', 'central2', 'forward',
                    'backward']
-        for method in methods:
-            Hfun2 = nd.Hessian(fun, method=method, step=step, full_output=True)
-            h2, _info = Hfun2([0, 0])
-            assert_array_almost_equal(h2, htrue)
+        for num_steps in [10, 1]:
+            step = nd.MinStepGenerator(num_steps=num_steps)
+            for method in methods:
+                Hfun2 = nd.Hessian(fun, method=method, step=step,
+                                   full_output=True)
+                h2, _info = Hfun2([0, 0])
+                # print(method, (h2-np.array(htrue)))
+                assert_array_almost_equal(h2, htrue)
 
 
 if __name__ == '__main__':

@@ -59,12 +59,10 @@ def get_test_function(fun_name, n=1):
                          lambda x: 1./(1-x**2)**(3./2) +
                          3*x**2./(1-x**2)**(5./2),
                          ),
-                 square=(lambda x: x*x,  # np.square,
+                 square=(lambda x: x * x,  # np.square,
                          lambda x: 2 * x,
-                         lambda x: 2 * np.ones_like(x),
-                         lambda x: np.zeros_like(x),
-                         lambda x: np.zeros_like(x),
-                         ),
+                         lambda x: 2 * np.ones_like(x)) +(
+                         lambda x: np.zeros_like(x),)*15,
                  exp=(np.exp,)*20,
                  expm1=(np.expm1,) + (np.exp,)*20,
                  exp2=(np.exp2,

@@ -88,8 +88,6 @@ for method in ['forward', 'central', 'complex']:
     hessian_funs[method] = ndcHessian(1, method=method, step=fixed_step)
     hessian_funs[method2] = ndcHessian(1, method=method, step=epsilon)
 
-# hessian_funs['complex'] = ndc.Hessian(f, method='complex', step=fixed_step)
-
 
 def compute_gradients(gradient_funs, problem_sizes):
 

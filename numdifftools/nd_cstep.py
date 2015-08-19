@@ -56,7 +56,7 @@ from scipy.ndimage.filters import convolve1d
 import warnings
 # NOTE: we only do double precision internally so far
 EPS = np.MachAr().eps
-
+_SQRT_J = (1j + 1.0) / np.sqrt(2.0)  # = 1j**0.5
 
 _CENTRAL_WEIGHTS_AND_POINTS = {
     (1, 3): (np.array([-1, 0, 1]) / 2.0, np.arange(-1, 2)),
@@ -163,12 +163,19 @@ def _make_exact(h):
     return (h + 1.0) - 1.0
 
 
-def default_scale(method='forward', n=1):
-    is_odd = (n % 2) == 1
+def default_scale(method='forward', n=1, order=2):
+    # is_odd = (n % 2) == 1
+    high_order = int(n > 1 or order >= 4)
+    order2 = max(order // 2-1, 0)
     n4 = n // 4
     return (dict(multicomplex=1.35, complex=1.35).get(method, 2.5) +
             int((n - 1)) * dict(multicomplex=0, complex=0.0).get(method, 1.3) +
-            is_odd * dict(complex=2.65*int(n//2)).get(method, 0) +
+            order2 * dict(central=3, forward=2, backward=2).get(method, 0) +
+            # is_odd * dict(complex=2.65*int(n//2)).get(method, 0) +
+            (n % 4 == 1) * high_order * dict(complex=3.65 + n4 * (5 + 1.5**n4)
+                                             ).get(method, 0) +
+            (n % 4 == 3) * dict(complex=3.65*2 + n4 * (5 + 2.1**n4)
+                                ).get(method, 0) +
             (n % 4 == 2) * dict(complex=3.65 + n4 * (5 + 1.7**n4)
                                 ).get(method, 0) +
             (n % 4 == 0) * dict(complex=(n//4) * (10 + 1.5*int(n > 10))
@@ -247,14 +254,14 @@ class MinStepGenerator(object):
                 for name in self.__dict__.keys()]
         return """%s(%s)""" % (class_name, ','.join(kwds))
 
-    def _default_scale(self, method, n):
+    def _default_scale(self, method, n, order):
         scale = self.scale
         if scale is None:
-            scale = default_scale(method, n)
+            scale = default_scale(method, n, order)
         return scale
 
-    def _default_base_step(self, xi, method, n):
-        scale = self._default_scale(method, n)
+    def _default_base_step(self, xi, method, n, order=2):
+        scale = self._default_scale(method, n, order)
         base_step = _default_base_step(xi, scale, self.base_step)
         if self.use_exact_steps:
             base_step = _make_exact(base_step)
@@ -266,7 +273,7 @@ class MinStepGenerator(object):
         if method in ['central', 'central2', 'complex']:
             step = 2
             if method == 'complex':
-                step = 4 if n % 2 == 0 else 2
+                step = 4 if n > 1 or order >= 4 else 2
             num_steps = (n + order-1) // step
         return int(num_steps)
 
@@ -290,7 +297,7 @@ class MinStepGenerator(object):
 
     def __call__(self, x, method='central', n=1, order=2):
         xi = np.asarray(x)
-        base_step = self._default_base_step(xi, method, n)
+        base_step = self._default_base_step(xi, method, n, order)
         step_ratio = self._default_step_ratio(n)
 
         num_steps = self._default_num_steps(method, n, order)
@@ -644,8 +651,13 @@ class _Derivative(object):
         order = max((self.order // step) * step, step)
         return order
 
+    def _complex_high_order(self):
+        return self.method == 'complex' and (self.n > 1 or self.order >= 4)
+
     def _richardson_step(self):
-        complex_step = 4 if self.n % 2 == 0 else 2
+        # complex_step = 4 if self.n % 2 == 0 else 2
+        complex_step = 4 if self._complex_high_order() else 2
+
         return dict(central=2, central2=2, complex=complex_step,
                     multicomplex=2).get(self.method, 1)
 
@@ -670,19 +682,22 @@ class _Derivative(object):
 
     def _get_function_name(self):
         name = '_%s' % self.method
-        even_derivative_order = (self.n % 2) == 0
+        even_derivative_order = self._is_even_derivative()
         if even_derivative_order and self.method in ('central', 'complex'):
             name = name + '_even'
-            if self.method in ('complex'):
-                is_multiplum_of_4 = (self.n % 4) == 0
-                if is_multiplum_of_4:
+            if self.method in ('complex') and self._is_fourth_derivative():
+                name = name + '_higher'
+        else:
+            if self._complex_high_order() and self._is_odd_derivative():
+                name = name + '_odd'
+                if self._is_third_derivative():
                     name = name + '_higher'
-        elif self.method == 'multicomplex' and self.n > 1:
-            if self.n == 2:
-                name = name + '2'
-            else:
-                raise ValueError('Multicomplex method only support first and'
-                                 'second order derivatives.')
+            elif self.method == 'multicomplex' and self.n > 1:
+                if self.n == 2:
+                    name = name + '2'
+                else:
+                    raise ValueError('Multicomplex method only support first '
+                                     'and second order derivatives.')
         return name
 
     def _get_functions(self):
@@ -698,6 +713,9 @@ class _Derivative(object):
 
     def _is_even_derivative(self):
         return self.n % 2 == 0
+
+    def _is_third_derivative(self):
+        return self.n % 4 == 3
 
     def _is_fourth_derivative(self):
         return self.n % 4 == 0
@@ -840,13 +858,13 @@ class Derivative(_Derivative):
             number of terms
         '''
         try:
-            step = [1, 2, 2, 4, 4][parity]
+            step = [1, 2, 2, 4, 4, 4, 4][parity]
         except Exception as msg:
-            raise ValueError('%s. Parity must be 0, 1, 2, 3 or 4! ' +
+            raise ValueError('%s. Parity must be 0, 1, 2, 3, 4, 5 or 6! ' +
                              '(%d)' % (str(msg), parity))
         inv_sr = 1.0 / step_ratio
-        offset = [1, 1, 2, 2, 4][parity]
-        c0 = [1.0, 1.0, 1.0, 2.0, 24.0][parity]
+        offset = [1, 1, 2, 2, 4, 1, 3][parity]
+        c0 = [1.0, 1.0, 1.0, 2.0, 24.0, 1.0, 6.0][parity]
         c = c0/misc.factorial(np.arange(offset, step * nterms + offset, step))
         [i, j] = np.ogrid[0:nterms, 0:nterms]
         return np.atleast_2d(c[j] * inv_sr ** (i * (step * j + offset)))
@@ -854,8 +872,7 @@ class Derivative(_Derivative):
     def _flip_fd_rule(self):
         n = self.n
         return ((self._is_even_derivative() and (self.method == 'backward')) or
-                (self.method == 'complex' and ((n % 8 in [4, 6]) or
-                                               (n % 4 == 3))))
+                (self.method == 'complex' and (n % 8 in [3, 4, 5, 6])))
 
     def _get_finite_difference_rule(self, step_ratio):
         '''
@@ -881,10 +898,14 @@ class Derivative(_Derivative):
         order, method_order = self.n - 1, self._method_order
         parity = 0
         if (method.startswith('central') or
-                method.startswith('complex') and self._is_odd_derivative()):
+                (method.startswith('complex') and self.n == 1 and
+                 method_order < 4)):
             parity = (order % 2) + 1
         elif self.method == 'complex':
-            parity = 4 if self.n % 4 == 0 else 3
+            if self._is_odd_derivative():
+                parity = 6 if self._is_third_derivative() else 5
+            else:
+                parity = 4 if self._is_fourth_derivative() else 3
 
         step = self._richardson_step()
         num_terms, ix = (order + method_order) // step, order // step
@@ -953,16 +974,28 @@ class Derivative(_Derivative):
         return f(x + 1j * h, *args, **kwds).imag
 
     @staticmethod
+    def _complex_odd(f, fx, x, h, *args, **kwds):
+        ih = h * _SQRT_J
+        return ((_SQRT_J/2.) * (f(x + ih, *args, **kwds) -
+                                f(x - ih, *args, **kwds))).imag
+
+    @staticmethod
+    def _complex_odd_higher(f, fx, x, h, *args, **kwds):
+        ih = h * _SQRT_J
+        return ((3 * _SQRT_J) * (f(x + ih, *args, **kwds) -
+                                 f(x - ih, *args, **kwds))).real
+
+    @staticmethod
     def _complex_even(f, fx, x, h, *args, **kwargs):
-        ih = h * (1j + 1.0) / np.sqrt(2)
+        ih = h * _SQRT_J
         return (f(x + ih, *args, **kwargs) +
                 f(x - ih, *args, **kwargs)).imag
 
     @staticmethod
     def _complex_even_higher(f, fx, x, h, *args, **kwargs):
-        ih = h * (1j + 1.0) / np.sqrt(2)
-        return (f(x + ih, *args, **kwargs) +
-                f(x - ih, *args, **kwargs) - 2 * fx).real * 12
+        ih = h * _SQRT_J
+        return 12.0 * (f(x + ih, *args, **kwargs) +
+                       f(x - ih, *args, **kwargs) - 2 * fx).real
 
     @staticmethod
     def _multicomplex(f, fx, x, h, *args, **kwds):
@@ -1056,6 +1089,16 @@ class Gradient(Derivative):
         n = len(x)
         increments = np.identity(n) * 1j * h
         partials = [f(x + ih, *args, **kwds).imag for ih in increments]
+        return np.array(partials).T
+
+    @staticmethod
+    def _complex_odd(f, fx, x, h, *args, **kwds):
+        n = len(x)
+        increments = np.identity(n) * _SQRT_J * h
+
+        partials = [((_SQRT_J/2.) * (f(x + ih, *args, **kwds) -
+                                     f(x - ih, *args, **kwds))).imag
+                    for ih in increments]
         return np.array(partials).T
 
     @staticmethod
@@ -1208,7 +1251,7 @@ class Hessdiag(Derivative):
 
 class Hessian(_Derivative):
     def __init__(self, f, step=None, method='central', full_output=False):
-        order = dict(backward=1, forward=1, complex=4).get(method, 2)
+        order = dict(backward=1, forward=1, complex=2).get(method, 2)
         super(Hessian, self).__init__(f, n=2, step=step, method=method,
                                       order=order, full_output=full_output)
 
@@ -1262,6 +1305,9 @@ class Hessian(_Derivative):
     --------
     Derivative, Hessian
     """)
+
+    def _complex_high_order(self):
+        return False
 
     def _derivative(self, xi, args, kwds):
         diff, f = self._get_functions()
@@ -1503,7 +1549,7 @@ def _example3(x=0.0001, fun_name='cos', epsilon=None, method='central',
         t.append(val)
     t = np.array(t)
     tt = dfun(x)
-    relativ_error = np.abs(t - tt) / (np.maximum(np.abs(tt), 1)) + 1e-17
+    relativ_error = np.abs(t - tt) / (np.maximum(np.abs(tt), 1)) + 1e-16
 
     weights = np.ones((3,))/3
     relativ_error = convolve1d(relativ_error, weights)  # smooth curve
@@ -1513,7 +1559,8 @@ def _example3(x=0.0001, fun_name='cos', epsilon=None, method='central',
                     error=np.nan, scale=np.nan)
     if True:  # False:  #
         plt.semilogy(scales, relativ_error)
-        plt.vlines(default_scale(fd.method, n), np.nanmin(relativ_error), 1)
+        plt.vlines(default_scale(fd.method, n, order),
+                   np.nanmin(relativ_error), 1)
         plt.xlabel('scales')
         plt.ylabel('Relative error')
         txt = ['', "1'st", "2'nd", "3'rd", "4'th", "5'th", "6'th",
@@ -1588,14 +1635,14 @@ def main2():
     num_extrap = 0
     method = 'complex'
     data = []
-    for name in ['exp', 'expm1', 'sin', 'cos']:  # function_names[:-3]:
-        for order in range(2, 3, 1):
+    for name in ['exp', 'expm1', 'sin', 'cos', 'square']:  # function_names[:-3]:
+        for order in range(4, 5, 1):
             #  order = 1
-            for n in range(4, 16, 4):
+            for n in range(1, 16, 1):
                 num_steps = n + order - 1 + num_extrap
                 if method in ['central', 'complex']:
                     step = 2
-                    if n % 2 == 0 and method == 'complex':
+                    if (n > 1 or order >= 4) and method == 'complex':
                         step = 4
                     num_steps = (n + order-1) // step + num_extrap
 
