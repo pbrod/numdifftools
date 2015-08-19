@@ -7,6 +7,20 @@ import numpy as np
 from numpy.testing import assert_array_almost_equal
 
 
+class TestGlobalFunctions(unittest.TestCase):
+
+    def testdea3(self):
+        def linfun(k):
+            return np.linspace(0, np.pi / 2., 2. ** (k + 5) + 1)
+        Ei = np.zeros(3)
+        for k in np.arange(3):
+            x = linfun(k)
+            Ei[k] = np.trapz(np.sin(x), x)
+        [En, err] = nd.dea3(Ei[0], Ei[1], Ei[2])
+        self.assertTrue(np.abs(En - 1) < err)
+        assert_array_almost_equal(En, 1.0, decimal=8)
+
+
 class TestRichardson(unittest.TestCase):
 
     def test_order_step_combinations(self):

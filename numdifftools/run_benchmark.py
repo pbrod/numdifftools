@@ -1,7 +1,7 @@
 import numpy as np
 import time
 
-import numdifftools as nd
+# import numdifftools as nd
 import numdifftools.nd_algopy as nda
 import numdifftools.nd_cstep as ndc
 from collections import OrderedDict
@@ -61,8 +61,8 @@ def plot_runtimes(run_time_objects, problem_sizes, symbols):
 
 
 options = dict(step_ratio=2., step_num=15, vectorized=True, method='forward')
-method = {'numdifftools': 0, 'scientific': 1,
-          'algopy_reverse': 2, 'algopy_forward': 3}
+# method = {'numdifftools': 0, 'scientific': 1,
+#           'algopy_reverse': 2, 'algopy_forward': 3}
 
 
 fixed_step = MinStepGenerator(num_steps=1, use_exact_steps=True, offset=0)
@@ -72,7 +72,7 @@ adaptiv_txt = '_adaptive_%d_%s_%d' % (epsilon.num_steps,
                                       str(epsilon.step_ratio), epsilon.offset)
 gradient_funs = OrderedDict()
 gradient_funs['algopy_forward'] = nda.Gradient(1, method='forward')
-gradient_funs['numdifftools'] = nd.Gradient(1, **options)
+# gradient_funs['numdifftools'] = nd.Gradient(1, **options)
 for method in ['forward', 'central', 'complex']:
     method2 = method + adaptiv_txt
     gradient_funs[method] = ndc.Gradient(1, method=method, step=fixed_step)
@@ -82,7 +82,7 @@ HessianFun = 'Hessdiag'
 ndcHessian = getattr(ndc, HessianFun)  # ndc.Hessian #
 hessian_funs = OrderedDict()
 hessian_funs['algopy_forward'] = getattr(nda, HessianFun)(1, method='forward')
-hessian_funs['numdifftools'] = getattr(nd, HessianFun)(1, **options)
+# hessian_funs['numdifftools'] = getattr(nd, HessianFun)(1, **options)
 for method in ['forward', 'central', 'complex']:
     method2 = method + adaptiv_txt
     hessian_funs[method] = ndcHessian(1, method=method, step=fixed_step)
@@ -157,8 +157,8 @@ def compute_hessians(hessian_funs, problem_sizes):
 
 if __name__ == '__main__':
     problem_sizes = (4, 8, 16, 32, 64, 96)
-    symbols = ('-kx', '-k+', ':k>', ':k<', '--k^', '--kv', '-kp', '-ks',
-               'b', '--b')
+    symbols = ('-kx', ':k>', ':k<', '--k^', '--kv', '-kp', '-ks',
+               'b', '--b', '-k+')
 
     results_gradients = compute_gradients(gradient_funs, problem_sizes)
     results_hessians = compute_hessians(hessian_funs, problem_sizes)
