@@ -1,6 +1,7 @@
 """ Test functions for numdifftools module
 
 """
+from __future__ import print_function
 import unittest
 import numdifftools.core as nd
 import numpy as np
@@ -302,7 +303,7 @@ class TestDerivative(unittest.TestCase):
                         small = error < 10**(-12 + n)
                     if not small:
                         print('method=%s, n=%d, order=%d' % (method, n, order))
-                        print error, info.error_estimate
+                        print(error, info.error_estimate)
                     self.assertTrue(small)
         # self.assert_(False)
 
