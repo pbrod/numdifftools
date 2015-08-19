@@ -7,10 +7,11 @@ problems in one or more variables. Finite differences are used in an adaptive
 manner, coupled with a Richardson extrapolation methodology to provide a
 maximally accurate result. The user can configure many options like; changing
 the order of the method or the extrapolation, even allowing the user to specify
-whether central, forward or backward differences are used. The methods provided
+whether complex-step, central, forward or backward differences are used. The
+methods provided
 are:
 
-*Derivative:* Computate derivatives of order 1 through 4 on any scalar function.
+*Derivative:* Computate derivatives of order 1 through 10 on any scalar function.
 
 *Gradient:* Computes the gradient vector of a scalar function of one or more variables.
 
@@ -23,6 +24,7 @@ are:
 All of these methods also produce error estimates on the result.
 
 Documentation is at: http://numdifftools.readthedocs.org/
+
 Code and issue tracker is at https://github.com/pbrod/numdifftools .
 
 To test if the toolbox is working paste the following in an interactive

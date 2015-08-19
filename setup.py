@@ -9,17 +9,26 @@
 
 Usage:
 Run all tests:
-python setup.py test
+  python setup.py test
 
-python setup.py install [, --prefix=$PREFIX]
+  python setup.py doctests
 
-python setup.py bdist_wininst
+Build documentation
+
+  python setup.py docs
+
+Install
+  python setup.py install [, --prefix=$PREFIX]
+
+Build wininstaller
+
+  python setup.py bdist_wininst
 
 PyPi upload:
 
-python setup.py sdist bdist_wininst upload --show-response
+  python setup.py sdist bdist_wininst upload --show-response
 
-python setup.py register sdist bdist_wininst upload --show-response
+  python setup.py register sdist bdist_wininst upload --show-response
 """
 
 import os

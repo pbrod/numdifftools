@@ -9,7 +9,7 @@ from numpy import pi, r_, sqrt, array
 # import numdifftools.nd_algopy as algopy
 # import numdifftools.nd_scientific as scientific
 from scipy import linalg, optimize, constants
-
+from numdifftools.multicomplex import c_abs as abs
 _TINY = np.finfo(float).machar.tiny
 
 
@@ -79,24 +79,25 @@ def _run_hamiltonian(verbose=True):
     # Important to restrict the step in order to avoid the discontinutiy at
     # x=[0,0]
     # hessian = nd.Hessian(c.potential, step_max=1.0, step_nom=np.abs(xopt))
-    hessian = nd.Hessian(c.potential)
+    step = nd.MaxStepGenerator(step_max=1e-1, num_steps=26)
+    hessian = nd.Hessian(c.potential, step=step, method='complex', full_output=True)
     # hessian = algopy.Hessian(c.potential) # Does not work
     # hessian = scientific.Hessian(c.potential) # does not work
-    H = hessian(xopt)
+    H, info = hessian(xopt)
     true_H = np.array([[5.23748385e-12, -2.61873829e-12],
                        [-2.61873829e-12, 5.23748385e-12]])
     if verbose:
         print(xopt)
         print('H', H)
         print('H-true_H', np.abs(H-true_H))
-        print('error_estimate', hessian.error_estimate)
+        print('error_estimate', info.error_estimate)
 
         eigenvalues = linalg.eigvals(H)
         normal_modes = c.normal_modes(eigenvalues)
 
         print('eigenvalues', eigenvalues)
         print('normal_modes', normal_modes)
-    return H, hessian.error_estimate, true_H
+    return H, info.error_estimate, true_H
 
 
 class TestHessian(unittest.TestCase):

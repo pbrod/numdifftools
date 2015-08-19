@@ -14,7 +14,7 @@ Contents
 	 
 	 Overview <src/overview>
 
-	 Theory <src/theory>
+	 Numerical differentiation <src/theory>
 
     License <license>
     Module Reference <_rst/modules>

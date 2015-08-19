@@ -1,5 +1,5 @@
-Introduction - Derivative Estimation
-####################################
+Introduction
+############
 
 The general problem of differentiation of a function typically pops up in three ways in Python.
 
@@ -26,13 +26,11 @@ Surely you recall the traditional definition of a derivative, in terms of a limi
 For small :math:`\delta`, the limit approaches :math:`f'(x)`. This is a one-sided approximation for the derivative. For a fixed value of :math:`\delta`, this is also known as a finite difference approximation (a forward difference.) Other approximations for the derivative are also available. We will see the origin of these approximations in the Taylor series expansion of a function :math:`f(x)` around some point :math:`x_0`.
 
 .. math::
-    f(x_0+\delta) &= f(x_0) + \delta f'(x_0) + \frac{\delta^2}{2} f''(x_0) +
+    f(x_0+\delta) &= f(x_0) + \delta f'(x_0) + \frac{\delta^2}{2} f''(x_0) + \frac{\delta^3}{6} f^{(3)}(x_0) + \\
     :label: 2
 
-    & \frac{\delta^3}{6} f^{(3)}(x_0) + \frac{\delta^4}{24} f^{(4)}(x_0) + \\
+    & \frac{\delta^4}{24} f^{(4)}(x_0) + \frac{\delta^5}{120} f^{(5)}(x_0) + \frac{\delta^6}{720} f^{(6)}(x_0) +...\\
 
-
-    & \frac{\delta^5}{120} f^{(5)}(x_0) + \frac{\delta^6}{720} f^{(6)}(x_0) +...\\
 
 Truncate the series in :eq:`2` to the first three terms, divide by :math:`\delta` and rearrange yields the forward difference approximation :eq:`1`:
 
@@ -69,23 +67,19 @@ Returning to the Taylor series expansion of :math:`f(x)` around some point :math
     f_{even}(x) = \frac{f(x_0 + x) - 2f(x_0) + f(x_0 - x)}{2}
     :label: 6
 
-The Taylor series expansion of :math:`f_{odd}(x-x_0)` has the useful property that we have killed off any even order terms, but the odd order terms are identical to :math:`f(x)`, as expanded around :math:`x_0`.
+The Taylor series expansion of :math:`f_{odd}(x)` around zero has the useful property that we have killed off any even order terms, but the odd order terms are identical to :math:`f(x)`, as expanded around :math:`x_0`.
 
 .. math::
-    f_{odd}(x-x_0) &= (x - x_0)f'(x_0) + \frac{(x - x_0)^3}{6} f^{(3)}(x_0) +
+    f_{odd}(\delta) = \delta f'(x_0) + \frac{\delta^3}{6} f^{(3)}(x_0) + \frac{\delta^5}{120} f^{(5)}(x_0) + \frac{\delta^7}{5040} f^{(7)}(x_0) +...
     :label: 7
-
-    & \frac{(x - x_0)^5}{120} f^{(5)}(x_0) + \frac{(x - x_0)^7}{5040} f^{(7)}(x_0) +...\\
 
 Likewise, the Taylor series expansion of :math:`f_{even}(x)` has no odd order terms or a constant term, but other even order terms that are identical to :math:`f(x)`.
 
 .. index:: even transformation
 
 .. math::
-    f_{even}(x-x_0) &= \frac{(x - x_0)^2}{2} f^{(2)}(x_0) + \frac{(x - x_0)^4}{24} f^{(4)}(x_0) +
+    f_{even}(\delta) = \frac{\delta^2}{2} f^{(2)}(x_0) + \frac{\delta^4}{24} f^{(4)}(x_0) + \frac{\delta^6}{720} f^{(6)}(x_0) + \frac{\delta^8}{40320} f^{(8)}(x_0) + ...
     :label: 8
-
-    & \frac{(x - x_0)^6}{720} f^{(6)}(x_0) + \frac{(x - x_0)^8}{40320} f^{(8)}(x_0) + ...\\
 
 
 The point of these transformations is we can rather simply generate a higher order approximation for any odd order derivatives of :math:`f(x)` by working with :math:`f_{odd}(x)`. Even order derivatives of :math:`f(x)` are similarly generated from :math:`f_{even}(x)`. For example, a second order approximation for :math:`f'(x_0)` is trivially written in :eq:`9` as a function of :math:`\delta`.
@@ -117,55 +111,64 @@ with a complex step :math:`i h`:
     f(x_0+ i h) &= f(x_0) + i h f'(x_0) - \frac{h^2}{2} f''(x_0) - \frac{i h^3}{6} f^{(3)}(x_0) + \frac{h^4}{24} f^{(4)}(x_0) + \\
     :label: 12a
 
-    & \frac{i h^5}{120} f^{(5)}(x_0) - \frac{h^6}{720} f^{(6)}(x_0) +...\\
+    & \frac{i h^5}{120} f^{(5)}(x_0) - \frac{h^6}{720} f^{(6)}(x_0) -...\\
 
 
 Taking only the imaginary parts of both sides gives
 
 .. math::
-    \Im(f(x_0+ i h)) &= h f'(x_0)  - \frac{i h^3}{6} f^{(3)}(x_0) - ...
+    \, \Im \,(f(x_0+ i h)) &= h f'(x_0)  - \frac{h^3}{6} f^{(3)}(x_0) + \frac{h^5}{120} f^{(5)}(x_0) -...
     :label: 12b
 
 Dividing with :math:`h` and rearranging yields:
 
 .. math::
-    f'(x_0) = \Im(f(x_0+ i h))/ h   + \frac{h^2}{6} f^{(3)}(x_0) - ...
+    f'(x_0) = \Im(f(x_0+ i h))/ h   + \frac{h^2}{6} f^{(3)}(x_0) - \frac{h^4}{120} f^{(5)}(x_0) +...
     :label: 12c
 
 Terms with order :math:`h^2` or higher can safely be ignored since the interval :math:`h` can be chosen up to machine precision
-without fear of rounding errors stemming from subtraction (since there are not any). Thus to within first-order the complex-step derivative approximation is given by:
+without fear of rounding errors stemming from subtraction (since there are not any). Thus to within second-order the complex-step derivative approximation is given by:
 
 .. math::
     f'(x_0) = \Im(f(x_0 + i h))/ h
     :label: 12d
 
 
-Next, consider replacing the step :math:`\delta` in :Eq:`8` with a complex step :math:`i^\frac{1}{2}  h`
+Next, consider replacing the step :math:`\delta` in :Eq:`8` with the complex step :math:`i^\frac{1}{2}  h`:
 
 .. math::
-    f_{even}(i^\frac{1}{2} h) &= \frac{i h^2}{2} f^{(2)}(x_0) - \frac{h^4}{24} f^{(4)}(x_0) -
+    \quad f_{even}(i^\frac{1}{2} h) &= \frac{i h^2}{2} f^{(2)}(x_0) - \frac{h^4}{24} f^{(4)}(x_0) - \frac{i h^6}{720} f^{(6)}(x_0) + \\
     :label: 12e
 
-    & \frac{i h^6}{720} f^{(6)}(x_0) + \frac{h^8}{40320} f^{(8)}(x_0) + ...\\
+		& \frac{h^8}{40320} f^{(8)}(x_0) + \frac{i h^{10}}{3628800} f^{(10)}(x_0) -...\\
 
-Similarly dividing with :math:`h` and taking only the imaginary components yields:
+Similarly dividing with :math:`h^2/2` and taking only the imaginary components yields:
 
 .. math::
-    f^{(2)}(x_0) = 2 \Im(f_{even}(i^\frac{1}{2} h)) / h^2 + \frac{h^4}{360} f^{(6)}(x_0) + ...
+    \quad f^{(2)}(x_0) = \Im\,(2\,f_{even}(i^\frac{1}{2} h)) / h^2 + \frac{h^4}{360} f^{(6)}(x_0) - \frac{h^8}{1814400} f^{(10)}(x_0)...
     :label: 12f
 
 This approximation is still subject to difference errors, but the error associated with this approximation is proportional to 
 :math:`h^4`. Neglecting these higher order terms yields:
 
 .. math::
-    f^{(2)}(x_0) = 2 \Im(f_{even}(i^\frac{1}{2} h)) / h^2 = Im(f(x_0 + i^\frac{1}{2} h) + f(x_0-i^\frac{1}{2} h)) / h^2
+    \quad f^{(2)}(x_0) = 2 \Im\,(f_{even}(i^\frac{1}{2} h)) / h^2 = \Im(f(x_0 + i^\frac{1}{2} h) + f(x_0-i^\frac{1}{2} h)) / h^2
     :label: 12g
 
 See [LaiCrassidisCheng2005]_ and [Ridout2009]_ for more details.
+The complex-step derivative in numdifftools.Derivative has truncation error 
+:math:`O(\delta^4)` for both odd and even order derivatives for :math:`n>1`. For :math:`n=1`
+the truncation error is on the order of :math:`O(\delta^4)`, so
+truncation error can be eliminated by choosing steps to be very small.  The first order complex-step derivative avoids the problem of
+round-off error with small steps because there is no subtraction. However,
+the function to differentiate needs to be analytic. This method does not work if it does
+not support complex numbers or involves non-analytic functions such as
+e.g.: abs, max, min. For this reason the `central` method is the default method.
+    
 
 High order derivative
 #####################
-So how do we construct these higher order formulas? In order to compute the 6'th order approximation we simply set :math:`f_{odd}(\delta)` equal to its 3-term Taylor expansion:
+So how do we construct these higher order approximation formulas? Here we will deomonstrate the principle by computing the 6'th order central approximation for the first-order derivative. In order to do so we simply set :math:`f_{odd}(\delta)` equal to its 3-term Taylor expansion:
 
 .. math::
     f_{odd}(\delta) = \sum_{i=0}^{2} \frac{\delta^{2i+1}}{(2i+1)!} f^{(2i+1)}(x_0)
@@ -209,9 +212,10 @@ The solution of these equations are simply:
         f_{odd}(\delta/2) \\
         f_{odd}(\delta/4)
     \end{bmatrix}
-    :label: 14
+    :label: 14a
 
-This solution gives also the 3'rd and 5'th order derivatives as bonus. As previously noted these formulas have the additional benefit of beeing applicable to any scale, with only a scale factor applied.
+The first row of :eq:`14a` gives the coefficients for 6'th order approximation. Looking at at row two and three, we see also that 
+this gives the 6'th order approximation for the 3'rd and 5'th order derivatives as bonus. Thus this is also a general method for obtaining high order differentiation rules. As previously noted these formulas have the additional benefit of beeing applicable to any scale, with only a scale factor applied.
 
 
 Richardson extrapolation methodology applied to derivative estimation
@@ -279,7 +283,7 @@ A quick test in Python yields much better results yet.
     >>> allclose(1./3*df1 - 2*df2 + 8./3*df3, 1.00000539448361) 
     True
 
-Again, Derivative uses the appropriate multiple term Richardson extrapolants for all derivatives of :math:`f` up to the fourth order. This, combined with the use of high order approximations for the derivatives, allows the use of quite large step sizes. See [LynessMoler1966]_ and [LynessMoler1969]_.
+Again, Derivative uses the appropriate multiple term Richardson extrapolants for all derivatives of :math:`f` up to any order [3]_. This, combined with the use of high order approximations for the derivatives, allows the use of quite large step sizes. See [LynessMoler1966]_ and [LynessMoler1969]_. How to compute the multiple term Richardson extrapolants will be elaborated further in the next section.
 
 
 Multiple term Richardson extrapolants
@@ -360,32 +364,36 @@ These error estimates are also of value in a different sense. Since they are eff
 
     >>> import numdifftools as nd
     >>> from numpy import exp, allclose
-    >>> f = nd.Derivative(exp)
-    >>> allclose(f(1), 2.71828183)
+    >>> f = nd.Derivative(exp, full_output=True)
+    >>> val, info = f(1)
+    >>> allclose(val, 2.71828183)
     True       
-    >>> allclose(f.error_estimate, 5.21804822e-14)
+    >>> allclose(info.error_estimate, 6.927791673660977e-14)
     True
-    >>> allclose(f.final_delta, 0.02166085)
+    >>> allclose(info.final_step, 0.0078125)
     True
 
 
 However, if we force the step size to be artificially large, then approximation error takes over.
 
-    >>> f = nd.Derivative(exp, delta=1, step_nom=1) 
-    >>> allclose(f(1), 3.19452805)
+    >>> f = nd.Derivative(exp, step=1, full_output=True) 
+    >>> val, info = f(1)
+    >>> allclose(val, 3.19452805)
     True
-    >>> allclose(f(1)-exp(1), 0.47624622)
+    >>> allclose(val-exp(1), 0.47624622)
     True
-    >>> f.final_delta array([ 1.])
+    >>> allclose(info.final_step, 1)
+    True
 
 And if the step size is forced to be too small, then we see noise dominate the problem.
 
-   >>> f = nd.Derivative(exp, delta=.0000000001, step_nom=1)
-   >>> allclose(f(1), 2.71828093)
+   >>> f = nd.Derivative(exp, step=1e-10, full_output=True)
+   >>> val, info = f(1)
+   >>> allclose(val, 2.71828093)
    True
-   >>> allclose(f(1) - exp(1), -8.97648138e-07)
+   >>> allclose(val - exp(1), -8.97648138e-07)
    True
-   >>> allclose(f.final_delta, 1.00000008e-10)
+   >>> allclose(info.final_step, 1.0000000e-10)
    True
 
 
@@ -397,30 +405,31 @@ Derivative in action
 
 How does numdifftools.Derivative work in action? A simple nonlinear function with a well known derivative is :math:`e^x`. At :math:`x = 0`, the derivative should be 1.
 
-   >>> f = nd.Derivative(exp)
-   >>> f(0)
-   array([ 1.])
+   >>> f = nd.Derivative(exp, full_output=True)
+   >>> val, info = f(0)
+   >>> allclose(val, 1)
+   True
 
-   >>> allclose(f.error_estimate, 5.28466160e-14)
+   >>> allclose(info.error_estimate, 5.28466160e-14)
    True
 
 A second simple example comes from trig functions. The first four derivatives of the sine function, evaluated at :math:`x = 0`, should be respectively :math:`[cos(0), -sin(0), -cos(0), sin(0)]`, or :math:`[1,0,-1,0]`.
 
     >>> from numpy import sin, allclose
     >>> import numdifftools as nd
-    >>> df = nd.Derivative(sin, 1)
+    >>> df = nd.Derivative(sin, n=1)
     >>> allclose(df(0), 1.)
     True
 
-    >>> ddf = nd.Derivative(sin, 2)
+    >>> ddf = nd.Derivative(sin, n=2)
     >>> allclose(ddf(0), 0.)
     True
 
-    >>> dddf = nd.Derivative(sin, 3)
+    >>> dddf = nd.Derivative(sin, n=3)
     >>> allclose(dddf(0), -1.)
     True
 
-    >>> ddddf = nd.Derivative(sin, 4)
+    >>> ddddf = nd.Derivative(sin, n=4)
     >>> allclose(ddddf(0), 0.)
     True
 
@@ -428,7 +437,7 @@ A second simple example comes from trig functions. The first four derivatives of
 Gradient and Hessian  estimation
 ################################
 
-Estimation of the gradient vector (numdifftools.Gradient) of a function of multiple variables is a simple task, requiring merely repeated calls to numdifftools.Derivative. Likewise, the diagonal elements of the hessian matrix are merely pure second partial derivatives of a function. numdifftools.Hessdiag accomplishes this task, again calling numdifftools.Derivative multiple times. Efficient computation of the off-diagonal (mixed partial derivative) elements of the Hessian matrix uses a scheme much like that of numdifftools.Derivative, wherein numdifftools.Derivative is called to determine an initial step size, then Richardson extrapolation is used to improve a set of second order finite difference estimates of those mixed partials.
+Estimation of the gradient vector (numdifftools.Gradient) of a function of multiple variables is a simple task, requiring merely repeated calls to numdifftools.Derivative. Likewise, the diagonal elements of the hessian matrix are merely pure second partial derivatives of a function. numdifftools.Hessdiag accomplishes this task, again calling numdifftools.Derivative multiple times. Efficient computation of the off-diagonal (mixed partial derivative) elements of the Hessian matrix uses a scheme much like that of numdifftools.Derivative, then Richardson extrapolation is used to improve a set of second order finite difference estimates of those mixed partials.
 
 Conclusion
 ##########
@@ -439,7 +448,7 @@ numdifftools.Derivative is an a adaptive scheme that can compute the derivative 
 Acknowledgments
 ###############
 
-My thanks are due to Shaun Simmons for convincing me to learn enough LaTeX to write this document.
+Thanks are due to John R. D’Errico for writing the first version of this document and `derivest` in which numdifftools is based on.
 
 References
 ##########
@@ -473,3 +482,7 @@ References
    given point. An even symmetry has the property that
    :math:`f(x) = f(-x)`. Likewise, an odd function expresses an odd
    symmetry, wherein :math:`f(x) = -f(-x)`.
+
+.. [3] For practical purposes the maximum order of the derivative is between 4 and 10
+	depending on the function to differentiate and also the method used
+	in the approximation.

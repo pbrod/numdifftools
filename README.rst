@@ -17,12 +17,12 @@ numerical differentiation problems in one or more variables. Finite differences
 are used in an adaptive manner, coupled with a Romberg extrapolation methodology
 to provide a maximally accurate result.
 The user can configure many options like; changing the order of the method or
-the extrapolation, even allowing the user to specify whether central, forward or
+the extrapolation, even allowing the user to specify whether complex-step, central, forward or
 backward differences are used.
 
 The methods provided are:
 
-- **Derivative**: Compute the derivatives of order 1 through 4 on any scalar function.
+- **Derivative**: Compute the derivatives of order 1 through 10 on any scalar function.
 
 - **Gradient**: Compute the gradient vector of a scalar function of one or more variables.
 
@@ -36,12 +36,19 @@ All of these methods also produce error estimates on the result.
 
 
 The documentation for numdifftools is available here http://numdifftools.readthedocs.org/
+
 Download the toolbox here: http://pypi.python.org/pypi/Numdifftools
 
 ----
 
 News
 """"
+2015
+----
+August 20
+^^^^^^^^^
+`New release of Numdifftools 0.9.0. <http://pypi.python.org/pypi/Numdifftools/0.9.0>`_
+
 2014
 ----
 December 18

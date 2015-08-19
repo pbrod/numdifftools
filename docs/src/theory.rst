@@ -1,5 +1,5 @@
-Theory
-======
+Numerical differentiation 
+=========================
 
 .. toctree::
     :maxdepth: 2
