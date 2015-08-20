@@ -24,6 +24,8 @@ Build wininstaller
 
   python setup.py bdist_wininst
 
+  python setup.py bdist_wheel --universal
+
 PyPi upload:
 
   python setup.py sdist bdist_wininst upload --show-response
