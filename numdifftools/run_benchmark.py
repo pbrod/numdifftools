@@ -1,11 +1,11 @@
 import numpy as np
 import time
 
-# import numdifftools as nd
+import numdifftools as nd
 import numdifftools.nd_algopy as nda
-import numdifftools.nd_cstep as ndc
+
 from collections import OrderedDict
-from numdifftools.nd_cstep import MinStepGenerator, MaxStepGenerator
+from numdifftools.core import MinStepGenerator, MaxStepGenerator
 import matplotlib.pyplot as pyplot
 
 
@@ -75,14 +75,14 @@ gradient_funs['algopy_forward'] = nda.Gradient(1, method='forward')
 # gradient_funs['numdifftools'] = nd.Gradient(1, **options)
 for method in ['forward', 'central', 'complex']:
     method2 = method + adaptiv_txt
-    gradient_funs[method] = ndc.Gradient(1, method=method, step=fixed_step)
-    gradient_funs[method2] = ndc.Gradient(1, method=method, step=epsilon)
+    gradient_funs[method] = nd.Gradient(1, method=method, step=fixed_step)
+    gradient_funs[method2] = nd.Gradient(1, method=method, step=epsilon)
 
 HessianFun = 'Hessdiag'
-ndcHessian = getattr(ndc, HessianFun)  # ndc.Hessian #
+ndcHessian = getattr(nd, HessianFun)  # ndc.Hessian #
 hessian_funs = OrderedDict()
 hessian_funs['algopy_forward'] = getattr(nda, HessianFun)(1, method='forward')
-# hessian_funs['numdifftools'] = getattr(nd, HessianFun)(1, **options)
+
 for method in ['forward', 'central', 'complex']:
     method2 = method + adaptiv_txt
     hessian_funs[method] = ndcHessian(1, method=method, step=fixed_step)

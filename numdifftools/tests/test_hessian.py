@@ -80,7 +80,8 @@ def _run_hamiltonian(verbose=True):
     # x=[0,0]
     # hessian = nd.Hessian(c.potential, step_max=1.0, step_nom=np.abs(xopt))
     step = nd.MaxStepGenerator(step_max=1e-1, num_steps=26)
-    hessian = nd.Hessian(c.potential, step=step, method='complex', full_output=True)
+    hessian = nd.Hessian(c.potential, step=step, method='complex',
+                         full_output=True)
     # hessian = algopy.Hessian(c.potential) # Does not work
     # hessian = scientific.Hessian(c.potential) # does not work
     H, info = hessian(xopt)

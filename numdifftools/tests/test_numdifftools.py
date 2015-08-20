@@ -6,7 +6,6 @@ import unittest
 import numdifftools.core as nd
 import numpy as np
 from numpy.testing import assert_array_almost_equal
-from numpy.testing.utils import assert_allclose
 
 
 class TestGlobalFunctions(unittest.TestCase):
@@ -307,7 +306,7 @@ class TestDerivative(unittest.TestCase):
                         print(error, info.error_estimate)
                     # self.assertTrue(small)
                     assert_array_almost_equal(y, true_val, decimal=4)
-        #self.assert_(False)
+        # self.assert_(False)
 
     def test_derivative_of_cos_x(self):
         x = np.r_[0, np.pi / 6.0, np.pi / 2.0]
@@ -332,9 +331,9 @@ class TestDerivative(unittest.TestCase):
                         print('method=%s, n=%d, order=%d' % (method, n, order))
                         print(error, info.error_estimate)
                     assert_array_almost_equal(y, true_val, decimal=4)
-                    #self.assertTrue(small.all())
-                    #assert_allclose(y, true_val)
-        #self.assert_(False)
+                    # self.assertTrue(small.all())
+                    # assert_allclose(y, true_val)
+        # self.assert_(False)
 
     def test_default_scale(self):
         for method, scale in zip(['complex', 'central', 'forward', 'backward',

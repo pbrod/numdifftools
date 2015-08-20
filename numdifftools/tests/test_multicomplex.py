@@ -6,7 +6,7 @@ Created on 22. apr. 2015
 import unittest
 # from functools import partial
 from numdifftools.multicomplex import bicomplex
-from numdifftools.test_functions import get_test_function
+from numdifftools.test_functions import get_function
 import numpy as np
 
 EPS = np.MachAr().eps
@@ -220,7 +220,7 @@ class BicomplexTester(unittest.TestCase):
 def _test_first_derivative(name):
     x = np.linspace(0.0001, 0.98, 5)
     h = _default_base_step(x, scale=2)
-    f, df = get_test_function(name, n=1)
+    f, df = get_function(name, n=1)
 
     der = f(bicomplex(x + h * 1j, 0)).imag1 / h
     der_true = df(x)
@@ -231,7 +231,7 @@ def _test_second_derivative(name):
     x = np.linspace(0.01, 0.98, 5)
     h = _default_base_step(x, scale=2.5)
     # h = 1e-8
-    f, df = get_test_function(name, n=2)
+    f, df = get_function(name, n=2)
 
     der = f(bicomplex(x + h * 1j, h)).imag12 / h**2
     der_true = df(x)

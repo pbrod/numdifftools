@@ -23,7 +23,7 @@ import numpy as np
 from collections import namedtuple
 from matplotlib import pyplot as plt
 from numdifftools.multicomplex import bicomplex
-from numdifftools.test_functions import get_test_function, function_names
+from numdifftools.test_functions import get_function  # , function_names
 from numpy import linalg
 from scipy import misc
 from scipy.ndimage.filters import convolve1d
@@ -31,7 +31,7 @@ import warnings
 
 __all__ = [
     'dea3', 'Derivative', 'Jacobian', 'Gradient', 'Hessian', 'Hessdiag',
-    'MinStepGenerator', 'MaxStepGenerator'
+    'MinStepGenerator', 'MaxStepGenerator', 'Richardson'
 ]
 # NOTE: we only do double precision internally so far
 _TINY = np.finfo(float).tiny
@@ -705,7 +705,7 @@ class Richardson(object):
     Example
     -------
     >>> import numpy as np
-    >>> import numdifftools.nd_cstep as nd
+    >>> import numdifftools as nd
     >>> n = 3
     >>> Ei = np.zeros((n,1))
     >>> h = np.zeros((n,1))
@@ -719,7 +719,7 @@ class Richardson(object):
     >>> (truErr, err, En)
     (array([[ -2.00805680e-04],
            [ -5.01999079e-05],
-           [ -1.25498825e-05]]), array([[ 0.00111851]]), array([[ 1.]]))
+           [ -1.25498825e-05]]), array([[ 0.00320501]]), array([[ 1.]]))
 
     '''
     def __init__(self, step_ratio=2.0, step=1, order=1, num_terms=2):
@@ -1021,11 +1021,11 @@ class Derivative(_Derivative):
     Examples
     --------
     >>> import numpy as np
-    >>> import numdifftools.nd_cstep as ndc
+    >>> import numdifftools as nd
 
     # 1'st derivative of exp(x), at x == 1
 
-    >>> fd = ndc.Derivative(np.exp)
+    >>> fd = nd.Derivative(np.exp)
     >>> np.allclose(fd(1), 2.71828183)
     True
 
@@ -1036,10 +1036,10 @@ class Derivative(_Derivative):
     >>> def f(x):
     ...     return x**3 + x**2
 
-    >>> df = ndc.Derivative(f)
+    >>> df = nd.Derivative(f)
     >>> np.allclose(df(1), 5)
     True
-    >>> ddf = ndc.Derivative(f, n=2)
+    >>> ddf = nd.Derivative(f, n=2)
     >>> np.allclose(ddf(1), 8)
     True
     """, see_also="""
@@ -1274,9 +1274,9 @@ class Gradient(Derivative):
     Examples
     --------
     >>> import numpy as np
-    >>> import numdifftools.nd_cstep as ndc
+    >>> import numdifftools as nd
     >>> fun = lambda x: np.sum(x**2)
-    >>> dfun = ndc.Gradient(fun)
+    >>> dfun = nd.Gradient(fun)
     >>> dfun([1,2,3])
     array([ 2.,  4.,  6.])
 
@@ -1285,7 +1285,7 @@ class Gradient(Derivative):
 
     >>> sin = np.sin; exp = np.exp
     >>> z = lambda xy: sin(xy[0]-xy[1]) + xy[1]*exp(xy[0])
-    >>> dz = ndc.Gradient(z)
+    >>> dz = nd.Gradient(z)
     >>> grad2 = dz([1, 1])
     >>> grad2
     array([ 3.71828183,  1.71828183])
@@ -1294,7 +1294,7 @@ class Gradient(Derivative):
     # compute the gradient. It should be essentially zero.
 
     >>> rosen = lambda x : (1-x[0])**2 + 105.*(x[1]-x[0]**2)**2
-    >>> rd = ndc.Gradient(rosen)
+    >>> rd = nd.Gradient(rosen)
     >>> grad3 = rd([1,1])
     >>> np.allclose(grad3,[0, 0])
     True""", see_also="""
@@ -1376,7 +1376,7 @@ class Jacobian(Gradient):
     """, example='''
      Examples
     --------
-    >>> import numdifftools.nd_cstep as ndc
+    >>> import numdifftools as nd
 
     #(nonlinear least squares)
 
@@ -1384,13 +1384,13 @@ class Jacobian(Gradient):
     >>> ydata = 1+2*np.exp(0.75*xdata)
     >>> fun = lambda c: (c[0]+c[1]*np.exp(c[2]*xdata) - ydata)**2
 
-    >>> Jfun = ndc.Jacobian(fun)
+    >>> Jfun = nd.Jacobian(fun)
     >>> val = Jfun([1,2,0.75])
     >>> np.allclose(val, np.zeros((10,3)))
     True
 
     >>> fun2 = lambda x : x[0]*x[1]*x[2] + np.exp(x[0])*x[1]
-    >>> Jfun3 = ndc.Jacobian(fun2)
+    >>> Jfun3 = nd.Jacobian(fun2)
     >>> Jfun3([3.,5.,7.])
     array([ 135.42768462,   41.08553692,   15.        ])
     ''', see_also="""
@@ -1423,9 +1423,9 @@ class Hessdiag(Derivative):
     Examples
     --------
     >>> import numpy as np
-    >>> import numdifftools.nd_cstep as ndc
+    >>> import numdifftools as nd
     >>> fun = lambda x : x[0] + x[1]**2 + x[2]**3
-    >>> Hfun = ndc.Hessdiag(fun, full_output=True)
+    >>> Hfun = nd.Hessdiag(fun, full_output=True)
     >>> hd, info = Hfun([1,2,3])
     >>> np.allclose(hd, [  0.,   2.,  18.])
     True
@@ -1524,12 +1524,12 @@ class Hessian(_Derivative):
     Examples
     --------
     >>> import numpy as np
-    >>> import numdifftools.nd_cstep as ndc
+    >>> import numdifftools as nd
 
     # Rosenbrock function, minimized at [1,1]
 
     >>> rosen = lambda x : (1.-x[0])**2 + 105*(x[1]-x[0]**2)**2
-    >>> Hfun = ndc.Hessian(rosen)
+    >>> Hfun = nd.Hessian(rosen)
     >>> h = Hfun([1, 1])
     >>> h
     array([[ 842., -420.],
@@ -1539,7 +1539,7 @@ class Hessian(_Derivative):
 
     >>> cos = np.cos
     >>> fun = lambda xy : cos(xy[0]-xy[1])
-    >>> Hfun2 = ndc.Hessian(fun)
+    >>> Hfun2 = nd.Hessian(fun)
     >>> h2 = Hfun2([0, 0])
     >>> h2
     array([[-1.,  1.],
@@ -1776,7 +1776,7 @@ def main():
 
 def _example3(x=0.0001, fun_name='cos', epsilon=None, method='central',
               scale=None, n=1, order=2):
-    fun0, dfun = get_test_function(fun_name, n)
+    fun0, dfun = get_function(fun_name, n)
     if dfun is None:
         return dict(n=n, order=order, method=method, fun=fun_name,
                     error=np.nan, scale=np.nan)
@@ -1824,7 +1824,7 @@ def _example3(x=0.0001, fun_name='cos', epsilon=None, method='central',
 
 def _example2(x=0.0001, fun_name='inv', epsilon=None, method='central',
               scale=None, n=1):
-    fun0, dfun = get_test_function(fun_name, n)
+    fun0, dfun = get_function(fun_name, n)
 
     fd = Derivative(fun0, step=epsilon, method=method, n=n)
     t = []
@@ -1845,7 +1845,7 @@ def _example(x=0.0001, fun_name='inv', epsilon=None, method='central',
              scale=None):
     '''
     '''
-    fun0, dfun = get_test_function(fun_name)
+    fun0, dfun = get_function(fun_name)
 
     h = _default_base_step(x, scale=2, epsilon=None)  # 1e-4
 

@@ -23,7 +23,7 @@ def ddcos(x):
     return -np.cos(x)
 
 
-def get_test_function(fun_name, n=1):
+def get_function(fun_name, n=1):
 
     sinh, cosh, tanh = np.sinh, np.cosh, np.tanh
     sin, cos, tan = np.sin, np.cos, np.tan
@@ -61,7 +61,7 @@ def get_test_function(fun_name, n=1):
                          ),
                  square=(lambda x: x * x,  # np.square,
                          lambda x: 2 * x,
-                         lambda x: 2 * np.ones_like(x)) +(
+                         lambda x: 2 * np.ones_like(x)) + (
                          lambda x: np.zeros_like(x),)*15,
                  exp=(np.exp,)*20,
                  expm1=(np.expm1,) + (np.exp,)*20,

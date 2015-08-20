@@ -88,15 +88,15 @@ class Derivative(_Common):
     >>> import numpy as np
     >>> import numdifftools.nd_algopy as nda
     >>> fd = nda.Derivative(np.exp)              # 1'st derivative
-    >>> fd(1)
-    array(2.718281828459045)
+    >>> np.allclose(fd(1), 2.718281828459045)
+    True
 
     # 1'st derivative of x.^3+x.^4, at x = [0,1]
 
     >>> fun = lambda x: x**3 + x**4
     >>> fd3 = nda.Derivative(fun)
-    >>> fd3([0,1])          #  True derivatives: [0,7]
-    array([ 0.,  7.])
+    >>> np.allclose(fd3([0,1]), [ 0.,  7.])
+    True
 
     See also
     --------

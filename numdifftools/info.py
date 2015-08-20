@@ -11,15 +11,22 @@ whether complex-step, central, forward or backward differences are used. The
 methods provided
 are:
 
-*Derivative:* Computate derivatives of order 1 through 10 on any scalar function.
+*Derivative:*
+    Computates the derivative of order 1 through 10 on any scalar function.
 
-*Gradient:* Computes the gradient vector of a scalar function of one or more variables.
+*Gradient:*
+    Computes the gradient vector of a scalar function of one or more variables.
 
-*Jacobian:* Computes the Jacobian matrix of a vector valued function of one or more variables.
+*Jacobian:*
+    Computes the Jacobian matrix of a vector valued function of one or more
+    variables.
 
-*Hessian:* Computes the Hessian matrix of all 2nd partial derivatives of a scalar function of one or more variables.
+*Hessian:*
+    Computes the Hessian matrix of all 2nd partial derivatives of a scalar
+    function of one or more variables.
 
-*Hessdiag:* Computes only the diagonal elements of the Hessian matrix
+*Hessdiag:*
+    Computes only the diagonal elements of the Hessian matrix
 
 All of these methods also produce error estimates on the result.
 
@@ -41,8 +48,10 @@ Compute 1'st and 2'nd derivative of exp(x), at x == 1::
     >>> import numdifftools as nd
     >>> fd = nd.Derivative(np.exp)        # 1'st derivative
     >>> fdd = nd.Derivative(np.exp, n=2)  # 2'nd derivative
-    >>> fd(1)
-    array([ 2.71828183])
+    >>> np.allclose(fd(1), 2.7182818284590424)
+    True
+    >>> np.allclose(fdd(1), 2.7182818284590424)
+    True
 
 Nonlinear least squares::
 
@@ -50,17 +59,8 @@ Nonlinear least squares::
     >>> ydata = 1+2*np.exp(0.75*xdata)
     >>> fun = lambda c: (c[0]+c[1]*np.exp(c[2]*xdata) - ydata)**2
     >>> Jfun = nd.Jacobian(fun)
-    >>> np.abs(Jfun([1,2,0.75])) < 1e-14 # should be numerically zero
-    array([[ True,  True,  True],
-           [ True,  True,  True],
-           [ True,  True,  True],
-           [ True,  True,  True],
-           [ True,  True,  True],
-           [ True,  True,  True],
-           [ True,  True,  True],
-           [ True,  True,  True],
-           [ True,  True,  True],
-           [ True,  True,  True]], dtype=bool)
+    >>> np.allclose(np.abs(Jfun([1,2,0.75])), 0) # should be numerically zero
+    True
 
 Compute gradient of sum(x**2)::
 
