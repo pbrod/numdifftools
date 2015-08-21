@@ -810,19 +810,20 @@ _cmn_doc = """
     %(returns)s
     Notes
     -----
-    The complex-step derivative has truncation error O(steps**2) and
-    O(steps**4) for odd and even order derivatives respectively, so
-    truncation error can be eliminated by choosing steps to be very small.
+    The complex-step derivative has truncation error O(steps**2) for `n=1` and
+    O(steps**4) for `n` larger, so truncation error can be eliminated by
+    choosing steps to be very small.
     Especially the first order complex-step derivative avoids the problem of
     round-off error with small steps because there is no subtraction. However,
-    the function needs to be analytic. This method does not work if f(x) does
+    the function needs to be analytic. This method fails if f(x) does
     not support complex numbers or involves non-analytic functions such as
     e.g.: abs, max, min.
     For this reason the 'central' method is the default method.
     This method is usually very accurate, but sometimes one can only allow
     evaluation in forward or backward direction.
 
-    Be careful in decreasing the step size too much due to round-off errors.
+    For all methods one should be careful in decreasing the step size too much
+    due to round-off errors.
     %(extra_note)s
     References
     ----------
@@ -850,7 +851,7 @@ class _Derivative(object):
 
     def __init__(self, f, step=None, method='central',  order=2, n=1,
                  full_output=False):
-        self.fun = f
+        self.f = f
         self.n = n
         self.order = order
         self.method = method
@@ -945,7 +946,7 @@ class _Derivative(object):
 
     def _get_functions(self):
         name = self._get_function_name()
-        return getattr(self, name), self.fun
+        return getattr(self, name), self.f
 
     def _get_steps(self, xi):
         method, n, order = self.method, self.n, self._method_order
