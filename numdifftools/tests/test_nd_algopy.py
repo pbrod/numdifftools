@@ -181,37 +181,38 @@ class TestJacobian(unittest.TestCase):
     def test_on_scalar_function(self):
         def f2(x):
             return x[0] * x[1] * x[2] + np.exp(x[0]) * x[1]
-        Jfun3 = nd.Jacobian(f2)
-        x = Jfun3([3., 5., 7.])
-        assert_array_almost_equal(x, [135.42768462, 41.08553692, 15.])
+        for method in ['forward', 'reverse']:
+            Jfun3 = nd.Jacobian(f2, method=method)
+            x = Jfun3([3., 5., 7.])
+            assert_array_almost_equal(x, [[135.42768462, 41.08553692, 15.]])
 
-#     def test_on_vector_valued_function(self):
-#         xdata = np.reshape(np.arange(0, 1, 0.1), (-1, 1))
-#         ydata = 1 + 2 * np.exp(0.75 * xdata)
-#
-#         def fun(c):
-#             return (c[0] + c[1] * np.exp(c[2] * xdata) - ydata) ** 2
-#
-#         for method in ['forward', ]:  # 'reverse']:
-#
-#             Jfun = nd.Jacobian(fun, method=method)
-#             J = Jfun([1, 2, 0.75])  # should be numerically zero
-#             assert_array_almost_equal(J, np.zeros(J.shape))
+    def test_on_vector_valued_function(self):
+        xdata = np.reshape(np.arange(0, 1, 0.1), (-1, 1))
+        ydata = 1 + 2 * np.exp(0.75 * xdata)
+
+        def fun(c):
+            return (c[0] + c[1] * np.exp(c[2] * xdata) - ydata) ** 2
+
+        for method in ['reverse']:  # 'forward', 'reverse']:
+
+            Jfun = nd.Jacobian(fun, method=method)
+            J = Jfun([1, 2, 0.75])  # should be numerically zero
+            assert_array_almost_equal(J, np.zeros(J.shape))
 
 
 class TestGradient(unittest.TestCase):
 
-    def testgradient(self):
+    def test_on_scalar_function(self):
         def fun(x):
             return np.sum(x ** 2)
+
         dtrue = [2., 4., 6.]
 
-        for method in ['forward', ]:  # 'reverse',
+        for method in ['forward', 'reverse']:  #
 
             dfun = nd.Gradient(fun, method=method)
             d = dfun([1, 2, 3])
             assert_array_almost_equal(d, dtrue)
-        # self.assert_(False)
 
 
 class TestHessdiag(unittest.TestCase):

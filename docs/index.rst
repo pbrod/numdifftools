@@ -10,11 +10,13 @@ Contents
 ========
 
 .. toctree::
-    :maxdepth: 3
+    :maxdepth: 4
 	 
 	 Overview <src/overview>
 
 	 Numerical differentiation <src/theory>
+
+    Automatic differentiation <src/ad>
 
     License <license>
     Module Reference <_rst/modules>

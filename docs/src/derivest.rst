@@ -360,7 +360,7 @@ A neat trick to compute the statistical uncertainty in the estimate of our desir
 
 This critical level will yield a two-sided confidence interval of 95 percent.
 
-These error estimates are also of value in a different sense. Since they are efficiently generated at all the different scales, the particular spacing which yields the minimum predicted error is chosen as the best derivative estimate. This has been shown to work consistently well. A spacing too large tends to have large errors of approximation due to the finite difference schemes used. But a too small spacing is bad also, in that we see a significant amplification of least significant fit errors in the approximation. A middle value generally seems to yield quite good results. For example, Derivative will estimate the derivative of :math:`e^x` automatically. As we see, the final overall spacing used was 0.02166085.
+These error estimates are also of value in a different sense. Since they are efficiently generated at all the different scales, the particular spacing which yields the minimum predicted error is chosen as the best derivative estimate. This has been shown to work consistently well. A spacing too large tends to have large errors of approximation due to the finite difference schemes used. But a too small spacing is bad also, in that we see a significant amplification of least significant fit errors in the approximation. A middle value generally seems to yield quite good results. For example, Derivative will estimate the derivative of :math:`e^x` automatically. As we see, the final overall spacing used was 0.0078125.
 
     >>> import numdifftools as nd
     >>> from numpy import exp, allclose
@@ -448,7 +448,7 @@ numdifftools.Derivative is an a adaptive scheme that can compute the derivative 
 Acknowledgments
 ###############
 
-Thanks are due to John R. D’Errico for writing the first version of this document and `derivest` in which numdifftools is based on.
+Thanks are due to John R. D`Errico for writing the first version of this document and `derivest` in which numdifftools is based on.
 
 References
 ##########

@@ -1,5 +1,56 @@
 '''
-Easy to use interface to derivatives in algopy
+Numdifftools.nd_algopy
+======================
+This module provide an easy to use interface to derivatives calculated with
+AlgoPy. Algopy stands for Algorithmic Differentiation in Python.
+
+The purpose of AlgoPy is the evaluation of higher-order derivatives in the
+forward and reverse mode of Algorithmic Differentiation (AD) of functions that
+are implemented as Python programs. Particular focus are functions that contain
+numerical linear algebra functions as they often appear in statistically
+motivated functions. The intended use of AlgoPy is for easy prototyping at
+reasonable execution speeds. More precisely, for a typical program a
+directional derivative takes order 10 times as much time as time as the
+function evaluation. This is approximately also true for the gradient.
+
+
+Algoritmic differentiation
+==========================
+
+Algorithmic differentiation (AD) is a set of techniques to numerically
+evaluate the derivative of a function specified by a computer program. AD
+exploits the fact that every computer program, no matter how complicated,
+executes a sequence of elementary arithmetic operations (addition,
+subtraction, multiplication, division, etc.) and elementary functions
+(exp, log, sin, cos, etc.). By applying the chain rule repeatedly to these
+operations, derivatives of arbitrary order can be computed automatically,
+accurately to working precision, and using at most a small constant factor
+more arithmetic operations than the original program.
+
+Algorithmic differentiation is not:
+
+Symbolic differentiation, nor Numerical differentiation (the method of
+finite differences). These classical methods run into problems:
+symbolic differentiation leads to inefficient code (unless carefully done)
+and faces the difficulty of converting a computer program into a single
+expression, while numerical differentiation can introduce round-off errors
+in the discretization process and cancellation. Both classical methods have
+problems with calculating higher derivatives, where the complexity and
+errors increase. Finally, both classical methods are slow at computing the
+partial derivatives of a function with respect to many inputs, as is needed
+for gradient-based optimization algorithms. Algoritmic differentiation
+solves all of these problems.
+
+References
+----------
+Sebastian F. Walter and Lutz Lehmann 2013,
+"Algorithmic differentiation in Python with AlgoPy",
+in Journal of Computational Science, vol 4, no 5, pp 334 - 344,
+http://www.sciencedirect.com/science/article/pii/S1877750311001013
+
+https://en.wikipedia.org/wiki/Automatic_differentiation
+
+https://pythonhosted.org/algopy/index.html
 '''
 from __future__ import division
 import numpy as np
@@ -11,108 +62,80 @@ except ImportError:
     algopy = None
 
 
+_cmn_doc = """
+    Calculate %(derivative)s with Algorithmic Differentiation method
+
+    Parameters
+    ----------
+    f : function
+       function of one array f(x, `*args`, `**kwds`)%(extra_parameter)s
+    method : string, optional {'forward', 'reverse'}
+        defines method used in the approximation
+    %(returns)s
+    Notes
+    -----
+    Algorithmic differentiation is a set of techniques to numerically
+    evaluate the derivative of a function specified by a computer program. AD
+    exploits the fact that every computer program, no matter how complicated,
+    executes a sequence of elementary arithmetic operations (addition,
+    subtraction, multiplication, division, etc.) and elementary functions
+    (exp, log, sin, cos, etc.). By applying the chain rule repeatedly to these
+    operations, derivatives of arbitrary order can be computed automatically,
+    accurately to working precision, and using at most a small constant factor
+    more arithmetic operations than the original program.
+    %(extra_note)s
+    References
+    ----------
+    Sebastian F. Walter and Lutz Lehmann 2013,
+    "Algorithmic differentiation in Python with AlgoPy",
+    in Journal of Computational Science, vol 4, no 5, pp 334 - 344,
+    http://www.sciencedirect.com/science/article/pii/S1877750311001013
+
+    https://en.wikipedia.org/wiki/Automatic_differentiation
+
+    %(example)s
+    %(see_also)s
+    """
+
+
 class _Common(object):
     def __init__(self, f, method='forward'):
         self.f = f
         self.method = method
-        self.initialize()
 
-    def _initialize_reverse(self, x):
-        # x = np.asarray(x, dtype=float)
-        # self.x = x.copy()
+    def _initialize_reverse(self, x, *args, **kwds):
         # STEP 1: trace the function evaluation
         cg = algopy.CGraph()
-        if True:
-            x = algopy.Function(x)
-            # x = [x]
-        else:
-            x = np.array([algopy.Function(x[i]) for i in range(len(x))])
+        x = algopy.Function(x)
 
-        y = self.f(x)
+        y = self.f(x, *args, **kwds)
+        # y = UTPM.as_utpm(z)
         cg.trace_off()
         cg.independentFunctionList = [x]
         cg.dependentFunctionList = [y]
         self._cg = cg
 
-    def initialize(self):
-        if self.method.startswith('reverse'):
-            # reverse mode using a computational graph
-            # self._initialize_reverse(x)
-            self._gradient = self._gradient_reverse
-            self._hessian = self._hessian_reverse
-            self._jacobian = self._jacobian_reverse
-        else:  # forward mode without building the computational graph
-            self._gradient = self._gradient_forward
-            self._hessian = self._hessian_forward
-            self._jacobian = self._gradient_forward
+    def _get_function(self):
+        name = '_' + self.method
+        return getattr(self, name)
 
-    def _derivative(self, x):
-        xi = np.asarray(x, dtype=float)
-        shape0 = xi.shape
-        y = np.array([self._gradient(xj) for xj in xi.ravel()])
-        return y.reshape(shape0)
-
-    def _jacobian_reverse(self, x):
-        self._initialize_reverse(x)
-        return self._cg.jacobian([np.asarray(x)])
-
-    def _gradient_reverse(self, x):
-        self._initialize_reverse(x)
-        return self._cg.gradient([np.asarray(x)])
-
-    def _hessian_reverse(self, x):
-        self._initialize_reverse(x)
-        return self._cg.hessian([np.asarray(x)])
-        # return self._cg.hessian([x])
-
-    def _jacobian_forward(self, x):
-        x = np.asarray(x)
-        # shape = x.shape
-        D, Nm = 2, x.size
-        P = Nm
-        y = UTPM(np.zeros((D, P, Nm)))
-
-        y.data[0, :] = x.ravel()
-        y.data[1, :] = np.eye(Nm)
-        z0 = self.f(y)
-        z = UTPM.as_utpm(z0)
-        J = z.data[1, :, :, 0]
-        return J
-
-    def _gradient_forward(self, x):
-        # forward mode without building the computational graph
-
-        tmp = algopy.UTPM.init_jacobian(np.asarray(x, dtype=float))
-        tmp2 = self.f(tmp)
-        return algopy.UTPM.extract_jacobian(tmp2)
-
-    def _hessian_forward(self, x):
-        tmp = algopy.UTPM.init_hessian(np.asarray(x, dtype=float))
-        tmp2 = self.f(tmp)
-        return algopy.UTPM.extract_hessian(len(x), tmp2)
+    def __call__(self, x0, *args, **kwds):
+        fun = self._get_function()
+        return fun(x0, *args, **kwds)
 
 
-class Derivative(object):
-    '''
-    Estimate n'th derivative of f at x0
-
-     Parameters
-    ----------
-    f : function
-       function of one array f(x, `*args`, `**kwargs`)
+class Derivative(_Common):
+    __doc__ = _cmn_doc % dict(
+        derivative='n-th derivative',
+        extra_parameter="""
     n : int, optional
-        Order of the derivative.
-
-    Call Parameters
-    ---------------
-    x : array_like
-       value at which function derivative is evaluated
-    args : tuple
-        Arguments for function `f`.
-    kwds : dict
-        Keyword arguments for function `f`.
-
-
+        Order of the derivative.""",
+        extra_note="", returns="""
+    Returns
+    -------
+    der : ndarray
+       array of derivatives
+    """, example='''
     Examples
     --------
     # 1'st and 2'nd derivative of exp(x), at x == 1
@@ -132,25 +155,28 @@ class Derivative(object):
     >>> fd3 = nda.Derivative(f)
     >>> np.allclose(fd3([0,1]), [ 0.,  7.])
     True
-
+    ''', see_also='''
     See also
     --------
     Gradient,
     Hessdiag,
     Hessian,
     Jacobian
-    '''
+    ''')
 
     def __init__(self, f, n=1, method='forward'):
         self.f = f
         self.n = n
         self.method = method
 
-    def derivative(self, x0, *args, **kwds):
-        return self(x0, *args, **kwds)
+    def _derivative(self, x):
+        xi = np.asarray(x, dtype=float)
+        shape0 = xi.shape
+        y = np.array([self._gradient(xj) for xj in xi.ravel()])
+        return y.reshape(shape0)
 
-    def __call__(self, x0, *args, **kwds):
-        x0 = np.asarray(x0)
+    def _forward(self, x, *args, **kwds):
+        x0 = np.asarray(x)
         shape = x0.shape
         P = 1
         x = UTPM(np.zeros((self.n + 1, P) + shape))
@@ -163,22 +189,16 @@ class Derivative(object):
 
 
 class Jacobian(_Common):
-    '''Estimate Jacobian matrix
-
-    The Jacobian matrix is the matrix of all first-order partial derivatives
-    of a vector-valued function.
-
-    Assumptions
-    -----------
-    f : (vector valued)
-        analytical function to differentiate.
-        f must be a function of the vector or array x0.
-
-    x0 : vector location at which to differentiate f
-        If x0 is an N x M array, then f is assumed to be
-        a function of N*M variables.
-
-    Examples
+    __doc__ = _cmn_doc % dict(
+        derivative='Jacobian',
+        extra_parameter="",
+        extra_note="", returns="""
+    Returns
+    -------
+    jacob : array
+        Jacobian
+    """, example='''
+     Examples
     --------
     >>> import numdifftools.nd_algopy as nda
 
@@ -194,8 +214,8 @@ class Jacobian(_Common):
            [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
            [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]])
 
-    Jfun2 = Jacobian(f, method='reverse')
-    Jfun2([1,2,0.75]) # should be numerically zero
+    >>> Jfun2 = Jacobian(f, method='reverse')
+    >>> Jfun2([1,2,0.75]).T # should be numerically zero
     array([[ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
            [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
            [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]])
@@ -203,78 +223,62 @@ class Jacobian(_Common):
     >>> f2 = lambda x : x[0]*x[1]*x[2] + np.exp(x[0])*x[1]
     >>> Jfun3 = nda.Jacobian(f2)
     >>> Jfun3([3.,5.,7.])
-    array([ 135.42768462,   41.08553692,   15.        ])
+    array([[ 135.42768462,   41.08553692,   15.        ]])
 
-    Jfun4 = nda.Jacobian(f2, method='reverse')
-    Jfun4([3,5,7])
-
+    >>> Jfun4 = nda.Jacobian(f2, method='reverse')
+    >>> Jfun4([3,5,7])
+    array([[ 135.42768462,   41.08553692,   15.        ]])
+    ''', see_also='''
     See also
     --------
+    Derivative
     Gradient,
-    Derivative,
     Hessdiag,
-    Hessian
-    '''
-    def __call__(self, x0):
-        return self.jacobian(x0)
+    Hessian,
+    ''')
 
-    def jacobian(self, x0):
-        '''
-        Return Jacobian matrix of a vector valued function of n variables
+    def _jacobian_forward(self, x, *args, **kwds):
+        x = np.asarray(x, dtype=float)
+        # shape = x.shape
+        D, Nm = 2, x.size
+        P = Nm
+        y = UTPM(np.zeros((D, P, Nm)))
 
+        y.data[0, :] = x.ravel()
+        y.data[1, :] = np.eye(Nm)
+        z0 = self.f(y, *args, **kwds)
+        z = UTPM.as_utpm(z0)
+        J = z.data[1, :, :, 0]
+        return J
 
-        Parameter
-        ---------
-        x0 : vector
-            location at which to differentiate f.
-            If x0 is an nxm array, then f is assumed to be
-            a function of n*m variables.
+    def _forward(self, x, *args, **kwds):
+        # forward mode without building the computational graph
+        x0 = np.asarray(x, dtype=float)
+        tmp = algopy.UTPM.init_jacobian(x0)
+        y = self.f(tmp, *args, **kwds)
+        return np.atleast_2d(algopy.UTPM.extract_jacobian(y))
 
-        Member variable used
-        --------------------
-        f : (vector valued) analytical function to differentiate.
-                f must be a function of the vector or array x0.
-
-        Returns
-        -------
-        jac : array-like
-           first partial derivatives of f. Assuming that x0
-           is a vector of length p and f returns a vector
-           of length n, then jac will be an array of size (n,p)
-
-        err - vector
-            of error estimates corresponding to each partial
-            derivative in jac.
-
-        See also
-        --------
-        Derivative,
-        Gradient,
-        Hessian,
-        Hessdiag
-        '''
-        return self._jacobian(x0)
+    def _reverse(self, x, *args, **kwds):
+        x = np.asarray(x, dtype=float)
+        self._initialize_reverse(x, *args, **kwds)
+        return self._cg.jacobian(x)
 
 
 class Gradient(_Common):
-    '''Estimate gradient of f at x0
-
-    Assumptions
-    -----------
-      f - SCALAR analytical function to differentiate.
-            fun must be a function of the vector or array x0,
-            but it needs not to be vectorized.
-
-      x0  - vector location at which to differentiate f
-            If x0 is an N x M array, then f is assumed to be
-            a function of N*M variables.
-
-
+    _doc__ = _cmn_doc % dict(
+        derivative='Gradient',
+        extra_parameter="",
+        extra_note="", returns="""
+    Returns
+    -------
+    grad : array
+        gradient
+    """, example='''
     Examples
     --------
     >>> import numdifftools.nd_algopy as nda
     >>> f = lambda x: np.sum(x**2)
-    >>> df = nda.Gradient(f)
+    >>> df = nda.Gradient(f, method='reverse')
     >>> df([1,2,3])
     array([ 2.,  4.,  6.])
 
@@ -296,38 +300,38 @@ class Gradient(_Common):
     >>> grad3 = rd([1,1])
     >>> grad3==np.array([ 0.,  0.])
     array([ True,  True], dtype=bool)
-
+    ''', see_also='''
     See also
     --------
-    Derivative, Hessdiag, Hessian, Jacobian
-    '''
+    Derivative
+    Jacobian,
+    Hessdiag,
+    Hessian,
+    ''')
 
-    def gradient(self, x0):
-        ''' Gradient vector of an analytical function of n variables
-        '''
-        return self._gradient(x0)
+    def _reverse(self, x, *args, **kwds):
+        x = np.asarray(x, dtype=float)
+        self._initialize_reverse(x, *args, **kwds)
+        return self._cg.gradient(x)
 
-    def __call__(self, x):
-        return self._gradient(x)
+    def _forward(self, x, *args, **kwds):
+        # forward mode without building the computational graph
+        x0 = np.asarray(x, dtype=float)
+        tmp = algopy.UTPM.init_jacobian(x0)
+        y = self.f(tmp, *args, **kwds)
+        return algopy.UTPM.extract_jacobian(y)
 
 
 class Hessian(_Common):
-    ''' Estimate Hessian matrix
-
-    HESSIAN estimate the matrix of 2nd order partial derivatives of a real
-    valued function FUN evaluated at X0.
-
-    Assumptions
-    -----------
-    f : SCALAR analytical function
-        to differentiate. f must be a function of the vector or array x0,
-        but it needs not to be vectorized.
-
-    x0 : vector location
-        at which to differentiate f
-        If x0 is an N x M array, then f is assumed to be a function
-        of N*M variables.
-
+    __doc__ = _cmn_doc % dict(
+        derivative='Hessian',
+        extra_parameter="",
+        returns="""
+    Returns
+    -------
+    hess : ndarray
+       array of partial second derivatives, Hessian
+    """, extra_note='', example='''
     Examples
     --------
     >>> import numdifftools.nd_algopy as nda
@@ -351,50 +355,42 @@ class Hessian(_Common):
     array([[-1.,  1.],
            [ 1., -1.]])
 
-    Hfun3 = Hessian(f, method='reverse') # TODO: Hfun3 fails in this case
-    h3 = Hfun3([0, 0]) # h2 = [-1, 1; 1, -1];
-    h3
-    array([[[-1.,  1.],
-            [ 1., -1.]]])
-
+    >>> Hfun3 = Hessian(f, method='reverse')
+    >>> h3 = Hfun3([0, 0]) # h2 = [-1, 1; 1, -1];
+    >>> h3
+    array([[-1.,  1.],
+           [ 1., -1.]])
+    ''', see_also='''
     See also
     --------
+    Derivative
     Gradient,
-    Derivative,
+    Jacobian,
     Hessdiag,
-    Jacobian
-    '''
+    ''')
 
-    def hessian(self, x0):
-        '''Hessian matrix i.e., array of 2nd order partial derivatives
+    def _forward(self, x, *args, **kwds):
+        x0 = np.asarray(x, dtype=float)
+        tmp = algopy.UTPM.init_hessian(x0)
+        y = self.f(tmp, *args, **kwds)
+        return algopy.UTPM.extract_hessian(len(x0), y)
 
-        See also
-        --------
-        derivative, gradient, hessdiag, jacobian
-        '''
-        return self._hessian(x0)
-
-    def __call__(self, x):
-        return self._hessian(x)
+    def _reverse(self, x, *args, **kwds):
+        x = np.asarray(x, dtype=float)
+        self._initialize_reverse(x, *args, **kwds)
+        return self._cg.hessian(x)
 
 
 class Hessdiag(Hessian):
-    ''' Estimate Hessian matrix
-
-    HESSIAN estimate the matrix of 2nd order partial derivatives of a real
-    valued function FUN evaluated at X0.
-
-    Assumptions
-    -----------
-    f : SCALAR analytical function
-        to differentiate. f must be a function of the vector or array x0,
-        but it needs not to be vectorized.
-
-    x0 : vector location
-        at which to differentiate f
-        If x0 is an N x M array, then f is assumed to be a function
-        of N*M variables.
-
+    __doc__ = _cmn_doc % dict(
+        derivative='Hessian diagonal',
+        extra_parameter="",
+        returns="""
+    Returns
+    -------
+    hessdiag : ndarray
+       Hessian diagonal array of partial second order derivatives.
+    """, extra_note='', example='''
     Examples
     --------
     >>> import numdifftools.nd_algopy as nda
@@ -416,23 +412,22 @@ class Hessdiag(Hessian):
     >>> h2
     array([-1., -1.])
 
-    Hfun3 = Hessdiag(f, method='reverse') # TODO: Hfun3 fails in this case
-    h3 = Hfun3([0, 0]) # h2 = [-1, -1];
-    h3
+    >>> Hfun3 = Hessdiag(f, method='reverse')
+    >>> h3 = Hfun3([0, 0]) # h2 = [-1, -1];
+    >>> h3
     array([-1., -1.])
 
+    ''', see_also='''
     See also
     --------
+    Derivative
     Gradient,
-    Derivative,
-    Hessdiag,
-    Jacobian
-    '''
+    Jacobian,
+    Hessian,
+    ''')
 
-    def __call__(self, x):
-        return np.diag(self._hessian(x))
-
-
+    def __call__(self, x, *args, **kwds):
+        return np.diag(super(Hessdiag, self).__call__(x, *args, **kwds))
 
 
 def _example_taylor():
@@ -455,4 +450,4 @@ def test_docstrings():
 
 if __name__ == '__main__':
     test_docstrings()
-    #_example_taylor()
+    # _example_taylor()
