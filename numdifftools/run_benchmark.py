@@ -32,32 +32,38 @@ def plot_errors(error_objects, problem_sizes, symbols):
 
         pyplot.ylabel(r'Absolute error $\|g_{ref} - g\|$')
         pyplot.xlabel('problem size $N$')
+        pyplot.ylim(loglimits(results))
         pyplot.grid()
         leg = pyplot.legend(loc=1)
         frame = leg.get_frame()
         frame.set_alpha(0.4)
-        pyplot.gca().set_ylim(1e-16, 1e-3)
         pyplot.savefig(title.lower().replace(' ', '_') + '.png', format='png')
 
 
 def plot_runtimes(run_time_objects, problem_sizes, symbols):
-    plottime = pyplot.plot
+    plottime = pyplot.loglog
     for title, funcs, results in run_time_objects:
         ref_sol = results[0]
         pyplot.figure()
         pyplot.title(title)
         for i, method in enumerate(funcs):
-            plottime(problem_sizes, results[i] / ref_sol, symbols[i],
+            plottime(problem_sizes, results[i], symbols[i],
                      markerfacecolor='None', label=method)
 
-        pyplot.ylabel('Relative time $t$')
+        pyplot.ylabel('time $t$')
         pyplot.xlabel('problem size $N$')
+        pyplot.xlim(loglimits(problem_sizes))
+        pyplot.ylim(loglimits(results))
         pyplot.grid()
         leg = pyplot.legend(loc=1)
         frame = leg.get_frame()
         frame.set_alpha(0.4)
-        pyplot.gca().set_ylim(0, 10)
         pyplot.savefig(title.lower().replace(' ', '_') + '.png', format='png')
+
+def loglimits(data, border=0.05):
+    low, high = np.min(data), np.max(data)
+    scale = (high/low)**border
+    return low/scale, high*scale
 
 
 options = dict(step_ratio=2., step_num=15, vectorized=True, method='forward')
