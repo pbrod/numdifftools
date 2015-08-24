@@ -16,10 +16,10 @@ Contents
 
 	 Numerical differentiation <src/theory>
 
-    Automatic differentiation <src/ad>
+    Algorithmic differentiation <src/ad.rst>
 
     License <license>
-    Module Reference <_rst/modules>
+    Module Reference <src/module_reference/modules>
 
 
 Indices and tables

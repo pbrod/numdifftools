@@ -158,7 +158,7 @@ This approximation is still subject to difference errors, but the error associat
 See [LaiCrassidisCheng2005]_ and [Ridout2009]_ for more details.
 The complex-step derivative in numdifftools.Derivative has truncation error 
 :math:`O(\delta^4)` for both odd and even order derivatives for :math:`n>1`. For :math:`n=1`
-the truncation error is on the order of :math:`O(\delta^4)`, so
+the truncation error is on the order of :math:`O(\delta^2)`, so
 truncation error can be eliminated by choosing steps to be very small.  The first order complex-step derivative avoids the problem of
 round-off error with small steps because there is no subtraction. However,
 the function to differentiate needs to be analytic. This method does not work if it does
@@ -300,12 +300,12 @@ We shall now indicate how we can calculate the multiple term Richardson extrapol
 This equation has the form
 
 .. math::
-    \phi(\delta) = L + a_1 \delta^2 + a_2 \delta^4 + a_3 \delta^6 +
+    \phi(\delta) = L + a_0 \delta^2 + a_1 \delta^4 + a_2 \delta^6 + ...
     :label: 18
 
 where L stands for :math:`f'(x_0)` and :math:`\phi(\delta)` for the numerical differentiation formula :math:`f_{odd}(\delta)/\delta`.
 
-By neglecting higher order terms and inserting three different stepsizes into :eq:`16`, eg :math:`\delta, \delta/2, \delta/4`, we get a set of linear equations:
+By neglecting higher order terms (:math:`a_3 \delta^8`) and inserting three different stepsizes into :eq:`18`, eg :math:`\delta, \delta/2, \delta/4`, we get a set of linear equations:
 
 .. math::
     \begin{bmatrix}
@@ -315,8 +315,8 @@ By neglecting higher order terms and inserting three different stepsizes into :e
     \end{bmatrix}
     \begin{bmatrix}
         L \\
-        \delta^2 a_1 \\
-        \delta^4 a_2
+        \delta^2 a_0 \\
+        \delta^4 a_1
     \end{bmatrix} =
     \begin{bmatrix}
         \phi(\delta) \\
@@ -330,8 +330,8 @@ The solution of these equations are simply:
 .. math::
     \begin{bmatrix}
         L \\
-        \delta^2 a_1 \\
-        \delta^4 a_2
+        \delta^2 a_0 \\
+        \delta^4 a_1
     \end{bmatrix} =  \frac{1}{45}
     \begin{bmatrix}
         1 & 20 & 64 \\

@@ -207,3 +207,6 @@ def rep_by_pep440(ver):
     else:
         ver["version"] = ver["version"].split('-')[0]
     return ver
+
+if __name__ == '__main__':
+    get_versions()

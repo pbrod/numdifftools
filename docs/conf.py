@@ -34,8 +34,9 @@ apidoc.main(cmd_line.split(" "))
 # needs_sphinx = '1.0'
 
 # Add any Sphinx extension module names here, as strings. They can be
-# extensions coming with Sphinx (named 'sphinx.ext.*') or your custom ones. 'sphinx.ext.mathjax',
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.autosummary',
+# extensions coming with Sphinx (named 'sphinx.ext.*') or your custom ones. 
+# , , 'sphinx.ext.mathjax',
+extensions = ['sphinx.ext.autodoc','sphinx.ext.autosummary',
               'sphinx.ext.doctest', 'sphinx.ext.pngmath', 
               'sphinx.ext.intersphinx', 'sphinx.ext.todo',
               'sphinx.ext.viewcode', 'sphinx.ext.coverage',

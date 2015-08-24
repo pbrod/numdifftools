@@ -1,2 +1,2 @@
 .. automodule:: numdifftools.nd_algopy
-   :members: 
+   :members: __doc__
