@@ -1,9 +1,10 @@
 import numpy as np
-import time
+import timeit
 
 import numdifftools as nd
 import numdifftools.nd_algopy as nda
-
+from algopy import dot
+# from numpy import dot
 from collections import OrderedDict
 from numdifftools.core import MinStepGenerator, MaxStepGenerator
 import matplotlib.pyplot as pyplot
@@ -16,8 +17,8 @@ class BenchmarkFunction(object):
 
     def __call__(self, xi):
         x = np.array(xi)
-        tmp = np.dot(self.A, x)
-        return 0.5 * np.dot(x * x, tmp)
+        tmp = dot(self.A, x)
+        return 0.5 * dot(x * x, tmp)
 
 
 def plot_errors(error_objects, problem_sizes, symbols):
@@ -34,7 +35,7 @@ def plot_errors(error_objects, problem_sizes, symbols):
         pyplot.xlabel('problem size $N$')
         pyplot.ylim(loglimits(results))
         pyplot.grid()
-        leg = pyplot.legend(loc=1)
+        leg = pyplot.legend(loc=7)
         frame = leg.get_frame()
         frame.set_alpha(0.4)
         pyplot.savefig(title.lower().replace(' ', '_') + '.png', format='png')
@@ -43,7 +44,6 @@ def plot_errors(error_objects, problem_sizes, symbols):
 def plot_runtimes(run_time_objects, problem_sizes, symbols):
     plottime = pyplot.loglog
     for title, funcs, results in run_time_objects:
-        ref_sol = results[0]
         pyplot.figure()
         pyplot.title(title)
         for i, method in enumerate(funcs):
@@ -55,20 +55,16 @@ def plot_runtimes(run_time_objects, problem_sizes, symbols):
         pyplot.xlim(loglimits(problem_sizes))
         pyplot.ylim(loglimits(results))
         pyplot.grid()
-        leg = pyplot.legend(loc=1)
+        leg = pyplot.legend(loc=2)
         frame = leg.get_frame()
         frame.set_alpha(0.4)
         pyplot.savefig(title.lower().replace(' ', '_') + '.png', format='png')
+
 
 def loglimits(data, border=0.05):
     low, high = np.min(data), np.max(data)
     scale = (high/low)**border
     return low/scale, high*scale
-
-
-options = dict(step_ratio=2., step_num=15, vectorized=True, method='forward')
-# method = {'numdifftools': 0, 'scientific': 1,
-#           'algopy_reverse': 2, 'algopy_forward': 3}
 
 
 fixed_step = MinStepGenerator(num_steps=1, use_exact_steps=True, offset=0)
@@ -77,17 +73,19 @@ epsilon = MaxStepGenerator(num_steps=14, use_exact_steps=True,
 adaptiv_txt = '_adaptive_%d_%s_%d' % (epsilon.num_steps,
                                       str(epsilon.step_ratio), epsilon.offset)
 gradient_funs = OrderedDict()
-gradient_funs['algopy_forward'] = nda.Gradient(1, method='forward')
-# gradient_funs['numdifftools'] = nd.Gradient(1, **options)
+nda_method = 'forward'
+nda_txt = 'algopy_' + nda_method
+gradient_funs[nda_txt] = nda.Jacobian(1, method=nda_method)
+# gradient_funs['numdifftools'] = nd.Jacobian(1, **options)
 for method in ['forward', 'central', 'complex']:
     method2 = method + adaptiv_txt
-    gradient_funs[method] = nd.Gradient(1, method=method, step=fixed_step)
-    gradient_funs[method2] = nd.Gradient(1, method=method, step=epsilon)
+    gradient_funs[method] = nd.Jacobian(1, method=method, step=fixed_step)
+    gradient_funs[method2] = nd.Jacobian(1, method=method, step=epsilon)
 
 HessianFun = 'Hessdiag'
 ndcHessian = getattr(nd, HessianFun)  # ndc.Hessian #
 hessian_funs = OrderedDict()
-hessian_funs['algopy_forward'] = getattr(nda, HessianFun)(1, method='forward')
+hessian_funs[nda_txt] = getattr(nda, HessianFun)(1, method=nda_method)
 
 for method in ['forward', 'central', 'complex']:
     method2 = method + adaptiv_txt
@@ -105,13 +103,13 @@ def compute_gradients(gradient_funs, problem_sizes):
         ref_g = None
         f = BenchmarkFunction(N)
         for i, (_key, gradient_f) in enumerate(gradient_funs.iteritems()):
-            t = time.time()
+            t = timeit.default_timer()
             gradient_f.f = f
-            preproc_time = time.time() - t
-            t = time.time()
+            preproc_time = timeit.default_timer() - t
+            t = timeit.default_timer()
             x = 3 * np.ones(N)
             val = gradient_f(x)
-            run_time = time.time() - t
+            run_time = timeit.default_timer() - t
             if ref_g is None:
                 ref_g = val
                 err = 0
@@ -138,13 +136,13 @@ def compute_hessians(hessian_funs, problem_sizes):
         ref_h = None
         f = BenchmarkFunction(N)
         for i, (_key, hessian_f) in enumerate(hessian_funs.iteritems()):
-            t = time.time()
+            t = timeit.default_timer()
             hessian_f.f = f
-            preproc_time = time.time() - t
-            t = time.time()
+            preproc_time = timeit.default_timer() - t
+            t = timeit.default_timer()
             x = 3 * np.ones(N)
             val = hessian_f(x)
-            run_time = time.time() - t
+            run_time = timeit.default_timer() - t
             if ref_h is None:
                 ref_h = val
                 err = 0.0
@@ -171,11 +169,11 @@ if __name__ == '__main__':
 
     print(results_gradients.shape)
 
-    run_time_objects = [('Gradient run times',
+    run_time_objects = [('Jacobian run times',
                          gradient_funs, results_gradients[..., 0].T),
                         ('Hessian run times',
                          hessian_funs, results_hessians[..., 0].T)]
-    error_objects = [('Gradient errors',
+    error_objects = [('Jacobian errors',
                       gradient_funs, results_gradients[..., 1].T),
                      ('Hessian errors',
                       hessian_funs, results_hessians[..., 1].T)]

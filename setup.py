@@ -193,6 +193,7 @@ def setup_package():
 
     # Some helper variables
     version = versioneer.get_version()
+    print(version)
     docs_path = os.path.join(__location__, "docs")
     docs_build_path = os.path.join(docs_path, "_build")
     install_reqs = get_install_requirements("requirements.txt")

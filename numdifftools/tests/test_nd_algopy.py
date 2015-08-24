@@ -120,60 +120,71 @@ class TestHessian(unittest.TestCase):
 
 class TestDerivative(unittest.TestCase):
 
-#     def test_infinite_functions(self):
-#         def finf(x):
-#             return np.inf * np.ones_like(x)
-#         df = nd.Derivative(finf)
-#         val = df(0)
-#         self.assert_(np.isnan(val))
+    # TODO: Derivative does not tackle non-finite values.
+    #     def test_infinite_functions(self):
+    #         def finf(x):
+    #             return np.inf * np.ones_like(x)
+    #         df = nd.Derivative(finf, method='forward')
+    #         val = df(0)
+    #         self.assert_(np.isnan(val))
 
     def test_high_order_derivative_cos(self):
         true_vals = (-1.0, 0.0, 1.0, 0.0) * 5
 
         x = np.pi / 2  # np.linspace(0, np.pi/2, 15)
-        for n in range(1, 15):
-            d3cos = nd.Derivative(np.cos, n=n)
-            y = d3cos(x)
-            assert_array_almost_equal(y, true_vals[n - 1])
+        for method in ['forward', 'reverse']:
+            nmax = 15 if method in ['forward'] else 2
+            for n in range(1, nmax):
+                d3cos = nd.Derivative(np.cos, n=n, method=method)
+                y = d3cos(x)
+                assert_array_almost_equal(y, true_vals[n - 1])
 
     def test_derivative_cube(self):
         '''Test for Issue 7'''
         def cube(x):
             return x * x * x
-        dcube = nd.Derivative(cube)
+
         shape = (3, 2)
         x = np.ones(shape) * 2
-        dx = dcube(x)
-        assert_array_almost_equal(list(dx.shape), list(shape),
-                                  decimal=13,
-                                  err_msg='Shape mismatch')
-        txt = 'First differing element %d\n value = %g,\n true value = %g'
-        for i, (val, tval) in enumerate(zip(dx.ravel(), (3 * x**2).ravel())):
-            assert_array_almost_equal(val, tval, decimal=8,
-                                      err_msg=txt % (i, val, tval))
+        for method in ['forward', 'reverse']:
+            dcube = nd.Derivative(cube, method=method)
+            dx = dcube(x)
+            assert_array_almost_equal(list(dx.shape), list(shape),
+                                      decimal=13,
+                                      err_msg='Shape mismatch')
+            txt = 'First differing element %d\n value = %g,\n true value = %g'
+            for i, (val, tval) in enumerate(zip(dx.ravel(),
+                                                (3 * x**2).ravel())):
+                assert_array_almost_equal(val, tval, decimal=8,
+                                          err_msg=txt % (i, val, tval))
 
     def test_derivative_exp(self):
         # derivative of exp(x), at x == 0
-        dexp = nd.Derivative(np.exp)
-        assert_array_almost_equal(dexp(0), np.exp(0), decimal=8)
+        for method in ['forward', 'reverse']:
+            dexp = nd.Derivative(np.exp, method=method)
+            assert_array_almost_equal(dexp(0), np.exp(0), decimal=8)
 
     def test_derivative_sin(self):
         # Evaluate the indicated (default = first)
         # derivative at multiple points
-        dsin = nd.Derivative(np.sin)
-        x = np.linspace(0, 2. * np.pi, 13)
-        y = dsin(x)
-        np.testing.assert_almost_equal(y, np.cos(x), decimal=8)
+        for method in ['forward', 'reverse']:
+            dsin = nd.Derivative(np.sin, method=method)
+            x = np.linspace(0, 2. * np.pi, 13)
+            y = dsin(x)
+            np.testing.assert_almost_equal(y, np.cos(x), decimal=8)
 
     def test_derivative_on_sinh(self):
-        dsinh = nd.Derivative(np.sinh, method='forward')
-        self.assertAlmostEqual(dsinh(0.0), np.cosh(0.0))
+        for method in ['forward', ]:  # 'reverse']: # TODO: reverse fails
+            dsinh = nd.Derivative(np.sinh, method=method)
+            self.assertAlmostEqual(dsinh(0.0), np.cosh(0.0))
 
     def test_derivative_on_log(self):
 
-        dlog = nd.Derivative(np.log)
-        x = 0.01
-        self.assertAlmostEqual(dlog(x), 1.0 / x)
+        x = np.r_[0.01, 0.1]
+        for method in ['forward', 'reverse']:
+            dlog = nd.Derivative(np.log, method=method)
+
+            assert_array_almost_equal(dlog(x), 1.0 / x)
 
 
 class TestJacobian(unittest.TestCase):
@@ -193,7 +204,7 @@ class TestJacobian(unittest.TestCase):
         def fun(c):
             return (c[0] + c[1] * np.exp(c[2] * xdata) - ydata) ** 2
 
-        for method in ['reverse']:  # 'forward', 'reverse']:
+        for method in ['reverse']:  # TODO: 'forward' fails
 
             Jfun = nd.Jacobian(fun, method=method)
             J = Jfun([1, 2, 0.75])  # should be numerically zero
@@ -226,6 +237,14 @@ class TestHessdiag(unittest.TestCase):
         _error = hd - htrue
         assert_array_almost_equal(hd, htrue)
 
+    def test_reverse(self):
+        def fun(x):
+            return x[0] + x[1] ** 2 + x[2] ** 3
+        htrue = np.array([0., 2., 18.])
+        Hfun = nd.Hessdiag(fun, method='reverse')
+        hd = Hfun([1, 2, 3])
+        _error = hd - htrue
+        assert_array_almost_equal(hd, htrue)
 
 if __name__ == '__main__':
     # _run_hamiltonian()

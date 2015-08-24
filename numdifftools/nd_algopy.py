@@ -102,18 +102,30 @@ class _Common(object):
     def __init__(self, f, method='forward'):
         self.f = f
         self.method = method
+        self._computational_graph = None
 
-    def _initialize_reverse(self, x, *args, **kwds):
-        # STEP 1: trace the function evaluation
-        cg = algopy.CGraph()
-        x = algopy.Function(x)
+    @property
+    def f(self):
+        return self._f
 
-        y = self.f(x, *args, **kwds)
-        # y = UTPM.as_utpm(z)
-        cg.trace_off()
-        cg.independentFunctionList = [x]
-        cg.dependentFunctionList = [y]
-        self._cg = cg
+    @f.setter
+    def f(self, f):
+        self._f = f
+        self._computational_graph = None
+
+    def computational_graph(self, x, *args, **kwds):
+        if self._computational_graph is None:
+            # STEP 1: trace the function evaluation
+            cg = algopy.CGraph()
+            x = algopy.Function(x)
+
+            y = self.f(x, *args, **kwds)
+            # y = UTPM.as_utpm(z)
+            cg.trace_off()
+            cg.independentFunctionList = [x]
+            cg.dependentFunctionList = [y]
+            self._computational_graph = cg
+        return self._computational_graph
 
     def _get_function(self):
         name = '_' + self.method
@@ -169,23 +181,27 @@ class Derivative(_Common):
         self.n = n
         self.method = method
 
-    def _derivative(self, x):
-        xi = np.asarray(x, dtype=float)
-        shape0 = xi.shape
-        y = np.array([self._gradient(xj) for xj in xi.ravel()])
-        return y.reshape(shape0)
-
     def _forward(self, x, *args, **kwds):
-        x0 = np.asarray(x)
+        x0 = np.asarray(x, dtype=float)
         shape = x0.shape
         P = 1
         x = UTPM(np.zeros((self.n + 1, P) + shape))
         x.data[0, 0] = x0
         x.data[1, 0] = 1
-
-        y = UTPM.as_utpm(self.f(x, *args, **kwds))
+        z = self.f(x, *args, **kwds)
+        y = UTPM.as_utpm(z)
 
         return y.data[self.n, 0] * misc.factorial(self.n)
+
+    def _reverse(self, x, *args, **kwds):
+        if self.n != 1:
+            raise NotImplementedError('Derivative reverse not implemented'
+                                      ' for n>1')
+        x = np.asarray(x, dtype=float)
+        c_graph = self.computational_graph(np.asarray(1), *args, **kwds)
+        shape0 = x.shape
+        y = np.array([c_graph.gradient(xi) for xi in x.ravel()])
+        return y.reshape(shape0)
 
 
 class Jacobian(_Common):
@@ -260,12 +276,12 @@ class Jacobian(_Common):
 
     def _reverse(self, x, *args, **kwds):
         x = np.asarray(x, dtype=float)
-        self._initialize_reverse(x, *args, **kwds)
-        return self._cg.jacobian(x)
+        c_graph = self.computational_graph(x, *args, **kwds)
+        return c_graph.jacobian(x)
 
 
 class Gradient(_Common):
-    _doc__ = _cmn_doc % dict(
+    __doc__ = _cmn_doc % dict(
         derivative='Gradient',
         extra_parameter="",
         extra_note="", returns="""
@@ -311,8 +327,8 @@ class Gradient(_Common):
 
     def _reverse(self, x, *args, **kwds):
         x = np.asarray(x, dtype=float)
-        self._initialize_reverse(x, *args, **kwds)
-        return self._cg.gradient(x)
+        c_graph = self.computational_graph(x, *args, **kwds)
+        return c_graph.gradient(x)
 
     def _forward(self, x, *args, **kwds):
         # forward mode without building the computational graph
@@ -377,8 +393,8 @@ class Hessian(_Common):
 
     def _reverse(self, x, *args, **kwds):
         x = np.asarray(x, dtype=float)
-        self._initialize_reverse(x, *args, **kwds)
-        return self._cg.hessian(x)
+        c_graph = self.computational_graph(x, *args, **kwds)
+        return c_graph.hessian(x)
 
 
 class Hessdiag(Hessian):
@@ -426,8 +442,41 @@ class Hessdiag(Hessian):
     Hessian,
     ''')
 
-    def __call__(self, x, *args, **kwds):
-        return np.diag(super(Hessdiag, self).__call__(x, *args, **kwds))
+    def _forward(self, x, *args, **kwds):
+        # return np.diag(super(Hessdiag, self)._forward(x, *args, **kwds))
+        x = np.asarray(x, dtype=float)
+
+        D, Nm = 2+1, x.size
+        P = Nm
+        y = UTPM(np.zeros((D, P, Nm)))
+
+        y.data[0, :] = x.ravel()
+        y.data[1, :] = np.eye(Nm)
+        z0 = self.f(y, *args, **kwds)
+        z = UTPM.as_utpm(z0)
+        H = z.data[2, ...] * 2
+        return H
+
+    def _reverse(self, x, *args, **kwds):
+        return np.diag(super(Hessdiag, self)._reverse(x, *args, **kwds))
+
+
+def hessian_forward():
+    def f(x, *args, **kwds):
+        return x[0] + x[1] ** 2 + x[2] ** 3
+    x = np.asarray([1, 2, 3], dtype=float)
+    # shape = x.shape
+    D, Nm = 2+1, x.size
+    P = Nm
+    y = UTPM(np.zeros((D, P, Nm)))
+
+    y.data[0, :] = x.ravel()
+    y.data[1, :] = np.eye(Nm)
+
+    z0 = f(y)
+    z = UTPM.as_utpm(z0)
+    J = z.data[2, ...] * 2
+    return J
 
 
 def _example_taylor():
@@ -449,5 +498,6 @@ def test_docstrings():
 
 
 if __name__ == '__main__':
-    test_docstrings()
+    hessian_forward()
+    #test_docstrings()
     # _example_taylor()
