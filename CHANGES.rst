@@ -4,21 +4,23 @@ Changelog
 
 Created with gitcommand: git shortlog v0.9.2..v0.9.3
 
+
 Version 0.9.3
-===========
+=============
+
 Paul Kienzle (1):
       more useful benchmark plots
 
 pbrod (7):
-      Update README.rst
+      Fixed bugs and updated docs.
     	Major rewrite of the easy to use interface to Algopy:     
 		   Added possibility to calculate n'th order derivative not just for n=1 in nd_algopy.     
          Added tests to the easy to use interface to algopy
-		Fixed bugs and updated docs.
 
 
 Version 0.9.2
-===========
+=============
+
 pbrod (3):
       Updated documentation
       Added parenthesis to a call to the print function
@@ -33,18 +35,13 @@ Christoph Deil (1):
 
 pbrod (47):
       Total remake of numdifftools with slightly different call syntax.
-      Highlights:
-         Can compute derivatives of higher order than 4 (up to 10-14 order depending on function, method and order). 
-      Updated documentation and tests accordingly.
-		
-      Fixed a bug in dea3  
-      Added StepsGenerator as an replacement for the adaptive option
-      Added bicomplex class for testing the complex step second derivative.
-      
-      Added fornberg_weights_all for computing optimal finite difference rules in a stable way.
-      Made numdifftools/core.Derivative more general and now allows derivatives of higher order than 4.
-      
-      Added higher order complex step derivative methods
+         Can compute derivatives of order up to 10-14 depending on function and method used. 
+         Updated documentation and tests accordingly.
+         Fixed a bug in dea3  
+         Added StepsGenerator as an replacement for the adaptive option
+         Added bicomplex class for testing the complex step second derivative.
+         Added fornberg_weights_all for computing optimal finite difference rules in a stable way.
+         Added higher order complex step derivative methods
       
 
 Version 0.7.7
@@ -54,10 +51,9 @@ pbrod (35):
       Got travis-ci working in order to run the tests automatically.
       Fixed bugs in Dea class
       Fixed better error estimate for the Hessian
-
-      Restructerd folders of numdifftools
       Fixed tests for python 2.6
       Adding tests as subpackage
+      Restructerd folders of numdifftools
 
 
 Version 0.7.0
@@ -75,8 +71,7 @@ Version 0.6.0
 pbrod (20):
       Update and rename README.md to README.rst
       Simplified call to Derivative: removed step_fix     
-		Deleted unused code
-      
+		Deleted unused code      
       Simplified and Refactored. Now possible to choose step_num=1
       Changed default step_nom from max(abs(x0), 0.2) to max(log2(abs(x0)), 0.2)
       pep8ified code and made sure that all tests pass.
@@ -109,6 +104,7 @@ pbrod (1)
 
 Version 0.3.4
 =============
+
 pbrod (11)
       Made automatic choice for the stepsize more robust.
       Added easy to use interface to the algopy and scientificpython modules

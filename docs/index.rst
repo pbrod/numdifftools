@@ -21,7 +21,6 @@ Contents
    changes.rst
    license.rst
    authors.rst
-   src/_rst/modules.rst   
 
 
 Indices and tables

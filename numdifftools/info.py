@@ -79,6 +79,7 @@ Compute gradient of sum(x**2)::
 Compute the same with AlgoPy
 
     >>> import numdifftools.nd_algopy as nda
+    >>> import numpy as np
     >>> fd = nda.Derivative(np.exp)        # 1'st derivative
     >>> fdd = nda.Derivative(np.exp, n=2)  # 2'nd derivative
     >>> np.allclose(fd(1), 2.7182818284590424)

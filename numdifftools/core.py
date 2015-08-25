@@ -1259,7 +1259,8 @@ class Gradient(Derivative):
                                        order=order, full_output=full_output)
     __doc__ = _cmn_doc % dict(
         derivative='Gradient',
-        extra_parameter="""order : int, optional
+        extra_parameter="""
+    order : int, optional
         defines the order of the error term in the Taylor approximation used.
         For 'central' and 'complex' methods, it must be an even number.""",
         returns="""
@@ -1357,7 +1358,8 @@ class Gradient(Derivative):
 class Jacobian(Gradient):
     __doc__ = _cmn_doc % dict(
         derivative='Jacobian',
-        extra_parameter="""order : int, optional
+        extra_parameter="""
+    order : int, optional
         defines the order of the error term in the Taylor approximation used.
         For 'central' and 'complex' methods, it must be an even number.""",
         returns="""
@@ -1509,18 +1511,22 @@ class Hessian(_Derivative):
        array of partial second derivatives, Hessian
     """, extra_note="""
     Computes the Hessian according to method as:
-    'forward', Eq. (7):
-        1/(d_j*d_k) * ((f(x + d[j]*e[j] + d[k]*e[k]) - f(x + d[j]*e[j])))
-    'central', Eq. (9):
-        1/(4*d_j*d_k) * ((f(x + d[j]*e[j] + d[k]*e[k]) -
-                          f(x + d[j]*e[j] - d[k]*e[k])) -
-                         (f(x - d[j]*e[j] + d[k]*e[k]) -
-                          f(x - d[j]*e[j] - d[k]*e[k]))
-    'complex', Eq. (10):
-        1/(2*d_j*d_k) * imag(f(x + i*d[j]*e[j] + d[k]*e[k]) -
-                            f(x + i*d[j]*e[j] - d[k]*e[k]))
-    where e[j] is a vector with element j == 1 and the rest are zero and
-    d[i] is steps[i].
+    'forward' :eq:`7`, 'central' :eq:`9` and 'complex' :eq:`10`:
+
+    .. math::
+        \quad ((f(x + d_j e_j + d_k e_k) - f(x + d_j e_j))) / (d_j d_k)
+        :label: 7
+
+    .. math::
+        \quad  ((f(x + d_j e_j + d_k e_k) - f(x + d_j e_j - d_k e_k)) -  (f(x - d_j e_j + d_k e_k) - f(x - d_j e_j - d_k e_k)) / (4 d_j d_k)
+        :label: 9
+
+    .. math::
+        imag(f(x + i d_j e_j + d_k e_k) - f(x + i d_j e_j - d_k e_k)) /(2 d_j d_k)
+        :label: 10
+
+    where :math:`e_j` is a vector with element :math:`j` is one and the rest
+    are zero and :math:`d_j` is a scalar spacing :math:`steps_j`.
     """, example="""
     Examples
     --------
