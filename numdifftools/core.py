@@ -29,10 +29,8 @@ from scipy import misc
 from scipy.ndimage.filters import convolve1d
 import warnings
 
-__all__ = [
-    'dea3', 'Derivative', 'Jacobian', 'Gradient', 'Hessian', 'Hessdiag',
-    'MinStepGenerator', 'MaxStepGenerator', 'Richardson'
-]
+__all__ = ['dea3', 'Derivative', 'Jacobian', 'Gradient', 'Hessian', 'Hessdiag',
+           'MinStepGenerator', 'MaxStepGenerator', 'Richardson']
 # NOTE: we only do double precision internally so far
 _TINY = np.finfo(float).tiny
 _EPS = np.finfo(float).eps
@@ -779,21 +777,16 @@ _cmn_doc = """
     Parameters
     ----------
     f : function
-       function of one array f(x, `*args`, `**kwargs`)
+       function of one array f(x, `*args`, `**kwds`)
     step : float, array-like or StepGenerator object, optional
-       Spacing used, if None, then the spacing is automatically chosen
-       according to (10*EPS)**(1/scale)*max(log(1+|x|), 1) where scale is
-       depending on method and derivative-order (see default_scale).
-       A StepGenerator can be used to extrapolate the results. However,
-       the generator must generate minimum 3 steps in order to extrapolate
-       the values.
-    method : string, optional
-        defines method used in the approximation
-        'central': central difference derivative
-        'complex': complex-step derivative
-        'multicomplex': multicomplex derivative
-        'backward': backward difference derivative
-        'forward': forward difference derivative%(extra_parameter)s
+       Defines the spacing used in the approximation.
+       Default is  MinStepGenerator(base_step=step, step_ratio=None)
+       if step or method in in ['complex', 'multicomplex'], otherwise
+       MaxStepGenerator(step_ratio=None, num_extrap=14)
+       The results are extrapolated if the StepGenerator generate more than 3
+       steps.
+    method : {'central', 'complex', 'multicomplex', 'forward', 'backward'}
+        defines the method used in the approximation%(extra_parameter)s
     full_output : bool, optional
         If `full_output` is False, only the derivative is returned.
         If `full_output` is True, then (der, r) is returned `der` is the
@@ -810,17 +803,21 @@ _cmn_doc = """
     %(returns)s
     Notes
     -----
+    Complex methods are usually the most accurate provided the function to
+    differentiate is analytic. The complex-step methods also requires fewer
+    steps than the other methods and can work very close to the support of
+    a function.
     The complex-step derivative has truncation error O(steps**2) for `n=1` and
     O(steps**4) for `n` larger, so truncation error can be eliminated by
     choosing steps to be very small.
     Especially the first order complex-step derivative avoids the problem of
     round-off error with small steps because there is no subtraction. However,
-    the function needs to be analytic. This method fails if f(x) does
-    not support complex numbers or involves non-analytic functions such as
-    e.g.: abs, max, min.
-    For this reason the 'central' method is the default method.
-    This method is usually very accurate, but sometimes one can only allow
-    evaluation in forward or backward direction.
+    this method fails if f(x) does not support complex numbers or involves
+    non-analytic functions such as e.g.: abs, max, min.
+    Central difference methods are almost as accurate and has no restriction on
+    type of function. For this reason the 'central' method is the default
+    method, but sometimes one can only allow evaluation in forward or backward
+    direction.
 
     For all methods one should be careful in decreasing the step size too much
     due to round-off errors.
@@ -1078,9 +1075,12 @@ class Derivative(_Derivative):
     Note on order: higher order methods will generally be more accurate,
              but may also suffer more from numerical problems. First order
              methods would usually not be recommended.
-    Note on method: Central difference methods are usually the most accurate,
-            but sometimes one can only allow evaluation in forward or backward
-            direction.
+    Complex methods are usually the most accurate provided the function to
+        differentiate is analytic. The complex-step methods also requires fewer
+        steps than the other methods and can work very close to the support of
+        a function. Central difference methods are almost as accurate and has
+        no restriction on type of function, but sometimes one can only allow
+        evaluation in forward or backward direction.
 
 
     """

@@ -209,4 +209,4 @@ def rep_by_pep440(ver):
     return ver
 
 if __name__ == '__main__':
-    get_versions()
+    print(get_versions())

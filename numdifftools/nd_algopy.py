@@ -498,6 +498,6 @@ def test_docstrings():
 
 
 if __name__ == '__main__':
-    hessian_forward()
-    #test_docstrings()
+    # hessian_forward()
+    test_docstrings()
     # _example_taylor()

@@ -3,6 +3,7 @@
 *.py[cod]
 *.so
 *.cfg
+!setup.cfg
 *.orig
 *.log
 *.pot
@@ -19,7 +20,7 @@ __pycache__/*
 
 # Package files
 *.egg
-.eggs
+*.eggs/
 .installed.cfg
 *.egg-info
 

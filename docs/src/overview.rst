@@ -1,2 +1,2 @@
 .. automodule:: numdifftools.info
-   :members: 
+   :members: __doc__

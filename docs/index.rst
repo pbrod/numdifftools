@@ -1,25 +1,27 @@
 ============
-Numdifftools
 ============
 
 This is the documentation of **Numdifftools**.
 
-Code and issue tracker is at https://github.com/pbrod/numdifftools .
+Code and issue tracker is at https://github.com/pbrod/numdifftools.
+
+Latest release is at
+http://pypi.python.org/pypi/Numdifftools.
+
 
 Contents
 ========
 
 .. toctree::
-    :maxdepth: 4
-	 
-	 Overview <src/overview>
+   :maxdepth: 4
 
-	 Numerical differentiation <src/theory>
-
-    Algorithmic differentiation <src/ad.rst>
-
-    License <license>
-    Module Reference <src/module_reference/modules>
+   src/overview.rst
+   src/numerical/main.rst
+   src/algorithmic/main.rst
+   changes.rst
+   license.rst
+   authors.rst
+   src/_rst/modules.rst   
 
 
 Indices and tables
