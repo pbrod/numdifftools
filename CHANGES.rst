@@ -5,6 +5,15 @@ Changelog
 Created with gitcommand: git shortlog v0.9.2..v0.9.3
 
 
+Version 0.9.10
+=============
+
+pbrod (7):
+      Fixed sphinx-build and updated docs.
+      Added more tests to nd_algopy
+      Dropped support for Python 2.6
+
+
 Version 0.9.4
 =============
 
