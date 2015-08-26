@@ -1,4 +1,4 @@
-============
+Numdifftools
 ============
 
 This is the documentation of **Numdifftools** version |version|. 
