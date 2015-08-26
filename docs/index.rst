@@ -1,7 +1,7 @@
 ============
 ============
 
-This is the documentation of **Numdifftools**.
+This is the documentation of **Numdifftools** version |version|. 
 
 Code and issue tracker is at https://github.com/pbrod/numdifftools.
 

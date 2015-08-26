@@ -8,6 +8,9 @@ Numdifftools
 .. image:: https://travis-ci.org/pbrod/numdifftools.svg?branch=master
     :target: https://travis-ci.org/pbrod/numdifftools
 
+.. image:: https://readthedocs.org/projects/pip/badge/?version=latest
+    :target: http://numdifftools.readthedocs.org/en/latest/
+
 Suite of tools written in `_Python <http://www.python.org/>`_ to solve automatic
 numerical differentiation problems in one or more variables. Finite differences
 are used in an adaptive manner, coupled with a Richardson extrapolation methodology
