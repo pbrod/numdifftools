@@ -141,7 +141,7 @@ def prepare_console_scripts(dct):
 
 
 def prepare_extras_require(dct):
-    return {k: [r.strip() for r in v.split(',')] for k, v in dct.items()}
+    return dict((k, [r.strip() for r in v.split(',')]) for k, v in dct.items())
 
 
 def prepare_data_files(dct):

@@ -102,7 +102,7 @@ def compute_gradients(gradient_funs, problem_sizes):
         results_gradient = np.zeros((num_methods, 3))
         ref_g = None
         f = BenchmarkFunction(N)
-        for i, (_key, gradient_f) in enumerate(gradient_funs.iteritems()):
+        for i, (_key, gradient_f) in enumerate(gradient_funs.items()):
             t = timeit.default_timer()
             gradient_f.f = f
             preproc_time = timeit.default_timer() - t
@@ -135,7 +135,7 @@ def compute_hessians(hessian_funs, problem_sizes):
         results_hessian = np.zeros((num_methods, 3))
         ref_h = None
         f = BenchmarkFunction(N)
-        for i, (_key, hessian_f) in enumerate(hessian_funs.iteritems()):
+        for i, (_key, hessian_f) in enumerate(hessian_funs.items()):
             t = timeit.default_timer()
             hessian_f.f = f
             preproc_time = timeit.default_timer() - t
