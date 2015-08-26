@@ -230,7 +230,7 @@ class Jacobian(_Common):
            [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
            [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]])
 
-    >>> Jfun2 = Jacobian(f, method='reverse')
+    >>> Jfun2 = nda.Jacobian(f, method='reverse')
     >>> Jfun2([1,2,0.75]).T # should be numerically zero
     array([[ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
            [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
@@ -371,7 +371,7 @@ class Hessian(_Common):
     array([[-1.,  1.],
            [ 1., -1.]])
 
-    >>> Hfun3 = Hessian(f, method='reverse')
+    >>> Hfun3 = nda.Hessian(f, method='reverse')
     >>> h3 = Hfun3([0, 0]) # h2 = [-1, 1; 1, -1];
     >>> h3
     array([[-1.,  1.],
@@ -428,7 +428,7 @@ class Hessdiag(Hessian):
     >>> h2
     array([-1., -1.])
 
-    >>> Hfun3 = Hessdiag(f, method='reverse')
+    >>> Hfun3 = nda.Hessdiag(f, method='reverse')
     >>> h3 = Hfun3([0, 0]) # h2 = [-1, -1];
     >>> h3
     array([-1., -1.])
