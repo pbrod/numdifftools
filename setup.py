@@ -248,7 +248,7 @@ def setup_package():
           classifiers=metadata['classifiers'],
           test_suite=TESTS_PATH,
           packages=setuptools.find_packages(),
-          packages=setuptools.find_packages(exclude=['tests', 'tests.*']),
+          # packages=setuptools.find_packages(exclude=['tests', 'tests.*']),
           namespace_packages=namespace,
           install_requires=install_reqs,
           setup_requires=['six', 'setuptools_scm'] + pytest_runner,
