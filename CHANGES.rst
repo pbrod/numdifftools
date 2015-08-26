@@ -5,6 +5,13 @@ Changelog
 Created with gitcommand: git shortlog v0.9.2..v0.9.3
 
 
+Version 0.9.4
+=============
+
+pbrod (7):
+      Fixed sphinx-build and updated docs.
+
+
 Version 0.9.3
 =============
 

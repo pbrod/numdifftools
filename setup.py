@@ -233,7 +233,9 @@ def setup_package():
                     'build_dir': ('setup.py', docs_build_path),
                     'config_dir': ('setup.py', docs_path),
                     'source_dir': ('setup.py', docs_path),
-                    'builder': ('setup.py', 'doctest')}
+                    'builder': ('setup.py', 'doctest')},
+        'tests': {'test_suite': ('setup.py', TESTS_PATH),
+                 'cov': ('setup.py', 'numdifftools')}
     }
 
     setup(name=package,
@@ -245,6 +247,7 @@ def setup_package():
           long_description=read('README.rst'),
           classifiers=metadata['classifiers'],
           test_suite=TESTS_PATH,
+          packages=setuptools.find_packages(),
           packages=setuptools.find_packages(exclude=['tests', 'tests.*']),
           namespace_packages=namespace,
           install_requires=install_reqs,
