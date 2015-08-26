@@ -219,7 +219,7 @@ def build_cmd_docs():
 def setup_package():
     docs_path = os.path.join(__location__, "docs")
     docs_build_path = os.path.join(docs_path, "_build")
-    needs_pytest = {'pytest', 'test', 'ptr'}.intersection(sys.argv)
+    needs_pytest = set(('pytest', 'test', 'ptr')).intersection(sys.argv)
     pytest_runner = ['pytest-runner'] if needs_pytest else []
     install_reqs = get_install_requirements("requirements.txt")
     metadata, console_scripts, extras_require, data_files = read_setup_cfg()
