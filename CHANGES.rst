@@ -4,6 +4,13 @@ Changelog
 
 Created with gitcommand: git shortlog v0.9.2..v0.9.3
 
+Version 0.9.11
+==============
+
+pbrod (2):
+      Fixed sphinx-build and updated docs.
+      Fixed issue #9 Backward differentiation method fails with additional parameters
+
 
 Version 0.9.10
 ==============
