@@ -44,6 +44,10 @@ News
 """"
 2015
 ----
+August 27
+^^^^^^^^^
+`New release of Numdifftools 0.9.11. <http://pypi.python.org/pypi/Numdifftools/0.9.11>`
+
 August 26
 ^^^^^^^^^
 `New release of Numdifftools 0.9.10. <http://pypi.python.org/pypi/Numdifftools/0.9.10>`_
