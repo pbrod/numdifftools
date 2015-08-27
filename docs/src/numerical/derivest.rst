@@ -448,7 +448,11 @@ numdifftools.Derivative is an a adaptive scheme that can compute the derivative 
 Acknowledgments
 ###############
 
-Thanks are due to John R. D`Errico for writing the first version of this document and `derivest` in which numdifftools is based on.
+The numdifftools package was originally a translation of an adaptive numerical differentiation toolbox written in Matlab by John D'Errico [DErrico2006]_.
+
+Numdifftools has as of version 0.9 been extended with some of the functionality
+found in the statsmodels.tools.numdiff module written by Josef Perktold [Perktold2014]_.
+
 
 References
 ##########
@@ -457,6 +461,12 @@ References
 
 .. [LynessMoler1969] Lyness, J. M., Moler, C. B. (1969). Generalized Romberg Methods for
                      Integrals of Derivatives. *Numerische Mathematik*.
+
+.. [DErrico2006] D’Errico, J. R.  (2006), Adaptive Robust Numerical Differentiation
+	http://www.mathworks.com/matlabcentral/fileexchange/13490-adaptive-robust-numerical-differentiation
+
+.. [Perktold2014] Perktold, J (2014), numdiff package   
+	http://statsmodels.sourceforge.net/0.6.0/_modules/statsmodels/tools/numdiff.html
 
 .. [LaiCrassidisCheng2005] K.-L. Lai, J.L. Crassidis, Y. Cheng, J. Kim (2005), New complex step derivative approximations with 										application to second-order kalman filtering, 
 									AIAA Guidance, *Navigation and Control Conference*,
