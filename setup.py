@@ -66,6 +66,7 @@ TESTS_PATH = os.path.join(package, 'tests')
 TESTSCRIPTS = [os.path.join(TESTS_PATH, f) for f in os.listdir(TESTS_PATH)
                if f.endswith('.py')]
 
+
 def version2str(version):
     if version.exact or not version.distance > 0:
         return version.format_with('{tag}')

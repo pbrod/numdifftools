@@ -18,9 +18,9 @@ Contents
    src/overview.rst
    src/numerical/main.rst
    src/algorithmic/main.rst
-   changes.rst
    license.rst
    authors.rst
+   changes.rst
    Module reference <_rst/modules.rst>
 
 
