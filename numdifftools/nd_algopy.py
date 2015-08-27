@@ -41,8 +41,8 @@ partial derivatives of a function with respect to many inputs, as is needed
 for gradient-based optimization algorithms. Algoritmic differentiation
 solves all of these problems.
 
-References
-----------
+Reference
+---------
 Sebastian F. Walter and Lutz Lehmann 2013,
 "Algorithmic differentiation in Python with AlgoPy",
 in Journal of Computational Science, vol 4, no 5, pp 334 - 344,
@@ -68,7 +68,7 @@ _cmn_doc = """
     Parameters
     ----------
     f : function
-       function of one array f(x, `*args`, `**kwds`)%(extra_parameter)s
+        function of one array f(x, `*args`, `**kwds`)%(extra_parameter)s
     method : string, optional {'forward', 'reverse'}
         defines method used in the approximation
     %(returns)s
@@ -84,8 +84,8 @@ _cmn_doc = """
     accurately to working precision, and using at most a small constant factor
     more arithmetic operations than the original program.
     %(extra_note)s
-    References
-    ----------
+    Reference
+    ---------
     Sebastian F. Walter and Lutz Lehmann 2013,
     "Algorithmic differentiation in Python with AlgoPy",
     in Journal of Computational Science, vol 4, no 5, pp 334 - 344,
@@ -131,8 +131,9 @@ class _Common(object):
         name = '_' + self.method
         return getattr(self, name)
 
-    def __call__(self, x0, *args, **kwds):
+    def __call__(self, x, *args, **kwds):
         fun = self._get_function()
+        x0 = np.asarray(x, dtype=float)
         return fun(x0, *args, **kwds)
 
 
@@ -148,8 +149,8 @@ class Derivative(_Common):
     der : ndarray
        array of derivatives
     """, example='''
-    Examples
-    --------
+    Example
+    -------
     # 1'st and 2'nd derivative of exp(x), at x == 1
 
     >>> import numpy as np
@@ -161,7 +162,7 @@ class Derivative(_Common):
     >>> np.allclose(fd5(1), 2.718281828459045)
     True
 
-    # 1'st derivative of x.^3+x.^4, at x = [0,1]
+    # 1'st derivative of x^3+x^4, at x = [0,1]
 
     >>> f = lambda x: x**3 + x**4
     >>> fd3 = nda.Derivative(f)
@@ -182,7 +183,7 @@ class Derivative(_Common):
         self.method = method
 
     def _forward(self, x, *args, **kwds):
-        x0 = np.asarray(x, dtype=float)
+        x0 = np.asarray(x)
         shape = x0.shape
         P = 1
         x = UTPM(np.zeros((self.n + 1, P) + shape))
@@ -197,7 +198,7 @@ class Derivative(_Common):
         if self.n != 1:
             raise NotImplementedError('Derivative reverse not implemented'
                                       ' for n>1')
-        x = np.asarray(x, dtype=float)
+
         c_graph = self.computational_graph(np.asarray(1), *args, **kwds)
         shape0 = x.shape
         y = np.array([c_graph.gradient(xi) for xi in x.ravel()])
@@ -214,8 +215,8 @@ class Jacobian(_Common):
     jacob : array
         Jacobian
     """, example='''
-     Examples
-    --------
+    Example
+    -------
     >>> import numdifftools.nd_algopy as nda
 
     #(nonlinear least squares)
@@ -269,13 +270,12 @@ class Jacobian(_Common):
 
     def _forward(self, x, *args, **kwds):
         # forward mode without building the computational graph
-        x0 = np.asarray(x, dtype=float)
-        tmp = algopy.UTPM.init_jacobian(x0)
+        tmp = algopy.UTPM.init_jacobian(x)
         y = self.f(tmp, *args, **kwds)
         return np.atleast_2d(algopy.UTPM.extract_jacobian(y))
 
     def _reverse(self, x, *args, **kwds):
-        x = np.asarray(x, dtype=float)
+        x = np.atleast_1d(x)
         c_graph = self.computational_graph(x, *args, **kwds)
         return c_graph.jacobian(x)
 
@@ -290,8 +290,8 @@ class Gradient(_Common):
     grad : array
         gradient
     """, example='''
-    Examples
-    --------
+    Example
+    -------
     >>> import numdifftools.nd_algopy as nda
     >>> f = lambda x: np.sum(x**2)
     >>> df = nda.Gradient(f, method='reverse')
@@ -326,14 +326,14 @@ class Gradient(_Common):
     ''')
 
     def _reverse(self, x, *args, **kwds):
-        x = np.asarray(x, dtype=float)
+
         c_graph = self.computational_graph(x, *args, **kwds)
         return c_graph.gradient(x)
 
     def _forward(self, x, *args, **kwds):
         # forward mode without building the computational graph
-        x0 = np.asarray(x, dtype=float)
-        tmp = algopy.UTPM.init_jacobian(x0)
+
+        tmp = algopy.UTPM.init_jacobian(x)
         y = self.f(tmp, *args, **kwds)
         return algopy.UTPM.extract_jacobian(y)
 
@@ -348,8 +348,8 @@ class Hessian(_Common):
     hess : ndarray
        array of partial second derivatives, Hessian
     """, extra_note='', example='''
-    Examples
-    --------
+    Example
+    -------
     >>> import numdifftools.nd_algopy as nda
 
     # Rosenbrock function, minimized at [1,1]
@@ -386,13 +386,13 @@ class Hessian(_Common):
     ''')
 
     def _forward(self, x, *args, **kwds):
-        x0 = np.asarray(x, dtype=float)
-        tmp = algopy.UTPM.init_hessian(x0)
+        x = np.atleast_1d(x)
+        tmp = algopy.UTPM.init_hessian(x)
         y = self.f(tmp, *args, **kwds)
-        return algopy.UTPM.extract_hessian(len(x0), y)
+        return algopy.UTPM.extract_hessian(len(x), y)
 
     def _reverse(self, x, *args, **kwds):
-        x = np.asarray(x, dtype=float)
+        x = np.atleast_1d(np.asarray(x, dtype=float))
         c_graph = self.computational_graph(x, *args, **kwds)
         return c_graph.hessian(x)
 
@@ -407,8 +407,8 @@ class Hessdiag(Hessian):
     hessdiag : ndarray
        Hessian diagonal array of partial second order derivatives.
     """, extra_note='', example='''
-    Examples
-    --------
+    Example
+    -------
     >>> import numdifftools.nd_algopy as nda
 
     # Rosenbrock function, minimized at [1,1]
@@ -444,8 +444,6 @@ class Hessdiag(Hessian):
 
     def _forward(self, x, *args, **kwds):
         # return np.diag(super(Hessdiag, self)._forward(x, *args, **kwds))
-        x = np.asarray(x, dtype=float)
-
         D, Nm = 2+1, x.size
         P = Nm
         y = UTPM(np.zeros((D, P, Nm)))

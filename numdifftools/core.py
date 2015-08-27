@@ -9,12 +9,12 @@ Copyright:   (c) pab 2008
 Licence:     New BSD
 
 Based on matlab functions derivest.m gradest.m hessdiag.m, hessian.m
- and jacobianest.m version 1.0 released 12/27/2006 by  John D'Errico
+and jacobianest.m version 1.0 released 12/27/2006 by  John D'Errico
 (e-mail: woodchips@rochester.rr.com)
 
 Also based on the python functions approx_fprime, approx_fprime_cs,
- approx_hess_cs, approx_hess1, approx_hess2 and approx_hess3 in the
- statsmodels.tools.numdiff module released in 2014 written by Josef Perktold.
+approx_hess_cs, approx_hess1, approx_hess2 and approx_hess3 in the
+statsmodels.tools.numdiff module released in 2014 written by Josef Perktold.
 
 """
 
@@ -337,8 +337,8 @@ def fornberg_weights_all(x, x0, M=1):
     ---------
     fornberg_weights
 
-    References
-    ----------
+    Reference
+    ---------
     B. Fornberg (1998)
     "Calculation of weights_and_points in finite difference formulas",
     SIAM Review 40, pp. 685-691.
@@ -454,15 +454,14 @@ class MinStepGenerator(object):
     '''
     Generates a sequence of steps
 
-    where
-        steps = base_step * step_ratio ** (np.arange(num_steps) + offset)
+    where steps = base_step * step_ratio ** (np.arange(num_steps) + offset)
 
     Parameters
     ----------
     base_step : float, array-like, optional
-       Defines the base step, if None, then base_step is set to
-           EPS**(1/scale)*max(log(1+|x|), 1)
-       where x is supplied at runtime through the __call__ method.
+        Defines the base step, if None, then base_step is set to
+        EPS**(1/scale)*max(log(1+|x|), 1) where x is supplied at runtime
+        through the __call__ method.
     step_ratio : real scalar, optional, default 2
         Ratio between sequential steps generated.
         Note: Ratio > 1
@@ -822,8 +821,8 @@ _cmn_doc = """
     For all methods one should be careful in decreasing the step size too much
     due to round-off errors.
     %(extra_note)s
-    References
-    ----------
+    Reference
+    ---------
     Ridout, M.S. (2009) Statistical applications of the complex-step method
         of numerical differentiation. The American Statistician, 63, 66-74
 
@@ -1016,8 +1015,8 @@ class Derivative(_Derivative):
     der : ndarray
        array of derivatives
     """, example="""
-    Examples
-    --------
+    Example
+    -------
     >>> import numpy as np
     >>> import numdifftools as nd
 
@@ -1196,22 +1195,22 @@ class Derivative(_Derivative):
         return self._apply_fd_rule(fd_rule, results, steps)
 
     @staticmethod
-    def _central_even(fun, f_x0i, x0i, h, *args, **kwds):
-        return (fun(x0i + h, *args, **kwds) +
-                fun(x0i - h, *args, **kwds)) / 2.0 - f_x0i
+    def _central_even(f, f_x0i, x0i, h, *args, **kwds):
+        return (f(x0i + h, *args, **kwds) +
+                f(x0i - h, *args, **kwds)) / 2.0 - f_x0i
 
     @staticmethod
-    def _central(fun, f_x0i, x0i, h, *args, **kwds):
-        return (fun(x0i + h, *args, **kwds) -
-                fun(x0i - h, *args, **kwds)) / 2.0
+    def _central(f, f_x0i, x0i, h, *args, **kwds):
+        return (f(x0i + h, *args, **kwds) -
+                f(x0i - h, *args, **kwds)) / 2.0
 
     @staticmethod
-    def _forward(fun, f_x0i, x0i, h, *args, **kwds):
-        return (fun(x0i + h, *args, **kwds) - f_x0i)
+    def _forward(f, f_x0i, x0i, h, *args, **kwds):
+        return (f(x0i + h, *args, **kwds) - f_x0i)
 
     @staticmethod
-    def _backward(fun, f_x0i, x0i, h, *args, **kwds):
-        return (f_x0i - fun(x0i - h))
+    def _backward(f, f_x0i, x0i, h, *args, **kwds):
+        return (f_x0i - f(x0i - h, *args, **kwds))
 
     @staticmethod
     def _complex(f, fx, x, h, *args, **kwds):
@@ -1230,16 +1229,16 @@ class Derivative(_Derivative):
                                  f(x - ih, *args, **kwds))).real
 
     @staticmethod
-    def _complex_even(f, fx, x, h, *args, **kwargs):
+    def _complex_even(f, fx, x, h, *args, **kwds):
         ih = h * _SQRT_J
-        return (f(x + ih, *args, **kwargs) +
-                f(x - ih, *args, **kwargs)).imag
+        return (f(x + ih, *args, **kwds) +
+                f(x - ih, *args, **kwds)).imag
 
     @staticmethod
-    def _complex_even_higher(f, fx, x, h, *args, **kwargs):
+    def _complex_even_higher(f, fx, x, h, *args, **kwds):
         ih = h * _SQRT_J
-        return 12.0 * (f(x + ih, *args, **kwargs) +
-                       f(x - ih, *args, **kwargs) - 2 * fx).real
+        return 12.0 * (f(x + ih, *args, **kwds) +
+                       f(x - ih, *args, **kwds) - 2 * fx).real
 
     @staticmethod
     def _multicomplex(f, fx, x, h, *args, **kwds):
@@ -1273,8 +1272,8 @@ class Gradient(Derivative):
     also suffer more from numerical problems. First order methods is usually
     not recommended.
     """, example="""
-    Examples
-    --------
+    Example
+    -------
     >>> import numpy as np
     >>> import numdifftools as nd
     >>> fun = lambda x: np.sum(x**2)
@@ -1354,6 +1353,9 @@ class Gradient(Derivative):
                     for hi in increments]
         return np.array(partials).T
 
+    def __call__(self, x, *args, **kwds):
+        return super(Gradient, self).__call__(np.atleast_1d(x), *args, **kwds)
+
 
 class Jacobian(Gradient):
     __doc__ = _cmn_doc % dict(
@@ -1377,8 +1379,8 @@ class Jacobian(Gradient):
     with the Jacobian of each observation with shape xk x nobs x xk. I.e.,
     the Jacobian of the first observation would be [:, 0, :]
     """, example='''
-     Examples
-    --------
+    Example
+    -------
     >>> import numdifftools as nd
 
     #(nonlinear least squares)
@@ -1423,8 +1425,8 @@ class Hessdiag(Derivative):
     also suffer more from numerical problems. First order methods is usually
     not recommended.
     """, example="""
-    Examples
-    --------
+    Example
+    -------
     >>> import numpy as np
     >>> import numdifftools as nd
     >>> fun = lambda x : x[0] + x[1]**2 + x[2]**3
@@ -1494,6 +1496,9 @@ class Hessdiag(Derivative):
                     for hi in increments]
         return np.array(partials)
 
+    def __call__(self, x, *args, **kwds):
+        return super(Hessdiag, self).__call__(np.atleast_1d(x), *args, **kwds)
+
 
 class Hessian(_Derivative):
     def __init__(self, f, step=None, method='central', full_output=False):
@@ -1528,8 +1533,8 @@ class Hessian(_Derivative):
     where :math:`e_j` is a vector with element :math:`j` is one and the rest
     are zero and :math:`d_j` is a scalar spacing :math:`steps_j`.
     """, example="""
-    Examples
-    --------
+    Example
+    -------
     >>> import numpy as np
     >>> import numdifftools as nd
 
@@ -1560,6 +1565,7 @@ class Hessian(_Derivative):
         return False
 
     def _derivative(self, xi, args, kwds):
+        xi = np.atleast_1d(xi)
         diff, f = self._get_functions()
         steps = self._get_steps(xi)
 

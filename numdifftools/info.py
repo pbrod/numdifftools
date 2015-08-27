@@ -76,7 +76,7 @@ Compute gradient of sum(x**2)::
     >>> dfun([1,2,3])
     array([ 2.,  4.,  6.])
 
-Compute the same with AlgoPy
+Compute the same with AlgoPy::
 
     >>> import numdifftools.nd_algopy as nda
     >>> import numpy as np
