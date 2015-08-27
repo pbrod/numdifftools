@@ -462,7 +462,7 @@ References
 .. [LynessMoler1969] Lyness, J. M., Moler, C. B. (1969). Generalized Romberg Methods for
                      Integrals of Derivatives. *Numerische Mathematik*.
 
-.. [DErrico2006] D’Errico, J. R.  (2006), Adaptive Robust Numerical Differentiation
+.. [DErrico2006] D'Errico, J. R.  (2006), Adaptive Robust Numerical Differentiation
 	http://www.mathworks.com/matlabcentral/fileexchange/13490-adaptive-robust-numerical-differentiation
 
 .. [Perktold2014] Perktold, J (2014), numdiff package   
