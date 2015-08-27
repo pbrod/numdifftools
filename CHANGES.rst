@@ -6,7 +6,7 @@ Created with gitcommand: git shortlog v0.9.2..v0.9.3
 
 
 Version 0.9.10
-=============
+==============
 
 pbrod (7):
       Fixed sphinx-build and updated docs.
@@ -29,9 +29,9 @@ Paul Kienzle (1):
 
 pbrod (7):
       Fixed bugs and updated docs.
-    	Major rewrite of the easy to use interface to Algopy:     
-		   Added possibility to calculate n'th order derivative not just for n=1 in nd_algopy.     
-         Added tests to the easy to use interface to algopy
+      Major rewrite of the easy to use interface to Algopy.
+      Added possibility to calculate n'th order derivative not just for n=1 in nd_algopy.
+      Added tests to the easy to use interface to algopy.
 
 
 Version 0.9.2
@@ -86,8 +86,8 @@ Version 0.6.0
 
 pbrod (20):
       Update and rename README.md to README.rst
-      Simplified call to Derivative: removed step_fix     
-		Deleted unused code      
+      Simplified call to Derivative: removed step_fix
+      Deleted unused code
       Simplified and Refactored. Now possible to choose step_num=1
       Changed default step_nom from max(abs(x0), 0.2) to max(log2(abs(x0)), 0.2)
       pep8ified code and made sure that all tests pass.

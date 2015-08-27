@@ -1,7 +1,7 @@
 Numdifftools
 ============
 
-This is the documentation of **Numdifftools** version |version|. 
+This is the documentation of **Numdifftools** |version|. 
 
 Code and issue tracker is at https://github.com/pbrod/numdifftools.
 
@@ -21,6 +21,7 @@ Contents
    changes.rst
    license.rst
    authors.rst
+   Module reference <_rst/modules.rst>
 
 
 Indices and tables

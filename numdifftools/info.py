@@ -1,6 +1,6 @@
 """
-Features
-========
+Introduction to Numdifftools
+=============================
 
 Numdifftools is a suite of tools written in Python to solve automatic numerical
 differentiation problems in one or more variables. Finite differences are used
@@ -47,8 +47,8 @@ python session::
    import numdifftools as nd
    nd.test(coverage=True, doctests=True)
 
-Examples
---------
+Getting Started
+---------------
 Compute 1'st and 2'nd derivative of exp(x), at x == 1::
 
     >>> import numpy as np
@@ -76,7 +76,7 @@ Compute gradient of sum(x**2)::
     >>> dfun([1,2,3])
     array([ 2.,  4.,  6.])
 
-Compute the same with AlgoPy::
+Compute the same with the easy to use interface to AlgoPy::
 
     >>> import numdifftools.nd_algopy as nda
     >>> import numpy as np
