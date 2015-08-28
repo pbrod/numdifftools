@@ -341,6 +341,20 @@ class TestDerivative(unittest.TestCase):
                                  [1.35, 2.5, 2.5, 2.5, 1.35]):
             np.testing.assert_allclose(scale, nd.default_scale(method, n=1))
 
+    def test_fun_with_additional_parameters(self):
+        '''Test for issue #9'''
+        def func(x, a, b=1):
+            return b * a * x * x * x
+        methods = ['forward', 'backward', 'central', 'complex', 'multicomplex']
+        dfuns = [nd.Gradient, nd.Derivative,  nd.Jacobian, nd.Hessdiag,
+                 nd.Hessian]
+        for dfun in dfuns:
+            for method in methods:
+                df = dfun(func, method=method)
+                val = df(0.0, 1.0, b=2)
+
+                assert_array_almost_equal(val, 0)
+
     def test_derivative_cube(self):
         '''Test for Issue 7'''
         def cube(x):
@@ -381,7 +395,7 @@ class TestDerivative(unittest.TestCase):
         # may still succeed
         epsilon = nd.MinStepGenerator(num_steps=15, offset=0, step_ratio=2)
         dlog = nd.Derivative(np.log, method='central', step=epsilon)
-        x = 0.01
+        x = 0.001
         self.assertAlmostEqual(dlog(x), 1.0 / x)
 
         # But forcing the use of a one-sided rule may be smart anyway

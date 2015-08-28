@@ -79,8 +79,8 @@ def _run_hamiltonian(verbose=True):
     # Important to restrict the step in order to avoid the discontinutiy at
     # x=[0,0]
     # hessian = nd.Hessian(c.potential, step_max=1.0, step_nom=np.abs(xopt))
-    step = nd.MaxStepGenerator(step_max=1e-1, num_steps=26)
-    hessian = nd.Hessian(c.potential, step=step, method='complex',
+    step = nd.MaxStepGenerator(step_max=2, step_ratio=4, num_steps=16)
+    hessian = nd.Hessian(c.potential, step=step, method='central',
                          full_output=True)
     # hessian = algopy.Hessian(c.potential) # Does not work
     # hessian = scientific.Hessian(c.potential) # does not work

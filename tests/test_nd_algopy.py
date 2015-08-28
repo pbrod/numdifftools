@@ -139,6 +139,19 @@ class TestDerivative(unittest.TestCase):
                 y = d3cos(x)
                 assert_array_almost_equal(y, true_vals[n - 1])
 
+    def test_fun_with_additional_parameters(self):
+        '''Test for issue #9'''
+        def func(x, a, b=1):
+            return b * a * x * x * x
+        methods = ['reverse', 'forward']
+        dfuns = [nd.Jacobian, nd.Derivative, nd.Gradient,  nd.Hessdiag,
+                 nd.Hessian]
+        for dfun in dfuns:
+            for method in methods:
+                df = dfun(func, method=method)
+                val = df(0.0, 1.0, b=2)
+                assert_array_almost_equal(val, 0)
+
     def test_derivative_cube(self):
         '''Test for Issue 7'''
         def cube(x):

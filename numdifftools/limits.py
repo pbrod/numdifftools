@@ -254,18 +254,23 @@ class Limit(object):
         return ix
 
     def _add_error_to_outliers(self, der, trim_fact=10):
-        try:
-            median = np.nanmedian(der, axis=0)
-        except ValueError as msg:
-            warnings.warn(str(msg))
-            return 0 * der
-        a_median = np.abs(median)
         # discard any estimate that differs wildly from the
         # median of all estimates. A factor of 10 to 1 in either
         # direction is probably wild enough here. The actual
         # trimming factor is defined as a parameter.
-        outliers = ((abs(der) < (a_median / trim_fact)) +
-                    (abs(der) > (a_median * trim_fact)))
+        try:
+            median = np.nanmedian(der, axis=0)
+            p75 = np.nanpercentile(der, 75, axis=0)
+            p25 = np.nanpercentile(der, 25, axis=0)
+            iqr = np.abs(p75-p25)
+        except ValueError as msg:
+            warnings.warn(str(msg))
+            return 0 * der
+
+        a_median = np.abs(median)
+        outliers = (((abs(der) < (a_median / trim_fact)) +
+                    (abs(der) > (a_median * trim_fact))) * (a_median > 1e-8) +
+                    ((der < p25-1.5*iqr) + (p75+1.5*iqr < der)))
         errors = outliers * np.abs(der - median)
         return errors
 
