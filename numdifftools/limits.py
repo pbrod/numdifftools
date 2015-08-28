@@ -334,7 +334,8 @@ class Limit(object):
 
 # class Residue(Limit):
 #     '''function [res,errest] = residueEst(fun,z0,varargin)
-#     residueEst: residue of fun at z0 with an error estimate, 1st or 2nd order pole
+#     residueEst: residue of fun at z0 with an error estimate,
+# 1st or 2nd order pole
 #     usage: [res,errest] = residueEst(fun,z0)
 #     usage: [res,errest] = residueEst(fun,z0,prop1,val1,prop2,val2,...)
 #
