@@ -57,7 +57,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Numdifftools'
-copyright = u'2015, Per A Brodtkorb'
+copyright = u"2009-2015, Per A Brodtkorb, John D'Errico"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -211,7 +211,7 @@ latex_elements = {
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
   ('index', 'user_guide.tex', u'numdifftools Documentation',
-   u'Per A Brodtkorb', 'manual'),
+   u"Per A Brodtkorb and John D'Errico", 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
