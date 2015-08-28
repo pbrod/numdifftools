@@ -878,7 +878,20 @@ class _Derivative(object):
         ix = np.ravel_multi_index((arg_mins, np.arange(shape[1])), shape)
         return ix
 
+    def _add_error_to_outliers(self, der, trim_fact=10):
+        try:
+            median = np.nanmedian(der, axis=0)
+        except ValueError as msg:
+            warnings.warn(str(msg))
+            return 0 * der
+        a_median = np.abs(median)
+        outliers = ((abs(der) < (a_median / trim_fact)) +
+                    (abs(der) > (a_median * trim_fact)))
+        errors = outliers * np.abs(der - median)
+        return errors
+
     def _get_best_estimate(self, der, errors, steps, shape):
+        errors += self._add_error_to_outliers(der)
         ix = self._get_arg_min(errors)
         final_step = steps.flat[ix].reshape(shape)
         err = errors.flat[ix].reshape(shape)

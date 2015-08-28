@@ -395,7 +395,7 @@ class TestDerivative(unittest.TestCase):
         # may still succeed
         epsilon = nd.MinStepGenerator(num_steps=15, offset=0, step_ratio=2)
         dlog = nd.Derivative(np.log, method='central', step=epsilon)
-        x = 0.01
+        x = 0.001
         self.assertAlmostEqual(dlog(x), 1.0 / x)
 
         # But forcing the use of a one-sided rule may be smart anyway
