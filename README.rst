@@ -36,6 +36,8 @@ All of these methods also produce error estimates on the result.
 
 The documentation for numdifftools is available here http://numdifftools.readthedocs.org/
 
+Code and issue tracker is at https://github.com/pbrod/numdifftools.
+
 Download the toolbox here: http://pypi.python.org/pypi/Numdifftools
 
 ----
