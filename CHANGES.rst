@@ -4,6 +4,21 @@ Changelog
 
 Created with gitcommand: git shortlog v0.9.2..v0.9.3
 
+Version 0.9.12
+==============
+
+pbrod (12):
+      
+      Updated documentation
+      Updated version in conf.py
+      Updated CHANGES.rst
+      Reimplemented outlier detection and made it more robust.     
+      Added limits.py with tests
+      Updated main tests folder          
+      Moved Richardson and dea3 to extrapolation.py
+      Making a new release in order to upload to pypi
+
+
 Version 0.9.11
 ==============
 
