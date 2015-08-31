@@ -14,9 +14,11 @@ class TestLimit(unittest.TestCase):
     def test_sinx_divx(self):
         def f(x):
             return np.sin(x)/x
-        limf = Limit(f, full_output=True)
-        lim, err = limf(0)
-        assert_array_almost_equal(lim, 1)
+        lim_f = Limit(f, full_output=True)
+
+        x = np.arange(-10,10) / np.pi
+        lim_f0, err = lim_f(x*np.pi)
+        assert_array_almost_equal(lim_f0, np.sinc(x))
         self.assertTrue(err.error_estimate < 1.77249444610966e-15)
 
     def test_derivative_of_cos(self):

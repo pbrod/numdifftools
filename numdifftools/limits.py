@@ -123,11 +123,12 @@ class MinStepGenerator(object):
 class Limit(object):
     ''' Compute limit of a function at a given point
 
-     Parameters
+    Parameters
     ----------
     f : callable
-        function to compute the limit for. The function, f, is assumed to
-        return a result of the same shape and size as its input.
+        function of one array f(z, `*args`, `**kwds`) to compute the limit for.
+        The function, f, is assumed to return a result of the same shape and
+        size as its input, `z`.
     step: float, complex, array-like or StepGenerator object, optional
         Defines the spacing used in the approximation.
         Default is  MinStepGenerator(base_step=step, step_ratio=4)
@@ -180,8 +181,8 @@ class Limit(object):
     >>> import numpy as np
     >>> from numdifftools.limits import Limit
     >>> def f(x): return np.sin(x)/x
-    >>> lim, err = Limit(f, full_output=True)(0)
-    >>> np.allclose(lim, 1)
+    >>> lim_f0, err = Limit(f, full_output=True)(0)
+    >>> np.allclose(lim_f0, 1)
     True
     >>> np.allclose(err.error_estimate, 1.77249444610966e-15)
     True
@@ -192,8 +193,8 @@ class Limit(object):
 
     >>> x0 = np.pi/2;
     >>> def g(x): return (np.cos(x0+x)-np.cos(x0))/x
-    >>> lim,err = Limit(g, full_output=True)(0)
-    >>> np.allclose(lim, -1)
+    >>> lim_g0, err = Limit(g, full_output=True)(0)
+    >>> np.allclose(lim_g0, -1)
     True
     >>> err.error_estimate < 1e-14
     True
@@ -204,8 +205,8 @@ class Limit(object):
     Here, that residue should be -0.5.
 
     >>> def h(z): return -z/(np.expm1(2*z))
-    >>> lim,err = Limit(h, full_output=True)(0)
-    >>> np.allclose(lim, -0.5)
+    >>> lim_h0, err = Limit(h, full_output=True)(0)
+    >>> np.allclose(lim_h0, -0.5)
     True
     >>> err.error_estimate < 1e-14
     True
@@ -312,24 +313,38 @@ class Limit(object):
                              '(it must be vectorized)')
         return f_del, h, original_shape
 
-    def __call__(self, x, *args, **kwds):
-        xi = np.asarray(x)
+    def _lim(self, f, z, args, kwds):
         sign = dict(forward=1, above=1, backward=-1, below=-1)[self.method]
-        steps = [sign * step for step in self.step(xi)]
-        step_ratio = self.step.step_ratio
+        steps = [sign * step for step in self.step(z)]
 
-        f = self.f
-        sequence = [f(x + h, *args, **kwds) for h in steps]
+        self._set_richardson_rule(self.step.step_ratio, self.order + 1)
 
-        num_terms = self.order + 1
-        self._set_richardson_rule(step_ratio, num_terms)
-
+        sequence = [f(z + h, *args, **kwds) for h in steps]
         results = self._vstack(sequence, steps)
+        lim_fz, info = self._extrapolate(*results)
+        return lim_fz, info
 
-        derivative, info = self._extrapolate(*results)
+    def __call__(self, x, *args, **kwds):
+        z = np.asarray(x)
+        f = self.f
+        fz = f(z, *args, **kwds)
+
+        err = np.zeros_like(fz, )
+        final_step = np.zeros_like(fz)
+        index = np.zeros_like(fz, dtype=int)
+        k = np.flatnonzero(1-np.isfinite(fz))
+        if k.size > 0:
+            fz = np.where(np.isnan(fz), 0, fz)
+            lim_fz, info1 = self._lim(f, z.flat[k], args, kwds)
+            np.put(fz, k, lim_fz)
+            if self.full_output:
+                np.put(final_step, k, info1.final_step)
+                np.put(index, k, info1.index)
+                np.put(err, k, info1.error_estimate)
+
         if self.full_output:
-            return derivative, info
-        return derivative
+            return fz, self.info(err, final_step, index)
+        return fz
 
 
 # class Residue(Limit):
@@ -552,7 +567,7 @@ class Limit(object):
 #
 #     # the actual extrapolated estimates are just the first row of polycoef
 #     # for a first order pole. For a second order pole, we need the first
-#     # derivative, so we need the second row. Higher order poles are not
+#     # lim_fz, so we need the second row. Higher order poles are not
 #     # estimable using this method due to numerical problems.
 #     switch par.PoleOrder
 #       case 1
@@ -616,12 +631,6 @@ class Limit(object):
 #     end # mainline end
 #
 #
-
-
-
-
-
-
 
 
 def test_docstrings():
