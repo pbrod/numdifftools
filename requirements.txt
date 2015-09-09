@@ -1,5 +1,5 @@
 # Add your requirements here like:
-numpy>=1.4
+numpy>=1.9
 scipy>=0.8
 algopy>=0.4
 numpydoc>=0.5
