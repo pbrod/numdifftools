@@ -102,6 +102,7 @@ class _Common(object):
     def __init__(self, f, method='forward'):
         self.f = f
         self.method = method
+        self.n = 1
         self._computational_graph = None
 
     @property
@@ -386,6 +387,12 @@ class Hessian(_Common):
     Jacobian,
     Hessdiag,
     ''')
+
+    def __init__(self, f, method='forward'):
+        self.f = f
+        self.method = method
+        self.n = 2
+        self._computational_graph = None
 
     def _forward(self, x, *args, **kwds):
         x = np.atleast_1d(x)
