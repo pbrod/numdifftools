@@ -280,19 +280,22 @@ class TestDerivative(unittest.TestCase):
         val = df(0)
         self.assert_(np.isnan(val))
 
+        df.n = 0
+        self.assertEqual(df(0), np.inf)
+
     def _example_fd_mat(self):
         fdmat = nd.Derivative._fd_matrix(step_ratio=2.0, parity=1, nterms=3)
         _fd_rules = np.linalg.pinv(fdmat)
         self.assert_(False)
 
     def test_high_order_derivative_cos(self):
-        true_vals = (-1.0, 0.0, 1.0, 0.0, -1.0, 0.0)
+        true_vals = (0.0, -1.0, 0.0, 1.0, 0.0, -1.0, 0.0)
         methods = ['complex', 'multicomplex', 'central',
                    'forward', 'backward']
         for method in methods:
             n_max = dict(multicomplex=2, central=6).get(method, 5)
-            for n in range(1, n_max + 1):
-                true_val = true_vals[n - 1]
+            for n in range(0, n_max + 1):
+                true_val = true_vals[n]
                 for order in range(2, 9, 2):
                     d3cos = nd.Derivative(np.cos, n=n, order=order,
                                           method=method, full_output=True)

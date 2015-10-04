@@ -13,6 +13,15 @@ _EPS = EPS
 _TINY = np.finfo(float).tiny
 
 
+def convolve(sequence, rule, **kwds):
+    '''Wrapper around scipy.ndimage.convolve1d that allows complex input
+    '''
+    if np.iscomplexobj(sequence):
+        return (convolve1d(sequence.real, rule, **kwds) + 1j *
+                convolve1d(sequence.imag, rule, **kwds))
+    return convolve1d(sequence, rule, **kwds)
+
+
 class Dea(object):
     '''
     LIMEXP  is the maximum number of elements the
@@ -275,6 +284,99 @@ def dea3(v0, v1, v2, symmetric=False):
     return result, abserr
 
 
+# class Richardson(object):
+#     '''
+#     Extrapolates as sequence with Richardsons method
+#
+#     Notes
+#     -----
+#     Suppose you have series expansion that goes like this
+#
+#     L = f(h) + a0 * h^p_0 + a1 * h^p_1+ a2 * h^p_2 + ...
+#
+#     where p_i = order + step * i  and f(h) -> L as h -> 0, but f(0) != L.
+#
+#     If we evaluate the right hand side for different stepsizes h
+#     we can fit a polynomial to that sequence of approximations.
+#     This is exactly what this class does.
+#
+#     Example
+#     -------
+#     >>> import numpy as np
+#     >>> import numdifftools as nd
+#     >>> n = 3
+#     >>> Ei = np.zeros((n,1))
+#     >>> h = np.zeros((n,1))
+#     >>> linfun = lambda i : np.linspace(0, np.pi/2., 2**(i+5)+1)
+#     >>> for k in np.arange(n):
+#     ...    x = linfun(k)
+#     ...    h[k] = x[1]
+#     ...    Ei[k] = np.trapz(np.sin(x),x)
+#     >>> En, err, step = nd.Richardson(step=1, order=1)(Ei, h)
+#     >>> truErr = Ei-1.
+#     >>> (truErr, err, En)
+#     (array([[ -2.00805680e-04],
+#            [ -5.01999079e-05],
+#            [ -1.25498825e-05]]), array([[ 0.00320501]]), array([[ 1.]]))
+#
+#     '''
+#     def __init__(self, step_ratio=2.0, step=1, order=1, num_terms=2):
+#         self.num_terms = num_terms
+#         self.order = order
+#         self.step = step
+#         self.step_ratio = step_ratio
+#
+#     def _r_matrix(self, num_terms):
+#         step = self.step
+#         i, j = np.ogrid[0:num_terms+1, 0:num_terms]
+#         r_mat = np.ones((num_terms + 1, num_terms + 1))
+#         r_mat[:, 1:] = (1.0 / self.step_ratio) ** (i*(step*j + self.order))
+#         return r_mat
+#
+#     def _get_richardson_rule(self, sequence_length=None):
+#         if sequence_length is None:
+#             sequence_length = self.num_terms + 1
+#         num_terms = min(self.num_terms, sequence_length - 1)
+#         if num_terms > 0:
+#             r_mat = self._r_matrix(num_terms)
+#             return linalg.pinv(r_mat)[0]
+#         return np.ones((1,))
+#
+#     def _estimate_error(self, new_sequence, old_sequence, steps, rule):
+#         m, _n = new_sequence.shape
+#
+#         if m < 2:
+#             return (np.abs(new_sequence) * EPS + steps) * 10.0
+#         cov1 = np.sum(rule**2)  # 1 spare dof
+#         fact = np.maximum(12.7062047361747 * np.sqrt(cov1), EPS * 10.)
+#         err = np.abs(np.diff(new_sequence, axis=0)) * fact
+#         tol = np.maximum(np.abs(new_sequence[1:]),
+#                          np.abs(new_sequence[:-1])) * EPS * fact
+#         converged = err <= tol
+#         abserr = err + np.where(converged, tol * 10,
+#                                 abs(new_sequence[:-1]-old_sequence[1:])*fact)
+#         # abserr = err1 + err2 + np.where(converged, tol2 * 10, abs(result-E2))
+#         # abserr = s * fact + np.abs(new_sequence) * EPS * 10.0
+#         return abserr
+#
+#     def extrapolate(self, sequence, steps):
+#         return self.__call__(sequence, steps)
+#
+#     def __call__(self, sequence, steps):
+#         ne = sequence.shape[0]
+#         rule = self._get_richardson_rule(ne)
+#         nr = rule.size - 1
+#         m = ne - nr
+#         new_sequence = convolve1d(sequence, rule[::-1], axis=0,
+#                                   origin=(nr//2))
+#         if np.any(sequence.imag()):
+#             new_sequence = new_sequence + 1j*convolve1d(np.imag(sequence),
+#                                                         rule[::-1], axis=0,
+#                                                         origin=(nr//2))
+#         abserr = self._estimate_error(new_sequence, sequence, steps, rule)
+#         return new_sequence[:m], abserr[:m], steps[:m]
+
+
 class Richardson(object):
     '''
     Extrapolates as sequence with Richardsons method
@@ -358,9 +460,8 @@ class Richardson(object):
         rule = self._get_richardson_rule(ne)
         nr = rule.size - 1
         m = ne - nr
-        new_sequence = convolve1d(sequence, rule[::-1], axis=0, origin=(nr//2))
+        new_sequence = convolve(sequence, rule[::-1], axis=0, origin=(nr // 2))
         abserr = self._estimate_error(new_sequence, sequence, steps, rule)
         return new_sequence[:m], abserr[:m], steps[:m]
-
 if __name__ == '__main__':
     pass

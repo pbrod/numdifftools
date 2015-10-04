@@ -128,6 +128,8 @@ class _Common(object):
         return self._computational_graph
 
     def _get_function(self):
+        if self.n == 0:
+            return self.f
         name = '_' + self.method
         return getattr(self, name)
 

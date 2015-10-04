@@ -217,11 +217,15 @@ class Limit(object):
     should be 0.5.
 
     >>> def k(x): return (x*np.exp(x)-np.exp(x)+1)/x**2
-    >>> lim,err = Limit(k, full_output=True)(0)
-    >>> np.allclose(lim, 0.5)
+    >>> lim_k0,err = Limit(k, full_output=True)(0)
+    >>> np.allclose(lim_k0, 0.5)
     True
     >>> np.allclose(err.error_estimate, 7.4e-9)
     True
+
+    >>> def h(x): return  (x-np.sin(x))/x**3
+    >>> lim_h0, err = Limit(h, full_output=True)(0)
+    >>> lim_h0, err
     '''
     info = namedtuple('info', ['error_estimate', 'final_step', 'index'])
 
@@ -324,6 +328,13 @@ class Limit(object):
         lim_fz, info = self._extrapolate(*results)
         return lim_fz, info
 
+    def limit(self, x, *args, **kwds):
+        z = np.asarray(x)
+        fz, info = self._lim(self.f, z, args, kwds)
+        if self.full_output:
+            return fz, info
+        return fz
+
     def __call__(self, x, *args, **kwds):
         z = np.asarray(x)
         f = self.f
@@ -332,7 +343,7 @@ class Limit(object):
         err = np.zeros_like(fz, )
         final_step = np.zeros_like(fz)
         index = np.zeros_like(fz, dtype=int)
-        k = np.flatnonzero(1-np.isfinite(fz))
+        k = np.flatnonzero(np.isnan(fz))
         if k.size > 0:
             fz = np.where(np.isnan(fz), 0, fz)
             lim_fz, info1 = self._lim(f, z.flat[k], args, kwds)

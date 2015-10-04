@@ -98,7 +98,7 @@ class ObjKeeper(type):
     def __init__(cls, name, bases, dct):
         cls.instances[cls] = []
 
-    def __call__(cls, *args, **kwargs):
+    def __call__(cls, *args, **kwargs):  # @NoSelf
         cls.instances[cls].append(super(ObjKeeper, cls).__call__(*args,
                                                                  **kwargs))
         return cls.instances[cls][-1]
@@ -197,7 +197,7 @@ def build_cmd_docs():
     class cmd_docs(BuildDoc):
 
         def set_version(self):
-            from setuptools_scm import get_version
+            from setuptools_scm import get_version  # @UnresolvedImport
             self.release = get_version()
             self.version = self.release.split('-', 1)[0]
 
@@ -237,7 +237,7 @@ def setup_package():
                     'source_dir': ('setup.py', docs_path),
                     'builder': ('setup.py', 'doctest')},
         'tests': {'test_suite': ('setup.py', TESTS_PATH),
-                 'cov': ('setup.py', 'numdifftools')}
+                  'cov': ('setup.py', 'numdifftools')}
     }
 
     setup(name=package,
