@@ -19,7 +19,7 @@ class TestLimit(unittest.TestCase):
         x = np.arange(-10,10) / np.pi
         lim_f0, err = lim_f(x*np.pi)
         assert_array_almost_equal(lim_f0, np.sinc(x))
-        self.assertTrue(err.error_estimate < 1.77249444610966e-15)
+        self.assertTrue(np.all(err.error_estimate < 1.0e-14))
 
     def test_derivative_of_cos(self):
         x0 = np.pi/2
