@@ -1,12 +1,11 @@
 Numdifftools
 ============
 
-This is the documentation of **Numdifftools** |version|. 
+This is the documentation of **Numdifftools** |version|.
 
 Code and issue tracker is at https://github.com/pbrod/numdifftools.
 
-Latest release is at
-http://pypi.python.org/pypi/Numdifftools.
+Latest release is at http://pypi.python.org/pypi/Numdifftools.
 
 
 Contents
@@ -21,7 +20,7 @@ Contents
    license.rst
    authors.rst
    changes.rst
-   Module reference <_rst/modules.rst>
+   Module reference <api/modules.rst>
 
 
 Indices and tables
