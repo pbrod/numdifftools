@@ -161,14 +161,14 @@ class BicomplexTester(unittest.TestCase):
     def test_arcsin(self):
         z1 = bicomplex(np.linspace(-0.98, 0.98, 5), 0)
         z2 = z1.arcsin()
-        np.testing.assert_allclose(z2.real, np.arcsin(z1.z1).real)
-        np.testing.assert_allclose(z2.imag1, np.arcsin(z1.z1).imag)
+        np.testing.assert_allclose(z2.real, np.arcsin(z1.z1).real, atol=1e-15)
+        np.testing.assert_allclose(z2.imag1, np.arcsin(z1.z1).imag, atol=1e-15)
 
     def test_arccos(self):
         z1 = bicomplex(np.linspace(-0.98, 0.98, 5), 0)
         z2 = z1.arccos()
-        np.testing.assert_allclose(z2.real, np.arccos(z1.z1).real)
-        np.testing.assert_allclose(z2.imag1, np.arccos(z1.z1).imag)
+        np.testing.assert_allclose(z2.real, np.arccos(z1.z1).real, atol=1e-15)
+        np.testing.assert_allclose(z2.imag1, np.arccos(z1.z1).imag, atol=1e-15)
 
     def test_der_cos(self):
         x = np.linspace(-0.99, 0.99, 5)
