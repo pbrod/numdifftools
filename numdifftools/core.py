@@ -21,7 +21,6 @@ statsmodels.tools.numdiff module released in 2014 written by Josef Perktold.
 from __future__ import division, print_function
 import numpy as np
 from collections import namedtuple
-from matplotlib import pyplot as plt
 from numdifftools.multicomplex import bicomplex
 from numdifftools.extrapolation import Richardson, dea3, convolve
 from numdifftools.test_functions import get_function  # , function_names
@@ -1503,9 +1502,10 @@ def main():
 
 if __name__ == '__main__':  # pragma : no cover
     test_docstrings()
+
+    # from matplotlib import pyplot as plt
     # main()
-
-
+#
 #     r = _example3(x=1, fun_name='sin', epsilon=None, method='complex',
 #               scale=None, n=4, order=2)
 #     print(r)
