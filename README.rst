@@ -11,13 +11,13 @@ Numdifftools
 .. image:: https://readthedocs.org/projects/pip/badge/?version=latest
     :target: http://numdifftools.readthedocs.org/en/latest/
 
-Suite of tools written in `_Python <http://www.python.org/>`_ to solve automatic
-numerical differentiation problems in one or more variables. Finite differences
-are used in an adaptive manner, coupled with a Richardson extrapolation methodology
-to provide a maximally accurate result.
+Numdifftools is a suite of tools written in `_Python <http://www.python.org/>`_ 
+to solve automatic numerical differentiation problems in one or more variables.
+Finite differences are used in an adaptive manner, coupled with a Richardson 
+extrapolation methodology to provide a maximally accurate result.
 The user can configure many options like; changing the order of the method or
-the extrapolation, even allowing the user to specify whether complex-step, central, forward or
-backward differences are used.
+the extrapolation, even allowing the user to specify whether complex-step, central, 
+forward or backward differences are used.
 
 The methods provided are:
 
@@ -33,82 +33,108 @@ The methods provided are:
 
 All of these methods also produce error estimates on the result.
 
-
-The documentation for numdifftools is available here http://numdifftools.readthedocs.org/
-
-Code and issue tracker is at https://github.com/pbrod/numdifftools.
-
-Download the toolbox here: http://pypi.python.org/pypi/Numdifftools
-
-----
-
-News
-""""
-2015
-----
-August 28
-^^^^^^^^^
-`New release of Numdifftools 0.9.12. <http://pypi.python.org/pypi/Numdifftools/0.9.12>`_
-
-August 27
-^^^^^^^^^
-`New release of Numdifftools 0.9.11. <http://pypi.python.org/pypi/Numdifftools/0.9.11>`_
-
-August 26
-^^^^^^^^^
-`New release of Numdifftools 0.9.10. <http://pypi.python.org/pypi/Numdifftools/0.9.10>`_
-
-August 20
-^^^^^^^^^
-`New release of Numdifftools 0.9.2. <http://pypi.python.org/pypi/Numdifftools/0.9.2>`_
-
-2014
-----
-December 18
-^^^^^^^^^^^
-`New release of Numdifftools 0.7.7. <http://pypi.python.org/pypi/Numdifftools/0.7.7>`_
+Numdifftools also provide an easy to use interface to derivatives calculated
+with in `_AlgoPy <https://pythonhosted.org/algopy/>`_. Algopy stands for Algorithmic
+Differentiation in Python.
+The purpose of AlgoPy is the evaluation of higher-order derivatives in the
+`forward` and `reverse` mode of Algorithmic Differentiation (AD) of functions
+that are implemented as Python programs.
 
 
-December 17
-^^^^^^^^^^^
-`New release of Numdifftools 0.7.3. <http://pypi.python.org/pypi/Numdifftools/0.7.3>`_
+Getting Started
+---------------
 
-February 8
-^^^^^^^^^^
-`New release of Numdifftools 0.6.0. <http://pypi.python.org/pypi/Numdifftools/0.6.0>`_
-: 
+Compute 1'st and 2'nd derivative of exp(x), at x == 1::
 
-January 10
-^^^^^^^^^^
-`New release of Numdifftools 0.5.0. <http://pypi.python.org/pypi/Numdifftools/0.5.0>`_
+    >>> import numpy as np
+    >>> import numdifftools as nd
+    >>> fd = nd.Derivative(np.exp)        # 1'st derivative
+    >>> fdd = nd.Derivative(np.exp, n=2)  # 2'nd derivative
+    >>> np.allclose(fd(1), 2.7182818284590424)
+    True
+    >>> np.allclose(fdd(1), 2.7182818284590424)
+    True
 
-2012
-------
-May 5
-^^^^^^
-`New release of Numdifftools 0.4.0. <http://pypi.python.org/pypi/Numdifftools/0.4.0>`_
+Nonlinear least squares::
+
+    >>> xdata = np.reshape(np.arange(0,1,0.1),(-1,1))
+    >>> ydata = 1+2*np.exp(0.75*xdata)
+    >>> fun = lambda c: (c[0]+c[1]*np.exp(c[2]*xdata) - ydata)**2
+    >>> Jfun = nd.Jacobian(fun)
+    >>> np.allclose(np.abs(Jfun([1,2,0.75])), 0) # should be numerically zero
+    True
+
+Compute gradient of sum(x**2)::
+
+    >>> fun = lambda x: np.sum(x**2)
+    >>> dfun = nd.Gradient(fun)
+    >>> dfun([1,2,3])
+    array([ 2.,  4.,  6.])
+
+Compute the same with the easy to use interface to AlgoPy::
+
+    >>> import numdifftools.nd_algopy as nda
+    >>> import numpy as np
+    >>> fd = nda.Derivative(np.exp)        # 1'st derivative
+    >>> fdd = nda.Derivative(np.exp, n=2)  # 2'nd derivative
+    >>> np.allclose(fd(1), 2.7182818284590424)
+    True
+    >>> np.allclose(fdd(1), 2.7182818284590424)
+    True
+
+Nonlinear least squares::
+
+    >>> xdata = np.reshape(np.arange(0,1,0.1),(-1,1))
+    >>> ydata = 1+2*np.exp(0.75*xdata)
+    >>> fun = lambda c: (c[0]+c[1]*np.exp(c[2]*xdata) - ydata)**2
+    >>> Jfun = nda.Jacobian(fun, method='reverse')
+    >>> np.allclose(np.abs(Jfun([1,2,0.75])), 0) # should be numerically zero
+    True
+
+Compute gradient of sum(x**2)::
+
+    >>> fun = lambda x: np.sum(x**2)
+    >>> dfun = nda.Gradient(fun)
+    >>> dfun([1,2,3])
+    array([ 2.,  4.,  6.])
+
+See also
+--------
+scipy.misc.derivative
 
 
-2011
-----
+Documentation and code
+======================
 
-May 19
-^^^^^^
-`New release of Numdifftools 0.3.5. <http://pypi.python.org/pypi/Numdifftools/0.3.5>`_
+Numdifftools works on Python 2.7+ and Python 3.0+.
 
+Current version is 0.9.13
 
-Feb 24
-^^^^^^
-`New release of Numdifftools 0.3.4. <http://pypi.python.org/pypi/Numdifftools/0.3.4>`_
+Official releases:
+available at: http://pypi.python.org/pypi/numdifftools
 
-2009
-----
+Official documentation:
+available at: http://numdifftools.readthedocs.org/
 
-May 20
-^^^^^^
-`New beta release of Numdifftools 0.3.1. <http://pypi.python.org/pypi/Numdifftools/0.3.1>`_
+Bleeding edge: https://github.com/pbrod/numdifftools.
 
 
+Installation and upgrade:
+=========================
+
+with pip
+$ pip install numdifftools
+
+with easy_install
+$ easy_install numdifftools for installation
+$ easy_install upgrade numdifftools to upgrade to the newest version
 
 
+Unit tests
+==========
+To test if the toolbox is working paste the following in an interactive
+python session::
+
+   import numdifftools as nd
+   nd.test(coverage=True, doctests=True)
 
