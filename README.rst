@@ -106,9 +106,13 @@ scipy.misc.derivative
 Documentation and code
 ======================
 
-Numdifftools works on Python 2.7+ and Python 3.0+.
+Numdifftools works on Python 2.7.7+ and Python 3.0+.
 
-Current version is 0.9.13
+Current version is
+
+.. image:: https://badge.fury.io/py/numdifftools.png
+    :target: https://pypi.python.org/pypi/Numdifftools/
+
 
 Official releases:
 available at: http://pypi.python.org/pypi/numdifftools
@@ -123,10 +127,14 @@ Installation and upgrade:
 =========================
 
 with pip
+
 $ pip install numdifftools
 
+
 with easy_install
+
 $ easy_install numdifftools for installation
+
 $ easy_install upgrade numdifftools to upgrade to the newest version
 
 
