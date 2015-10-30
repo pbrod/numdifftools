@@ -61,7 +61,7 @@ copyright = u"2009-2015, Per A Brodtkorb, John D'Errico"
 #
 
 # The full version, including alpha/beta/rc tags.
-release = '0.9.12'  # Is set by calling `setup.py docs`
+release = '0.9.13'  # Is set by calling `setup.py docs`
 # The short X.Y version.
 version = release.split('-', 1)[0]  # Is set by calling `setup.py docs`
 
