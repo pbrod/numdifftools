@@ -106,7 +106,7 @@ scipy.misc.derivative
 Documentation and code
 ======================
 
-Numdifftools works on Python 2.7.7+ and Python 3.0+.
+Numdifftools works on Python 2.7+ and Python 3.0+.
 
 Current version is
 
