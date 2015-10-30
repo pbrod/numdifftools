@@ -20,18 +20,16 @@ Build documentation
 Install
   python setup.py install [, --prefix=$PREFIX]
 
-Build wininstaller
+Build
 
   python setup.py bdist_wininst
 
   python setup.py bdist_wheel --universal
 
+  python setup.py sdist
+
 PyPi upload:
-  python setup.py sdist bdist_wheel upload
-
-  python setup.py sdist bdist_wininst upload --show-response
-
-  python setup.py register sdist bdist_wininst upload --show-response
+  twine upload dist/*
 """
 
 import sys
