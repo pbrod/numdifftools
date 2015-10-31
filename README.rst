@@ -46,6 +46,8 @@ Getting Started
 
 Visualize high order derivatives of the tanh function
 
+    >>> import numpy as np
+    >>> import numdifftools as nd
     >>> import matplotlib.pyplot as plt
     >>> x = np.linspace(-2, 2, 100)
     >>> for i in range(10):
@@ -60,8 +62,6 @@ Visualize high order derivatives of the tanh function
 
 Compute 1'st and 2'nd derivative of exp(x), at x == 1::
 
-    >>> import numpy as np
-    >>> import numdifftools as nd
     >>> fd = nd.Derivative(np.exp)        # 1'st derivative
     >>> fdd = nd.Derivative(np.exp, n=2)  # 2'nd derivative
     >>> np.allclose(fd(1), 2.7182818284590424)
