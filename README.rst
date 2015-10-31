@@ -98,6 +98,24 @@ Compute gradient of sum(x**2)::
     >>> dfun([1,2,3])
     array([ 2.,  4.,  6.])
 
+
+Visualize high order derivatives of a userdefined function
+
+    >>> import matplotlib.pyplot as plt
+    >>> def fun(x):
+    ...    y = np.exp(-x)
+    ...    return (1.0 - y)  / ( 1.0 + y)
+
+    >>> x = np.linspace(-7, 7, 200)
+    >>> for i in range(7):
+    ...    df = Derivative(fun, n=i)
+    ...    plt.plot(x, df(x))
+    >>> plt.show()
+
+.. image:: ./examples/fun.png
+    :target: ./examples/fun.py
+
+
 See also
 --------
 scipy.misc.derivative
