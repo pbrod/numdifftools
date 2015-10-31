@@ -44,6 +44,20 @@ that are implemented as Python programs.
 Getting Started
 ---------------
 
+Visualize high order derivatives of the tanh function
+
+    >>> import matplotlib.pyplot as plt
+    >>> x = np.linspace(-2, 2, 100)
+    >>> for i in range(10):
+    ...    df = Derivative(np.tanh, n=i)
+    ...    y = df(x)
+    ...    plt.plot(x, y/np.abs(y).max())
+    >>> plt.show()
+
+.. image:: ./examples/fun.png
+    :target: ./examples/fun.py
+
+
 Compute 1'st and 2'nd derivative of exp(x), at x == 1::
 
     >>> import numpy as np
@@ -97,23 +111,6 @@ Compute gradient of sum(x**2)::
     >>> dfun = nda.Gradient(fun)
     >>> dfun([1,2,3])
     array([ 2.,  4.,  6.])
-
-
-Visualize high order derivatives of a userdefined function
-
-    >>> import matplotlib.pyplot as plt
-    >>> def fun(x):
-    ...    y = np.exp(-x)
-    ...    return (1.0 - y)  / ( 1.0 + y)
-
-    >>> x = np.linspace(-7, 7, 200)
-    >>> for i in range(7):
-    ...    df = Derivative(fun, n=i)
-    ...    plt.plot(x, df(x))
-    >>> plt.show()
-
-.. image:: ./examples/fun.png
-    :target: ./examples/fun.py
 
 
 See also

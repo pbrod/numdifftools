@@ -2,15 +2,13 @@ import numdifftools as nd
 import numpy as np
 import matplotlib.pyplot as plt
 
-def fun(x):
-    y = np.exp(-x)
-    return (1.0 - y)  / ( 1.0 + y)
-
-x = np.linspace(-7, 7, 200)
-for i in range(0,7):
-    df = nd.Derivative(fun, n=i)
-    plt.plot(x, df(x))
+x = np.linspace(-2, 2, 100)
+for i in range(0, 10):
+    df = nd.Derivative(np.tanh, n=i)
+    y = df(x)
+    plt.plot(x, y/np.abs(y).max())
 
 plt.axis('off')
+plt.axis('tight')
 plt.savefig("fun.png")
 plt.clf()
