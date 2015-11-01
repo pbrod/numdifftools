@@ -1,6 +1,6 @@
 doc-warnings: yes
 test-warnings: yes
-strictness: veryhigh
+strictness: medium
 mccabe:
   run: false
 pylint:

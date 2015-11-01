@@ -785,9 +785,10 @@ class Derivative(_Derivative):
         '''
         try:
             step = [1, 2, 2, 4, 4, 4, 4][parity]
-        except Exception as msg:
-            raise ValueError('%s. Parity must be 0, 1, 2, 3, 4, 5 or 6! ' +
-                             '(%d)' % (str(msg), parity))
+        except Exception as e:
+            msg = '%s. Parity must be 0, 1, 2, 3, 4, 5 or 6! (%d)' % (str(e),
+                                                                      parity)
+            raise ValueError(msg)
         inv_sr = 1.0 / step_ratio
         offset = [1, 1, 2, 2, 4, 1, 3][parity]
         c0 = [1.0, 1.0, 1.0, 2.0, 24.0, 1.0, 6.0][parity]
