@@ -30,10 +30,97 @@ class BicomplexTester(unittest.TestCase):
         self.assertEqual(z2.z1, -z.z1)
         self.assertEqual(z2.z2, -z.z2)
 
+    def test_shape(self):
+        shape = (3, 3)
+        t = np.arange(9).reshape(shape)
+        z = bicomplex(t, 2 * t)
+        self.assertEqual(z.shape, shape)
+
+        z = bicomplex(1, 2)
+        self.assertEqual(z.shape, ())
+
+    def test_norm(self):
+        shape = (3, 3)
+        t = np.arange(9).reshape(shape)
+        z = bicomplex(t, 2 * t)
+        np.testing.assert_array_equal(z.norm(), np.sqrt(5*t**2))
+
+        z = bicomplex(1, 2)
+        self.assertEqual(z.norm(), np.sqrt(5))
+
+    def test_lt(self):
+        shape = (3, 3)
+        t = np.arange(9).reshape(shape)
+        z = bicomplex(t, 2 * t)
+        z2 = bicomplex(1, 2)
+        val = z < z2
+        truth = np.array([[ True, False, False],
+                           [False, False, False],
+                           [False, False, False]], dtype=bool)
+        np.testing.assert_array_equal(val, truth)
+
+    def test_le(self):
+        shape = (3, 3)
+        t = np.arange(9).reshape(shape)
+        z = bicomplex(t, 2 * t)
+        z2 = bicomplex(1, 2)
+        val = z <= z2
+        truth = np.array([[ True, True, False],
+                           [False, False, False],
+                           [False, False, False]], dtype=bool)
+        np.testing.assert_array_equal(val, truth)
+
+    def test_ge(self):
+        shape = (3, 3)
+        t = np.arange(9).reshape(shape)
+        z = bicomplex(t, 2 * t)
+        z2 = bicomplex(1, 2)
+        val = z >= z2
+        truth = np.array([[False,  True,  True],
+                          [ True,  True,  True],
+                          [ True,  True,  True]], dtype=bool)
+        np.testing.assert_array_equal(val, truth)
+
+    def test_gt(self):
+        shape = (3, 3)
+        t = np.arange(9).reshape(shape)
+        z = bicomplex(t, 2 * t)
+        z2 = bicomplex(1, 2)
+        val = z > z2
+        truth = np.array([[False,  False,  True],
+                          [ True,  True,  True],
+                          [ True,  True,  True]], dtype=bool)
+        np.testing.assert_array_equal(val, truth)
+
+
+    def test_eq(self):
+        shape = (3, 3)
+        t = np.arange(9).reshape(shape)
+        z = bicomplex(t, 2 * t)
+        z2 = bicomplex(1, 2)
+        val = z == z2
+        truth = np.array([[ False, True, False],
+                           [False, False, False],
+                           [False, False, False]], dtype=bool)
+        np.testing.assert_array_equal(val, truth)
+
+    def test_conjugate(self):
+        z = bicomplex(1, 2)
+        z2 = bicomplex(1, -2)
+        self.assertTrue(z.conjugate()==z2)
+
+    def test_flat(self):
+        shape = (3, 3)
+        t = np.arange(9).reshape(shape)
+        z = bicomplex(t, 2 * t)
+        t = z.flat(1)
+        self.assertTrue(t==bicomplex(1, 2))
+
     def test_subsref(self):
         shape = (3, 3)
         t = np.arange(9).reshape(shape)
         z = bicomplex(t, 2 * t)
+
         z0 = z[0]
         np.testing.assert_array_equal(z0.z1, z.z1[0])
         np.testing.assert_array_equal(z0.z2, z.z2[0])
@@ -198,6 +285,17 @@ class BicomplexTester(unittest.TestCase):
         true_der2 = -x / (1 - x**2)**(3. / 2)
         np.testing.assert_allclose(der2, true_der2, atol=1e-5)
 
+    def test_der_arccosh(self):
+        x = np.linspace(1.2, 5, 5)
+        h = 1e-8
+        der1 = np.arccosh(bicomplex(x + h * 1j, 0)).imag1 / h
+        np.testing.assert_allclose(der1, 1. / np.sqrt(x**2 - 1))
+
+        h = (_default_base_step(x, scale=2.5) + 1) - 1
+        der2 = np.arccosh(bicomplex(x + h * 1j, h)).imag12 / h**2
+        true_der2 = -x / (x**2-1)**(3. / 2)
+        np.testing.assert_allclose(der2, true_der2, atol=1e-5)
+
     def test_der_abs(self):
         x = np.linspace(-0.98, 0.98, 5)
         h = 1e-8
@@ -214,7 +312,6 @@ class BicomplexTester(unittest.TestCase):
 
         der2 = bicomplex(x+h*1j, h).arctan().imag12/h**2
         np.testing.assert_allclose(der2, -2*x/(1+x**2)**2)
-#         pass
 
 
 def _test_first_derivative(name):
@@ -239,7 +336,8 @@ def _test_second_derivative(name):
 
 _function_names = ['cos', 'sin', 'tan', 'arccos', 'arcsin', 'arctan', 'cosh',
                    'sinh', 'tanh', 'exp', 'log', 'exp2', 'square', 'sqrt',
-                   'log1p', 'expm1', 'log10', 'log2', 'arcsinh', 'arctanh']
+                   'log1p', 'expm1', 'log10', 'log2', 'arcsinh',
+                   'arctanh']
 
 
 class DerivativeTester(unittest.TestCase):

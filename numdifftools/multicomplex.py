@@ -33,22 +33,22 @@ import numpy as np
 _TINY = np.finfo(float).machar.tiny
 
 
-def c_atan2(x, y):
-    a, b = np.real(x), np.imag(x)
-    c, d = np.real(y), np.imag(y)
-    return np.arctan2(a, c) + 1j * (c * b - a * d) / (a**2 + c**2)
-
-
-def c_max(x, y):
-    return np.where(x.real < y.real, y, x)
-
-
-def c_min(x, y):
-    return np.where(x.real > y.real, y, x)
-
-
-def c_abs(z):
-    return np.where(np.real(z) >= 0, z, -z)
+# def c_atan2(x, y):
+#     a, b = np.real(x), np.imag(x)
+#     c, d = np.real(y), np.imag(y)
+#     return np.arctan2(a, c) + 1j * (c * b - a * d) / (a**2 + c**2)
+#
+#
+# def c_max(x, y):
+#     return np.where(x.real < y.real, y, x)
+#
+#
+# def c_min(x, y):
+#     return np.where(x.real > y.real, y, x)
+#
+#
+# def c_abs(z):
+#     return np.where(np.real(z) >= 0, z, -z)
 
 
 class bicomplex(object):
@@ -366,32 +366,3 @@ class bicomplex(object):
         return self._arg_c(self.z1, self.z2)
 
 
-def example_derivative():
-    x0 = 1
-    h = 1e-11
-    x = bicomplex(x0 + 1j * h, 0)
-    dx0 = (x * x).imag1 / h
-    print(dx0)  # should be 2
-    x2 = bicomplex(x0 + 1j * h, h)
-    dx2 = (x2**2).imag12 / h**2
-    print(dx2)  # should be 2
-
-
-if __name__ == '__main__':
-    x0 = 2
-    h = 0
-    x = bicomplex(x0, h)
-    # print(x.arg_c())
-    print(x)
-    y = x.sin()
-    # print(y.arg_c())
-    print(np.arcsin(y.z1))
-    print(y)
-    x1 = y.arcsin()
-    print(x1)
-#     y1 = x1.cos()
-#     print(y1)
-#     x2 = y1.arccos()
-#     print(x2)
-
-    pass

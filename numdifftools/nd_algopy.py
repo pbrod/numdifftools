@@ -257,19 +257,19 @@ class Jacobian(_Common):
     Hessian,
     ''')
 
-    def _jacobian_forward(self, x, *args, **kwds):
-        x = np.asarray(x, dtype=float)
-        # shape = x.shape
-        D, Nm = 2, x.size
-        P = Nm
-        y = UTPM(np.zeros((D, P, Nm)))
-
-        y.data[0, :] = x.ravel()
-        y.data[1, :] = np.eye(Nm)
-        z0 = self.f(y, *args, **kwds)
-        z = UTPM.as_utpm(z0)
-        J = z.data[1, :, :, 0]
-        return J
+    #     def _jacobian_forward(self, x, *args, **kwds):
+    #         x = np.asarray(x, dtype=float)
+    #         # shape = x.shape
+    #         D, Nm = 2, x.size
+    #         P = Nm
+    #         y = UTPM(np.zeros((D, P, Nm)))
+    #
+    #         y.data[0, :] = x.ravel()
+    #         y.data[1, :] = np.eye(Nm)
+    #         z0 = self.f(y, *args, **kwds)
+    #         z = UTPM.as_utpm(z0)
+    #         J = z.data[1, :, :, 0]
+    #         return J
 
     def _forward(self, x, *args, **kwds):
         # forward mode without building the computational graph
@@ -468,35 +468,17 @@ class Hessdiag(Hessian):
         return np.diag(super(Hessdiag, self)._reverse(x, *args, **kwds))
 
 
-def hessian_forward():
-    def f(x, *args, **kwds):
-        return x[0] + x[1] ** 2 + x[2] ** 3
-    x = np.asarray([1, 2, 3], dtype=float)
-    # shape = x.shape
-    D, Nm = 2+1, x.size
-    P = Nm
-    y = UTPM(np.zeros((D, P, Nm)))
-
-    y.data[0, :] = x.ravel()
-    y.data[1, :] = np.eye(Nm)
-
-    z0 = f(y)
-    z = UTPM.as_utpm(z0)
-    J = z.data[2, ...] * 2
-    return J
-
-
-def _example_taylor():
-    def f(x):
-        return x*x*x*x  # np.sin(np.cos(x) + np.sin(x))
-    D = 5
-    P = 1
-    x = UTPM(np.zeros((D, P)))
-    x.data[0, 0] = 1.0
-    x.data[1, 0] = 1
-
-    y = f(x)
-    print('coefficients of y =', y.data[:, 0])
+# def _example_taylor():
+#     def f(x):
+#         return x*x*x*x  # np.sin(np.cos(x) + np.sin(x))
+#     D = 5
+#     P = 1
+#     x = UTPM(np.zeros((D, P)))
+#     x.data[0, 0] = 1.0
+#     x.data[1, 0] = 1
+#
+#     y = f(x)
+#     print('coefficients of y =', y.data[:, 0])
 
 
 def test_docstrings():
@@ -505,6 +487,5 @@ def test_docstrings():
 
 
 if __name__ == '__main__':
-    # hessian_forward()
     test_docstrings()
     # _example_taylor()
