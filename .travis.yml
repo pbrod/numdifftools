@@ -32,6 +32,7 @@ before_script:
 script:
   - python setup.py test
 after_success:
+  - coveralls
   - if [[ "$COVERAGE" == "true" ]]; then coveralls || echo "failed"; fi
 cache:
   - apt
