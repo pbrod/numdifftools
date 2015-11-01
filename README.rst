@@ -15,6 +15,9 @@ Numdifftools
    :target: https://landscape.io/github/pbrod/numdifftools/master
    :alt: Code Health
 
+.. image:: https://coveralls.io/repos/pbrod/numdifftools/badge.svg?branch=master&service=github
+   :target: https://coveralls.io/github/pbrod/numdifftools?branch=master
+
 Numdifftools is a suite of tools written in `_Python <http://www.python.org/>`_ 
 to solve automatic numerical differentiation problems in one or more variables.
 Finite differences are used in an adaptive manner, coupled with a Richardson 
