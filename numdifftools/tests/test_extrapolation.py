@@ -7,10 +7,11 @@ from numdifftools.extrapolation import Dea, dea3, Richardson
 class TestExtrapolation(unittest.TestCase):
 
     def setUp(self):
-        Ei = np.zeros(3)
-        h = np.zeros(3)
+        n = 7
+        Ei = np.zeros(n)
+        h = np.zeros(n)
         linfun = lambda i : np.linspace(0, np.pi/2., 2**(i+5)+1)
-        for k in np.arange(3):
+        for k in np.arange(n):
             x = linfun(k)
             Ei[k] = np.trapz(np.sin(x),x)
             h[k] = x[1]
@@ -21,7 +22,7 @@ class TestExtrapolation(unittest.TestCase):
     def test_dea3_on_trapz_sin(self):
         Ei = self.Ei
         [En, err] = dea3(Ei[0], Ei[1], Ei[2])
-        truErr = Ei-1.
+        truErr = Ei[:3]-1.
         assert_allclose(truErr,
                         [ -2.00805680e-04, -5.01999079e-05, -1.25498825e-05])
         assert_allclose(En,  1.)
@@ -35,16 +36,19 @@ class TestExtrapolation(unittest.TestCase):
             En, err = dea_3(E)
 
         truErr = Ei-1.
+
         assert_allclose(truErr,
-                        [ -2.00805680e-04, -5.01999079e-05, -1.25498825e-05])
+                        [-2.00805680e-04,  -5.01999079e-05, -1.25498825e-05
+                         -3.13746471e-06, -7.84365809e-07, -1.96091429e-07,
+                         -4.90228558e-08])
         assert_allclose(En,  1.)
-        self.assertLessEqual(err, 0.00021)
+        self.assertLessEqual(err, 1e-10)
 
     def test_richardson(self):
         Ei, h = self.Ei[:, np.newaxis], self.h[:, np.newaxis]
         En, err, step = Richardson(step=1, order=1)(Ei, h)
         assert_allclose(En,  1.)
-        self.assertLessEqual(err, 0.0033)
+        self.assertTrue(np.all(err<0.0022))
 
 #     def test_epsal():
 #         HUGE = 1.E+60
