@@ -75,7 +75,7 @@ class bicomplex(object):
         r12, r22 = self.z1*self.z1, self.z2*self.z2
         r = np.sqrt(r12 + r22)
         return r
-        return np.where(r == 0, np.sqrt(r12 - r22), r)
+        # return np.where(r == 0, np.sqrt(r12 - r22), r)
 
     def norm(self):
         z1, z2 = self.z1, self.z2
@@ -328,12 +328,12 @@ class bicomplex(object):
     def arcsin(self):
         J = bicomplex(0, 1)
         return -J * ((J*self + (1-self**2)**0.5).log())
-        return (np.pi/2 - self.arccos())
+        # return (np.pi/2 - self.arccos())
 
     def arccos(self):
         return (np.pi/2 - self.arcsin())
-        J = bicomplex(0, 1)
-        return J * ((self - J * (1-self**2)**0.5).log())
+        # J = bicomplex(0, 1)
+        # return J * ((self - J * (1-self**2)**0.5).log())
 
     def arctan(self):
         J = bicomplex(0, 1)
@@ -353,7 +353,7 @@ class bicomplex(object):
     def _arg_c(self, z1, z2):
         sign = np.where((z1.real == 0) * (z2.real == 0), 0,
                         np.where(0 <= z2.real, 1, -1))
-    # clip to avoid nans for complex args
+        # clip to avoid nans for complex args
         arg = z2 / (z1 + _TINY).clip(min=-1e150, max=1e150)
         arg_c = np.arctan(arg) + sign * np.pi * (z1.real <= 0)
         return arg_c

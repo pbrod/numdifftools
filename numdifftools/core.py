@@ -97,8 +97,7 @@ def fornberg_weights_all(x, x0, M=1):
             c3 = x[n] - x[v]
             c2, c6, c7 = c2 * c3, m * C[v, m-1], C[v, m]
             C[v, m] = (c4 * c7 - c6) / c3
-        else:
-            C[n, m] = c1 * (c6 - c5 * c7) / c2
+        C[n, m] = c1 * (c6 - c5 * c7) / c2
         c1 = c2
     return C
 
@@ -1368,145 +1367,10 @@ class Hessian(_Derivative):
         return self._forward(f, fx, x, -h, *args, **kwargs)
 
 
-def _example3(x=0.0001, fun_name='cos', epsilon=None, method='central',
-              scale=None, n=1, order=2):
-    fun0, dfun = get_function(fun_name, n)
-    if dfun is None:
-        return dict(n=n, order=order, method=method, fun=fun_name,
-                    error=np.nan, scale=np.nan)
-    fd = Derivative(fun0, step=epsilon, method=method, n=n, order=order)
-    t = []
-    scales = np.arange(1.0, 45, 0.25)
-    for scale in scales:
-        fd.step.scale = scale
-        try:
-            val = fd(x)
-        except Exception:
-            val = np.nan
-        t.append(val)
-    t = np.array(t)
-    tt = dfun(x)
-    relativ_error = np.abs(t - tt) / (np.maximum(np.abs(tt), 1)) + 1e-16
-
-    weights = np.ones((3,))/3
-    relativ_error = convolve1d(relativ_error, weights)  # smooth curve
-
-    if np.isnan(relativ_error).all():
-        return dict(n=n, order=order, method=method, fun=fun_name,
-                    error=np.nan, scale=np.nan)
-    if True:  # False:  #
-        plt.semilogy(scales, relativ_error)
-        plt.vlines(default_scale(fd.method, n, order),
-                   np.nanmin(relativ_error), 1)
-        plt.xlabel('scales')
-        plt.ylabel('Relative error')
-        txt = ['', "1'st", "2'nd", "3'rd", "4'th", "5'th", "6'th",
-               "7th"] + ["%d'th" % i for i in range(8, 25)]
-
-        plt.title("The %s derivative of %s using %s, order=%d" % (txt[n],
-                                                                  fun_name,
-                                                                  method,
-                                                                  order))
-
-        plt.axis([min(scales), max(scales), np.nanmin(relativ_error), 1])
-        plt.figure()
-        # plt.show('hold')
-    i = np.nanargmin(relativ_error)
-    return dict(n=n, order=order, method=method, fun=fun_name,
-                error=relativ_error[i], scale=scales[i])
-
-
-def _example2(x=0.0001, fun_name='inv', epsilon=None, method='central',
-              scale=None, n=1):
-    fun0, dfun = get_function(fun_name, n)
-
-    fd = Derivative(fun0, step=epsilon, method=method, n=n)
-    t = []
-    orders = n + (n % 2) + np.arange(0, 12, 2)
-
-    for order in orders:
-        fd.order = order
-        fd.step.num_steps = n + order - 1
-        t.append(fd(x))
-    t = np.array(t)
-    tt = dfun(x)
-    plt.semilogy(orders, np.abs(t - tt) / (np.abs(tt) + 1e-17) + 1e-17)
-
-    plt.show('hold')
-
-
-def _example(x=0.0001, fun_name='inv', epsilon=None, method='central',
-             scale=None):
-    '''
-    '''
-    fun0, dfun = get_function(fun_name)
-
-    h = _default_base_step(x, scale=2, epsilon=None)  # 1e-4
-
-    fd = Derivative(fun0, step=epsilon, method=method, full_output=True)
-
-    t, res = fd(x)
-
-    txt = (' (f(x+h)-f(x))/h = %g\n' %
-           ((fun0(x + h) - fun0(x)) / h))
-    deltas = np.array([h for h in epsilon(x, fd.scale)])
-
-    print((txt +
-           '      true df(x) = %20.15g\n' +
-           ' estimated df(x) = %20.15g\n' +
-           ' true err = %g\n err estimate = %g\n relative err = %g\n'
-           ' delta = %g\n') % (dfun(x), t, dfun(x) - t,
-                               res.error_estimate,
-                               res.error_estimate / t,
-                               deltas.flat[res.index]))
-    # plt.show('hold')
-
-
 def test_docstrings():
     import doctest
     doctest.testmod(optionflags=doctest.NORMALIZE_WHITESPACE)
 
 
-def main():
-    import pandas as pd
-    num_extrap = 0
-    method = 'complex'
-    data = []
-    for name in ['exp', 'expm1', 'sin', 'cos', 'square']:
-        # function_names[:-3]:
-        for order in range(4, 5, 1):
-            #  order = 1
-            for n in range(1, 16, 1):
-                num_steps = n + order - 1 + num_extrap
-                if method in ['central', 'complex']:
-                    step = 2
-                    if (n > 1 or order >= 4) and method == 'complex':
-                        step = 4
-                    num_steps = (n + order-1) // step + num_extrap
-
-                step_ratio = 1.6  # 4**(1./n)
-                epsilon = MinStepGenerator(num_steps=num_steps,
-                                           step_ratio=step_ratio,
-                                           offset=0, use_exact_steps=True)
-                data.append(pd.DataFrame(_example3(x=0.7, fun_name=name,
-                                                   epsilon=epsilon,
-                                                   method=method,
-                                                   scale=None, n=n,
-                                                   order=order),
-                                         index=np.arange(1)))
-    df = pd.concat(data)
-    # sprint(df)
-    print(df.groupby(['n']).mean())
-    print(np.diff(df.groupby(['n']).mean(), axis=0))
-    plt.show('hold')
-
 if __name__ == '__main__':  # pragma : no cover
     test_docstrings()
-
-    # from matplotlib import pyplot as plt
-    # main()
-#
-#     r = _example3(x=1, fun_name='sin', epsilon=None, method='complex',
-#               scale=None, n=4, order=2)
-#     print(r)
-#     plt.show('hold')
