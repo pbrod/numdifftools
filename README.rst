@@ -15,7 +15,7 @@ Numdifftools
    :target: https://landscape.io/github/pbrod/numdifftools/master
    :alt: Code Health
 
-.. image:: https://coveralls.io/repos/pbrod/numdifftools/badge.svg?branch=master&service=github
+.. image:: https://coveralls.io/repos/pbrod/numdifftools/badge.svg?branch=master
    :target: https://coveralls.io/github/pbrod/numdifftools?branch=master
 
 Numdifftools is a suite of tools written in `_Python <http://www.python.org/>`_ 
