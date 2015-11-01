@@ -11,6 +11,10 @@ Numdifftools
 .. image:: https://readthedocs.org/projects/pip/badge/?version=latest
     :target: http://numdifftools.readthedocs.org/en/latest/
 
+.. image:: https://landscape.io/github/pbrod/numdifftools/master/landscape.svg?style=flat
+   :target: https://landscape.io/github/pbrod/numdifftools/master
+   :alt: Code Health
+
 Numdifftools is a suite of tools written in `_Python <http://www.python.org/>`_ 
 to solve automatic numerical differentiation problems in one or more variables.
 Finite differences are used in an adaptive manner, coupled with a Richardson 
