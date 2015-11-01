@@ -1,8 +1,7 @@
 doc-warnings: yes
-test-warnings: yes
-strictness: medium
-mccabe:
-  run: false
+test-warnings: no
+strictness: veryhigh
+
 pylint:
   disable:
     - too-few-public-methods
