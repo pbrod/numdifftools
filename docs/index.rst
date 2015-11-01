@@ -1,11 +1,31 @@
 Numdifftools
 ============
 
+.. image:: https://badge.fury.io/py/numdifftools.png
+    :target: https://pypi.python.org/pypi/Numdifftools/
+
+.. image:: https://travis-ci.org/pbrod/numdifftools.svg?branch=master
+    :target: https://travis-ci.org/pbrod/numdifftools
+
+.. image:: https://readthedocs.org/projects/pip/badge/?version=latest
+    :target: http://numdifftools.readthedocs.org/en/latest/
+
+.. image:: https://landscape.io/github/pbrod/numdifftools/master/landscape.svg?style=flat
+   :target: https://landscape.io/github/pbrod/numdifftools/master
+   :alt: Code Health
+
+.. image:: https://coveralls.io/repos/pbrod/numdifftools/badge.svg?branch=master
+   :target: https://coveralls.io/github/pbrod/numdifftools?branch=master
+
+.. image:: https://img.shields.io/pypi/pyversions/numdifftools.svg
+   :target: https://github.com/pbrod/numdifftools
+
+
 This is the documentation of **Numdifftools** |version|.
 
-Code and issue tracker is at https://github.com/pbrod/numdifftools.
+Bleeding edge available at: https://github.com/pbrod/numdifftools.
 
-Latest release is at http://pypi.python.org/pypi/Numdifftools.
+Official releases are available at: http://pypi.python.org/pypi/Numdifftools.
 
 
 Contents
