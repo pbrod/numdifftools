@@ -1,6 +1,6 @@
 doc-warnings: yes
 test-warnings: no
-strictness: veryhigh
+strictness: low
 
 pylint:
   disable:
