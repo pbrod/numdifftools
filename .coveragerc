@@ -1,8 +1,8 @@
 # .coveragerc to control coverage.py
 [run]
 branch = True
-source = git_numdifftools
-omit = */_version.py
+source = numdifftools
+omit = */run_benchmark.py
 
 [report]
 # Regexes for lines to exclude from consideration
