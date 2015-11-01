@@ -33,22 +33,22 @@ import numpy as np
 _TINY = np.finfo(float).machar.tiny
 
 
-# def c_atan2(x, y):
-#     a, b = np.real(x), np.imag(x)
-#     c, d = np.real(y), np.imag(y)
-#     return np.arctan2(a, c) + 1j * (c * b - a * d) / (a**2 + c**2)
-#
-#
-# def c_max(x, y):
-#     return np.where(x.real < y.real, y, x)
-#
-#
-# def c_min(x, y):
-#     return np.where(x.real > y.real, y, x)
-#
-#
-# def c_abs(z):
-#     return np.where(np.real(z) >= 0, z, -z)
+def c_atan2(x, y):
+    a, b = np.real(x), np.imag(x)
+    c, d = np.real(y), np.imag(y)
+    return np.arctan2(a, c) + 1j * (c * b - a * d) / (a**2 + c**2)
+
+
+def c_max(x, y):
+    return np.where(x.real < y.real, y, x)
+
+
+def c_min(x, y):
+    return np.where(x.real > y.real, y, x)
+
+
+def c_abs(z):
+    return np.where(np.real(z) >= 0, z, -z)
 
 
 class bicomplex(object):
