@@ -25,14 +25,13 @@ before_install:
   #- sudo ln -s /run/shm /dev/shm
 # Install packages
 install:
-  - conda install --yes python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib pytest
+  - conda install --yes python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib pytest coveralls
 before_script:
   - git config --global user.email "per.andreas.brodtkorb@gmail.com"
   - git config --global user.name "pbrod"
 script:
-  - python setup.py test
+  - coverage run --source=numdifftools setup.py test
 after_success:
-  - coveralls
   - if [[ "$COVERAGE" == "true" ]]; then coveralls || echo "failed"; fi
 cache:
   - apt
