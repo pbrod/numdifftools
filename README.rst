@@ -127,17 +127,16 @@ Documentation and code
 
 Numdifftools works on Python 2.7+ and Python 3.0+.
 
-Current version is
 
+Official releases available at: http://pypi.python.org/pypi/numdifftools
 .. image:: https://badge.fury.io/py/numdifftools.png
     :target: https://pypi.python.org/pypi/Numdifftools/
 
 
-Official releases:
-available at: http://pypi.python.org/pypi/numdifftools
+Official documentation available at: http://numdifftools.readthedocs.org/
+.. image:: https://readthedocs.org/projects/pip/badge/?version=latest
+    :target: http://numdifftools.readthedocs.org/en/latest/
 
-Official documentation:
-available at: http://numdifftools.readthedocs.org/
 
 Bleeding edge: https://github.com/pbrod/numdifftools.
 
