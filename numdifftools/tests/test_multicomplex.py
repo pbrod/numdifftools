@@ -5,7 +5,7 @@ Created on 22. apr. 2015
 '''
 import unittest
 # from functools import partial
-from numdifftools.multicomplex import bicomplex
+from numdifftools.multicomplex import bicomplex, c_abs, c_arctan
 from numdifftools.test_functions import get_function
 import numpy as np
 
