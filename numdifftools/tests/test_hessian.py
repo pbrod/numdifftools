@@ -1,13 +1,9 @@
 # -*- coding:utf-8 -*-
-""""""
-
 from __future__ import division
 import unittest
 import numdifftools as nd
 import numpy as np
 from numpy import pi, r_, sqrt, array
-# import numdifftools.nd_algopy as algopy
-# import numdifftools.nd_scientific as scientific
 from scipy import linalg, optimize, constants
 from numdifftools.multicomplex import c_abs as abs
 _TINY = np.finfo(float).machar.tiny
@@ -15,8 +11,10 @@ _TINY = np.finfo(float).machar.tiny
 
 #  Hamiltonian
 #     H = sum_i(p_i2/(2m)+ 1/2 * m * w2 x_i2) + sum_(i!=j)(a/|x_i-x_j|)
-class classicalHamiltonian:
-    '''
+class classicalHamiltonian(object):
+    """
+    Hamiltonian
+
     Parameters
     ----------
     N : scalar
@@ -27,7 +25,8 @@ class classicalHamiltonian:
         Coulomb constant times the electronic charge in SI units.
     m : scalar
         the mass of a single trapped ion in the chain
-    '''
+    """
+
     def __init__(self):
         self.N = 2
         f = 1000000      # f is a scalar, it's the trap frequency
@@ -37,10 +36,12 @@ class classicalHamiltonian:
         self.m = 39.96 * 1.66e-27
 
     def potential(self, positionvector):
-        '''
+        """
+        Return potential
+
         positionvector is an 1-d array (vector) of length N that contains the
         positions of the N ions
-        '''
+        """
         x = positionvector
         w = self.w
         C = self.C
@@ -61,8 +62,12 @@ class classicalHamiltonian:
         return x_0
 
     def normal_modes(self, eigenvalues):
-        '''the computed eigenvalues of the matrix Vx are of the form
-        (normal_modes)2*m.'''
+        """
+        Return normal modes
+
+        the computed eigenvalues of the matrix Vx are of the form
+        (normal_modes)2*m.
+        """
         m = self.m
         normal_modes = sqrt(eigenvalues / m)
         return normal_modes

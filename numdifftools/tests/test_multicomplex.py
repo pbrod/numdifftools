@@ -1,8 +1,8 @@
-'''
+"""
 Created on 22. apr. 2015
 
 @author: pab
-'''
+"""
 import unittest
 # from functools import partial
 from numdifftools.multicomplex import bicomplex

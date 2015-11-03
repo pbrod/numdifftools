@@ -1,4 +1,4 @@
-'''
+"""
 Numdifftools.nd_algopy
 ======================
 This module provide an easy to use interface to derivatives calculated with
@@ -51,7 +51,7 @@ http://www.sciencedirect.com/science/article/pii/S1877750311001013
 https://en.wikipedia.org/wiki/Automatic_differentiation
 
 https://pythonhosted.org/algopy/index.html
-'''
+"""
 from __future__ import division
 import numpy as np
 from scipy import misc
@@ -151,7 +151,7 @@ class Derivative(_Common):
     -------
     der : ndarray
        array of derivatives
-    """, example='''
+    """, example="""
     Example
     -------
     # 1'st and 2'nd derivative of exp(x), at x == 1
@@ -171,14 +171,14 @@ class Derivative(_Common):
     >>> fd3 = nda.Derivative(f)
     >>> np.allclose(fd3([0,1]), [ 0.,  7.])
     True
-    ''', see_also='''
+    """, see_also="""
     See also
     --------
     Gradient,
     Hessdiag,
     Hessian,
     Jacobian
-    ''')
+    """)
 
     def __init__(self, f, n=1, method='forward'):
         self.f = f
@@ -217,7 +217,7 @@ class Jacobian(_Common):
     -------
     jacob : array
         Jacobian
-    """, example='''
+    """, example="""
     Example
     -------
     >>> import numdifftools.nd_algopy as nda
@@ -248,14 +248,14 @@ class Jacobian(_Common):
     >>> Jfun4 = nda.Jacobian(f2, method='reverse')
     >>> Jfun4([3,5,7])
     array([[ 135.42768462,   41.08553692,   15.        ]])
-    ''', see_also='''
+    """, see_also="""
     See also
     --------
     Derivative
     Gradient,
     Hessdiag,
     Hessian,
-    ''')
+    """)
 
     #     def _jacobian_forward(self, x, *args, **kwds):
     #         x = np.asarray(x, dtype=float)
@@ -292,7 +292,7 @@ class Gradient(_Common):
     -------
     grad : array
         gradient
-    """, example='''
+    """, example="""
     Example
     -------
     >>> import numdifftools.nd_algopy as nda
@@ -319,14 +319,14 @@ class Gradient(_Common):
     >>> grad3 = rd([1,1])
     >>> grad3==np.array([ 0.,  0.])
     array([ True,  True], dtype=bool)
-    ''', see_also='''
+    """, see_also="""
     See also
     --------
     Derivative
     Jacobian,
     Hessdiag,
     Hessian,
-    ''')
+    """)
 
     def _reverse(self, x, *args, **kwds):
 
@@ -350,7 +350,7 @@ class Hessian(_Common):
     -------
     hess : ndarray
        array of partial second derivatives, Hessian
-    """, extra_note='', example='''
+    """, extra_note='', example="""
     Example
     -------
     >>> import numdifftools.nd_algopy as nda
@@ -379,14 +379,14 @@ class Hessian(_Common):
     >>> h3
     array([[-1.,  1.],
            [ 1., -1.]])
-    ''', see_also='''
+    """, see_also="""
     See also
     --------
     Derivative
     Gradient,
     Jacobian,
     Hessdiag,
-    ''')
+    """)
 
     def __init__(self, f, method='forward'):
         self.f = f
@@ -415,7 +415,7 @@ class Hessdiag(Hessian):
     -------
     hessdiag : ndarray
        Hessian diagonal array of partial second order derivatives.
-    """, extra_note='', example='''
+    """, extra_note='', example="""
     Example
     -------
     >>> import numdifftools.nd_algopy as nda
@@ -442,14 +442,14 @@ class Hessdiag(Hessian):
     >>> h3
     array([-1., -1.])
 
-    ''', see_also='''
+    """, see_also="""
     See also
     --------
     Derivative
     Gradient,
     Jacobian,
     Hessian,
-    ''')
+    """)
 
     def _forward(self, x, *args, **kwds):
         # return np.diag(super(Hessdiag, self)._forward(x, *args, **kwds))

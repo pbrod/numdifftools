@@ -4,8 +4,8 @@ from numpy.testing import assert_array_almost_equal, assert_allclose
 from numdifftools.extrapolation import Dea, dea3, Richardson
 
 
-class TestRichardson():
-       def test_order_step_combinations(self):
+class TestRichardson(unittest.TestCase):
+    def test_order_step_combinations(self):
         true_vals = {
             (1, 1, 1): [-0.9999999999999998, 1.9999999999999998],
             (1, 1, 2): [-0.33333333333333304, 1.333333333333333],

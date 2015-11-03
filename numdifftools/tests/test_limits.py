@@ -1,8 +1,8 @@
-'''
+"""
 Created on 28. aug. 2015
 
 @author: pab
-'''
+"""
 import unittest
 import numpy as np
 from numpy.testing import assert_array_almost_equal, assert_allclose

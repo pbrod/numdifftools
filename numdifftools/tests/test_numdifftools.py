@@ -1,6 +1,4 @@
-""" Test functions for numdifftools module
-
-"""
+"""Test functions for numdifftools module"""
 from __future__ import print_function
 import unittest
 import numdifftools.core as nd
@@ -272,7 +270,7 @@ class TestDerivative(unittest.TestCase):
             np.testing.assert_allclose(scale, nd.default_scale(method, n=1))
 
     def test_fun_with_additional_parameters(self):
-        '''Test for issue #9'''
+        """Test for issue #9"""
         def func(x, a, b=1):
             return b * a * x * x * x
         methods = ['forward', 'backward', 'central', 'complex', 'multicomplex']
@@ -286,7 +284,7 @@ class TestDerivative(unittest.TestCase):
                 assert_array_almost_equal(val, 0)
 
     def test_derivative_cube(self):
-        '''Test for Issue 7'''
+        """Test for Issue 7"""
         def cube(x):
             return x * x * x
         dcube = nd.Derivative(cube)

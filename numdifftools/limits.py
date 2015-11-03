@@ -1,4 +1,4 @@
-'''
+"""
 Created on 27. aug. 2015
 
 @author: pab
@@ -7,7 +7,7 @@ e-mail: woodchips@rochester.rr.com
 Release: 1.0
 Release date: 5/23/2008
 
-'''
+"""
 from __future__ import division, print_function
 import numpy as np
 from collections import namedtuple
@@ -17,16 +17,16 @@ _EPS = EPS
 
 
 def _make_exact(h):
-    '''Make sure h is an exact representable number
+    """Make sure h is an exact representable number
+
     This is important when calculating numerical derivatives and is
     accomplished by adding 1 and then subtracting 1..
-    '''
+    """
     return (h + 1.0) - 1.0
 
 
 def valarray(shape, value=np.NaN, typecode=None):
-    """Return an array of all value.
-    """
+    """Return an array of all value."""
     if typecode is None:
         typecode = bool
     out = np.ones(shape, dtype=typecode) * value
@@ -37,7 +37,7 @@ def valarray(shape, value=np.NaN, typecode=None):
 
 
 def nom_step(x=None):
-    '''Return nominal step'''
+    """Return nominal step"""
     if x is None:
         return 1.0
     return np.maximum(np.log1p(np.abs(x)), 1.0)
@@ -52,7 +52,7 @@ def _default_base_step(x, scale, epsilon=None):
 
 
 class MinStepGenerator(object):
-    '''
+    """
     Generates a sequence of steps
 
     where steps = base_step * step_ratio ** (np.arange(num_steps) + offset)
@@ -73,7 +73,7 @@ class MinStepGenerator(object):
     scale : real scalar, optional
         scale used in base step. If not None it will override the default
         computed with the default_scale function.
-    '''
+    """
 
     def __init__(self, base_step=None, step_ratio=4.0, num_steps=None,
                  offset=0, scale=1.2, use_exact_steps=True):
@@ -121,7 +121,8 @@ class MinStepGenerator(object):
 
 
 class Limit(object):
-    ''' Compute limit of a function at a given point
+    """
+    Compute limit of a function at a given point
 
     Parameters
     ----------
@@ -226,7 +227,8 @@ class Limit(object):
     >>> def h(x): return  (x-np.sin(x))/x**3
     >>> lim_h0, err = Limit(h, full_output=True)(0)
     >>> lim_h0, err
-    '''
+    """
+
     info = namedtuple('info', ['error_estimate', 'final_step', 'index'])
 
     def __init__(self, f, step=None, method='above', order=4,
@@ -359,7 +361,7 @@ class Limit(object):
 
 
 # class Residue(Limit):
-#     '''function [res,errest] = residueEst(fun,z0,varargin)
+#     """function [res,errest] = residueEst(fun,z0,varargin)
 #     residueEst: residue of fun at z0 with an error estimate,
 # 1st or 2nd order pole
 #     usage: [res,errest] = residueEst(fun,z0)
@@ -494,7 +496,7 @@ class Limit(object):
 #
 #     e =
 #       2.6336e-11
-#     '''
+#     """
 #
 #     def __init__(self, f, dz=None, order=None, pole_order=1, max_step=1000,
 #                  step_ratio=2.0, path='radial', dtheta=np.pi/8):

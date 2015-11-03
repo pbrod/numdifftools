@@ -14,8 +14,10 @@ _TINY = np.finfo(float).machar.tiny
 
 #  Hamiltonian
 #     H = sum_i(p_i2/(2m)+ 1/2 * m * w2 x_i2) + sum_(i!=j)(a/|x_i-x_j|)
-class classicalHamiltonian:
-    '''
+class classicalHamiltonian(object):
+    """
+    Hamiltonian
+
     Parameters
     ----------
     N : scalar
@@ -26,7 +28,7 @@ class classicalHamiltonian:
         Coulomb constant times the electronic charge in SI units.
     m : scalar
         the mass of a single trapped ion in the chain
-    '''
+    """
 
     def __init__(self):
         self.N = 2
@@ -37,10 +39,12 @@ class classicalHamiltonian:
         self.m = 39.96 * 1.66e-27
 
     def potential(self, positionvector):
-        '''
+        """
+        Return potential
+
         positionvector is an 1-d array (vector) of length N that contains the
         positions of the N ions
-        '''
+        """
         x = positionvector
         w = self.w
         C = self.C
@@ -61,8 +65,11 @@ class classicalHamiltonian:
         return x_0
 
     def normal_modes(self, eigenvalues):
-        '''the computed eigenvalues of the matrix Vx are of the form
-        (normal_modes)2*m.'''
+        """Return normal modes
+
+        Computed eigenvalues of the matrix Vx are of the form
+            (normal_modes)**2*m.
+        """
         m = self.m
         normal_modes = sqrt(eigenvalues / m)
         return normal_modes
@@ -140,7 +147,7 @@ class TestDerivative(unittest.TestCase):
                 assert_array_almost_equal(y, true_vals[n - 1])
 
     def test_fun_with_additional_parameters(self):
-        '''Test for issue #9'''
+        """Test for issue #9"""
         def func(x, a, b=1):
             return b * a * x * x * x
         methods = ['reverse', 'forward']
@@ -153,7 +160,7 @@ class TestDerivative(unittest.TestCase):
                 assert_array_almost_equal(val, 0)
 
     def test_derivative_cube(self):
-        '''Test for Issue 7'''
+        """Test for Issue 7"""
         def cube(x):
             return x * x * x
 

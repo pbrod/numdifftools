@@ -1,5 +1,6 @@
 # !/usr/bin/env python
 """numerical differentiation functions:
+
 Derivative, Gradient, Jacobian, and Hessian
 
 Author:      Per A. Brodtkorb
@@ -29,8 +30,8 @@ from scipy import misc
 from scipy.ndimage.filters import convolve1d
 import warnings
 
-__all__ = ['dea3', 'Derivative', 'Jacobian', 'Gradient', 'Hessian', 'Hessdiag',
-           'MinStepGenerator', 'MaxStepGenerator', 'Richardson']
+__all__ = ('dea3', 'Derivative', 'Jacobian', 'Gradient', 'Hessian', 'Hessdiag',
+           'MinStepGenerator', 'MaxStepGenerator', 'Richardson')
 # NOTE: we only do double precision internally so far
 _TINY = np.finfo(float).tiny
 _EPS = np.finfo(float).eps
@@ -53,9 +54,8 @@ _CENTRAL_WEIGHTS_AND_POINTS = {
 
 
 def fornberg_weights_all(x, x0, M=1):
-    '''
-    Return finite difference weights_and_points for derivatives
-    of all orders 0, 1, ..., m
+    """
+    Return finite difference weights_and_points for derivatives of all orders.
 
     Parameters
     ----------
@@ -82,7 +82,7 @@ def fornberg_weights_all(x, x0, M=1):
     SIAM Review 40, pp. 685-691.
 
     http://www.scholarpedia.org/article/Finite_difference_method
-    '''
+    """
     N = len(x)
     if M >= N:
         raise ValueError('length(x) must be larger than m')
@@ -103,7 +103,7 @@ def fornberg_weights_all(x, x0, M=1):
 
 
 def fornberg_weights(x, x0, m=1):
-    '''
+    """
     Return weights for finite difference approximation of the m'th derivative
     U^m(x0), evaluated at x0, based on n values of U at x[0], x[1],... x[n-1]:
 
@@ -129,15 +129,16 @@ def fornberg_weights(x, x0, m=1):
     See also
     --------
     fornberg_weights_all
-    '''
+    """
     return fornberg_weights_all(x, x0, m)[:, -1]
 
 
 def _make_exact(h):
-    '''Make sure h is an exact representable number
+    """Make sure h is an exact representable number
+
     This is important when calculating numerical derivatives and is
     accomplished by adding 1 and then subtracting 1..
-    '''
+    """
     return (h + 1.0) - 1.0
 
 
@@ -161,8 +162,7 @@ def default_scale(method='forward', n=1, order=2):
 
 
 def valarray(shape, value=np.NaN, typecode=None):
-    """Return an array of all value.
-    """
+    """Return an array of all value."""
     if typecode is None:
         typecode = bool
     out = np.ones(shape, dtype=typecode) * value
@@ -173,7 +173,7 @@ def valarray(shape, value=np.NaN, typecode=None):
 
 
 def nom_step(x=None):
-    '''Return nominal step'''
+    """Return nominal step."""
     if x is None:
         return 1.0
     return np.maximum(np.log1p(np.abs(x)), 1.0)
@@ -188,7 +188,8 @@ def _default_base_step(x, scale, epsilon=None):
 
 
 class MinStepGenerator(object):
-    '''
+
+    """
     Generates a sequence of steps
 
     where steps = base_step * step_ratio ** (np.arange(num_steps) + offset)
@@ -211,7 +212,7 @@ class MinStepGenerator(object):
     scale : real scalar, optional
         scale used in base step. If not None it will override the default
         computed with the default_scale function.
-    '''
+    """
 
     def __init__(self, base_step=None, step_ratio=2, num_steps=None,
                  offset=0, scale=None, num_extrap=0, use_exact_steps=True,
@@ -286,7 +287,7 @@ class MinStepGenerator(object):
 
 
 class MinMaxStepGenerator(object):
-    '''
+    """
     Generates a sequence of steps
 
     where
@@ -306,7 +307,7 @@ class MinMaxStepGenerator(object):
     scale : real scalar, optional
         scale used in base step. If set to a value it will override the scale
         supplied at runtime.
-    '''
+    """
 
     def __init__(self, step_min=None, step_max=None, num_steps=10, scale=None,
                  num_extrap=0):
@@ -340,23 +341,9 @@ class MinMaxStepGenerator(object):
             if (np.abs(h) > 0).all():
                 yield h
 
-'''
-    step_nom : vector   default maximum(log1p(abs(x0)), 1)
-        Nominal step. (The steps: h_i = step_nom[i] * delta)
-    step_max : real scalar  (Default 2.0)
-        Maximum allowed excursion from step_nom as a multiple of it.
-    step_ratio: real scalar  (Default 2.0)
-        Ratio used between sequential steps in the estimation of the derivative
-    step_num : integer  (Default 26)
-        The minimum step_num for making richardson extrapolation work is
-            7 + np.ceil(self.n/2.) + self.order + self.richardson_terms
-    delta : vector default step_max*step_ratio**(-arange(step_num))
-        Defines the steps sizes used in derivation: h_i = step_nom[i] * delta
-'''
-
 
 class MaxStepGenerator(MinStepGenerator):
-    '''
+    """
     Generates a sequence of steps
 
     where
@@ -377,8 +364,8 @@ class MaxStepGenerator(MinStepGenerator):
         Nominal step.
     offset : real scalar, optional, default 0
         offset to the base step: max_step * nom_step
+    """
 
-    '''
     def __init__(self, step_max=2.0, step_ratio=2.0, num_steps=15,
                  step_nom=None, offset=0, num_extrap=0,
                  use_exact_steps=False, check_num_steps=True):
@@ -768,7 +755,8 @@ class Derivative(_Derivative):
 
     @staticmethod
     def _fd_matrix(step_ratio, parity, nterms):
-        ''' Return matrix for finite difference and complex step derivation.
+        """
+        Return matrix for finite difference and complex step derivation.
 
         Parameters
         ----------
@@ -782,7 +770,7 @@ class Derivative(_Derivative):
             4 (only every 4'th order terms included starting from order 4)
         nterms : scalar, integer
             number of terms
-        '''
+        """
         try:
             step = [1, 2, 2, 4, 4, 4, 4][parity]
         except Exception as e:
@@ -802,7 +790,7 @@ class Derivative(_Derivative):
                 (self.method == 'complex' and (n % 8 in [3, 4, 5, 6])))
 
     def _get_finite_difference_rule(self, step_ratio):
-        '''
+        """
         Generate finite differencing rule in advance.
 
         The rule is for a nominal unit step size, and will
@@ -817,7 +805,7 @@ class Derivative(_Derivative):
         n
         order
         method
-        '''
+        """
         method = self.method
         if method in ('multicomplex', ) or self.n == 0:
             return np.ones((1,))
@@ -844,13 +832,13 @@ class Derivative(_Derivative):
         return fd_rule
 
     def _apply_fd_rule(self, fd_rule, sequence, steps):
-        '''
+        """
         Return derivative estimates of f at x0 for a sequence of stepsizes h
 
         Member variables used
         ---------------------
         n
-        '''
+        """
         f_del, h, original_shape = self._vstack(sequence, steps)
 
         ne = h.shape[0]
@@ -1068,7 +1056,7 @@ class Jacobian(Gradient):
     by f (e.g., with a value for each observation), it returns a 3d array
     with the Jacobian of each observation with shape xk x nobs x xk. I.e.,
     the Jacobian of the first observation would be [:, 0, :]
-    """, example='''
+    """, example="""
     Example
     -------
     >>> import numdifftools as nd
@@ -1088,7 +1076,7 @@ class Jacobian(Gradient):
     >>> Jfun3 = nd.Jacobian(fun2)
     >>> Jfun3([3.,5.,7.])
     array([ 135.42768462,   41.08553692,   15.        ])
-    ''', see_also="""
+    """, see_also="""
     See also
     --------
     Derivative, Hessian, Gradient
@@ -1135,7 +1123,7 @@ class Hessdiag(Derivative):
 
     @staticmethod
     def _central2(f, fx, x, h, *args, **kwds):
-        '''Eq. 8'''
+        """Eq. 8"""
         n = len(x)
         increments = np.identity(n) * h
         partials = [(f(x + 2*hi, *args, **kwds) +
@@ -1147,7 +1135,7 @@ class Hessdiag(Derivative):
 
     @staticmethod
     def _central_even(f, fx, x, h, *args, **kwds):
-        '''Eq. 9'''
+        """Eq. 9"""
         n = len(x)
         increments = np.identity(n) * h
         partials = [(f(x + hi, *args, **kwds) +
@@ -1267,9 +1255,11 @@ class Hessian(_Derivative):
 
     @staticmethod
     def _complex_even(f, fx, x, h, *args, **kwargs):
-        '''Calculate Hessian with complex-step derivative approximation
+        """
+        Calculate Hessian with complex-step derivative approximation
+
         The stepsize is the same for the complex and the finite difference part
-        '''
+        """
         n = len(x)
         # h = _default_base_step(x, 3, base_step, n)
         ee = np.diag(h)
@@ -1285,8 +1275,7 @@ class Hessian(_Derivative):
 
     @staticmethod
     def _multicomplex2(f, fx, x, h, *args, **kwargs):
-        '''Calculate Hessian with bicomplex-step derivative approximation
-        '''
+        """Calculate Hessian with bicomplex-step derivative approximation"""
         n = len(x)
         ee = np.diag(h)
         hess = np.outer(h, h)
@@ -1299,7 +1288,7 @@ class Hessian(_Derivative):
 
     @staticmethod
     def _central_even(f, fx, x, h, *args, **kwargs):
-        '''Eq 9.'''
+        """Eq 9."""
         n = len(x)
         # h = _default_base_step(x, 4, base_step, n)
         ee = np.diag(h)
@@ -1320,7 +1309,7 @@ class Hessian(_Derivative):
 
     @staticmethod
     def _central2(f, fx, x, h, *args, **kwargs):
-        '''Eq. 8'''
+        """Eq. 8"""
         n = len(x)
         # NOTE: ridout suggesting using eps**(1/4)*theta
         # h = _default_base_step(x, 3, base_step, n)
@@ -1346,7 +1335,7 @@ class Hessian(_Derivative):
 
     @staticmethod
     def _forward(f, fx, x, h, *args, **kwargs):
-        '''Eq. 7'''
+        """Eq. 7"""
         n = len(x)
         ee = np.diag(h)
 

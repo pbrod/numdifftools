@@ -1,8 +1,8 @@
-'''
+"""
 Created on 28. aug. 2015
 
 @author: pab
-'''
+"""
 from __future__ import division, print_function
 import numpy as np
 from scipy import linalg
@@ -14,8 +14,7 @@ _TINY = np.finfo(float).tiny
 
 
 def convolve(sequence, rule, **kwds):
-    '''Wrapper around scipy.ndimage.convolve1d that allows complex input
-    '''
+    """Wrapper around scipy.ndimage.convolve1d that allows complex input."""
     if np.iscomplexobj(sequence):
         return (convolve1d(sequence.real, rule, **kwds) + 1j *
                 convolve1d(sequence.imag, rule, **kwds))
@@ -23,7 +22,7 @@ def convolve(sequence, rule, **kwds):
 
 
 class Dea(object):
-    '''
+    """
     LIMEXP  is the maximum number of elements the
     epsilon table data can contain. The epsilon table
     is stored in the first (LIMEXP+2) entries of EPSTAB.
@@ -55,7 +54,7 @@ class Dea(object):
     RES3LA - DOUBLE PREISION
              Vector of DIMENSION 3 containing at most
              the last 3 results.
-    '''
+    """
     def __init__(self, limexp=3):
         self.limexp = 2 * (limexp // 2) + 1
         self.epstab = np.zeros(limexp+5)
@@ -256,7 +255,7 @@ def dea3(v0, v1, v2, symmetric=False):
 
 
 class Richardson(object):
-    '''
+    """
     Extrapolates as sequence with Richardsons method
 
     Notes
@@ -290,7 +289,7 @@ class Richardson(object):
            [ -5.01999079e-05],
            [ -1.25498825e-05]]), array([[ 0.00320501]]), array([[ 1.]]))
 
-    '''
+    """
     def __init__(self, step_ratio=2.0, step=1, order=1, num_terms=2):
         self.num_terms = num_terms
         self.order = order

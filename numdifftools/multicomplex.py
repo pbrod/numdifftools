@@ -1,4 +1,4 @@
-'''
+"""
 Created on 22. apr. 2015
 
 @author: pab
@@ -26,7 +26,7 @@ step method
 Adriaen Verheyleweghen, (2014)
 Project report, NTNU
 
-'''
+"""
 from __future__ import division
 import numpy as np
 
@@ -52,10 +52,12 @@ def c_abs(z):
 
 
 class bicomplex(object):
-    '''BICOMPLEX(z1, z2)
+    """
+    BICOMPLEX(z1, z2)
+
     Creates an instance of a bicomplex object.
     zeta = z1 + j*z2, where z1 and z2 are complex numbers.
-    '''
+    """
 
     def __init__(self, z1, z2):
         z1, z2 = np.broadcast_arrays(z1, z2)
@@ -71,7 +73,7 @@ class bicomplex(object):
         return self.z1.size
 
     def mod_c(self):
-        '''Complex modulus'''
+        """Complex modulus"""
         r12, r22 = self.z1*self.z1, self.z2*self.z2
         r = np.sqrt(r12 + r22)
         return r
@@ -186,17 +188,17 @@ class bicomplex(object):
         return - self.__sub__(other)
 
     def __div__(self, other):
-        '''elementwise division'''
+        """elementwise division"""
         return self * other ** -1  # np.exp(-np.log(other))
 
     __truediv__ = __div__
 
     def __rdiv__(self, other):
-        '''elementwise division'''
+        """elementwise division"""
         return other * self ** -1
 
     def __mul__(self, other):
-        '''elementwise multiplication'''
+        """elementwise multiplication"""
         other = self._coerce(other)
         return bicomplex(self.z1 * other.z1 - self.z2 * other.z2,
                          (self.z1 * other.z2 + self.z2 * other.z1))

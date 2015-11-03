@@ -1,8 +1,8 @@
-'''
+"""
 Created on 17. mai 2015
 
 @author: pab
-'''
+"""
 from __future__ import division
 import numpy as np
 

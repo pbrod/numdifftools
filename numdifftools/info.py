@@ -1,6 +1,6 @@
 """
 Introduction to Numdifftools
-=============================
+============================
 
 Numdifftools is a suite of tools written in Python to solve automatic numerical
 differentiation problems in one or more variables. Finite differences are used
