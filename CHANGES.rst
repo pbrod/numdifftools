@@ -182,7 +182,7 @@ pbrod (11)
 
 
 Version 0.3.1, May 20, 2009
----------------------
+---------------------------
 
 pbrod (4)
       * First version of numdifftools published on google.code

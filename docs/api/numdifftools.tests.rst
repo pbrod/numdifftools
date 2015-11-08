@@ -12,6 +12,14 @@ numdifftools.tests.conftest module
     :undoc-members:
     :show-inheritance:
 
+numdifftools.tests.test_extrapolation module
+--------------------------------------------
+
+.. automodule:: numdifftools.tests.test_extrapolation
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 numdifftools.tests.test_hessian module
 --------------------------------------
 

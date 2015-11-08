@@ -15,11 +15,16 @@ from sphinx import apidoc
 import sphinx_rtd_theme
 # import alabaster
 
+package = "numdifftools"
+
+path0 = os.path.abspath(os.path.pardir)
+
+print('min path: {}'.format(path0))
+sys.path.insert(0, path0)
 
 __location__ = os.path.join(os.getcwd(), os.path.dirname(
     inspect.getfile(inspect.currentframe())))
 
-package = "numdifftools"
 namespace = []
 namespace_pkg = ".".join([namespace[-1], package]) if namespace else package
 
@@ -37,7 +42,8 @@ namespace_pkg = ".".join([namespace[-1], package]) if namespace else package
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.intersphinx', 'sphinx.ext.todo',
               'sphinx.ext.autosummary', 'sphinx.ext.viewcode', 'sphinx.ext.coverage',
-              'sphinx.ext.doctest', 'sphinx.ext.ifconfig', 'sphinx.ext.pngmath']
+              'sphinx.ext.doctest', 'sphinx.ext.ifconfig', 'sphinx.ext.pngmath',
+              'numpydoc']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

@@ -4,7 +4,7 @@ from .core import *
 from numpy.testing import Tester
 try:
     __version__ = pkg_resources.get_distribution(__name__).version
-except AttributeError:
+except :
     __version__ = 'unknown'
 
 test = Tester().test

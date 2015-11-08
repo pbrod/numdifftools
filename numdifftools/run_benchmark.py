@@ -8,7 +8,7 @@ from algopy import dot
 # from numpy import dot
 from collections import OrderedDict
 from numdifftools.core import MinStepGenerator, MaxStepGenerator
-import matplotlib.pyplot as pyplot
+import matplotlib.pyplot as plt
 
 
 class BenchmarkFunction(object):
@@ -23,43 +23,43 @@ class BenchmarkFunction(object):
 
 
 def plot_errors(error_objects, problem_sizes, symbols):
-    ploterror = pyplot.semilogy
+    ploterror = plt.semilogy
     for title, funcs, results in error_objects:
-        pyplot.figure()
-        pyplot.title(title)
+        plt.figure()
+        plt.title(title)
         # ref_sol = results[0]
         for i, method in enumerate(funcs):
             ploterror(problem_sizes, results[i], symbols[i],
                       markerfacecolor='None', label=method)
 
-        pyplot.ylabel(r'Absolute error $\|g_{ref} - g\|$')
-        pyplot.xlabel('problem size $N$')
-        pyplot.ylim(loglimits(results))
-        pyplot.grid()
-        leg = pyplot.legend(loc=7)
+        plt.ylabel(r'Absolute error $\|g_{ref} - g\|$')
+        plt.xlabel('problem size $N$')
+        plt.ylim(loglimits(results))
+        plt.grid()
+        leg = plt.legend(loc=7)
         frame = leg.get_frame()
         frame.set_alpha(0.4)
-        pyplot.savefig(title.lower().replace(' ', '_') + '.png', format='png')
+        plt.savefig(title.lower().replace(' ', '_') + '.png', format='png')
 
 
 def plot_runtimes(run_time_objects, problem_sizes, symbols):
-    plottime = pyplot.loglog
+    plottime = plt.loglog
     for title, funcs, results in run_time_objects:
-        pyplot.figure()
-        pyplot.title(title)
+        plt.figure()
+        plt.title(title)
         for i, method in enumerate(funcs):
             plottime(problem_sizes, results[i], symbols[i],
                      markerfacecolor='None', label=method)
 
-        pyplot.ylabel('time $t$')
-        pyplot.xlabel('problem size $N$')
-        pyplot.xlim(loglimits(problem_sizes))
-        pyplot.ylim(loglimits(results))
-        pyplot.grid()
-        leg = pyplot.legend(loc=2)
+        plt.ylabel('time $t$')
+        plt.xlabel('problem size $N$')
+        plt.xlim(loglimits(problem_sizes))
+        plt.ylim(loglimits(results))
+        plt.grid()
+        leg = plt.legend(loc=2)
         frame = leg.get_frame()
         frame.set_alpha(0.4)
-        pyplot.savefig(title.lower().replace(' ', '_') + '.png', format='png')
+        plt.savefig(title.lower().replace(' ', '_') + '.png', format='png')
 
 
 def loglimits(data, border=0.05):
