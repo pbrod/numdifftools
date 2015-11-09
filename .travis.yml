@@ -1,7 +1,7 @@
 # Travis configuration file using the build matrix feature
 # Read more under http://docs.travis-ci.com/user/build-configuration/
 # THIS SCRIPT IS SUPPOSED TO BE AN EXAMPLE. MODIFY IT ACCORDING TO YOUR NEEDS!
-sudo: false
+
 language: python
 python:
   - 2.7
@@ -11,11 +11,27 @@ notifications:
   email: false
  
 # Setup anaconda
-#before_install:
-  
+before_install:
+  - sudo apt-get update
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
+      wget https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh;
+    else
+      wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+    fi
+  - chmod +x miniconda.sh
+  - ./miniconda.sh -b
+  - export PATH=/home/travis/miniconda/bin:$PATH
+  - conda update --yes conda
+# The next couple lines fix a crash with multiprocessing on Travis and are not specific to using Miniconda
+  - sudo rm -rf /dev/shm
+  - sudo ln -s /run/shm /dev/shm
+
+  - conda create --yes -n condaenv python=$TRAVIS_PYTHON_VERSION
+  - conda install --yes -n condaenv pip
+  - source activate condaenv
 # Install packages
 install:
-  - pip install numpy scipy matplotlib pytest
+  - conda install --yes python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib pytest
   - pip install coveralls
 before_script:
   - git config --global user.email "per.andreas.brodtkorb@gmail.com"
