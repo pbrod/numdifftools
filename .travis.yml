@@ -31,7 +31,7 @@ before_install:
   - source activate condaenv
 # Install packages
 install:
-  - conda install --yes python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib pytest
+  - conda install --yes python=$TRAVIS_PYTHON_VERSION numpy scipy algopy pytest
   - pip install coveralls
 before_script:
   - git config --global user.email "per.andreas.brodtkorb@gmail.com"
