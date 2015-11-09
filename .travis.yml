@@ -27,6 +27,7 @@ before_install:
   - conda update --yes conda
   - conda create --yes -n condaenv python=$TRAVIS_PYTHON_VERSION
   - conda install --yes -n condaenv pip
+  - conda config --add channels https://conda.anaconda.org/omnia
   - source activate condaenv
 # Install packages
 install:
