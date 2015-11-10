@@ -26,7 +26,7 @@ before_install:
       export PATH=/home/travis/miniconda3/bin:$PATH;
     fi
   - conda update --yes conda
-  - conda install conda-build
+  - conda install --yes conda-build
   - conda create --yes -n condaenv python=$TRAVIS_PYTHON_VERSION
   - conda install --yes -n condaenv pip
   - conda config --add channels https://conda.anaconda.org/omnia
