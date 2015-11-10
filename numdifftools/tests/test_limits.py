@@ -8,7 +8,6 @@ import numpy as np
 from numpy.testing import assert_array_almost_equal, assert_allclose
 from numdifftools.limits import Limit
 
-
 class TestLimit(unittest.TestCase):
 
     def test_sinx_divx(self):

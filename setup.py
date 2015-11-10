@@ -35,6 +35,16 @@ PyPi upload:
 import sys
 from setuptools import setup
 
+def print_version():
+    import pkg_resources
+    try:
+        __version__ = pkg_resources.get_distribution("numdifftools").version
+        with open("__conda_version__.txt","w") as fid:
+            fid.write(__version__)
+    except pkg_resources.DistributionNotFound:
+        __version__ = 'unknown'
+    print("Version: {}".format(__version__))
+
 
 def setup_package():
     needs_sphinx = {'build_sphinx', 'upload_docs'}.intersection(sys.argv)
@@ -42,6 +52,7 @@ def setup_package():
     setup(setup_requires=['six', 'pyscaffold>=2.4rc1,<2.5a0'] + sphinx,
           tests_require=['pytest_cov', 'pytest'],
           use_pyscaffold=True)
+    print_version()
 
 
 if __name__ == "__main__":

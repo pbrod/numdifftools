@@ -156,14 +156,18 @@ Installation and upgrade:
 
 with pip
 
-$ pip install numdifftools
+    $ pip install numdifftools
 
 
 with easy_install
 
-$ easy_install numdifftools for installation
+    $ easy_install numdifftools 
 
-$ easy_install upgrade numdifftools to upgrade to the newest version
+or
+
+    $ easy_install upgrade numdifftools
+
+to upgrade to the newest version
 
 
 Unit tests

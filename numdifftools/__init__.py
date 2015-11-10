@@ -4,7 +4,8 @@ from .core import *
 from numpy.testing import Tester
 try:
     __version__ = pkg_resources.get_distribution(__name__).version
-except :
+except pkg_resources.DistributionNotFound:
     __version__ = 'unknown'
 
-test = Tester().test
+
+test = Tester(raise_warnings="release").test

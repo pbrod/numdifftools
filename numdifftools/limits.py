@@ -324,8 +324,9 @@ class Limit(object):
         steps = [sign * step for step in self.step(z)]
 
         self._set_richardson_rule(self.step.step_ratio, self.order + 1)
-
-        sequence = [f(z + h, *args, **kwds) for h in steps]
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            sequence = [f(z + h, *args, **kwds) for h in steps]
         results = self._vstack(sequence, steps)
         lim_fz, info = self._extrapolate(*results)
         return lim_fz, info
@@ -340,7 +341,9 @@ class Limit(object):
     def __call__(self, x, *args, **kwds):
         z = np.asarray(x)
         f = self.f
-        fz = f(z, *args, **kwds)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            fz = f(z, *args, **kwds)
 
         err = np.zeros_like(fz, )
         final_step = np.zeros_like(fz)
