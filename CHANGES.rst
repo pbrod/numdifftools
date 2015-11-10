@@ -2,7 +2,29 @@
 Changelog
 =========
 
-Created with gitcommand: git shortlog v0.9.12..v0.9.13
+Created with gitcommand: git shortlog v0.9.13..v0.9.14
+
+
+Version 0.9.14, November 10, 2015
+---------------------------------
+
+pbrod (53):
+      * Updated documentation of setup.py
+      * Updated README.rst
+      * updated version
+      * Added more documentation
+      * Updated example
+      * Added .landscape.yml     updated .coveragerc, .travis.yml
+      * Added coverageall to README.rst.
+      * updated docs/index.rst
+      * Removed unused code and added tests/test_extrapolation.py
+      * updated tests
+      * Added more tests
+      * Readded c_abs c_atan2
+      * Removed dependence on wheel, numpydoc>=0.5 and sphinx_rtd_theme>=0.1.7 (only needed for building documentation)
+      * updated conda path in .travis.yml
+      * added omnia channel to .travis.yml
+      * Added conda_recipe files     Filtered out warnings in limits.py
 
 
 Version 0.9.13, October 30, 2015

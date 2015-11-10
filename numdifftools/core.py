@@ -1017,7 +1017,6 @@ class Gradient(Derivative):
     def _complex_odd(f, fx, x, h, *args, **kwds):
         n = len(x)
         increments = np.identity(n) * _SQRT_J * h
-
         partials = [((_SQRT_J/2.) * (f(x + ih, *args, **kwds) -
                                      f(x - ih, *args, **kwds))).imag
                     for ih in increments]

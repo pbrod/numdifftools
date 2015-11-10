@@ -36,9 +36,9 @@ before_install:
 install:
   - conda install --yes python=$TRAVIS_PYTHON_VERSION numpy scipy algopy pytest
   - pip install coveralls
-# - python setup.py install
-  - conda build conda_recipe
-  - conda install numdifftools --use-local
+  - python setup.py install
+#  - conda build conda_recipe
+#  - conda install numdifftools --use-local
 before_script:
   - git config --global user.email "per.andreas.brodtkorb@gmail.com"
   - git config --global user.name "pbrod"
