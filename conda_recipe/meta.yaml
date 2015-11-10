@@ -32,6 +32,7 @@ requirements:
     - scipy >=0.8
     - algopy >=0.4
     - six
+    - pyscaffold
     - setuptools_scm
 
   run:
@@ -41,6 +42,7 @@ requirements:
     - scipy >=0.8
     - algopy >=0.4
     - six
+    - pyscaffold
     - setuptools_scm
 
 test:

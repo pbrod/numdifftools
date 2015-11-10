@@ -30,6 +30,7 @@ before_install:
   - conda create --yes -n condaenv python=$TRAVIS_PYTHON_VERSION
   - conda install --yes -n condaenv pip
   - conda config --add channels https://conda.anaconda.org/omnia
+  - conda config --add channels https://conda.anaconda.org/pbrod
   - source activate condaenv
 # Install packages
 install:
