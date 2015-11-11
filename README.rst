@@ -158,6 +158,10 @@ with pip
 
     $ pip install numdifftools
 
+with conda
+
+    $ conda install numdifftools --channel https://conda.anaconda.org/pbrod
+
 
 with easy_install
 
