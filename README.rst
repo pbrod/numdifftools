@@ -160,7 +160,7 @@ with pip
 
 with conda
 
-    $ conda install numdifftools --channel https://conda.anaconda.org/pbrod
+    $ conda install -c https://conda.anaconda.org/pbrod numdifftools
 
 
 with easy_install
