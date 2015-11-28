@@ -384,7 +384,7 @@ class MaxStepGenerator(MinStepGenerator):
             return nom_step(x)
         return valarray(x.shape, value=self.step_nom)
 
-    def _default_base_step(self, xi, method, n):
+    def _default_base_step(self, xi, method, n, order=1):
         base_step = self.base_step
         if base_step is None:
             base_step = self.step_max * self._default_step_nom(xi)
