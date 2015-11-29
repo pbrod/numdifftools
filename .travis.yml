@@ -36,6 +36,7 @@ before_install:
 install:
   - conda install --yes python=$TRAVIS_PYTHON_VERSION numpy scipy algopy pytest
   - pip install coveralls
+  - pip install codecov
   - python setup.py install
 #  - conda build conda_recipe
 #  - conda install numdifftools --use-local
@@ -46,5 +47,6 @@ script:
   - coverage run --source=numdifftools setup.py test
 after_success:
   - coveralls
+  - codecov
 cache:
   - apt
