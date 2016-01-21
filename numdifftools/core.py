@@ -229,9 +229,9 @@ class MinStepGenerator(object):
 
     def __repr__(self):
         class_name = self.__class__.__name__
-        kwds = ['%s=%s' % (name, str(getattr(self, name)))
+        kwds = ['{0!s}={1!s}'.format(name, str(getattr(self, name)))
                 for name in self.__dict__.keys()]
-        return """%s(%s)""" % (class_name, ','.join(kwds))
+        return """{0!s}({1!s})""".format(class_name, ','.join(kwds))
 
     def _default_scale(self, method, n, order):
         scale = self.scale
@@ -320,9 +320,9 @@ class MinMaxStepGenerator(object):
 
     def __repr__(self):
         class_name = self.__class__.__name__
-        kwds = ['%s=%s' % (name, str(getattr(self, name)))
+        kwds = ['{0!s}={1!s}'.format(name, str(getattr(self, name)))
                 for name in self.__dict__.keys()]
-        return """%s(%s)""" % (class_name, ','.join(kwds))
+        return """{0!s}({1!s})""".format(class_name, ','.join(kwds))
 
     def __call__(self, x, method='forward', n=1, order=None):
         if self.scale is not None:
@@ -579,7 +579,7 @@ class _Derivative(object):
         return der, info
 
     def _get_function_name(self):
-        name = '_%s' % self.method
+        name = '_{0!s}'.format(self.method)
         even_derivative_order = self._is_even_derivative()
         if even_derivative_order and self.method in ('central', 'complex'):
             name = name + '_even'
@@ -775,7 +775,7 @@ class Derivative(_Derivative):
         try:
             step = [1, 2, 2, 4, 4, 4, 4][parity]
         except Exception as e:
-            msg = '%s. Parity must be 0, 1, 2, 3, 4, 5 or 6! (%d)' % (str(e),
+            msg = '{0!s}. Parity must be 0, 1, 2, 3, 4, 5 or 6! ({1:d})'.format(str(e),
                                                                       parity)
             raise ValueError(msg)
         inv_sr = 1.0 / step_ratio
