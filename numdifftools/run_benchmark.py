@@ -71,7 +71,7 @@ def loglimits(data, border=0.05):
 fixed_step = MinStepGenerator(num_steps=1, use_exact_steps=True, offset=0)
 epsilon = MaxStepGenerator(num_steps=14, use_exact_steps=True,
                            step_ratio=1.6, offset=0)
-adaptiv_txt = '_adaptive_%d_%s_%d' % (epsilon.num_steps,
+adaptiv_txt = '_adaptive_{0:d}_{1!s}_{2:d}'.format(epsilon.num_steps,
                                       str(epsilon.step_ratio), epsilon.offset)
 gradient_funs = OrderedDict()
 nda_method = 'forward'

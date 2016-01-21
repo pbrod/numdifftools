@@ -135,7 +135,7 @@ class bicomplex(object):
 
     def __repr__(self):
         name = self.__class__.__name__
-        return """%s(z1=%s, z2=%s)""" % (name, str(self.z1), str(self.z2))
+        return """{0!s}(z1={1!s}, z2={2!s})""".format(name, str(self.z1), str(self.z2))
 
     def __lt__(self, other):
         other = self._coerce(other)
