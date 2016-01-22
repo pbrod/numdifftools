@@ -191,10 +191,10 @@ def linkcode_resolve(domain, info):
     fn = relpath(fn, start=dirname(numdifftools.__file__))
 
     if 'dev' in _VERSION:
-        return "http://github.com/pbrod/numdifftools/blob/master/numdifftools/%s%s" % (
+        return "http://github.com/pbrod/numdifftools/blob/master/numdifftools/{0!s}{1!s}".format(
            fn, linespec)
     else:
-        return "http://github.com/pbrod/numdifftools/blob/v%s/numdifftools/%s%s" % (
+        return "http://github.com/pbrod/numdifftools/blob/v{0!s}/numdifftools/{1!s}{2!s}".format(
            _VERSION, fn, linespec)
 
 
