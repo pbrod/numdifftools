@@ -1,76 +1,95 @@
 numdifftools package
 ====================
 
-Subpackages
------------
+.. currentmodule:: numdifftools.core
 
-.. toctree::
 
-    numdifftools.tests
+Step generators
+----------------
+.. autosummary::
+   :toctree: generated/
 
-Submodules
-----------
+	MinStepGenerator
+	MaxStepGenerator
+	MinMaxStepGenerator
 
-numdifftools.core module
-------------------------
 
-.. automodule:: numdifftools.core
-    :members:
-    :undoc-members:
-    :show-inheritance:
+Utility functions
+------------------
+.. autosummary::
+   :toctree: generated/
+	valarray
+	nomstep
+	default_scale
+
+
+Finite difference approximations
+---------------------------------
+.. autosummary::
+   :toctree: generated/
+	
+   fornberg_weights_all
+   fornberg_weights
+   Derivative
+   Gradient
+   Jacobian
+   Hessdiag
+   Hessian
+   directionaldiff
+
+
+.. currentmodule:: numdifftools.extrapolation
 
 numdifftools.extrapolation module
 ---------------------------------
+.. autosummary::
+   :toctree: generated/
 
-.. automodule:: numdifftools.extrapolation
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   convolve
+   Dea
+   dea3
+   Richardson
 
-numdifftools.info module
-------------------------
 
-.. automodule:: numdifftools.info
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. currentmodule:: numdifftools.limits
 
 numdifftools.limits module
 --------------------------
+.. autosummary::
+   :toctree: generated/
 
-.. automodule:: numdifftools.limits
-    :members:
-    :undoc-members:
-    :show-inheritance:
+    MinStepGenerator
+    Limit
+
+
+.. currentmodule:: numdifftools.multicomplex
 
 numdifftools.multicomplex module
 --------------------------------
 
-.. automodule:: numdifftools.multicomplex
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. autosummary::
+   :toctree: generated/
+
+    bicomplex
+
+
+.. currentmodule:: numdifftools.nd_algopy
 
 numdifftools.nd_algopy module
 -----------------------------
+.. autosummary::
+   :toctree: generated/
 
-.. automodule:: numdifftools.nd_algopy
-    :members:
-    :undoc-members:
-    :show-inheritance:
+
+   Jacobian
+   Hessdiag
+   Hessian
+   directionaldiff
 
 numdifftools.run_benchmark module
 ---------------------------------
 
 .. automodule:: numdifftools.run_benchmark
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-numdifftools.test_functions module
-----------------------------------
-
-.. automodule:: numdifftools.test_functions
     :members:
     :undoc-members:
     :show-inheritance:

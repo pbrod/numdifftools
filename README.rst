@@ -2,25 +2,7 @@
 Numdifftools
 ============
 
-.. image:: https://badge.fury.io/py/numdifftools.png
-    :target: https://pypi.python.org/pypi/Numdifftools/
-
-.. image:: https://travis-ci.org/pbrod/numdifftools.svg?branch=master
-    :target: https://travis-ci.org/pbrod/numdifftools
-
-.. image:: https://readthedocs.org/projects/pip/badge/?version=latest
-    :target: http://numdifftools.readthedocs.org/en/latest/
-
-.. image:: https://landscape.io/github/pbrod/numdifftools/master/landscape.svg?style=flat
-   :target: https://landscape.io/github/pbrod/numdifftools/master
-   :alt: Code Health
-
-.. image:: https://coveralls.io/repos/pbrod/numdifftools/badge.svg?branch=master
-   :target: https://coveralls.io/github/pbrod/numdifftools?branch=master
-
-.. image:: https://img.shields.io/pypi/pyversions/numdifftools.svg
-   :target: https://github.com/pbrod/numdifftools
-
+|pkg_img| |tests_img| |docs_img| |health_img| |coverage_img| |versions_img|
 
 
 Numdifftools is a suite of tools written in `_Python <http://www.python.org/>`_ 
@@ -135,43 +117,23 @@ Documentation and code
 
 Numdifftools works on Python 2.7+ and Python 3.0+.
 
+Official releases available at: http://pypi.python.org/pypi/numdifftools |pkg_img|
 
-Official releases available at: http://pypi.python.org/pypi/numdifftools
-
-.. image:: https://badge.fury.io/py/numdifftools.png
-    :target: https://pypi.python.org/pypi/Numdifftools/
-
-
-Official documentation available at: http://numdifftools.readthedocs.org/
-
-.. image:: https://readthedocs.org/projects/pip/badge/?version=latest
-    :target: http://numdifftools.readthedocs.org/en/latest/
-
+Official documentation available at: http://numdifftools.readthedocs.org/ |docs_img|
 
 Bleeding edge: https://github.com/pbrod/numdifftools.
 
 
-Installation and upgrade:
-=========================
+Installation
+============
 
-with pip
+If you have pip installed, then simply type:
 
     $ pip install numdifftools
 
-with conda
+to get the lastest stable version. Using pip also has the advantage that all
+requirements are automatically installed.
 
-    $ conda install -c https://conda.anaconda.org/pbrod numdifftools
-
-
-with easy_install
-
-    $ easy_install numdifftools 
-
-or
-
-    $ easy_install upgrade numdifftools
-
-to upgrade to the newest version
 
 
 Unit tests
@@ -182,3 +144,44 @@ python session::
    import numdifftools as nd
    nd.test(coverage=True, doctests=True)
 
+
+Acknowledgement
+===============
+The `numdifftools package <http://pypi.python.org/pypi/numdifftools/>`_ for
+`Python <https://www.python.org/>`_ was written by Per A. Brodtkorb 
+based on the adaptive numerical differentiation toolbox written in `Matlab <http://www.mathworks.com>`_  by John D'Errico [DErrico2006]_.
+
+Numdifftools has as of version 0.9 been extended with some of the functionality
+found in the statsmodels.tools.numdiff module written by Josef Perktold [Perktold2014]_.
+
+
+
+References
+===========
+
+.. [DErrico2006] D'Errico, J. R.  (2006), Adaptive Robust Numerical Differentiation
+	http://www.mathworks.com/matlabcentral/fileexchange/13490-adaptive-robust-numerical-differentiation
+
+.. [Perktold2014] Perktold, J (2014), numdiff package   
+	http://statsmodels.sourceforge.net/0.6.0/_modules/statsmodels/tools/numdiff.html
+
+
+
+.. |pkg_img| image:: https://badge.fury.io/py/numdifftools.png
+    :target: https://pypi.python.org/pypi/Numdifftools/
+
+.. |tests_img| image:: https://travis-ci.org/pbrod/numdifftools.svg?branch=master
+    :target: https://travis-ci.org/pbrod/numdifftools
+
+.. |docs_img| image:: https://readthedocs.org/projects/pip/badge/?version=latest
+    :target: http://numdifftools.readthedocs.org/en/latest/
+
+.. |health_img| image:: https://landscape.io/github/pbrod/numdifftools/master/landscape.svg?style=flat
+   :target: https://landscape.io/github/pbrod/numdifftools/master
+   :alt: Code Health
+
+.. |coverage_img| image:: https://coveralls.io/repos/pbrod/numdifftools/badge.svg?branch=master
+   :target: https://coveralls.io/github/pbrod/numdifftools?branch=master
+
+.. |versions_img| image:: https://img.shields.io/pypi/pyversions/numdifftools.svg
+   :target: https://github.com/pbrod/numdifftools
