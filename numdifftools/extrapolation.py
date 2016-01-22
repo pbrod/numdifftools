@@ -64,12 +64,14 @@ class Dea(object):
         if (limexp < 3):
             raise ValueError('LIMEXP IS LESS THAN 3')
 
-    def _compute_error(self, RES3LA, NRES, RES):
+    @staticmethod
+    def _compute_error( RES3LA, NRES, RES):
         fact = [6.0, 2.0, 1.0][min(NRES-1, 2)]
         error = fact * np.abs(RES - RES3LA[:NRES]).sum()
         return error
 
-    def _shift_table(self, EPSTAB, N, NEWELM, NUM):
+    @staticmethod
+    def _shift_table(EPSTAB, N, NEWELM, NUM):
         i_0 = 1 if ((NUM // 2) * 2 == NUM - 1) else 0
         i_n = 2 * NEWELM + 2
         EPSTAB[i_0:i_n:2] = EPSTAB[i_0 + 2:i_n + 2:2]
@@ -79,7 +81,8 @@ class Dea(object):
             EPSTAB[:N + 1] = EPSTAB[i_n:i_n + N + 1]
         return EPSTAB
 
-    def _update_RES3LA(self, RES3LA, RESULT, NRES):
+    @staticmethod
+    def _update_RES3LA(RES3LA, RESULT, NRES):
         if NRES > 2:
             RES3LA[:2] = RES3LA[1:]
             RES3LA[2] = RESULT
@@ -312,7 +315,8 @@ class Richardson(object):
             return linalg.pinv(r_mat)[0]
         return np.ones((1,))
 
-    def _estimate_error(self, new_sequence, old_sequence, steps, rule):
+    @staticmethod
+    def _estimate_error(new_sequence, old_sequence, steps, rule):
         m, _n = new_sequence.shape
 
         if m < 2:

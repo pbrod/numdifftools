@@ -246,7 +246,8 @@ class MinStepGenerator(object):
             base_step = _make_exact(base_step)
         return base_step
 
-    def _min_num_steps(self, method, n, order):
+    @staticmethod
+    def _min_num_steps(method, n, order):
         num_steps = n + order - 1
 
         if method in ['central', 'central2', 'complex', 'multicomplex']:
@@ -502,7 +503,8 @@ class _Derivative(object):
             return MaxStepGenerator(step_ratio=None, num_extrap=14)
         return MinStepGenerator(base_step=step, step_ratio=None, num_extrap=0)
 
-    def _get_arg_min(self, errors):
+    @staticmethod
+    def _get_arg_min(errors):
         shape = errors.shape
         try:
             arg_mins = np.nanargmin(errors, axis=0)
@@ -518,7 +520,8 @@ class _Derivative(object):
         ix = np.ravel_multi_index((arg_mins, np.arange(shape[1])), shape)
         return ix
 
-    def _add_error_to_outliers(self, der, trim_fact=10):
+    @staticmethod
+    def _add_error_to_outliers(der, trim_fact=10):
         try:
             median = np.nanmedian(der, axis=0)
             p75 = np.nanpercentile(der, 75, axis=0)
@@ -565,8 +568,8 @@ class _Derivative(object):
         self._richardson_extrapolate = Richardson(step_ratio=step_ratio,
                                                   step=step, order=order,
                                                   num_terms=num_terms)
-
-    def _wynn_extrapolate(self, der, steps):
+    @staticmethod
+    def _wynn_extrapolate(der, steps):
         der, errors = dea3(der[0:-2], der[1:-1], der[2:], symmetric=False)
         return der, errors, steps[2:]
 
@@ -629,7 +632,8 @@ class _Derivative(object):
             return f(x, *args, **kwds)
         return 0.0
 
-    def _vstack(self, sequence, steps):
+    @staticmethod
+    def _vstack(sequence, steps):
         # sequence = np.atleast_2d(sequence)
         original_shape = np.shape(sequence[0])
         f_del = np.vstack(list(np.ravel(r)) for r in sequence)
@@ -640,7 +644,8 @@ class _Derivative(object):
                              '(it must be vectorized)')
         return f_del, h, original_shape
 
-    def _compute_step_ratio(self, steps):
+    @staticmethod
+    def _compute_step_ratio(steps):
         if len(steps) < 2:
             return 1
         return np.unique(steps[0]/steps[1]).mean()
@@ -1291,7 +1296,8 @@ class Hessian(_Derivative):
     Derivative, Hessian
     """)
 
-    def _complex_high_order(self):
+    @staticmethod
+    def _complex_high_order():
         return False
 
     def _derivative(self, xi, args, kwds):

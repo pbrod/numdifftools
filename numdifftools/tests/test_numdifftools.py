@@ -8,7 +8,7 @@ from numpy.testing import assert_array_almost_equal
 
 class TestGlobalFunctions(unittest.TestCase):
 
-    def testdea3(self):
+    def test_dea3(self):
         def linfun(k):
             return np.linspace(0, np.pi / 2., 2. ** (k + 5) + 1)
         Ei = np.zeros(3)
@@ -341,7 +341,7 @@ class TestDerivative(unittest.TestCase):
 
 class TestJacobian(unittest.TestCase):
 
-    def testjacobian(self):
+    def test_jacobian(self):
         xdata = np.reshape(np.arange(0, 1, 0.1), (-1, 1))
         ydata = 1 + 2 * np.exp(0.75 * xdata)
 
@@ -366,7 +366,7 @@ class TestGradient(unittest.TestCase):
         directional_diff = np.dot(nd.Gradient(rosen)(x0), v)
         assert_array_almost_equal(directional_diff, 743.87633380824832)
 
-    def testgradient(self):
+    def test_gradient(self):
         def fun(x):
             return np.sum(x ** 2)
         dtrue = [2., 4., 6.]

@@ -14,7 +14,7 @@ _TINY = np.finfo(float).machar.tiny
 
 #  Hamiltonian
 #     H = sum_i(p_i2/(2m)+ 1/2 * m * w2 x_i2) + sum_(i!=j)(a/|x_i-x_j|)
-class classicalHamiltonian(object):
+class ClassicalHamiltonian(object):
     """
     Hamiltonian
 
@@ -76,7 +76,7 @@ class classicalHamiltonian(object):
 
 
 def _run_hamiltonian(verbose=True):
-    c = classicalHamiltonian()
+    c = ClassicalHamiltonian()
     if verbose:
         print(c.potential(array([-0.5, 0.5])))
         print(c.potential(array([-0.5, 0.0])))
@@ -134,6 +134,13 @@ class TestDerivative(unittest.TestCase):
     #         df = nd.Derivative(finf, method='forward')
     #         val = df(0)
     #         self.assert_(np.isnan(val))
+    def test_directional_diff(self):
+        v = [1, -1]
+        x0 = [2, 3]
+        def rosen(x):
+            return (1-x[0])**2 + 105.*(x[1]-x[0]**2)**2
+        directional_diff = nd.directionaldiff(rosen, x0, v)
+        assert_array_almost_equal(directional_diff, 743.87633380824832)
 
     def test_high_order_derivative_cos(self):
         true_vals = (-1.0, 0.0, 1.0, 0.0) * 5

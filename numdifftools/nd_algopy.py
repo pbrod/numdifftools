@@ -468,6 +468,58 @@ class Hessdiag(Hessian):
         return np.diag(super(Hessdiag, self)._reverse(x, *args, **kwds))
 
 
+
+def directionaldiff(f, x0, vec, **options):
+    """
+    Return directional derivative of a function of n variables
+
+    Parameters
+    ----------
+    f: function
+        analytical function to differentiate.
+    x0: array
+        vector location at which to differentiate f. If x0 is an nxm array,
+        then fun is assumed to be a function of n*m variables.
+    vec: array
+        vector defining the line along which to take the derivative. It should
+        be the same size as x0, but need not be a vector of unit length.
+    **options:
+        optional arguments to pass on to Derivative.
+
+    Returns
+    -------
+    dder:  scalar
+        estimate of the first derivative of f in the specified direction.
+
+    Example
+    -------
+    At the global minimizer (1,1) of the Rosenbrock function,
+    compute the directional derivative in the direction [1 2]
+
+    >>> import numpy as np
+    >>> import numdifftools as nd
+    >>> vec = np.r_[1, 2]
+    >>> rosen = lambda x: (1-x[0])**2 + 105*(x[1]-x[0]**2)**2
+    >>> dd, info = nd.directionaldiff(rosen, [1, 1], vec, full_output=True)
+    >>> np.allclose(dd, 0)
+    True
+    >>> np.abs(info.error_estimate)<1e-14
+    True
+
+    See also
+    --------
+    Derivative,
+    Gradient
+    """
+    x0 = np.asarray(x0)
+    vec = np.asarray(vec)
+    if x0.size != vec.size:
+        raise ValueError('vec and x0 must be the same shapes')
+
+    vec = np.reshape(vec/np.linalg.norm(vec.ravel()), x0.shape)
+    return Derivative(lambda t: f(x0+t*vec), **options)(0)
+
+
 # def _example_taylor():
 #     def f(x):
 #         return x*x*x*x  # np.sin(np.cos(x) + np.sin(x))

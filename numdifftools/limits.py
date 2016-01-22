@@ -239,12 +239,14 @@ class Limit(object):
         self.full_output = full_output
         self.step = self._make_generator(step)
 
-    def _make_generator(self, step):
+    @staticmethod
+    def _make_generator(step):
         if hasattr(step, '__call__'):
             return step
         return MinStepGenerator(base_step=step)
 
-    def _get_arg_min(self, errors):
+    @staticmethod
+    def _get_arg_min(errors):
         shape = errors.shape
         try:
             arg_mins = np.nanargmin(errors, axis=0)
@@ -260,7 +262,8 @@ class Limit(object):
         ix = np.ravel_multi_index((arg_mins, np.arange(shape[1])), shape)
         return ix
 
-    def _add_error_to_outliers(self, der, trim_fact=10):
+    @staticmethod
+    def _add_error_to_outliers(der, trim_fact=10):
         # discard any estimate that differs wildly from the
         # median of all estimates. A factor of 10 to 1 in either
         # direction is probably wild enough here. The actual
@@ -293,7 +296,8 @@ class Limit(object):
                                                   step=1, order=1,
                                                   num_terms=num_terms)
 
-    def _wynn_extrapolate(self, der, steps):
+    @staticmethod
+    def _wynn_extrapolate(der, steps):
         der, errors = dea3(der[0:-2], der[1:-1], der[2:], symmetric=False)
         return der, errors, steps[2:]
 
@@ -308,7 +312,8 @@ class Limit(object):
     def _get_steps(self, xi):
         return [step for step in self.step(xi)]
 
-    def _vstack(self, sequence, steps):
+    @staticmethod
+    def _vstack(sequence, steps):
         # sequence = np.atleast_2d(sequence)
         original_shape = np.shape(sequence[0])
         f_del = np.vstack(list(np.ravel(r)) for r in sequence)

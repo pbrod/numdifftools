@@ -10,7 +10,7 @@ _TINY = np.finfo(float).machar.tiny
 
 #  Hamiltonian
 #     H = sum_i(p_i2/(2m)+ 1/2 * m * w2 x_i2) + sum_(i!=j)(a/|x_i-x_j|)
-class classicalHamiltonian(object):
+class ClassicalHamiltonian(object):
     """
     Hamiltonian
 
@@ -73,7 +73,7 @@ class classicalHamiltonian(object):
 
 
 def _run_hamiltonian(verbose=True):
-    c = classicalHamiltonian()
+    c = ClassicalHamiltonian()
     if verbose:
         print(c.potential(array([-0.5, 0.5])))
         print(c.potential(array([-0.5, 0.0])))

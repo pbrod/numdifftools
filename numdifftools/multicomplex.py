@@ -352,7 +352,8 @@ class bicomplex(object):
     def arctanh(self):
         return 0.5 * (((1+self)/(1-self)).log())
 
-    def _arg_c(self, z1, z2):
+    @staticmethod
+    def _arg_c(z1, z2):
         sign = np.where((z1.real == 0) * (z2.real == 0), 0,
                         np.where(0 <= z2.real, 1, -1))
         # clip to avoid nans for complex args

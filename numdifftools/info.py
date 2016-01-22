@@ -2,57 +2,60 @@
 Introduction to Numdifftools
 ============================
 
-Numdifftools is a suite of tools written in Python to solve automatic numerical
-differentiation problems in one or more variables. Finite differences are used
-in an adaptive manner, coupled with a Richardson extrapolation methodology to
-provide a maximally accurate result. The user can configure many options like;
-changing the order of the method or the extrapolation, even allowing the user
-to specify whether `complex`, `multicomplex`, `central`, `forward` or
-`backward` differences are used. The methods provided are:
+|pkg_img| |tests_img| |docs_img| |health_img| |coverage_img| |versions_img|
 
-*Derivative:*
-    Computates the derivative of order 1 through 10 on any scalar function.
 
-*Gradient:*
-    Computes the gradient vector of a scalar function of one or more variables.
+Numdifftools is a suite of tools written in `_Python <http://www.python.org/>`_ 
+to solve automatic numerical differentiation problems in one or more variables.
+Finite differences are used in an adaptive manner, coupled with a Richardson 
+extrapolation methodology to provide a maximally accurate result.
+The user can configure many options like; changing the order of the method or
+the extrapolation, even allowing the user to specify whether complex-step, central, 
+forward or backward differences are used.
 
-*Jacobian:*
-    Computes the Jacobian matrix of a vector valued function of one or more
-    variables.
+The methods provided are:
 
-*Hessian:*
-    Computes the Hessian matrix of all 2nd partial derivatives of a scalar
-    function of one or more variables.
+- **Derivative**: Compute the derivatives of order 1 through 10 on any scalar function.
 
-*Hessdiag:*
-    Computes only the diagonal elements of the Hessian matrix
+- **Gradient**: Compute the gradient vector of a scalar function of one or more variables.
+
+- **Jacobian**: Compute the Jacobian matrix of a vector valued function of one or more variables.
+
+- **Hessian**: Compute the Hessian matrix of all 2nd partial derivatives of a scalar function of one or more variables.
+
+- **Hessdiag**: Compute only the diagonal elements of the Hessian matrix 
 
 All of these methods also produce error estimates on the result.
 
 Numdifftools also provide an easy to use interface to derivatives calculated
-with AlgoPy. Algopy stands for Algorithmic Differentiation in Python.
+with in `_AlgoPy <https://pythonhosted.org/algopy/>`_. Algopy stands for Algorithmic
+Differentiation in Python.
 The purpose of AlgoPy is the evaluation of higher-order derivatives in the
 `forward` and `reverse` mode of Algorithmic Differentiation (AD) of functions
 that are implemented as Python programs.
 
-Documentation is at: http://numdifftools.readthedocs.org/
-
-Code and issue tracker is at https://github.com/pbrod/numdifftools.
-
-Latest stable release is at http://pypi.python.org/pypi/Numdifftools.
-
-To test if the toolbox is working paste the following in an interactive
-python session::
-
-   import numdifftools as nd
-   nd.test(coverage=True, doctests=True)
 
 Getting Started
 ---------------
-Compute 1'st and 2'nd derivative of exp(x), at x == 1::
+
+Visualize high order derivatives of the tanh function
 
     >>> import numpy as np
     >>> import numdifftools as nd
+    >>> import matplotlib.pyplot as plt
+    >>> x = np.linspace(-2, 2, 100)
+    >>> for i in range(10):
+    ...    df = Derivative(np.tanh, n=i)
+    ...    y = df(x)
+    ...    plt.plot(x, y/np.abs(y).max())
+    >>> plt.show()
+
+.. image:: ./examples/fun.png
+    :target: ./examples/fun.py
+
+
+Compute 1'st and 2'nd derivative of exp(x), at x == 1::
+
     >>> fd = nd.Derivative(np.exp)        # 1'st derivative
     >>> fdd = nd.Derivative(np.exp, n=2)  # 2'nd derivative
     >>> np.allclose(fd(1), 2.7182818284590424)
@@ -103,11 +106,83 @@ Compute gradient of sum(x**2)::
     >>> dfun([1,2,3])
     array([ 2.,  4.,  6.])
 
+
 See also
 --------
 scipy.misc.derivative
 
-"""
+
+Documentation and code
+======================
+
+Numdifftools works on Python 2.7+ and Python 3.0+.
+
+Official releases available at: http://pypi.python.org/pypi/numdifftools |pkg_img|
+
+Official documentation available at: http://numdifftools.readthedocs.org/ |docs_img|
+
+Bleeding edge: https://github.com/pbrod/numdifftools.
+
+
+Installation
+============
+
+If you have pip installed, then simply type:
+
+    $ pip install numdifftools
+
+to get the lastest stable version. Using pip also has the advantage that all
+requirements are automatically installed.
+
+
+Unit tests
+==========
+To test if the toolbox is working paste the following in an interactive
+python session::
+
+   import numdifftools as nd
+   nd.test(coverage=True, doctests=True)
+
+
+Acknowledgement
+===============
+The `numdifftools package <http://pypi.python.org/pypi/numdifftools/>`_ for
+`Python <https://www.python.org/>`_ was written by Per A. Brodtkorb 
+based on the adaptive numerical differentiation toolbox written in `Matlab <http://www.mathworks.com>`_  by John D'Errico [DErrico2006]_.
+
+Numdifftools has as of version 0.9 been extended with some of the functionality
+found in the statsmodels.tools.numdiff module written by Josef Perktold [Perktold2014]_.
+
+
+References
+===========
+
+.. [DErrico2006] D'Errico, J. R.  (2006), Adaptive Robust Numerical Differentiation
+	http://www.mathworks.com/matlabcentral/fileexchange/13490-adaptive-robust-numerical-differentiation
+
+.. [Perktold2014] Perktold, J (2014), numdiff package   
+	http://statsmodels.sourceforge.net/0.6.0/_modules/statsmodels/tools/numdiff.html
+
+
+
+.. |pkg_img| image:: https://badge.fury.io/py/numdifftools.png
+    :target: https://pypi.python.org/pypi/Numdifftools/
+
+.. |tests_img| image:: https://travis-ci.org/pbrod/numdifftools.svg?branch=master
+    :target: https://travis-ci.org/pbrod/numdifftools
+
+.. |docs_img| image:: https://readthedocs.org/projects/pip/badge/?version=latest
+    :target: http://numdifftools.readthedocs.org/en/latest/
+
+.. |health_img| image:: https://landscape.io/github/pbrod/numdifftools/master/landscape.svg?style=flat
+   :target: https://landscape.io/github/pbrod/numdifftools/master
+   :alt: Code Health
+
+.. |coverage_img| image:: https://coveralls.io/repos/pbrod/numdifftools/badge.svg?branch=master
+   :target: https://coveralls.io/github/pbrod/numdifftools?branch=master
+
+.. |versions_img| image:: https://img.shields.io/pypi/pyversions/numdifftools.svg
+   :target: https://github.com/pbrod/numdifftools
 
 
 def test_docstrings():
