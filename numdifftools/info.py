@@ -5,12 +5,12 @@ Introduction to Numdifftools
 |pkg_img| |tests_img| |docs_img| |health_img| |coverage_img| |versions_img|
 
 
-Numdifftools is a suite of tools written in `_Python <http://www.python.org/>`_ 
+Numdifftools is a suite of tools written in `_Python <http://www.python.org/>`_
 to solve automatic numerical differentiation problems in one or more variables.
-Finite differences are used in an adaptive manner, coupled with a Richardson 
+Finite differences are used in an adaptive manner, coupled with a Richardson
 extrapolation methodology to provide a maximally accurate result.
 The user can configure many options like; changing the order of the method or
-the extrapolation, even allowing the user to specify whether complex-step, central, 
+the extrapolation, even allowing the user to specify whether complex-step, central,
 forward or backward differences are used.
 
 The methods provided are:
@@ -23,7 +23,7 @@ The methods provided are:
 
 - **Hessian**: Compute the Hessian matrix of all 2nd partial derivatives of a scalar function of one or more variables.
 
-- **Hessdiag**: Compute only the diagonal elements of the Hessian matrix 
+- **Hessdiag**: Compute only the diagonal elements of the Hessian matrix
 
 All of these methods also produce error estimates on the result.
 
@@ -147,7 +147,7 @@ python session::
 Acknowledgement
 ===============
 The `numdifftools package <http://pypi.python.org/pypi/numdifftools/>`_ for
-`Python <https://www.python.org/>`_ was written by Per A. Brodtkorb 
+`Python <https://www.python.org/>`_ was written by Per A. Brodtkorb
 based on the adaptive numerical differentiation toolbox written in `Matlab <http://www.mathworks.com>`_  by John D'Errico [DErrico2006]_.
 
 Numdifftools has as of version 0.9 been extended with some of the functionality
@@ -158,10 +158,10 @@ References
 ===========
 
 .. [DErrico2006] D'Errico, J. R.  (2006), Adaptive Robust Numerical Differentiation
-	http://www.mathworks.com/matlabcentral/fileexchange/13490-adaptive-robust-numerical-differentiation
+    http://www.mathworks.com/matlabcentral/fileexchange/13490-adaptive-robust-numerical-differentiation
 
-.. [Perktold2014] Perktold, J (2014), numdiff package   
-	http://statsmodels.sourceforge.net/0.6.0/_modules/statsmodels/tools/numdiff.html
+.. [Perktold2014] Perktold, J (2014), numdiff package
+    http://statsmodels.sourceforge.net/0.6.0/_modules/statsmodels/tools/numdiff.html
 
 
 
@@ -184,6 +184,7 @@ References
 .. |versions_img| image:: https://img.shields.io/pypi/pyversions/numdifftools.svg
    :target: https://github.com/pbrod/numdifftools
 
+"""
 
 def test_docstrings():
     import doctest

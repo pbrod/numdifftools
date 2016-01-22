@@ -340,8 +340,8 @@ class TestDerivative(unittest.TestCase):
 
 
 class TestJacobian(unittest.TestCase):
-
-    def test_jacobian(self):
+    @staticmethod
+    def test_jacobian():
         xdata = np.reshape(np.arange(0, 1, 0.1), (-1, 1))
         ydata = 1 + 2 * np.exp(0.75 * xdata)
 
@@ -356,8 +356,8 @@ class TestJacobian(unittest.TestCase):
 
 
 class TestGradient(unittest.TestCase):
-
-    def test_directional_diff(self):
+    @staticmethod
+    def test_directional_diff():
         v = np.r_[1, -1]
         v = v/np.linalg.norm(v)
         x0 = [2, 3]
@@ -365,6 +365,8 @@ class TestGradient(unittest.TestCase):
             return (1-x[0])**2 + 105.*(x[1]-x[0]**2)**2
         directional_diff = np.dot(nd.Gradient(rosen)(x0), v)
         assert_array_almost_equal(directional_diff, 743.87633380824832)
+        dd, info = nd.directionaldiff(rosen, x0, v, full_output=True)
+        assert_array_almost_equal(dd, 743.87633380824832)
 
     def test_gradient(self):
         def fun(x):
