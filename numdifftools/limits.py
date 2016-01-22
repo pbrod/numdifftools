@@ -86,9 +86,9 @@ class MinStepGenerator(object):
 
     def __repr__(self):
         class_name = self.__class__.__name__
-        kwds = ['%s=%s' % (name, str(getattr(self, name)))
+        kwds = ['{0!s}={1!s}'.format(name, str(getattr(self, name)))
                 for name in self.__dict__.keys()]
-        return """%s(%s)""" % (class_name, ','.join(kwds))
+        return """{0!s}({1!s})""".format(class_name, ','.join(kwds))
 
     def _default_base_step(self, xi):
         scale = self.scale

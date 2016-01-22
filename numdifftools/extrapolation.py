@@ -184,7 +184,7 @@ def test_dea():
         x = linfun(k)
         val = np.trapz(np.sin(x), x)
         vale, err = dea(val)
-        print('%5d %20.8f  %20.8f  %20.8f' % (len(x)-1, val, vale, err))
+        print('{0:5d} {1:20.8f}  {2:20.8f}  {3:20.8f}'.format(len(x)-1, val, vale, err))
 
 
 def dea3(v0, v1, v2, symmetric=False):

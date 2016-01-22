@@ -321,7 +321,7 @@ def _test_first_derivative(name):
 
     der = f(bicomplex(x + h * 1j, 0)).imag1 / h
     der_true = df(x)
-    np.testing.assert_allclose(der, der_true, err_msg=('%s' % name))
+    np.testing.assert_allclose(der, der_true, err_msg=('{0!s}'.format(name)))
 
 
 def _test_second_derivative(name):
@@ -332,7 +332,7 @@ def _test_second_derivative(name):
 
     der = f(bicomplex(x + h * 1j, h)).imag12 / h**2
     der_true = df(x)
-    np.testing.assert_allclose(der, der_true, err_msg=('%s' % name))
+    np.testing.assert_allclose(der, der_true, err_msg=('{0!s}'.format(name)))
 
 _function_names = ['cos', 'sin', 'tan', 'arccos', 'arcsin', 'arctan', 'cosh',
                    'sinh', 'tanh', 'exp', 'log', 'exp2', 'square', 'sqrt',
