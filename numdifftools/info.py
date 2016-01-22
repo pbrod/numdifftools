@@ -50,8 +50,8 @@ Visualize high order derivatives of the tanh function
     ...    plt.plot(x, y/np.abs(y).max())
     >>> plt.show()
 
-.. image:: ./examples/fun.png
-    :target: ./examples/fun.py
+.. image:: https://github.com/pbrod/numdifftools/blob/master/examples/fun.png
+    :target: https://github.com/pbrod/numdifftools/blob/master/examples/fun.py
 
 
 Compute 1'st and 2'nd derivative of exp(x), at x == 1::
