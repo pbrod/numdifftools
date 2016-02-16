@@ -145,7 +145,7 @@ for name in ['sphinx.ext.linkcode', 'numpydoc.linkcode']:
         extensions.append(name)
         break
     except ImportError:
-        pass
+        continue
 else:
     print("NOTE: linkcode extension not found -- no links to source generated")
 

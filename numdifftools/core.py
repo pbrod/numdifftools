@@ -325,18 +325,22 @@ class MinMaxStepGenerator(object):
                 for name in self.__dict__.keys()]
         return """{0!s}({1!s})""".format(class_name, ','.join(kwds))
 
-    def __call__(self, x, method='forward', n=1, order=None):
+
+    def _steps(self, x):
         if self.scale is not None:
             scale = self.scale
         xi = np.asarray(x)
         step_min, step_max = self.step_min, self.step_max
         delta = _default_base_step(xi, scale, step_min)
         if step_min is None:
-            step_min = (10 * EPS)**(1. / scale)
+            step_min = (10 * EPS) ** (1. / scale)
         if step_max is None:
             step_max = np.exp(np.log(step_min) * scale / (scale + 1.5))
-        steps = np.logspace(0, np.log10(step_max) - np.log10(step_min),
-                            self.num_steps)[::-1]
+        steps = np.logspace(0, np.log10(step_max) - np.log10(step_min), self.num_steps)[:-1]
+        return steps, delta
+
+    def __call__(self, x, method='forward', n=1, order=None):
+        steps, delta = self._steps(x)
 
         for step in steps:
             h = _make_exact(delta * step)
@@ -552,6 +556,7 @@ class _Derivative(object):
         order = max((self.order // step) * step, step)
         return order
 
+    @property
     def _complex_high_order(self):
         return self.method == 'complex' and (self.n > 1 or self.order >= 4)
 
@@ -583,15 +588,14 @@ class _Derivative(object):
 
     def _get_function_name(self):
         name = '_{0!s}'.format(self.method)
-        even_derivative_order = self._is_even_derivative()
-        if even_derivative_order and self.method in ('central', 'complex'):
+        if self._is_even_derivative and self.method in ('central', 'complex'):
             name = name + '_even'
-            if self.method in ('complex') and self._is_fourth_derivative():
+            if self.method in ('complex') and self._is_fourth_derivative:
                 name = name + '_higher'
         else:
-            if self._complex_high_order() and self._is_odd_derivative():
+            if self._complex_high_order and self._is_odd_derivative:
                 name = name + '_odd'
-                if self._is_third_derivative():
+                if self._is_third_derivative:
                     name = name + '_higher'
             elif self.method == 'multicomplex' and self.n > 1:
                 if self.n == 2:
@@ -609,15 +613,19 @@ class _Derivative(object):
         method, n, order = self.method, self.n, self._method_order
         return [step for step in self.step(xi, method, n, order)]
 
+    @property
     def _is_odd_derivative(self):
         return self.n % 2 == 1
 
+    @property
     def _is_even_derivative(self):
         return self.n % 2 == 0
 
+    @property
     def _is_third_derivative(self):
         return self.n % 4 == 3
 
+    @property
     def _is_fourth_derivative(self):
         return self.n % 4 == 0
 
@@ -795,6 +803,20 @@ class Derivative(_Derivative):
         return ((self._is_even_derivative() and (self.method == 'backward')) or
                 (self.method == 'complex' and (n % 8 in [3, 4, 5, 6])))
 
+
+    def _parity(self, method, order, method_order):
+        parity = 0
+        if (method.startswith('central') or
+            (method.startswith('complex') and self.n == 1 and
+                method_order < 4)):
+            parity = (order % 2) + 1
+        elif method == 'complex':
+            if self._is_odd_derivative():
+                parity = 6 if self._is_third_derivative() else 5
+            else:
+                parity = 4 if self._is_fourth_derivative() else 3
+        return parity
+
     def _get_finite_difference_rule(self, step_ratio):
         """
         Generate finite differencing rule in advance.
@@ -817,16 +839,7 @@ class Derivative(_Derivative):
             return np.ones((1,))
 
         order, method_order = self.n - 1, self._method_order
-        parity = 0
-        if (method.startswith('central') or
-                (method.startswith('complex') and self.n == 1 and
-                 method_order < 4)):
-            parity = (order % 2) + 1
-        elif self.method == 'complex':
-            if self._is_odd_derivative():
-                parity = 6 if self._is_third_derivative() else 5
-            else:
-                parity = 4 if self._is_fourth_derivative() else 3
+        parity = self._parity(method, order, method_order)
 
         step = self._richardson_step()
         num_terms, ix = (order + method_order) // step, order // step

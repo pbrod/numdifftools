@@ -389,10 +389,9 @@ class Hessian(_Common):
     """)
 
     def __init__(self, f, method='forward'):
-        self.f = f
-        self.method = method
+        super(Hessian, self).__init__(f, method)
         self.n = 2
-        self._computational_graph = None
+
 
     def _forward(self, x, *args, **kwds):
         x = np.atleast_1d(x)
