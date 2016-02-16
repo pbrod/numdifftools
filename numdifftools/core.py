@@ -570,7 +570,7 @@ class _Derivative(object):
     def set_richardson_rule(self, step_ratio, num_terms=2):
         order = self._method_order
         step = self._richardson_step()
-        self._richardson_extrapolate = Richardson(step_ratio=step_ratio,
+        self.richardson = Richardson(step_ratio=step_ratio,
                                                   step=step, order=order,
                                                   num_terms=num_terms)
     @staticmethod
@@ -579,9 +579,9 @@ class _Derivative(object):
         return der, errors, steps[2:]
 
     def _extrapolate(self, results, steps, shape):
-        der, errors, steps = self._richardson_extrapolate(results, steps)
+        der, errors, steps = self.richardson(results, steps)
         if len(der) > 2:
-            # der, errors, steps = self._richardson_extrapolate(results, steps)
+            # der, errors, steps = self.richardson(results, steps)
             der, errors, steps = self._wynn_extrapolate(der, steps)
         der, info = self._get_best_estimate(der, errors, steps, shape)
         return der, info

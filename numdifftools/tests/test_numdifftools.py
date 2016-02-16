@@ -41,7 +41,7 @@ class TestRichardson(unittest.TestCase):
             for order in range(1, 7):
                 d = nd.Derivative(np.exp, method=method, order=order)
                 d.set_richardson_rule(step_ratio=2.0, num_terms=num_terms)
-                rule = d._richardson_extrapolate.rule()
+                rule = d.richardson.rule()
                 assert_array_almost_equal(rule,
                                           true_vals[(num_terms, order)])
 
@@ -102,7 +102,7 @@ class TestRichardson(unittest.TestCase):
                     d = nd.Derivative(np.exp, n=n, method='complex',
                                       order=order)
                     d.set_richardson_rule(step_ratio=2.0, num_terms=num_terms)
-                    rule = d._richardson_extrapolate.rule()
+                    rule = d.richardson.rule()
                     # t[(n, num_terms, order)] = rule.tolist()
                     assert_array_almost_equal(rule,
                                               truth[(n, num_terms, order)])
@@ -127,7 +127,7 @@ class TestRichardson(unittest.TestCase):
                 for order in range(1, 7):
                     d = nd.Derivative(np.exp, method=method, order=order)
                     d.set_richardson_rule(step_ratio=2.0, num_terms=num_terms)
-                    rule = d._richardson_extrapolate.rule()
+                    rule = d.richardson.rule()
                     assert_array_almost_equal(rule,
                                               truth[(num_terms, order)])
 
