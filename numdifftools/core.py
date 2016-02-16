@@ -562,12 +562,12 @@ class _Derivative(object):
 
     def _richardson_step(self):
         # complex_step = 4 if self.n % 2 == 0 else 2
-        complex_step = 4 if self._complex_high_order() else 2
+        complex_step = 4 if self._complex_high_order else 2
 
         return dict(central=2, central2=2, complex=complex_step,
                     multicomplex=2).get(self.method, 1)
 
-    def _set_richardson_rule(self, step_ratio, num_terms=2):
+    def set_richardson_rule(self, step_ratio, num_terms=2):
         order = self._method_order
         step = self._richardson_step()
         self._richardson_extrapolate = Richardson(step_ratio=step_ratio,
@@ -630,10 +630,10 @@ class _Derivative(object):
         return self.n % 4 == 0
 
     def _eval_first_condition(self):
-        even_derivative = self._is_even_derivative()
+        even_derivative = self._is_even_derivative
         return ((even_derivative and self.method in ('central', 'central2')) or
                 self.method in ['forward', 'backward'] or
-                self.method == 'complex' and self._is_fourth_derivative())
+                self.method == 'complex' and self._is_fourth_derivative)
 
     def _eval_first(self, f, x, *args, **kwds):
         if self._eval_first_condition():
@@ -800,7 +800,7 @@ class Derivative(_Derivative):
 
     def _flip_fd_rule(self):
         n = self.n
-        return ((self._is_even_derivative() and (self.method == 'backward')) or
+        return ((self._is_even_derivative and (self.method == 'backward')) or
                 (self.method == 'complex' and (n % 8 in [3, 4, 5, 6])))
 
 
@@ -811,10 +811,10 @@ class Derivative(_Derivative):
                 method_order < 4)):
             parity = (order % 2) + 1
         elif method == 'complex':
-            if self._is_odd_derivative():
-                parity = 6 if self._is_third_derivative() else 5
+            if self._is_odd_derivative:
+                parity = 6 if self._is_third_derivative else 5
             else:
-                parity = 4 if self._is_fourth_derivative() else 3
+                parity = 4 if self._is_fourth_derivative else 3
         return parity
 
     def _get_finite_difference_rule(self, step_ratio):
@@ -877,7 +877,7 @@ class Derivative(_Derivative):
     def _derivative_zero_order(self, xi, args, kwds):
         steps = [np.zeros_like(xi)]
         results = [self.f(xi, *args, **kwds)]
-        self._set_richardson_rule(2, 0)
+        self.set_richardson_rule(2, 0)
         return self._vstack(results, steps)
 
     def _derivative_nonzero_order(self, xi, args, kwds):
@@ -887,7 +887,7 @@ class Derivative(_Derivative):
         results = [diff(f, fxi, xi, h, *args, **kwds) for h in steps]
         step_ratio = self._compute_step_ratio(steps)
 
-        self._set_richardson_rule(step_ratio, self.richardson_terms)
+        self.set_richardson_rule(step_ratio, self.richardson_terms)
         fd_rule = self._get_finite_difference_rule(step_ratio)
         return self._apply_fd_rule(fd_rule, results, steps)
 
@@ -1321,7 +1321,7 @@ class Hessian(_Derivative):
         fxi = self._eval_first(f, xi, *args, **kwds)
         results = [diff(f, fxi, xi, h, *args, **kwds) for h in steps]
         step_ratio = self._compute_step_ratio(steps)
-        self._set_richardson_rule(step_ratio, self.richardson_terms)
+        self.set_richardson_rule(step_ratio, self.richardson_terms)
         return self._vstack(results, steps)
 
     @staticmethod

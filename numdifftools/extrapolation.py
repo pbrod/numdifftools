@@ -306,7 +306,7 @@ class Richardson(object):
         r_mat[:, 1:] = (1.0 / self.step_ratio) ** (i*(step*j + self.order))
         return r_mat
 
-    def _get_richardson_rule(self, sequence_length=None):
+    def rule(self, sequence_length=None):
         if sequence_length is None:
             sequence_length = self.num_terms + 1
         num_terms = min(self.num_terms, sequence_length - 1)
@@ -338,7 +338,7 @@ class Richardson(object):
 
     def __call__(self, sequence, steps):
         ne = sequence.shape[0]
-        rule = self._get_richardson_rule(ne)
+        rule = self.rule(ne)
         nr = rule.size - 1
         m = ne - nr
         new_sequence = convolve(sequence, rule[::-1], axis=0, origin=(nr // 2))

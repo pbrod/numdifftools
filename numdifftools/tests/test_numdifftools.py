@@ -40,8 +40,8 @@ class TestRichardson(unittest.TestCase):
         for num_terms in [1, 2]:
             for order in range(1, 7):
                 d = nd.Derivative(np.exp, method=method, order=order)
-                d._set_richardson_rule(step_ratio=2.0, num_terms=num_terms)
-                rule = d._richardson_extrapolate._get_richardson_rule()
+                d.set_richardson_rule(step_ratio=2.0, num_terms=num_terms)
+                rule = d._richardson_extrapolate.rule()
                 assert_array_almost_equal(rule,
                                           true_vals[(num_terms, order)])
 
@@ -101,8 +101,8 @@ class TestRichardson(unittest.TestCase):
                 for order in range(2, 9, 2):
                     d = nd.Derivative(np.exp, n=n, method='complex',
                                       order=order)
-                    d._set_richardson_rule(step_ratio=2.0, num_terms=num_terms)
-                    rule = d._richardson_extrapolate._get_richardson_rule()
+                    d.set_richardson_rule(step_ratio=2.0, num_terms=num_terms)
+                    rule = d._richardson_extrapolate.rule()
                     # t[(n, num_terms, order)] = rule.tolist()
                     assert_array_almost_equal(rule,
                                               truth[(n, num_terms, order)])
@@ -126,8 +126,8 @@ class TestRichardson(unittest.TestCase):
             for num_terms in [1, 2]:
                 for order in range(1, 7):
                     d = nd.Derivative(np.exp, method=method, order=order)
-                    d._set_richardson_rule(step_ratio=2.0, num_terms=num_terms)
-                    rule = d._richardson_extrapolate._get_richardson_rule()
+                    d.set_richardson_rule(step_ratio=2.0, num_terms=num_terms)
+                    rule = d._richardson_extrapolate.rule()
                     assert_array_almost_equal(rule,
                                               truth[(num_terms, order)])
 
@@ -150,7 +150,7 @@ class TestRichardson(unittest.TestCase):
 #                 print(fd_rule)
 #                 df1, stepsi, _shape = d._apply_fd_rule(fd_rule, df, steps)
 #
-#                 rule = r_extrap._get_richardson_rule()
+#                 rule = r_extrap.rule()
 #                 df2, error, hi = r_extrap(df1, stepsi)
 #
 #                 print(rule)
