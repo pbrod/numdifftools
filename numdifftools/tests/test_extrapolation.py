@@ -71,7 +71,7 @@ class TestRichardson(unittest.TestCase):
                 for order in range(1, 7):
                     r_extrap = Richardson(step_ratio=2.0, step=step,
                                              num_terms=num_terms, order=order)
-                    rule = r_extrap._get_richardson_rule()
+                    rule = r_extrap.rule()
                     # print((num_terms, step, order), rule.tolist())
                     assert_array_almost_equal(rule,
                                               true_vals[(num_terms, step,
