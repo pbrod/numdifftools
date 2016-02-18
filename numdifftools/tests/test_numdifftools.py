@@ -21,8 +21,8 @@ class TestGlobalFunctions(unittest.TestCase):
 
 
 class TestRichardson(unittest.TestCase):
-
-    def test_central(self):
+    @staticmethod
+    def test_central():
         method = 'central'
         true_vals = {(1, 1): [-0.33333333, 1.33333333],
                      (1, 2): [-0.33333333, 1.33333333],
@@ -45,7 +45,8 @@ class TestRichardson(unittest.TestCase):
                 assert_array_almost_equal(rule,
                                           true_vals[(num_terms, order)])
 
-    def test_complex(self):
+    @staticmethod
+    def test_complex():
         truth = {
             (1, 2, 8): [9.576480164718605e-07, -0.004167684167715291,
                         1.004166726519699],
@@ -108,8 +109,8 @@ class TestRichardson(unittest.TestCase):
                                               truth[(n, num_terms, order)])
         # print(t)
         # self.assert_(False)
-
-    def test_forward_backward(self):
+    @staticmethod
+    def test_forward_backward():
         truth = {(1, 1): [-1., 2.],
                  (1, 2): [-0.33333333, 1.33333333],
                  (1, 3): [-0.14285714, 1.14285714],
@@ -160,8 +161,8 @@ class TestRichardson(unittest.TestCase):
 
 
 class TestStepGenerator(unittest.TestCase):
-
-    def test_default_generator(self):
+    @staticmethod
+    def test_default_generator():
         step_gen = nd.MinStepGenerator(base_step=None, num_steps=10,
                                        step_ratio=4, offset=-1)
         h = np.array([h for h in step_gen(0)])
@@ -172,13 +173,15 @@ class TestStepGenerator(unittest.TestCase):
 
         assert_array_almost_equal((h - desired) / desired, 0)
 
-    def test_default_base_step(self):
+    @staticmethod
+    def test_default_base_step():
         step_gen = nd.MinStepGenerator(num_steps=1, offset=0)
         h = [h for h in step_gen(0)]
         desired = nd.EPS ** (1. / 2.5)
         assert_array_almost_equal((h[0] - desired) / desired, 0)
 
-    def test_fixed_base_step(self):
+    @staticmethod
+    def test_fixed_base_step():
         desired = 0.1
         step_gen = nd.MinStepGenerator(base_step=desired, num_steps=1, scale=2,
                                        offset=0)
@@ -188,7 +191,8 @@ class TestStepGenerator(unittest.TestCase):
 
 class TestFornbergWeights(unittest.TestCase):
 
-    def test_weights(self):
+    @staticmethod
+    def test_weights():
         x = np.r_[-1, 0, 1]
         xbar = 0
         k = 1
@@ -197,8 +201,8 @@ class TestFornbergWeights(unittest.TestCase):
 
 
 class TestDerivative(unittest.TestCase):
-
-    def test_directional_diff(self):
+    @staticmethod
+    def test_directional_diff():
         v = [1, -1]
         x0 = [2, 3]
         def rosen(x):
@@ -208,7 +212,7 @@ class TestDerivative(unittest.TestCase):
 
     def test_infinite_functions(self):
         def finf(x):
-            return np.inf
+            return np.inf*np.ones_like(x)
         df = nd.Derivative(finf)
         val = df(0)
         self.assert_(np.isnan(val))
@@ -220,8 +224,8 @@ class TestDerivative(unittest.TestCase):
 #         fdmat = nd.Derivative._fd_matrix(step_ratio=2.0, parity=1, nterms=3)
 #         _fd_rules = np.linalg.pinv(fdmat)
 #         self.assert_(False)
-
-    def test_high_order_derivative_cos(self):
+    @staticmethod
+    def test_high_order_derivative_cos():
         true_vals = (0.0, -1.0, 0.0, 1.0, 0.0, -1.0, 0.0)
         methods = ['complex', 'multicomplex', 'central',
                    'forward', 'backward']
@@ -244,7 +248,8 @@ class TestDerivative(unittest.TestCase):
                     assert_array_almost_equal(y, true_val, decimal=4)
         # self.assert_(False)
 
-    def test_derivative_of_cos_x(self):
+    @staticmethod
+    def test_derivative_of_cos_x():
         x = np.r_[0, np.pi / 6.0, np.pi / 2.0]
         true_vals = (-np.sin(x), -np.cos(x), np.sin(x), np.cos(x), -np.sin(x),
                      -np.cos(x))
@@ -271,13 +276,15 @@ class TestDerivative(unittest.TestCase):
                     # assert_allclose(y, true_val)
         # self.assert_(False)
 
-    def test_default_scale(self):
+    @staticmethod
+    def test_default_scale():
         for method, scale in zip(['complex', 'central', 'forward', 'backward',
                                   'multicomplex'],
                                  [1.35, 2.5, 2.5, 2.5, 1.35]):
             np.testing.assert_allclose(scale, nd.default_scale(method, n=1))
 
-    def test_fun_with_additional_parameters(self):
+    @staticmethod
+    def test_fun_with_additional_parameters():
         """Test for issue #9"""
         def func(x, a, b=1):
             return b * a * x * x * x
@@ -291,7 +298,8 @@ class TestDerivative(unittest.TestCase):
 
                 assert_array_almost_equal(val, 0)
 
-    def test_derivative_cube(self):
+    @staticmethod
+    def test_derivative_cube():
         """Test for Issue 7"""
         def cube(x):
             return x * x * x
@@ -307,12 +315,14 @@ class TestDerivative(unittest.TestCase):
             assert_array_almost_equal(val, tval, decimal=8,
                                       err_msg=txt % (i, val, tval))
 
-    def test_derivative_exp(self):
+    @staticmethod
+    def test_derivative_exp():
         # derivative of exp(x), at x == 0
         dexp = nd.Derivative(np.exp)
         assert_array_almost_equal(dexp(0), np.exp(0), decimal=8)
 
-    def test_derivative_sin(self):
+    @staticmethod
+    def test_derivative_sin():
         # Evaluate the indicated (default = first)
         # derivative at multiple points
         dsin = nd.Derivative(np.sin)
@@ -368,7 +378,8 @@ class TestGradient(unittest.TestCase):
         dd, info = nd.directionaldiff(rosen, x0, v, full_output=True)
         assert_array_almost_equal(dd, 743.87633380824832)
 
-    def test_gradient(self):
+    @staticmethod
+    def test_gradient():
         def fun(x):
             return np.sum(x ** 2)
         dtrue = [2., 4., 6.]
@@ -382,8 +393,8 @@ class TestGradient(unittest.TestCase):
 
 
 class TestHessdiag(unittest.TestCase):
-
-    def test_complex(self):
+    @staticmethod
+    def test_complex():
         def fun(x):
             return x[0] + x[1] ** 2 + x[2] ** 3
         htrue = np.array([0., 2., 18.])
@@ -398,7 +409,8 @@ class TestHessdiag(unittest.TestCase):
             _error = hd - htrue
             assert_array_almost_equal(hd, htrue)
 
-    def test_fixed_step(self):
+    @staticmethod
+    def test_fixed_step():
         def fun(x):
             return x[0] + x[1] ** 2 + x[2] ** 3
         htrue = np.array([0., 2., 18.])
@@ -415,7 +427,8 @@ class TestHessdiag(unittest.TestCase):
                 _error = hd - htrue
                 assert_array_almost_equal(hd, htrue)
 
-    def test_default_step(self):
+    @staticmethod
+    def test_default_step():
         def fun(x):
             return x[0] + x[1] ** 2 + x[2] ** 3
         htrue = np.array([0., 2., 18.])
@@ -431,8 +444,8 @@ class TestHessdiag(unittest.TestCase):
 
 
 class TestHessian(unittest.TestCase):
-
-    def test_hessian_cosIx_yI_at_I0_0I(self):
+    @staticmethod
+    def test_hessian_cosIx_yI_at_I0_0I():
         # cos(x-y), at (0,0)
 
         def fun(xy):

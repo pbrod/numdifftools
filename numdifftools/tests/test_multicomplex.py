@@ -21,8 +21,8 @@ class BicomplexTester(unittest.TestCase):
 
     def test_init(self):
         z = bicomplex(1, 2)
-        np.testing.assert_array_equal(z.z1, 1)
-        np.testing.assert_array_equal(z.z2, 2)
+        self.assertEqual(z.z1, 1)
+        self.assertEqual(z.z2, 2)
 
     def test_neg(self):
         z = bicomplex(1, 2)
@@ -48,7 +48,8 @@ class BicomplexTester(unittest.TestCase):
         z = bicomplex(1, 2)
         self.assertEqual(z.norm(), np.sqrt(5))
 
-    def test_lt(self):
+    @staticmethod
+    def test_lt():
         shape = (3, 3)
         t = np.arange(9).reshape(shape)
         z = bicomplex(t, 2 * t)
@@ -59,7 +60,8 @@ class BicomplexTester(unittest.TestCase):
                            [False, False, False]], dtype=bool)
         np.testing.assert_array_equal(val, truth)
 
-    def test_le(self):
+    @staticmethod
+    def test_le():
         shape = (3, 3)
         t = np.arange(9).reshape(shape)
         z = bicomplex(t, 2 * t)
@@ -70,7 +72,8 @@ class BicomplexTester(unittest.TestCase):
                            [False, False, False]], dtype=bool)
         np.testing.assert_array_equal(val, truth)
 
-    def test_ge(self):
+    @staticmethod
+    def test_ge():
         shape = (3, 3)
         t = np.arange(9).reshape(shape)
         z = bicomplex(t, 2 * t)
@@ -81,7 +84,8 @@ class BicomplexTester(unittest.TestCase):
                           [ True,  True,  True]], dtype=bool)
         np.testing.assert_array_equal(val, truth)
 
-    def test_gt(self):
+    @staticmethod
+    def test_gt():
         shape = (3, 3)
         t = np.arange(9).reshape(shape)
         z = bicomplex(t, 2 * t)
@@ -93,7 +97,8 @@ class BicomplexTester(unittest.TestCase):
         np.testing.assert_array_equal(val, truth)
 
 
-    def test_eq(self):
+    @staticmethod
+    def test_eq():
         shape = (3, 3)
         t = np.arange(9).reshape(shape)
         z = bicomplex(t, 2 * t)
@@ -116,7 +121,8 @@ class BicomplexTester(unittest.TestCase):
         t = z.flat(1)
         self.assertTrue(t==bicomplex(1, 2))
 
-    def test_subsref(self):
+    @staticmethod
+    def test_subsref():
         shape = (3, 3)
         t = np.arange(9).reshape(shape)
         z = bicomplex(t, 2 * t)
@@ -131,7 +137,8 @@ class BicomplexTester(unittest.TestCase):
         np.testing.assert_array_equal(z1.z1, z.z1[1:3, 1:3])
         np.testing.assert_array_equal(z1.z2, z.z2[1:3, 1:3])
 
-    def test_assign(self):
+    @staticmethod
+    def test_assign():
         shape = (3, 3)
         z = bicomplex(np.ones(shape), 2 * np.ones(shape))
         z0 = z[0]
@@ -141,7 +148,8 @@ class BicomplexTester(unittest.TestCase):
         np.testing.assert_array_equal(z1.z1, z.z1[:])
         np.testing.assert_array_equal(z1.z2, z.z2[:])
 
-    def test_add(self):
+    @staticmethod
+    def test_add():
         shape = (3, 3)
         z0 = bicomplex(np.ones(shape), 2 * np.ones(shape))
         z1 = bicomplex(3 * np.ones(shape), 4 * np.ones(shape))
@@ -153,7 +161,8 @@ class BicomplexTester(unittest.TestCase):
         np.testing.assert_array_equal(z3.z1, z0.z1 + 1)
         np.testing.assert_array_equal(z3.z2, z0.z2)
 
-    def test_sub(self):
+    @staticmethod
+    def test_sub():
         shape = (3, 3)
         z0 = bicomplex(np.ones(shape), 2 * np.ones(shape))
         z1 = bicomplex(3 * np.ones(shape), 4 * np.ones(shape))
@@ -162,7 +171,8 @@ class BicomplexTester(unittest.TestCase):
         np.testing.assert_array_equal(z2.z1, z0.z1 - z1.z1)
         np.testing.assert_array_equal(z2.z2, z0.z2 - z1.z2)
 
-    def test_rsub(self):
+    @staticmethod
+    def test_rsub():
         z1 = bicomplex(2, 1)
         a = 1 + 1j
         z2 = a - z1
@@ -174,7 +184,8 @@ class BicomplexTester(unittest.TestCase):
         txt = repr(z)
         self.assertEqual(txt, "bicomplex(z1=(1+0j), z2=(2+0j))")
 
-    def test_multiplication(self):
+    @staticmethod
+    def test_multiplication():
         z1 = bicomplex(1, 2)
         z2 = bicomplex(3, 4)
         z3 = z1 * z2
@@ -199,7 +210,8 @@ class BicomplexTester(unittest.TestCase):
         np.testing.assert_allclose(z3.z1, z1.z1 * z1.z1 - z1.z2 * z1.z2)
         np.testing.assert_allclose(z3.z2, z1.z1 * z1.z2 + z1.z2 * z1.z1)
 
-    def test_division(self):
+    @staticmethod
+    def test_division():
         z1 = bicomplex(1, 2)
         z2 = bicomplex(3, 4)
         z3 = z1 / z2
@@ -216,14 +228,16 @@ class BicomplexTester(unittest.TestCase):
 #         np.testing.assert_array_equal(z3.z1, z4.z1)
 #         np.testing.assert_array_equal(z3.z2, z4.z2)
 
-    def test_rpow(self):
+    @staticmethod
+    def test_rpow():
         z2 = bicomplex(3, 4)
         z3 = 2. ** z2
         z4 = np.exp(z2*np.log(2))
         np.testing.assert_allclose(z3.z1, z4.z1)
         np.testing.assert_allclose(z3.z2, z4.z2)
 
-    def test_dot(self):
+    @staticmethod
+    def test_dot():
         z1 = bicomplex(1, 2)
         z2 = bicomplex(3, 4)
         z3 = z1.dot(z2)
@@ -231,12 +245,14 @@ class BicomplexTester(unittest.TestCase):
         np.testing.assert_array_equal(z3.z1, z4.z1)
         np.testing.assert_array_equal(z3.z2, z4.z2)
 
-    def test_cos(self):
+    @staticmethod
+    def test_cos():
         z1 = bicomplex(np.linspace(0, np.pi, 5), 0)
         z2 = z1.cos()  # np.cos(z1)
         np.testing.assert_array_equal(z2.z1, np.cos(z1.z1))
 
-    def test_arg_c(self):
+    @staticmethod
+    def test_arg_c():
         z1 = bicomplex(np.linspace(0, np.pi, 5), 0)
         z2 = z1.arg_c()
         np.testing.assert_array_equal(z2, np.arctan2(z1.z2.real, z1.z1.real))
@@ -245,13 +261,15 @@ class BicomplexTester(unittest.TestCase):
         z4 = z3.arg_c()
         np.testing.assert_allclose(z4.real, np.arctan2(z3.z2.real, z3.z1.real))
 
-    def test_arcsin(self):
+    @staticmethod
+    def test_arcsin():
         z1 = bicomplex(np.linspace(-0.98, 0.98, 5), 0)
         z2 = z1.arcsin()
         np.testing.assert_allclose(z2.real, np.arcsin(z1.z1).real, atol=1e-15)
         np.testing.assert_allclose(z2.imag1, np.arcsin(z1.z1).imag, atol=1e-15)
 
-    def test_arccos(self):
+    @staticmethod
+    def test_arccos():
         z1 = bicomplex(np.linspace(-0.98, 0.98, 5), 0)
         z2 = z1.arccos()
         np.testing.assert_allclose(z2.real, np.arccos(z1.z1).real, atol=1e-15)
@@ -266,7 +284,8 @@ class BicomplexTester(unittest.TestCase):
         der2 = np.cos(bicomplex(x + h * 1j, h)).imag12 / h**2
         np.testing.assert_allclose(der2, -np.cos(x))
 
-    def test_der_log(self):
+    @staticmethod
+    def test_der_log():
         x = np.linspace(0.001, 5, 6)
         h = 1e-15
         der1 = np.log(bicomplex(x + h * 1j, 0)).imag1 / h
@@ -274,7 +293,8 @@ class BicomplexTester(unittest.TestCase):
         der2 = np.log(bicomplex(x + h * 1j, h)).imag12 / h**2
         np.testing.assert_allclose(der2, -1./x**2)
 
-    def test_der_arccos(self):
+    @staticmethod
+    def test_der_arccos():
         x = np.linspace(-0.98, 0.98, 5)
         h = 1e-8
         der1 = np.arccos(bicomplex(x + h * 1j, 0)).imag1 / h
@@ -285,7 +305,8 @@ class BicomplexTester(unittest.TestCase):
         true_der2 = -x / (1 - x**2)**(3. / 2)
         np.testing.assert_allclose(der2, true_der2, atol=1e-5)
 
-    def test_der_arccosh(self):
+    @staticmethod
+    def test_der_arccosh():
         x = np.linspace(1.2, 5, 5)
         h = 1e-8
         der1 = np.arccosh(bicomplex(x + h * 1j, 0)).imag1 / h
@@ -296,7 +317,8 @@ class BicomplexTester(unittest.TestCase):
         true_der2 = -x / (x**2-1)**(3. / 2)
         np.testing.assert_allclose(der2, true_der2, atol=1e-5)
 
-    def test_der_abs(self):
+    @staticmethod
+    def test_der_abs():
         x = np.linspace(-0.98, 0.98, 5)
         h = 1e-8
         der1 = abs(bicomplex(x + h * 1j, 0)).imag1 / h
@@ -304,7 +326,8 @@ class BicomplexTester(unittest.TestCase):
         der2 = abs(bicomplex(x + h * 1j, h)).imag12 / h**2
         np.testing.assert_allclose(der2, 0, atol=1e-6)
 
-    def test_der_arctan(self):
+    @staticmethod
+    def test_der_arctan():
         x = np.linspace(0, 2, 5)
         h = 1e-8
         der1 = np.arctan(bicomplex(x + h * 1j, 0)).imag1 / h
@@ -341,11 +364,13 @@ _function_names = ['cos', 'sin', 'tan', 'arccos', 'arcsin', 'arctan', 'cosh',
 
 
 class DerivativeTester(unittest.TestCase):
-    def test_all_first_derivatives(self):
+    @staticmethod
+    def test_all_first_derivatives():
         for name in _function_names:
             _test_first_derivative(name)
 
-    def test_all_second_derivatives(self):
+    @staticmethod
+    def test_all_second_derivatives():
         for name in _function_names:
             _test_second_derivative(name)
 

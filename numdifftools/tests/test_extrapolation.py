@@ -5,8 +5,8 @@ from numdifftools.extrapolation import Dea, dea3, Richardson
 
 
 class TestRichardson(unittest.TestCase):
-    def test_order_step_combinations(self):
-        true_vals = {
+    def setUp(self):
+        self.true_vals = {
             (1, 1, 1): [-0.9999999999999998, 1.9999999999999998],
             (1, 1, 2): [-0.33333333333333304, 1.333333333333333],
             (1, 1, 3): [-0.14285714285714307, 1.142857142857143],
@@ -66,6 +66,7 @@ class TestRichardson(unittest.TestCase):
                         -0.042755592360228634, 1.0424220613604906],
             (3, 2, 6): [-6.08476257157875e-08, 8.177920896951241e-05,
                         -0.02093547748207586, 1.0208537591207332]}
+    def test_order_step_combinations(self):
         for num_terms in [1, 2, 3]:
             for step in [1, 2]:
                 for order in range(1, 7):
@@ -74,7 +75,7 @@ class TestRichardson(unittest.TestCase):
                     rule = r_extrap.rule()
                     # print((num_terms, step, order), rule.tolist())
                     assert_array_almost_equal(rule,
-                                              true_vals[(num_terms, step,
+                                              self.true_vals[(num_terms, step,
                                                          order)])
         # self.assert_(False)
 

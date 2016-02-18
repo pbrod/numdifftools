@@ -110,7 +110,8 @@ class TestHessian(unittest.TestCase):
         H, _error_estimate, true_H = _run_hamiltonian(verbose=False)
         self.assertTrue((np.abs(H - true_H) < 1e-18).all())
 
-    def test_hessian_cosIx_yI_at_I0_0I(self):
+    @staticmethod
+    def test_hessian_cosIx_yI_at_I0_0I():
         # cos(x-y), at (0,0)
 
         def fun(xy):
@@ -134,7 +135,8 @@ class TestDerivative(unittest.TestCase):
     #         df = nd.Derivative(finf, method='forward')
     #         val = df(0)
     #         self.assert_(np.isnan(val))
-    def test_directional_diff(self):
+    @staticmethod
+    def test_directional_diff():
         v = [1, -1]
         x0 = [2, 3]
         def rosen(x):
@@ -142,7 +144,8 @@ class TestDerivative(unittest.TestCase):
         directional_diff = nd.directionaldiff(rosen, x0, v)
         assert_array_almost_equal(directional_diff, 743.87633380824832)
 
-    def test_high_order_derivative_cos(self):
+    @staticmethod
+    def test_high_order_derivative_cos():
         true_vals = (-1.0, 0.0, 1.0, 0.0) * 5
 
         x = np.pi / 2  # np.linspace(0, np.pi/2, 15)
@@ -153,7 +156,8 @@ class TestDerivative(unittest.TestCase):
                 y = d3cos(x)
                 assert_array_almost_equal(y, true_vals[n - 1])
 
-    def test_fun_with_additional_parameters(self):
+    @staticmethod
+    def test_fun_with_additional_parameters():
         """Test for issue #9"""
         def func(x, a, b=1):
             return b * a * x * x * x
@@ -166,7 +170,8 @@ class TestDerivative(unittest.TestCase):
                 val = df(0.0, 1.0, b=2)
                 assert_array_almost_equal(val, 0)
 
-    def test_derivative_cube(self):
+    @staticmethod
+    def test_derivative_cube():
         """Test for Issue 7"""
         def cube(x):
             return x * x * x
@@ -185,13 +190,15 @@ class TestDerivative(unittest.TestCase):
                 assert_array_almost_equal(val, tval, decimal=8,
                                           err_msg=txt % (i, val, tval))
 
-    def test_derivative_exp(self):
+    @staticmethod
+    def test_derivative_exp():
         # derivative of exp(x), at x == 0
         for method in ['forward', 'reverse']:
             dexp = nd.Derivative(np.exp, method=method)
             assert_array_almost_equal(dexp(0), np.exp(0), decimal=8)
 
-    def test_derivative_sin(self):
+    @staticmethod
+    def test_derivative_sin():
         # Evaluate the indicated (default = first)
         # derivative at multiple points
         for method in ['forward', 'reverse']:
@@ -205,7 +212,8 @@ class TestDerivative(unittest.TestCase):
             dsinh = nd.Derivative(np.sinh, method=method)
             self.assertAlmostEqual(dsinh(0.0), np.cosh(0.0))
 
-    def test_derivative_on_log(self):
+    @staticmethod
+    def test_derivative_on_log():
 
         x = np.r_[0.01, 0.1]
         for method in ['forward', 'reverse']:
@@ -215,8 +223,8 @@ class TestDerivative(unittest.TestCase):
 
 
 class TestJacobian(unittest.TestCase):
-
-    def test_on_scalar_function(self):
+    @staticmethod
+    def test_on_scalar_function():
         def f2(x):
             return x[0] * x[1] * x[2] + np.exp(x[0]) * x[1]
         for method in ['forward', 'reverse']:
@@ -224,7 +232,8 @@ class TestJacobian(unittest.TestCase):
             x = Jfun3([3., 5., 7.])
             assert_array_almost_equal(x, [[135.42768462, 41.08553692, 15.]])
 
-    def test_on_vector_valued_function(self):
+    @staticmethod
+    def test_on_vector_valued_function():
         xdata = np.reshape(np.arange(0, 1, 0.1), (-1, 1))
         ydata = 1 + 2 * np.exp(0.75 * xdata)
 
@@ -239,8 +248,8 @@ class TestJacobian(unittest.TestCase):
 
 
 class TestGradient(unittest.TestCase):
-
-    def test_on_scalar_function(self):
+    @staticmethod
+    def test_on_scalar_function():
         def fun(x):
             return np.sum(x ** 2)
 
@@ -254,8 +263,8 @@ class TestGradient(unittest.TestCase):
 
 
 class TestHessdiag(unittest.TestCase):
-
-    def test_forward(self):
+    @staticmethod
+    def test_forward():
         def fun(x):
             return x[0] + x[1] ** 2 + x[2] ** 3
         htrue = np.array([0., 2., 18.])
@@ -264,7 +273,8 @@ class TestHessdiag(unittest.TestCase):
         _error = hd - htrue
         assert_array_almost_equal(hd, htrue)
 
-    def test_reverse(self):
+    @staticmethod
+    def test_reverse():
         def fun(x):
             return x[0] + x[1] ** 2 + x[2] ** 3
         htrue = np.array([0., 2., 18.])
