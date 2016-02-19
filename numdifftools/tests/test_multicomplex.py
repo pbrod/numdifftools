@@ -192,7 +192,8 @@ class BicomplexTester(unittest.TestCase):
         np.testing.assert_array_equal(z3.z1, z1.z1 * z2.z1 - z1.z2 * z2.z2)
         np.testing.assert_array_equal(z3.z2, z1.z1 * z2.z2 + z1.z2 * z2.z1)
 
-    def test_pow(self):
+    @staticmethod
+    def test_pow():
         z1 = bicomplex(1, 2)
         z2 = z1 ** 2
         z3 = z1 * z1
@@ -275,7 +276,8 @@ class BicomplexTester(unittest.TestCase):
         np.testing.assert_allclose(z2.real, np.arccos(z1.z1).real, atol=1e-15)
         np.testing.assert_allclose(z2.imag1, np.arccos(z1.z1).imag, atol=1e-15)
 
-    def test_der_cos(self):
+    @staticmethod
+    def test_der_cos():
         x = np.linspace(-0.99, 0.99, 5)
         h = 1e-9
         der1 = np.cos(bicomplex(x + h * 1j, 0)).imag1 / h
