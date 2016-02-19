@@ -5,6 +5,8 @@ import numdifftools.core as nd
 import numpy as np
 from numpy.testing import assert_array_almost_equal
 
+def rosen(x):
+    return (1-x[0])**2 + 105.*(x[1]-x[0]**2)**2
 
 class TestGlobalFunctions(unittest.TestCase):
 
@@ -205,8 +207,7 @@ class TestDerivative(unittest.TestCase):
     def test_directional_diff():
         v = [1, -1]
         x0 = [2, 3]
-        def rosen(x):
-            return (1-x[0])**2 + 105.*(x[1]-x[0]**2)**2
+
         directional_diff = nd.directionaldiff(rosen, x0, v)
         assert_array_almost_equal(directional_diff, 743.87633380824832)
 
@@ -371,8 +372,6 @@ class TestGradient(unittest.TestCase):
         v = np.r_[1, -1]
         v = v/np.linalg.norm(v)
         x0 = [2, 3]
-        def rosen(x):
-            return (1-x[0])**2 + 105.*(x[1]-x[0]**2)**2
         directional_diff = np.dot(nd.Gradient(rosen)(x0), v)
         assert_array_almost_equal(directional_diff, 743.87633380824832)
         dd, info = nd.directionaldiff(rosen, x0, v, full_output=True)
@@ -394,25 +393,25 @@ class TestGradient(unittest.TestCase):
 
 class TestHessdiag(unittest.TestCase):
     @staticmethod
-    def test_complex():
-        def fun(x):
-            return x[0] + x[1] ** 2 + x[2] ** 3
+    def fun(x):
+        return x[0] + x[1] ** 2 + x[2] ** 3
+
+    def test_complex(self):
+
         htrue = np.array([0., 2., 18.])
         method = 'complex'
         for num_steps in range(3, 7, 1):
             steps = nd.MinStepGenerator(num_steps=num_steps,
                                         use_exact_steps=True,
                                         step_ratio=2.0, offset=4)
-            Hfun = nd.Hessdiag(fun, step=steps, method=method,
+            Hfun = nd.Hessdiag(self.fun, step=steps, method=method,
                                full_output=True)
             hd, _info = Hfun([1, 2, 3])
             _error = hd - htrue
             assert_array_almost_equal(hd, htrue)
 
-    @staticmethod
-    def test_fixed_step():
-        def fun(x):
-            return x[0] + x[1] ** 2 + x[2] ** 3
+
+    def test_fixed_step(self):
         htrue = np.array([0., 2., 18.])
 
         methods = ['multicomplex', 'complex', 'central', 'forward', 'backward']
@@ -421,22 +420,20 @@ class TestHessdiag(unittest.TestCase):
                                         use_exact_steps=True,
                                         step_ratio=3., offset=0)
             for method in methods:
-                Hfun = nd.Hessdiag(fun, step=steps, method=method, order=order,
-                                   full_output=True)
+                Hfun = nd.Hessdiag(self.fun, step=steps, method=method,
+                                   order=order, full_output=True)
                 hd, _info = Hfun([1, 2, 3])
                 _error = hd - htrue
                 assert_array_almost_equal(hd, htrue)
 
-    @staticmethod
-    def test_default_step():
-        def fun(x):
-            return x[0] + x[1] ** 2 + x[2] ** 3
+
+    def test_default_step(self):
         htrue = np.array([0., 2., 18.])
         methods = ['central2', 'central', 'multicomplex', 'complex', 'forward',
                    'backward']
         for order in range(2, 7, 2):
             for method in methods:
-                Hfun = nd.Hessdiag(fun, method=method, order=order,
+                Hfun = nd.Hessdiag(self.fun, method=method, order=order,
                                    full_output=True)
                 hd, _info = Hfun([1, 2, 3])
                 _error = hd - htrue
