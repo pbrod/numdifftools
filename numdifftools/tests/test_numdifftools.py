@@ -6,16 +6,19 @@ import numpy as np
 from numpy.testing import assert_array_almost_equal
 
 def rosen(x):
+    """Rosenbrock function
+
+    This is a non-convex function used as a performance test problem for
+    optimization algorithms introduced by Howard H. Rosenbrock in 1960.[1]
+    """
     return (1-x[0])**2 + 105.*(x[1]-x[0]**2)**2
 
 class TestGlobalFunctions(unittest.TestCase):
 
     def test_dea3(self):
-        def linfun(k):
-            return np.linspace(0, np.pi / 2., 2. ** (k + 5) + 1)
         Ei = np.zeros(3)
         for k in np.arange(3):
-            x = linfun(k)
+            x = np.linspace(0, np.pi / 2., 2. ** (k + 5) + 1)
             Ei[k] = np.trapz(np.sin(x), x)
         [En, err] = nd.dea3(Ei[0], Ei[1], Ei[2])
         self.assertTrue(np.abs(En - 1) < err)
@@ -393,7 +396,7 @@ class TestGradient(unittest.TestCase):
 
 class TestHessdiag(unittest.TestCase):
     @staticmethod
-    def fun(x):
+    def _fun(x):
         return x[0] + x[1] ** 2 + x[2] ** 3
 
     def test_complex(self):
@@ -404,7 +407,7 @@ class TestHessdiag(unittest.TestCase):
             steps = nd.MinStepGenerator(num_steps=num_steps,
                                         use_exact_steps=True,
                                         step_ratio=2.0, offset=4)
-            Hfun = nd.Hessdiag(self.fun, step=steps, method=method,
+            Hfun = nd.Hessdiag(self._fun, step=steps, method=method,
                                full_output=True)
             hd, _info = Hfun([1, 2, 3])
             _error = hd - htrue
@@ -420,7 +423,7 @@ class TestHessdiag(unittest.TestCase):
                                         use_exact_steps=True,
                                         step_ratio=3., offset=0)
             for method in methods:
-                Hfun = nd.Hessdiag(self.fun, step=steps, method=method,
+                Hfun = nd.Hessdiag(self._fun, step=steps, method=method,
                                    order=order, full_output=True)
                 hd, _info = Hfun([1, 2, 3])
                 _error = hd - htrue
@@ -433,7 +436,7 @@ class TestHessdiag(unittest.TestCase):
                    'backward']
         for order in range(2, 7, 2):
             for method in methods:
-                Hfun = nd.Hessdiag(self.fun, method=method, order=order,
+                Hfun = nd.Hessdiag(self._fun, method=method, order=order,
                                    full_output=True)
                 hd, _info = Hfun([1, 2, 3])
                 _error = hd - htrue
