@@ -587,9 +587,9 @@ class _Derivative(object):
 
     def _get_middle_name(self):
         middle = ''
-        if self._is_even_derivative and self.method in ('central', 'complex'):
+        if self._even_derivative and self.method in ('central', 'complex'):
             middle = '_even'
-        elif self._complex_high_order and self._is_odd_derivative:
+        elif self._complex_high_order and self._odd_derivative:
             middle = '_odd'
         elif self.method == 'multicomplex' and self.n > 1:
             middle = '2'
@@ -601,8 +601,8 @@ class _Derivative(object):
 
     def _get_last_name(self):
         last = ''
-        if (self.method in ('complex') and self._is_fourth_derivative or 
-            self._complex_high_order and self._is_third_derivative):
+        if (self.method in ('complex') and self._derivative_mod_four_is_zero or
+            self._complex_high_order and self._derivative_mod_four_is_three):
             last = '_higher'
         return last
 
@@ -623,26 +623,26 @@ class _Derivative(object):
         return [step for step in self.step(xi, method, n, order)]
 
     @property
-    def _is_odd_derivative(self):
+    def _odd_derivative(self):
         return self.n % 2 == 1
 
     @property
-    def _is_even_derivative(self):
+    def _even_derivative(self):
         return self.n % 2 == 0
 
     @property
-    def _is_third_derivative(self):
+    def _derivative_mod_four_is_three(self):
         return self.n % 4 == 3
 
     @property
-    def _is_fourth_derivative(self):
+    def _derivative_mod_four_is_zero(self):
         return self.n % 4 == 0
 
     def _eval_first_condition(self):
-        even_derivative = self._is_even_derivative
+        even_derivative = self._even_derivative
         return ((even_derivative and self.method in ('central', 'central2')) or
                 self.method in ['forward', 'backward'] or
-                self.method == 'complex' and self._is_fourth_derivative)
+                self.method == 'complex' and self._derivative_mod_four_is_zero)
 
     def _eval_first(self, f, x, *args, **kwds):
         if self._eval_first_condition():
@@ -809,7 +809,7 @@ class Derivative(_Derivative):
 
     def _flip_fd_rule(self):
         n = self.n
-        return ((self._is_even_derivative and (self.method == 'backward')) or
+        return ((self._even_derivative and (self.method == 'backward')) or
                 (self.method == 'complex' and (n % 8 in [3, 4, 5, 6])))
 
 
@@ -820,10 +820,9 @@ class Derivative(_Derivative):
                 method_order < 4)):
             parity = (order % 2) + 1
         elif method == 'complex':
-            if self._is_odd_derivative:
-                parity = 6 if self._is_third_derivative else 5
-            else:
-                parity = 4 if self._is_fourth_derivative else 3
+            parity = (3 + 2*self._odd_derivative +
+                      int(self._derivative_mod_four_is_three)+
+                      int(self._derivative_mod_four_is_zero))
         return parity
 
     def _get_finite_difference_rule(self, step_ratio):

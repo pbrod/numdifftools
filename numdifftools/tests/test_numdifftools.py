@@ -5,6 +5,7 @@ import numdifftools.core as nd
 import numpy as np
 from numpy.testing import assert_array_almost_equal
 
+
 def rosen(x):
     """Rosenbrock function
 
@@ -12,6 +13,7 @@ def rosen(x):
     optimization algorithms introduced by Howard H. Rosenbrock in 1960.[1]
     """
     return (1-x[0])**2 + 105.*(x[1]-x[0]**2)**2
+
 
 class TestGlobalFunctions(unittest.TestCase):
 
@@ -53,7 +55,7 @@ class TestRichardson(unittest.TestCase):
                      (2, 5): [5.12032770e-04, -4.91551459e-02, 1.04864311e+00],
                      (2, 6): [1.24984377e-04, -2.39970004e-02, 1.02387202e+00]}
         true_vals = {'central': central, 'forward': forward,
-                     'backward':backward}
+                     'backward':forward}
 
         for method in true_vals:
             truth = true_vals[method]
