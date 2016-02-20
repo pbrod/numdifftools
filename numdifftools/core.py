@@ -586,17 +586,16 @@ class _Derivative(object):
         return der, info
 
     def _get_middle_name(self):
-        middle = ''
         if self._even_derivative and self.method in ('central', 'complex'):
-            middle = '_even'
-        elif self._complex_high_order and self._odd_derivative:
-            middle = '_odd'
-        elif self.method == 'multicomplex' and self.n > 1:
-            middle = '2'
+            return '_even'
+        if self._complex_high_order and self._odd_derivative:
+            return '_odd'
+        if self.method == 'multicomplex' and self.n > 1:
             if self.n > 2:
                 raise ValueError('Multicomplex method only support first '
                                  'and second order derivatives.')
-        return middle
+            return '2'
+        return ''
 
 
     def _get_last_name(self):
@@ -807,23 +806,25 @@ class Derivative(_Derivative):
         [i, j] = np.ogrid[0:nterms, 0:nterms]
         return np.atleast_2d(c[j] * inv_sr ** (i * (step * j + offset)))
 
+    @property
     def _flip_fd_rule(self):
         n = self.n
         return ((self._even_derivative and (self.method == 'backward')) or
                 (self.method == 'complex' and (n % 8 in [3, 4, 5, 6])))
 
-
-    def _parity(self, method, order, method_order):
-        parity = 0
-        if (method.startswith('central') or
-            (method.startswith('complex') and self.n == 1 and
-                method_order < 4)):
-            parity = (order % 2) + 1
-        elif method == 'complex':
-            parity = (3 + 2*self._odd_derivative +
+    def _parity_complex(self, order, method_order):
+        if self.n == 1 and method_order < 4:
+            return (order % 2) + 1
+        return (3 + 2*int(self._odd_derivative) +
                       int(self._derivative_mod_four_is_three)+
                       int(self._derivative_mod_four_is_zero))
-        return parity
+
+    def _parity(self, method, order, method_order):
+        if method.startswith('central'):
+            return (order % 2) + 1
+        if method == 'complex':
+            return self._parity_complex(order, method_order)
+        return 0
 
     def _get_finite_difference_rule(self, step_ratio):
         """
@@ -854,7 +855,7 @@ class Derivative(_Derivative):
         fd_mat = self._fd_matrix(step_ratio, parity, num_terms)
         fd_rule = linalg.pinv(fd_mat)[ix]
 
-        if self._flip_fd_rule():
+        if self._flip_fd_rule:
             fd_rule *= -1
         return fd_rule
 
