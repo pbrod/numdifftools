@@ -6,7 +6,7 @@ Created on 22. apr. 2015
 import unittest
 # from functools import partial
 from numdifftools.multicomplex import bicomplex
-from numdifftools.test_functions import get_function
+from numdifftools.example_functions import get_function
 import numpy as np
 
 EPS = np.MachAr().eps
