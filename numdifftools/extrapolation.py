@@ -125,8 +125,7 @@ class Dea(object):
                     DELTA1 = E1 - E3
                     ERR1 = abs(DELTA1)
                     TOL1 = max(abs(E1), abs(E3)) * _EPS
-                    converged = (ERR1 <= TOL1 or ERR2 <= TOL2 or
-                                 ERR3 <= TOL3)
+                    converged = (ERR1 <= TOL1 or ERR2 <= TOL2 or ERR3 <= TOL3)
                     if not converged:
                         SS = 1.0 / DELTA1 + 1.0 / DELTA2 - 1.0 / DELTA3
                 else:

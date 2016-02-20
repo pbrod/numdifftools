@@ -24,7 +24,6 @@ import numpy as np
 from collections import namedtuple
 from numdifftools.multicomplex import bicomplex
 from numdifftools.extrapolation import Richardson, dea3, convolve
-from numdifftools.test_functions import get_function  # , function_names
 from numpy import linalg
 from scipy import misc
 from scipy.ndimage.filters import convolve1d

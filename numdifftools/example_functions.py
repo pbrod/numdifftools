@@ -23,12 +23,24 @@ def ddcos(x):
     return -np.cos(x)
 
 
+def darcsin(x):
+    return 1./np.sqrt(1-x**2)
+
+
+def ddarcsin(x):
+    return x/(1-x**2)**(3./2)
+
+
+def dddarcsin(x):
+    return 1./(1-x**2)**(3./2) + 3*x**2./(1-x**2)**(5./2)
+
+
 def get_function(fun_name, n=1):
 
     sinh, cosh, tanh = np.sinh, np.cosh, np.tanh
     sin, cos, tan = np.sin, np.cos, np.tan
-    f_dic = dict(sinh=(sinh, cosh, sinh, cosh, sinh),
-                 cosh=(cosh, sinh, cosh, sinh, cosh),
+    f_dic = dict(sinh=(sinh, cosh) * 6,
+                 cosh=(cosh, sinh) * 6,
                  arccosh=(np.arccosh,
                           lambda x: 1./np.sqrt(x**2-1),
                           lambda x: -x/(x**2-1)**(1.5),
@@ -53,12 +65,7 @@ def get_function(fun_name, n=1):
                          lambda x: -1./(1-x**2)**(3./2) -
                          3*x**2/(1-x**2)**(5./2),
                          ),
-                 arcsin=(np.arcsin,
-                         lambda x: 1./np.sqrt(1-x**2),
-                         lambda x: x/(1-x**2)**(3./2),
-                         lambda x: 1./(1-x**2)**(3./2) +
-                         3*x**2./(1-x**2)**(5./2),
-                         ),
+                 arcsin=(np.arcsin, darcsin, ddarcsin, dddarcsin),
                  square=(lambda x: x * x,  # np.square,
                          lambda x: 2 * x,
                          lambda x: 2 * np.ones_like(x)) + (

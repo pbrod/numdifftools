@@ -86,10 +86,8 @@ class TestExtrapolation(unittest.TestCase):
         n = 7
         Ei = np.zeros(n)
         h = np.zeros(n)
-        def linfun(i):
-            return np.linspace(0, np.pi/2., 2**(i+5)+1)
         for k in np.arange(n):
-            x = linfun(k)
+            x = np.linspace(0, np.pi/2., 2**(k+5)+1)
             Ei[k] = np.trapz(np.sin(x),x)
             h[k] = x[1]
         self.Ei = Ei
