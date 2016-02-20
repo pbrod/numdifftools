@@ -561,7 +561,6 @@ class _Derivative(object):
         return self.method == 'complex' and (self.n > 1 or self.order >= 4)
 
     def _richardson_step(self):
-        # complex_step = 4 if self.n % 2 == 0 else 2
         complex_step = 4 if self._complex_high_order else 2
 
         return dict(central=2, central2=2, complex=complex_step,
@@ -586,23 +585,33 @@ class _Derivative(object):
         der, info = self._get_best_estimate(der, errors, steps, shape)
         return der, info
 
-    def _get_function_name(self):
-        name = '_{0!s}'.format(self.method)
+    def _get_middle_name(self):
+        middle = ''
         if self._is_even_derivative and self.method in ('central', 'complex'):
-            name = name + '_even'
-            if self.method in ('complex') and self._is_fourth_derivative:
-                name = name + '_higher'
-        else:
-            if self._complex_high_order and self._is_odd_derivative:
-                name = name + '_odd'
-                if self._is_third_derivative:
-                    name = name + '_higher'
-            elif self.method == 'multicomplex' and self.n > 1:
-                if self.n == 2:
-                    name = name + '2'
-                else:
-                    raise ValueError('Multicomplex method only support first '
-                                     'and second order derivatives.')
+            middle = '_even'
+        elif self._complex_high_order and self._is_odd_derivative:
+            middle = '_odd'
+        elif self.method == 'multicomplex' and self.n > 1:
+            middle = '2'
+            if self.n > 2:
+                raise ValueError('Multicomplex method only support first '
+                                 'and second order derivatives.')
+        return middle
+
+
+    def _get_last_name(self):
+        last = ''
+        if (self.method in ('complex') and self._is_fourth_derivative or 
+            self._complex_high_order and self._is_third_derivative):
+            last = '_higher'
+        return last
+
+    def _get_function_name(self):
+        first = '_{0!s}'.format(self.method)
+        middle = self._get_middle_name()
+        last = self._get_last_name()
+
+        name = first + middle + last
         return name
 
     def _get_functions(self):

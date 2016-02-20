@@ -22,44 +22,34 @@ class BenchmarkFunction(object):
         return 0.5 * dot(x * x, tmp)
 
 
-def plot_errors(error_objects, problem_sizes, symbols):
-    ploterror = plt.semilogy
-    for title, funcs, results in error_objects:
+def _plot(plot, problem_sizes, objects, symbols, ylabel='', loc=2, logx=False):
+    for title, funcs, results in objects:
         plt.figure()
         plt.title(title)
-        # ref_sol = results[0]
         for i, method in enumerate(funcs):
-            ploterror(problem_sizes, results[i], symbols[i],
-                      markerfacecolor='None', label=method)
+            plot(problem_sizes, results[i], symbols[i],
+                markerfacecolor='None', label=method)
 
-        plt.ylabel(r'Absolute error $\|g_{ref} - g\|$')
+        plt.ylabel(ylabel)
         plt.xlabel('problem size $N$')
+        if logx:
+            plt.xlim(loglimits(problem_sizes))
         plt.ylim(loglimits(results))
         plt.grid()
-        leg = plt.legend(loc=7)
+        leg = plt.legend(loc=loc)
         frame = leg.get_frame()
         frame.set_alpha(0.4)
         plt.savefig(title.lower().replace(' ', '_') + '.png', format='png')
+
+
+def plot_errors(error_objects, problem_sizes, symbols):
+    _plot(plt.semilogy, problem_sizes, error_objects, symbols,
+          ylabel=r'Absolute error $\|g_{ref} - g\|$', loc=7, logx=False)
 
 
 def plot_runtimes(run_time_objects, problem_sizes, symbols):
-    plottime = plt.loglog
-    for title, funcs, results in run_time_objects:
-        plt.figure()
-        plt.title(title)
-        for i, method in enumerate(funcs):
-            plottime(problem_sizes, results[i], symbols[i],
-                     markerfacecolor='None', label=method)
-
-        plt.ylabel('time $t$')
-        plt.xlabel('problem size $N$')
-        plt.xlim(loglimits(problem_sizes))
-        plt.ylim(loglimits(results))
-        plt.grid()
-        leg = plt.legend(loc=2)
-        frame = leg.get_frame()
-        frame.set_alpha(0.4)
-        plt.savefig(title.lower().replace(' ', '_') + '.png', format='png')
+    _plot(plt.loglog, problem_sizes, run_time_objects, symbols,
+          ylabel='time $t$', loc=2, logx=True)
 
 
 def loglimits(data, border=0.05):
@@ -170,13 +160,12 @@ if __name__ == '__main__':
 
     print(results_gradients.shape)
 
-    run_time_objects = [('Jacobian run times',
-                         gradient_funs, results_gradients[..., 0].T),
-                        ('Hessian run times',
-                         hessian_funs, results_hessians[..., 0].T)]
-    error_objects = [('Jacobian errors',
-                      gradient_funs, results_gradients[..., 1].T),
-                     ('Hessian errors',
-                      hessian_funs, results_hessians[..., 1].T)]
-    plot_runtimes(run_time_objects, problem_sizes, symbols)
-    plot_errors(error_objects, problem_sizes, symbols)
+    for i, txt in enumerate(['run times', 'errors']):
+        objects = [('Jacobian ' + txt, gradient_funs,
+                    results_gradients[..., i].T),
+                   ('Hessian ' + txt, hessian_funs,
+                    results_hessians[..., i].T)]
+        if i == 0:
+            plot_runtimes(objects, problem_sizes, symbols)
+        else:
+            plot_errors(objects, problem_sizes, symbols)

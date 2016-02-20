@@ -27,9 +27,8 @@ class TestGlobalFunctions(unittest.TestCase):
 
 class TestRichardson(unittest.TestCase):
     @staticmethod
-    def test_central():
-        method = 'central'
-        true_vals = {(1, 1): [-0.33333333, 1.33333333],
+    def test_central_forward_backward():
+        true_vals = {'central':{(1, 1): [-0.33333333, 1.33333333],
                      (1, 2): [-0.33333333, 1.33333333],
                      (1, 3): [-0.33333333, 1.33333333],
                      (1, 4): [-0.06666667, 1.06666667],
@@ -40,15 +39,31 @@ class TestRichardson(unittest.TestCase):
                      (2, 3): [0.02222222, -0.44444444, 1.42222222],
                      (2, 4): [1.05820106e-03, -8.46560847e-02, 1.08359788e+00],
                      (2, 5): [1.05820106e-03, -8.46560847e-02, 1.08359788e+00],
-                     (2, 6): [6.22471211e-05, -1.99190787e-02, 1.01985683e+00]}
+                     (2, 6): [6.22471211e-05, -1.99190787e-02, 1.01985683e+00]},
+                     'forward': {(1, 1): [-1., 2.],
+                     (1, 2): [-0.33333333, 1.33333333],
+                     (1, 3): [-0.14285714, 1.14285714],
+                     (1, 4): [-0.06666667, 1.06666667],
+                     (1, 5): [-0.03225806, 1.03225806],
+                     (1, 6): [-0.01587302, 1.01587302],
+                     (2, 1): [0.33333333, -2., 2.66666667],
+                     (2, 2): [0.04761905, -0.57142857, 1.52380952],
+                     (2, 3): [0.00952381, -0.22857143, 1.21904762],
+                     (2, 4): [0.00215054, -0.10322581, 1.10107527],
+                     (2, 5): [5.12032770e-04, -4.91551459e-02, 1.04864311e+00],
+                     (2, 6): [1.24984377e-04, -2.39970004e-02, 1.02387202e+00]}
+                     }
+        true_vals['backward'] = true_vals['forward']
 
-        for num_terms in [1, 2]:
-            for order in range(1, 7):
-                d = nd.Derivative(np.exp, method=method, order=order)
-                d.set_richardson_rule(step_ratio=2.0, num_terms=num_terms)
-                rule = d.richardson.rule()
-                assert_array_almost_equal(rule,
-                                          true_vals[(num_terms, order)])
+        for method in true_vals:
+            truth = true_vals[method]
+            for num_terms in [1, 2]:
+                for order in range(1, 7):
+                    d = nd.Derivative(np.exp, method=method, order=order)
+                    d.set_richardson_rule(step_ratio=2.0, num_terms=num_terms)
+                    rule = d.richardson.rule()
+                    assert_array_almost_equal(rule,
+                                              truth[(num_terms, order)])
 
     @staticmethod
     def test_complex():
@@ -114,28 +129,6 @@ class TestRichardson(unittest.TestCase):
                                               truth[(n, num_terms, order)])
         # print(t)
         # self.assert_(False)
-    @staticmethod
-    def test_forward_backward():
-        truth = {(1, 1): [-1., 2.],
-                 (1, 2): [-0.33333333, 1.33333333],
-                 (1, 3): [-0.14285714, 1.14285714],
-                 (1, 4): [-0.06666667, 1.06666667],
-                 (1, 5): [-0.03225806, 1.03225806],
-                 (1, 6): [-0.01587302, 1.01587302],
-                 (2, 1): [0.33333333, -2., 2.66666667],
-                 (2, 2): [0.04761905, -0.57142857, 1.52380952],
-                 (2, 3): [0.00952381, -0.22857143, 1.21904762],
-                 (2, 4): [0.00215054, -0.10322581, 1.10107527],
-                 (2, 5): [5.12032770e-04, -4.91551459e-02, 1.04864311e+00],
-                 (2, 6): [1.24984377e-04, -2.39970004e-02, 1.02387202e+00]}
-        for method in ['forward', 'backward']:
-            for num_terms in [1, 2]:
-                for order in range(1, 7):
-                    d = nd.Derivative(np.exp, method=method, order=order)
-                    d.set_richardson_rule(step_ratio=2.0, num_terms=num_terms)
-                    rule = d.richardson.rule()
-                    assert_array_almost_equal(rule,
-                                              truth[(num_terms, order)])
 
 #     def _example_(self):
 #         def f(x, h):
