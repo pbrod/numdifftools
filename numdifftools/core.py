@@ -29,6 +29,7 @@ from scipy import misc
 from scipy.ndimage.filters import convolve1d
 import warnings
 
+
 __all__ = ('dea3', 'Derivative', 'Jacobian', 'Gradient', 'Hessian', 'Hessdiag',
            'MinStepGenerator', 'MaxStepGenerator', 'Richardson',
            'directionaldiff')
@@ -1436,10 +1437,12 @@ class Hessian(_Derivative):
         return self._forward(f, fx, x, -h, *args, **kwargs)
 
 
-def test_docstrings():
+def test_docstrings(filename):
     import doctest
+    print('Testing docstrings in {0!s}'.format(filename))
     doctest.testmod(optionflags=doctest.NORMALIZE_WHITESPACE)
+    print('Docstrings tested')
 
 
 if __name__ == '__main__':  # pragma : no cover
-    test_docstrings()
+    test_docstrings(__file__)
