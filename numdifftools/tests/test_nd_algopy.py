@@ -8,7 +8,7 @@ import numpy as np
 from numpy import pi, r_, sqrt, array
 from numpy.testing import assert_array_almost_equal
 from scipy import linalg, optimize, constants
-
+import algopy
 _TINY = np.finfo(float).machar.tiny
 
 
@@ -139,6 +139,7 @@ class TestDerivative(unittest.TestCase):
     def test_directional_diff():
         v = [1, -1]
         x0 = [2, 3]
+
         def rosen(x):
             return (1-x[0])**2 + 105.*(x[1]-x[0]**2)**2
         directional_diff = nd.directionaldiff(rosen, x0, v)
@@ -244,7 +245,52 @@ class TestJacobian(unittest.TestCase):
 
             Jfun = nd.Jacobian(fun, method=method)
             J = Jfun([1, 2, 0.75])  # should be numerically zero
-            assert_array_almost_equal(J, np.zeros(J.shape))
+            assert_array_almost_equal(J, np.zeros((ydata.size, 3)))
+
+    @staticmethod
+    def test_on_matrix_valued_function():
+        def f(x):
+
+            f0 = x[0] ** 2 + x[1] ** 2
+            f1 = x[0] ** 3 + x[1] ** 3
+
+            s0 = f0.size
+            s1 = f1.size
+            out = algopy.zeros((2, (s0 + s1) / 2), dtype=x)
+            out[0, :] = f0
+            out[1, :] = f1
+            return out
+
+        x = np.array([(1, 2, 3, 4),
+                      (5, 6, 7, 8)], dtype=float)
+
+        y = f(x)
+        assert_array_almost_equal(y, [[26., 40., 58., 80.],
+                                      [126., 224., 370., 576.]])
+        jaca = nd.Jacobian(f)
+
+        assert_array_almost_equal(jaca([1, 2]), [[[2., 4.]],
+                                                 [[3., 12.]]])
+        assert_array_almost_equal(jaca([3, 4]), [[[6., 8.]],
+                                                 [[27., 48.]]])
+
+        assert_array_almost_equal(jaca([[1, 2],
+                                        [3, 4]]),
+                                  [[[2., 0., 6., 0.],
+                                    [0., 4., 0., 8.]],
+                                   [[3., 0., 27., 0.],
+                                    [0., 12., 0., 48.]]])
+        # v0 = df([1, 2])
+        val = jaca(x)
+        assert_array_almost_equal(val,
+                                  [[[2., 0., 0., 0., 10., 0., 0., 0.],
+                                    [0., 4., 0., 0., 0., 12., 0., 0.],
+                                    [0., 0., 6., 0., 0., 0., 14., 0.],
+                                    [0., 0., 0., 8., 0., 0., 0., 16.]],
+                                   [[3., 0., 0., 0., 75., 0., 0., 0.],
+                                    [0., 12., 0., 0., 0., 108., 0., 0.],
+                                    [0., 0., 27., 0., 0., 0., 147., 0.],
+                                    [0., 0., 0., 48., 0., 0., 0., 192.]]])
 
 
 class TestGradient(unittest.TestCase):

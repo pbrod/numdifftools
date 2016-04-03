@@ -26,7 +26,6 @@ from numdifftools.multicomplex import bicomplex
 from numdifftools.extrapolation import Richardson, dea3, convolve
 from numpy import linalg
 from scipy import misc
-from scipy.ndimage.filters import convolve1d
 import warnings
 
 
@@ -50,7 +49,7 @@ _CENTRAL_WEIGHTS_AND_POINTS = {
     (2, 7): (np.array([2, -27, 270, -490, 270, -27, 2]) / 180.0,
              np.arange(-3, 4)),
     (2, 9): (np.array([-9, 128, -1008, 8064, -14350,
-                      8064, -1008, 128, -9]) / 5040.0,
+                       8064, -1008, 128, -9]) / 5040.0,
              np.arange(-4, 5))}
 
 
@@ -96,7 +95,7 @@ def fornberg_weights_all(x, x0, M=1):
         c2, c5, c4 = 1, c4, x[n] - x0
         for v in range(n):
             c3 = x[n] - x[v]
-            c2, c6, c7 = c2 * c3, m * C[v, m-1], C[v, m]
+            c2, c6, c7 = c2 * c3, m * C[v, m - 1], C[v, m]
             C[v, m] = (c4 * c7 - c6) / c3
         C[n, m] = c1 * (c6 - c5 * c7) / c2
         c1 = c2
@@ -146,7 +145,7 @@ def _make_exact(h):
 def default_scale(method='forward', n=1, order=2):
     # is_odd = (n % 2) == 1
     high_order = int(n > 1 or order >= 4)
-    order2 = max(order // 2-1, 0)
+    order2 = max(order // 2 - 1, 0)
     n4 = n // 4
     return (dict(multicomplex=1.35, complex=1.35).get(method, 2.5) +
             int((n - 1)) * dict(multicomplex=0, complex=0.0).get(method, 1.3) +
@@ -154,11 +153,11 @@ def default_scale(method='forward', n=1, order=2):
             # is_odd * dict(complex=2.65*int(n//2)).get(method, 0) +
             (n % 4 == 1) * high_order * dict(complex=3.65 + n4 * (5 + 1.5**n4)
                                              ).get(method, 0) +
-            (n % 4 == 3) * dict(complex=3.65*2 + n4 * (5 + 2.1**n4)
+            (n % 4 == 3) * dict(complex=3.65 * 2 + n4 * (5 + 2.1**n4)
                                 ).get(method, 0) +
             (n % 4 == 2) * dict(complex=3.65 + n4 * (5 + 1.7**n4)
                                 ).get(method, 0) +
-            (n % 4 == 0) * dict(complex=(n//4) * (10 + 1.5*int(n > 10))
+            (n % 4 == 0) * dict(complex=(n // 4) * (10 + 1.5 * int(n > 10))
                                 ).get(method, 0))
 
 
@@ -254,7 +253,7 @@ class MinStepGenerator(object):
             step = 2
             if method == 'complex':
                 step = 4 if n > 2 or order >= 4 else 2
-            num_steps = (n + order-1) // step
+            num_steps = (n + order - 1) // step
         return max(int(num_steps), 1)
 
     def _default_num_steps(self, method, n, order):
@@ -282,7 +281,7 @@ class MinStepGenerator(object):
 
         num_steps = self._default_num_steps(method, n, order)
         offset = self.offset
-        for i in range(num_steps-1, -1, -1):
+        for i in range(num_steps - 1, -1, -1):
             h = (base_step * step_ratio**(i + offset))
             if (np.abs(h) > 0).all():
                 yield h
@@ -325,7 +324,6 @@ class MinMaxStepGenerator(object):
                 for name in self.__dict__.keys()]
         return """{0!s}({1!s})""".format(class_name, ','.join(kwds))
 
-
     def _steps(self, x):
         if self.scale is not None:
             scale = self.scale
@@ -336,7 +334,8 @@ class MinMaxStepGenerator(object):
             step_min = (10 * EPS) ** (1. / scale)
         if step_max is None:
             step_max = np.exp(np.log(step_min) * scale / (scale + 1.5))
-        steps = np.logspace(0, np.log10(step_max) - np.log10(step_min), self.num_steps)[:-1]
+        steps = np.logspace(0, np.log10(step_max) - np.log10(step_min),
+                            self.num_steps)[:-1]
         return steps, delta
 
     def __call__(self, x, method='forward', n=1, order=None):
@@ -411,8 +410,6 @@ class MaxStepGenerator(MinStepGenerator):
             h = base_step * step_ratio**(-i + offset)
             if (np.abs(h) > 0).all():
                 yield h
-
-
 
 
 _cmn_doc = """
@@ -490,7 +487,7 @@ class _Derivative(object):
 
     info = namedtuple('info', ['error_estimate', 'final_step', 'index'])
 
-    def __init__(self, f, step=None, method='central',  order=2, n=1,
+    def __init__(self, f, step=None, method='central', order=2, n=1,
                  full_output=False):
         self.f = f
         self.n = n
@@ -530,15 +527,15 @@ class _Derivative(object):
             median = np.nanmedian(der, axis=0)
             p75 = np.nanpercentile(der, 75, axis=0)
             p25 = np.nanpercentile(der, 25, axis=0)
-            iqr = np.abs(p75-p25)
+            iqr = np.abs(p75 - p25)
         except ValueError as msg:
             warnings.warn(str(msg))
             return 0 * der
 
         a_median = np.abs(median)
         outliers = (((abs(der) < (a_median / trim_fact)) +
-                    (abs(der) > (a_median * trim_fact))) * (a_median > 1e-8) +
-                    ((der < p25-1.5*iqr) + (p75+1.5*iqr < der)))
+                     (abs(der) > (a_median * trim_fact))) * (a_median > 1e-8) +
+                    ((der < p25 - 1.5 * iqr) + (p75 + 1.5 * iqr < der)))
         errors = outliers * np.abs(der - median)
         return errors
 
@@ -570,8 +567,9 @@ class _Derivative(object):
         order = self._method_order
         step = self._richardson_step()
         self.richardson = Richardson(step_ratio=step_ratio,
-                                                  step=step, order=order,
-                                                  num_terms=num_terms)
+                                     step=step, order=order,
+                                     num_terms=num_terms)
+
     @staticmethod
     def _wynn_extrapolate(der, steps):
         der, errors = dea3(der[0:-2], der[1:-1], der[2:], symmetric=False)
@@ -597,11 +595,11 @@ class _Derivative(object):
             return '2'
         return ''
 
-
     def _get_last_name(self):
         last = ''
-        if (self.method in ('complex') and self._derivative_mod_four_is_zero or
-            self._complex_high_order and self._derivative_mod_four_is_three):
+        if (self.method == 'complex' and self._derivative_mod_four_is_zero or
+                self._complex_high_order and
+                self._derivative_mod_four_is_three):
             last = '_higher'
         return last
 
@@ -653,7 +651,7 @@ class _Derivative(object):
         # sequence = np.atleast_2d(sequence)
         original_shape = np.shape(sequence[0])
         f_del = np.vstack(list(np.ravel(r)) for r in sequence)
-        h = np.vstack(list(np.ravel(np.ones(original_shape)*step))
+        h = np.vstack(list(np.ravel(np.ones(original_shape) * step))
                       for step in steps)
         if f_del.size != h.size:
             raise ValueError('fun did not return data of correct size ' +
@@ -664,7 +662,7 @@ class _Derivative(object):
     def _compute_step_ratio(steps):
         if len(steps) < 2:
             return 1
-        return np.unique(steps[0]/steps[1]).mean()
+        return np.unique(steps[0] / steps[1]).mean()
 
     def __call__(self, x, *args, **kwds):
         xi = np.asarray(x)
@@ -790,19 +788,21 @@ class Derivative(_Derivative):
             2 (only even terms included)
             3 (only every 4'th order terms included starting from order 2)
             4 (only every 4'th order terms included starting from order 4)
+            5 (only every 4'th order terms included starting from order 1)
+            6 (only every 4'th order terms included starting from order 3)
         nterms : scalar, integer
             number of terms
         """
         try:
             step = [1, 2, 2, 4, 4, 4, 4][parity]
         except Exception as e:
-            msg = '{0!s}. Parity must be 0, 1, 2, 3, 4, 5 or 6! ({1:d})'.format(str(e),
-                                                                      parity)
-            raise ValueError(msg)
+            msg = '{0!s}. Parity must be 0, 1, 2, 3, 4, 5 or 6! ({1:d})'
+            raise ValueError(msg.format(str(e), parity))
         inv_sr = 1.0 / step_ratio
         offset = [1, 1, 2, 2, 4, 1, 3][parity]
         c0 = [1.0, 1.0, 1.0, 2.0, 24.0, 1.0, 6.0][parity]
-        c = c0/misc.factorial(np.arange(offset, step * nterms + offset, step))
+        c = c0 / \
+            misc.factorial(np.arange(offset, step * nterms + offset, step))
         [i, j] = np.ogrid[0:nterms, 0:nterms]
         return np.atleast_2d(c[j] * inv_sr ** (i * (step * j + offset)))
 
@@ -815,9 +815,9 @@ class Derivative(_Derivative):
     def _parity_complex(self, order, method_order):
         if self.n == 1 and method_order < 4:
             return (order % 2) + 1
-        return (3 + 2*int(self._odd_derivative) +
-                      int(self._derivative_mod_four_is_three)+
-                      int(self._derivative_mod_four_is_zero))
+        return (3 + 2 * int(self._odd_derivative) +
+                int(self._derivative_mod_four_is_three) +
+                int(self._derivative_mod_four_is_zero))
 
     def _parity(self, method, order, method_order):
         if method.startswith('central'):
@@ -871,13 +871,13 @@ class Derivative(_Derivative):
 
         ne = h.shape[0]
         if ne < fd_rule.size:
-            raise ValueError('num_steps (%d) must  be larger than '
-                             '(%d) n + order - 1 = %d + %d -1'
-                             ' (%s)' % (ne, fd_rule.size, self.n, self.order,
-                                        self.method)
+            raise ValueError('num_steps ({0:d}) must  be larger than '
+                             '({1:d}) n + order - 1 = {2:d} + {3:d} -1'
+                             ' ({4:s})'.format(ne, fd_rule.size, self.n,
+                                               self.order, self.method)
                              )
-        nr = (fd_rule.size-1)
-        f_diff = convolve(f_del, fd_rule[::-1], axis=0, origin=nr//2)
+        nr = (fd_rule.size - 1)
+        f_diff = convolve(f_del, fd_rule[::-1], axis=0, origin=nr // 2)
 
         der_init = f_diff / (h ** self.n)
         ne = max(ne - nr, 1)
@@ -925,8 +925,8 @@ class Derivative(_Derivative):
     @staticmethod
     def _complex_odd(f, fx, x, h, *args, **kwds):
         ih = h * _SQRT_J
-        return ((_SQRT_J/2.) * (f(x + ih, *args, **kwds) -
-                                f(x - ih, *args, **kwds))).imag
+        return ((_SQRT_J / 2.) * (f(x + ih, *args, **kwds) -
+                                  f(x - ih, *args, **kwds))).imag
 
     @staticmethod
     def _complex_odd_higher(f, fx, x, h, *args, **kwds):
@@ -1004,16 +1004,146 @@ def directionaldiff(f, x0, vec, **options):
     if x0.size != vec.size:
         raise ValueError('vec and x0 must be the same shapes')
 
-    vec = np.reshape(vec/np.linalg.norm(vec.ravel()), x0.shape)
-    return Derivative(lambda t: f(x0+t*vec), **options)(0)
+    vec = np.reshape(vec / np.linalg.norm(vec.ravel()), x0.shape)
+    return Derivative(lambda t: f(x0 + t * vec), **options)(0)
 
 
+class Jacobian(Derivative):
+    __doc__ = _cmn_doc % dict(
+        derivative='Jacobian',
+        extra_parameter="""
+    order : int, optional
+        defines the order of the error term in the Taylor approximation used.
+        For 'central' and 'complex' methods, it must be an even number.""",
+        returns="""
+    Returns
+    -------
+    jacob : array
+        Jacobian
+    """, extra_note="""
+    Higher order approximation methods will generally be more accurate, but may
+    also suffer more from numerical problems. First order methods is usually
+    not recommended.
 
-class Gradient(Derivative):
+    If f returns a 1d array, it returns a Jacobian. If a 2d array is returned
+    by f (e.g., with a value for each observation), it returns a 3d array
+    with the Jacobian of each observation with shape xk x nobs x xk. I.e.,
+    the Jacobian of the first observation would be [:, 0, :]
+    """, example="""
+    Example
+    -------
+    >>> import numdifftools as nd
+
+    #(nonlinear least squares)
+
+    >>> xdata = np.reshape(np.arange(0,1,0.1),(-1,1))
+    >>> ydata = 1+2*np.exp(0.75*xdata)
+    >>> fun = lambda c: (c[0]+c[1]*np.exp(c[2]*xdata) - ydata)**2
+
+    >>> Jfun = nd.Jacobian(fun)
+    >>> val = Jfun([1,2,0.75])
+    >>> np.allclose(val, np.zeros((10,3)))
+    True
+
+    >>> fun2 = lambda x : x[0]*x[1]*x[2] + np.exp(x[0])*x[1]
+    >>> Jfun3 = nd.Jacobian(fun2)
+    >>> Jfun3([3.,5.,7.])
+    array([[ 135.42768462,   41.08553692,   15.        ]])
+    """, see_also="""
+    See also
+    --------
+    Derivative, Hessian, Gradient
+    """)
+
     def __init__(self, f, step=None, method='central', order=2,
                  full_output=False):
-        super(Gradient, self).__init__(f, step=step, method=method, n=1,
+        super(Jacobian, self).__init__(f, step=step, method=method, n=1,
                                        order=order, full_output=full_output)
+
+    def _vstack(self, sequence, steps):
+        original_shape = list(np.shape(np.atleast_1d(sequence[0].squeeze())))
+        ndim = len(original_shape)
+        axes = [0, 1, 2][:ndim]
+        axes[:2] = axes[1::-1]
+        original_shape[:2] = original_shape[1::-1]
+        n = 1 if ndim < 2 else original_shape[0]
+
+        f_del = np.vstack([np.atleast_1d(r.squeeze()).transpose(axes).ravel()]
+                          for r in sequence)
+        one = np.ones(original_shape)
+        h_shape = (n,) + steps[0].shape
+        h = [np.atleast_2d(step).repeat(n, axis=0).reshape(h_shape)
+             for step in steps]
+        if len(h_shape) < 3:
+            h = np.vstack([(one * hi).ravel()] for hi in h)
+        else:
+            h = np.vstack([(one * hi.transpose(axes)).ravel()]
+                          for hi in h)
+
+        if f_del.size != h.size:
+            raise ValueError('fun did not return data of correct size ' +
+                             '(it must be vectorized)')
+        if ndim == 1:
+            original_shape = (1,) + tuple(original_shape)
+        return f_del, h, tuple(original_shape)
+
+    def _identity(self, n):
+        m = np.zeros((n, n, n))
+        np.put(m, np.arange(0, n ** 3, n * (n + 1) + 1), 1)
+        return m
+
+    def _increments(self, n, h):
+        return np.dot(self._identity(n), h)
+
+    def _central(self, f, fx, x, h, *args, **kwds):
+        n = len(x)
+        increments = self._increments(n, h)
+        partials = [(f(x + hi, *args, **kwds) - f(x - hi, *args, **kwds)) / 2.0
+                    for hi in increments]
+        return np.array(partials)
+
+    def _backward(self, f, fx, x, h, *args, **kwds):
+        n = len(x)
+        increments = self._increments(n, h)
+        partials = [(fx - f(x - hi, *args, **kwds)) for hi in increments]
+        return np.array(partials)
+
+    def _forward(self, f, fx, x, h, *args, **kwds):
+        n = len(x)
+        increments = self._increments(n, h)
+        partials = [(f(x + hi, *args, **kwds) - fx) for hi in increments]
+        return np.array(partials)
+
+    def _complex(self, f, fx, x, h, *args, **kwds):
+        n = len(x)
+        increments = self._increments(n, 1j * h)
+        partials = [f(x + ih, *args, **kwds).imag for ih in increments]
+        return np.array(partials)
+
+    def _complex_odd(self, f, fx, x, h, *args, **kwds):
+        n = len(x)
+        increments = self._increments(n, _SQRT_J * h)
+        partials = [((_SQRT_J / 2.) * (f(x + ih, *args, **kwds) -
+                                       f(x - ih, *args, **kwds))).imag
+                    for ih in increments]
+        return np.array(partials)
+
+    def _multicomplex(self, f, fx, x, h, *args, **kwds):
+        n = len(x)
+        increments = self._increments(n, 1j * h)
+        partials = [f(bicomplex(x + hi, 0), *args, **kwds).imag
+                    for hi in increments]
+        return np.array(partials)
+
+    def __call__(self, x, *args, **kwds):
+        vals = super(Jacobian, self).__call__(np.atleast_1d(x), *args, **kwds)
+        if vals.ndim == 3:
+            return np.array([np.hstack([np.diag(hj) for hj in hi])
+                             for hi in vals])
+        return vals
+
+
+class Gradient(Jacobian):
     __doc__ = _cmn_doc % dict(
         derivative='Gradient',
         extra_parameter="""
@@ -1062,107 +1192,13 @@ class Gradient(Derivative):
     Derivative, Hessian, Jacobian
     """)
 
-    @staticmethod
-    def _central(f, fx, x, h, *args, **kwds):
-        n = len(x)
-        increments = np.identity(n) * h
-        partials = [(f(x + hi, *args, **kwds) - f(x - hi, *args, **kwds)) / 2.0
-                    for hi in increments]
-        return np.array(partials).T
-
-    @staticmethod
-    def _backward(f, fx, x, h, *args, **kwds):
-        n = len(x)
-        increments = np.identity(n) * h
-        partials = [(fx - f(x - hi, *args, **kwds)) for hi in increments]
-        return np.array(partials).T
-
-    @staticmethod
-    def _forward(f, fx, x, h, *args, **kwds):
-        n = len(x)
-        increments = np.identity(n) * h
-        partials = [(f(x + hi, *args, **kwds) - fx) for hi in increments]
-        return np.array(partials).T
-
-    @staticmethod
-    def _complex(f, fx, x, h, *args, **kwds):
-        # From Guilherme P. de Freitas, numpy mailing list
-        # http://mail.scipy.org/pipermail/numpy-discussion/2010-May/050250.html
-        n = len(x)
-        increments = np.identity(n) * 1j * h
-        partials = [f(x + ih, *args, **kwds).imag for ih in increments]
-        return np.array(partials).T
-
-    @staticmethod
-    def _complex_odd(f, fx, x, h, *args, **kwds):
-        n = len(x)
-        increments = np.identity(n) * _SQRT_J * h
-        partials = [((_SQRT_J/2.) * (f(x + ih, *args, **kwds) -
-                                     f(x - ih, *args, **kwds))).imag
-                    for ih in increments]
-        return np.array(partials).T
-
-    @staticmethod
-    def _multicomplex(f, fx, x, h, *args, **kwds):
-        n = len(x)
-        increments = np.identity(n) * 1j * h
-        partials = [f(bicomplex(x + hi, 0), *args, **kwds).imag
-                    for hi in increments]
-        return np.array(partials).T
-
     def __call__(self, x, *args, **kwds):
-        return super(Gradient, self).__call__(np.atleast_1d(x), *args, **kwds)
-
-
-class Jacobian(Gradient):
-    __doc__ = _cmn_doc % dict(
-        derivative='Jacobian',
-        extra_parameter="""
-    order : int, optional
-        defines the order of the error term in the Taylor approximation used.
-        For 'central' and 'complex' methods, it must be an even number.""",
-        returns="""
-    Returns
-    -------
-    jacob : array
-        Jacobian
-    """, extra_note="""
-    Higher order approximation methods will generally be more accurate, but may
-    also suffer more from numerical problems. First order methods is usually
-    not recommended.
-
-    If f returns a 1d array, it returns a Jacobian. If a 2d array is returned
-    by f (e.g., with a value for each observation), it returns a 3d array
-    with the Jacobian of each observation with shape xk x nobs x xk. I.e.,
-    the Jacobian of the first observation would be [:, 0, :]
-    """, example="""
-    Example
-    -------
-    >>> import numdifftools as nd
-
-    #(nonlinear least squares)
-
-    >>> xdata = np.reshape(np.arange(0,1,0.1),(-1,1))
-    >>> ydata = 1+2*np.exp(0.75*xdata)
-    >>> fun = lambda c: (c[0]+c[1]*np.exp(c[2]*xdata) - ydata)**2
-
-    >>> Jfun = nd.Jacobian(fun)
-    >>> val = Jfun([1,2,0.75])
-    >>> np.allclose(val, np.zeros((10,3)))
-    True
-
-    >>> fun2 = lambda x : x[0]*x[1]*x[2] + np.exp(x[0])*x[1]
-    >>> Jfun3 = nd.Jacobian(fun2)
-    >>> Jfun3([3.,5.,7.])
-    array([ 135.42768462,   41.08553692,   15.        ])
-    """, see_also="""
-    See also
-    --------
-    Derivative, Hessian, Gradient
-    """)
+        return super(Gradient, self).__call__(np.atleast_1d(x).ravel(),
+                                              *args, **kwds).squeeze()
 
 
 class Hessdiag(Derivative):
+
     def __init__(self, f, step=None, method='central', order=2,
                  full_output=False):
         super(Hessdiag, self).__init__(f, step=step, method=method, n=2,
@@ -1205,10 +1241,10 @@ class Hessdiag(Derivative):
         """Eq. 8"""
         n = len(x)
         increments = np.identity(n) * h
-        partials = [(f(x + 2*hi, *args, **kwds) +
-                    f(x - 2*hi, *args, **kwds) + 2*fx -
-                    2*f(x + hi, *args, **kwds) -
-                    2*f(x - hi, *args, **kwds)) / 4.0
+        partials = [(f(x + 2 * hi, *args, **kwds) +
+                     f(x - 2 * hi, *args, **kwds) + 2 * fx -
+                     2 * f(x + hi, *args, **kwds) -
+                     2 * f(x - hi, *args, **kwds)) / 4.0
                     for hi in increments]
         return np.array(partials)
 
@@ -1247,7 +1283,7 @@ class Hessdiag(Derivative):
     @staticmethod
     def _complex_even(f, fx, x, h, *args, **kwargs):
         n = len(x)
-        increments = np.identity(n) * h * (1j+1) / np.sqrt(2)
+        increments = np.identity(n) * h * (1j + 1) / np.sqrt(2)
         partials = [(f(x + hi, *args, **kwargs) +
                      f(x - hi, *args, **kwargs)).imag
                     for hi in increments]
@@ -1258,6 +1294,7 @@ class Hessdiag(Derivative):
 
 
 class Hessian(_Derivative):
+
     def __init__(self, f, step=None, method='central', full_output=False):
         order = dict(backward=1, forward=1, complex=2).get(method, 2)
         super(Hessian, self).__init__(f, n=2, step=step, method=method,
@@ -1375,10 +1412,10 @@ class Hessian(_Derivative):
         hess = np.outer(h, h)
 
         for i in range(n):
-            hess[i, i] = (f(x + 2*ee[i, :], *args, **kwargs) - 2*fx +
-                          f(x - 2*ee[i, :], *args, **kwargs)
+            hess[i, i] = (f(x + 2 * ee[i, :], *args, **kwargs) - 2 * fx +
+                          f(x - 2 * ee[i, :], *args, **kwargs)
                           ) / (4. * hess[i, i])
-            for j in range(i+1, n):
+            for j in range(i + 1, n):
                 hess[i, j] = (f(x + ee[i, :] + ee[j, :], *args, **kwargs) -
                               f(x + ee[i, :] - ee[j, :], *args, **kwargs) -
                               f(x - ee[i, :] + ee[j, :], *args, **kwargs) +
