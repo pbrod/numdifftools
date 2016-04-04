@@ -4,16 +4,7 @@ import unittest
 import numdifftools.core as nd
 import numpy as np
 from numpy.testing import assert_array_almost_equal
-from numpy.ma.testutils import assert_array_almost_equal
-
-
-def rosen(x):
-    """Rosenbrock function
-
-    This is a non-convex function used as a performance test problem for
-    optimization algorithms introduced by Howard H. Rosenbrock in 1960.[1]
-    """
-    return (1 - x[0])**2 + 105. * (x[1] - x[0]**2)**2
+from numdifftools.testing import rosen
 
 
 class TestGlobalFunctions(unittest.TestCase):
@@ -473,8 +464,9 @@ class TestJacobian(unittest.TestCase):
             f0_d1 = np.atleast_1d(x[1] * 2)
             f1_d0 = np.atleast_1d(3 * x[0] ** 2)
             f1_d1 = np.atleast_1d(3 * x[1] ** 2)
-            return np.array([np.hstack([np.diag(f0_d0), np.diag(f0_d1)]),
-                             np.hstack([np.diag(f1_d0), np.diag(f1_d1)]) ]).squeeze()
+            df0 = np.hstack([np.diag(f0_d0), np.diag(f0_d1)])
+            df1 = np.hstack([np.diag(f1_d0), np.diag(f1_d1)])
+            return np.array([df0, df1]).squeeze()
 
         x = np.array([(1, 2, 3, 4),
                       (5, 6, 7, 8)], dtype=float)

@@ -967,7 +967,7 @@ def directionaldiff(f, x0, vec, **options):
         analytical function to differentiate.
     x0: array
         vector location at which to differentiate f. If x0 is an nxm array,
-        then fun is assumed to be a function of n*m variables.
+        then f is assumed to be a function of n*m variables.
     vec: array
         vector defining the line along which to take the derivative. It should
         be the same size as x0, but need not be a vector of unit length.
@@ -1159,6 +1159,8 @@ class Gradient(Jacobian):
     Higher order approximation methods will generally be more accurate, but may
     also suffer more from numerical problems. First order methods is usually
     not recommended.
+
+    If x0 is an nxm array, then f is assumed to be a function of n*m variables.
     """, example="""
     Example
     -------

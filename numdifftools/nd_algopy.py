@@ -313,17 +313,17 @@ class Gradient(_Common):
     Hessian,
     """)
 
-    def _reverse(self, x, *args, **kwds):
-
-        c_graph = self.computational_graph(x, *args, **kwds)
-        return c_graph.gradient(x)
-
     def _forward(self, x, *args, **kwds):
         # forward mode without building the computational graph
 
         tmp = algopy.UTPM.init_jacobian(x)
         y = self.f(tmp, *args, **kwds)
         return algopy.UTPM.extract_jacobian(y)
+
+    def _reverse(self, x, *args, **kwds):
+
+        c_graph = self.computational_graph(x, *args, **kwds)
+        return c_graph.gradient(x)
 
 
 class Hessian(_Common):

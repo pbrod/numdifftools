@@ -9,6 +9,7 @@ from numpy import pi, r_, sqrt, array
 from numpy.testing import assert_array_almost_equal
 from scipy import linalg, optimize, constants
 import algopy
+from numdifftools.testing import rosen
 _TINY = np.finfo(float).machar.tiny
 
 
@@ -140,8 +141,6 @@ class TestDerivative(unittest.TestCase):
         v = [1, -1]
         x0 = [2, 3]
 
-        def rosen(x):
-            return (1-x[0])**2 + 105.*(x[1]-x[0]**2)**2
         directional_diff = nd.directionaldiff(rosen, x0, v)
         assert_array_almost_equal(directional_diff, 743.87633380824832)
 
