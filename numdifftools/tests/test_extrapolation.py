@@ -66,17 +66,18 @@ class TestRichardson(unittest.TestCase):
                         -0.042755592360228634, 1.0424220613604906],
             (3, 2, 6): [-6.08476257157875e-08, 8.177920896951241e-05,
                         -0.02093547748207586, 1.0208537591207332]}
+
     def test_order_step_combinations(self):
         for num_terms in [1, 2, 3]:
             for step in [1, 2]:
                 for order in range(1, 7):
                     r_extrap = Richardson(step_ratio=2.0, step=step,
-                                             num_terms=num_terms, order=order)
+                                          num_terms=num_terms, order=order)
                     rule = r_extrap.rule()
                     # print((num_terms, step, order), rule.tolist())
                     assert_array_almost_equal(rule,
                                               self.true_vals[(num_terms, step,
-                                                         order)])
+                                                              order)])
         # self.assert_(False)
 
 
@@ -88,21 +89,19 @@ class TestExtrapolation(unittest.TestCase):
         h = np.zeros(n)
         for k in np.arange(n):
             x = np.linspace(0, np.pi/2., 2**(k+5)+1)
-            Ei[k] = np.trapz(np.sin(x),x)
+            Ei[k] = np.trapz(np.sin(x), x)
             h[k] = x[1]
         self.Ei = Ei
         self.h = h
-
 
     def test_dea3_on_trapz_sin(self):
         Ei = self.Ei
         [En, err] = dea3(Ei[0], Ei[1], Ei[2])
         truErr = Ei[:3]-1.
         assert_allclose(truErr,
-                        [ -2.00805680e-04, -5.01999079e-05, -1.25498825e-05])
+                        [-2.00805680e-04, -5.01999079e-05, -1.25498825e-05])
         assert_allclose(En,  1.)
         self.assertLessEqual(err, 0.00021)
-
 
     def test_dea_on_trapz_sin(self):
         Ei = self.Ei
@@ -115,15 +114,15 @@ class TestExtrapolation(unittest.TestCase):
                                    1.25498825e-05, 3.13746471e-06,
                                    7.84365809e-07, 1.96091429e-07,
                                    4.90228558e-08])
-        self.assertTrue(np.all(truErr< err_bound))
+        self.assertTrue(np.all(truErr < err_bound))
         assert_allclose(En,  1.)
         self.assertLessEqual(err, 1e-10)
 
     def test_richardson(self):
         Ei, h = self.Ei[:, np.newaxis], self.h[:, np.newaxis]
-        En, err, step = Richardson(step=1, order=1)(Ei, h)
+        En, err, _step = Richardson(step=1, order=1)(Ei, h)
         assert_allclose(En,  1.)
-        self.assertTrue(np.all(err<0.0022))
+        self.assertTrue(np.all(err < 0.0022))
 
 
 #     def test_epsal():
