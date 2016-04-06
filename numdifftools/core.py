@@ -421,9 +421,11 @@ _cmn_doc = """
        function of one array f(x, `*args`, `**kwds`)
     step : float, array-like or StepGenerator object, optional
        Defines the spacing used in the approximation.
-       Default is  MinStepGenerator(base_step=step, step_ratio=None)
-       if step or method in in ['complex', 'multicomplex'], otherwise
-       MaxStepGenerator(step_ratio=None, num_extrap=14)
+       Default is MinStepGenerator(base_step=step, step_ratio=None,
+                                   num_extrap=0, **step_options)
+       if step or method in in ['complex', 'multicomplex'],
+       otherwise
+           MaxStepGenerator(step_ratio=None, num_extrap=14, **step_options)
        The results are extrapolated if the StepGenerator generate more than 3
        steps.
     method : {'central', 'complex', 'multicomplex', 'forward', 'backward'}
@@ -432,6 +434,8 @@ _cmn_doc = """
         If `full_output` is False, only the derivative is returned.
         If `full_output` is True, then (der, r) is returned `der` is the
         derivative, and `r` is a Results object.
+    **step_options:
+        options to pass on to the XXXStepGenerator used.
 
     Call Parameters
     ---------------
@@ -488,21 +492,23 @@ class _Derivative(object):
     info = namedtuple('info', ['error_estimate', 'final_step', 'index'])
 
     def __init__(self, f, step=None, method='central', order=2, n=1,
-                 full_output=False):
+                 full_output=False, **step_options):
         self.f = f
         self.n = n
         self.order = order
         self.method = method
         self.full_output = full_output
         self.richardson_terms = 2
-        self.step = self._make_generator(step)
+        self.step = self._make_generator(step, step_options)
 
-    def _make_generator(self, step):
+    def _make_generator(self, step, step_options):
         if hasattr(step, '__call__'):
             return step
         if step is None and self.method not in ['complex', 'multicomplex']:
-            return MaxStepGenerator(step_ratio=None, num_extrap=14)
-        return MinStepGenerator(base_step=step, step_ratio=None, num_extrap=0)
+            return MaxStepGenerator(step_ratio=None, num_extrap=14,
+                                    **step_options)
+        return MinStepGenerator(base_step=step, step_ratio=None, num_extrap=0,
+                                **step_options)
 
     @staticmethod
     def _get_arg_min(errors):
@@ -1056,9 +1062,10 @@ class Jacobian(Derivative):
     """)
 
     def __init__(self, f, step=None, method='central', order=2,
-                 full_output=False):
+                 full_output=False, **step_options):
         super(Jacobian, self).__init__(f, step=step, method=method, n=1,
-                                       order=order, full_output=full_output)
+                                       order=order, full_output=full_output,
+                                       **step_options)
 
     def _vstack(self, sequence, steps):
         original_shape = list(np.shape(np.atleast_1d(sequence[0].squeeze())))
@@ -1202,9 +1209,10 @@ class Gradient(Jacobian):
 class Hessdiag(Derivative):
 
     def __init__(self, f, step=None, method='central', order=2,
-                 full_output=False):
+                 full_output=False, **step_options):
         super(Hessdiag, self).__init__(f, step=step, method=method, n=2,
-                                       order=order, full_output=full_output)
+                                       order=order, full_output=full_output,
+                                       **step_options)
     __doc__ = _cmn_doc % dict(
         derivative='Hessian diagonal',
         extra_parameter="""order : int, optional
