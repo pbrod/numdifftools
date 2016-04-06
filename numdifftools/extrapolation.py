@@ -248,6 +248,12 @@ def dea3(v0, v1, v2, symmetric=False):
             "Acceleration de la convergence en analyse numerique",
             "Lecture Notes in Math.", vol. 584,
             Springer-Verlag, New York, 1977.
+
+    ..  [3] E. J. Weniger (1989)
+            "Nonlinear sequence transformations for the acceleration of
+            convergence and the summation of divergent series"
+            Computer Physics Reports Vol. 10, 189 - 371
+            http://arxiv.org/abs/math/0306302v1
     """
     E0, E1, E2 = np.atleast_1d(v0, v1, v2)
     abs, max = np.abs, np.maximum  # @ReservedAssignment
