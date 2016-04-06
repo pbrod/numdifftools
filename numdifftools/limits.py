@@ -96,7 +96,7 @@ class MinStepGenerator(object):
         self.dtheta = dtheta
 
         if path not in ['spiral', 'radial']:
-            raise ValueError('Invalid Path: %s' % str(path))
+            raise ValueError('Invalid Path: {}'.format(str(path)))
 
     @property
     def step_ratio(self):
