@@ -56,13 +56,22 @@ class Dea(object):
              the last 3 results.
     """
     def __init__(self, limexp=3):
-        self.limexp = 2 * (limexp // 2) + 1
-        self.epstab = np.zeros(limexp+5)
+        self.limexp = limexp
         self.ABSERR = 10.
         self._n = 0
         self._nres = 0
-        if (limexp < 3):
+
+    @property
+    def limexp(self):
+        return self._limexp
+
+    @limexp.setter
+    def limexp(self, limexp):
+        n = 2 * (limexp // 2) + 1
+        if (n < 3):
             raise ValueError('LIMEXP IS LESS THAN 3')
+        self.epstab = np.zeros(n+5)
+        self._limexp = n
 
     @staticmethod
     def _compute_error(RES3LA, NRES, RES):
@@ -71,13 +80,13 @@ class Dea(object):
         return error
 
     @staticmethod
-    def _shift_table(EPSTAB, N, NEWELM, NUM):
-        i_0 = 1 if ((NUM // 2) * 2 == NUM - 1) else 0
+    def _shift_table(EPSTAB, N, NEWELM, old_N):
+        i_0 = old_N % 2  # 1 if ((old_N // 2) * 2 == old_N - 1) else 0
         i_n = 2 * NEWELM + 2
         EPSTAB[i_0:i_n:2] = EPSTAB[i_0 + 2:i_n + 2:2]
 
-        if (NUM != N):
-            i_n = NUM - N
+        if (old_N != N):
+            i_n = old_N - N
             EPSTAB[:N + 1] = EPSTAB[i_n:i_n + N + 1]
         return EPSTAB
 
@@ -89,12 +98,13 @@ class Dea(object):
         else:
             RES3LA[NRES] = RESULT
 
-    def _dea(self, EPSTAB, N, NRES):
+    def _dea(self, EPSTAB, N):
+        NRES = self._nres
         RES3LA = EPSTAB[-3:]
         ABSERR = self.ABSERR
         EPSTAB[N + 2] = EPSTAB[N]
         NEWELM = N // 2
-        NUM = N
+        old_N = N
         K1 = N
         for I in range(NEWELM):
             E0, E1, E2 = EPSTAB[K1 - 2], EPSTAB[K1 - 1], EPSTAB[K1 + 2]
@@ -103,27 +113,27 @@ class Dea(object):
             ERR2, ERR3 = abs(DELTA2), abs(DELTA3)
             TOL2 = max(abs(E2), abs(E1)) * _EPS
             TOL3 = max(abs(E1), abs(E0)) * _EPS
-            converged = (ERR2 <= TOL2 and ERR3 <= TOL3)
-            if converged:
+            all_converged = (ERR2 <= TOL2 and ERR3 <= TOL3)
+            if all_converged:
                 ABSERR = ERR2 + ERR3
                 RESULT = RES
                 break
 
             if (I == 0):
-                converged = (ERR2 <= TOL2 or ERR3 <= TOL3)
-                if not converged:
+                any_converged = (ERR2 <= TOL2 or ERR3 <= TOL3)
+                if not any_converged:
                     SS = 1.0 / DELTA2 - 1.0 / DELTA3
             else:
                 E3 = EPSTAB[K1]
                 DELTA1 = E1 - E3
                 ERR1 = abs(DELTA1)
                 TOL1 = max(abs(E1), abs(E3)) * _EPS
-                converged = (ERR1 <= TOL1 or ERR2 <= TOL2 or ERR3 <= TOL3)
-                if not converged:
+                any_converged = (ERR1 <= TOL1 or ERR2 <= TOL2 or ERR3 <= TOL3)
+                if not any_converged:
                     SS = 1.0 / DELTA1 + 1.0 / DELTA2 - 1.0 / DELTA3
 
             EPSTAB[K1] = E1
-            if (converged or abs(SS * E1) <= 1e-04):
+            if (any_converged or abs(SS * E1) <= 1e-04):
                 N = 2 * I
                 if (NRES == 0):
                     ABSERR = ERR2 + ERR3
@@ -145,20 +155,21 @@ class Dea(object):
                 continue
             ABSERR = ERROR
             RESULT = RES
-        else:
-            ABSERR = self._compute_error(RES3LA, NRES, RES)
-            RESULT = RES
+#        else:
+#            pass
+#            ERROR = self._compute_error(RES3LA, NRES, RES)
+            # RESULT = RES
 
         # 50
         if (N == self.limexp - 1):
             N = 2 * (self.limexp // 2) - 1
-        EPSTAB = self._shift_table(EPSTAB, N, NEWELM, NUM)
+        EPSTAB = self._shift_table(EPSTAB, N, NEWELM, old_N)
         self._update_RES3LA(RES3LA, RESULT, NRES)
 
         ABSERR = max(ABSERR, 10.0*_EPS * abs(RESULT))
-        NRES = NRES + 1
 
-        return RESULT, ABSERR, N, NRES
+        self._nres += 1
+        return RESULT, ABSERR, N
 
     def __call__(self, SVALUE):
 
@@ -166,29 +177,77 @@ class Dea(object):
 
         RESULT = SVALUE
         N = self._n
-        NRES = self._nres
+
         EPSTAB[N] = SVALUE
         if (N == 0):
             ABSERR = abs(RESULT)
         elif (N == 1):
             ABSERR = 6.0 * abs(RESULT - EPSTAB[0])
         else:
-            RESULT, ABSERR, N, NRES = self._dea(EPSTAB, N, NRES)
+            RESULT, ABSERR, N = self._dea(EPSTAB, N)
         N += 1
         self._n = N
-        self._nres = NRES
 
         self.ABSERR = ABSERR
         return RESULT, ABSERR
 
 
-def dea_demo():
+class EpsAlg(object):
+    def __init__(self, limexp=3):
+        self.limexp = 2 * (limexp // 2) + 1
+        self.epstab = np.zeros(limexp+5)
+        self.ABSERR = 10.
+        self._n = 0
+        self._nres = 0
+        if (limexp < 3):
+            raise ValueError('LIMEXP IS LESS THAN 3')
+
+    def __call__(self, SOFN):
+        N = self._n
+        E = self.epstab
+        E[N] = SOFN
+        if (N == 0):
+            ESTLIM = SOFN
+        else:
+            AUX2 = 0.0
+            for J in range(N, 0, -1):
+                AUX1 = AUX2
+                AUX2 = E[J-1]
+                DIFF = E[J] - AUX2
+                if (np.abs(DIFF) <= 1e-60):
+                    E[J-1] = 1.0e+60
+                else:
+                    E[J-1] = AUX1 + 1.0/DIFF
+            ESTLIM = E[np.mod(N, 2)]
+            if N > self.limexp - 1:
+                raise ValueError("Eps table to small!")
+
+        N += 1
+        self._n = N
+        return ESTLIM
+
+
+def epsalg_demo():
     def linfun(i):
         return np.linspace(0, np.pi/2., 2**i+1)
-    dea = Dea(limexp=11)
+    dea = EpsAlg(limexp=15)
     print('NO. PANELS      TRAP. APPROX          APPROX W/EA           ABSERR')
     txt = '{0:5d} {1:20.8f}  {2:20.8f}  {3:20.8f}'
     for k in np.arange(10):
+        x = linfun(k)
+        val = np.trapz(np.sin(x), x)
+        vale = dea(val)
+        err = np.abs(1.0-vale)
+        print(txt.format(len(x)-1, val, vale, err))
+
+
+def dea_demo():
+    def linfun(i):
+        return np.linspace(0, np.pi/2., 2**i+1)
+    dea = Dea(limexp=6)
+    print('NO. PANELS      TRAP. APPROX          APPROX W/EA           ABSERR')
+    txt = '{0:5d} {1:20.8f}  {2:20.8f}  {3:20.8f}'
+    for k in np.arange(12):
         x = linfun(k)
         val = np.trapz(np.sin(x), x)
         vale, err = dea(val)
@@ -364,4 +423,5 @@ class Richardson(object):
 
 
 if __name__ == '__main__':
-    pass
+    dea_demo()
+    # epsalg_demo()
