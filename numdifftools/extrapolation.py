@@ -193,6 +193,17 @@ class Dea(object):
 
 
 class EpsAlg(object):
+    """
+    This implementaion is from [1]_
+
+    Reference
+    ---------
+    ..  [1] E. J. Weniger (1989)
+            "Nonlinear sequence transformations for the acceleration of
+            convergence and the summation of divergent series"
+            Computer Physics Reports Vol. 10, 189 - 371
+            http://arxiv.org/abs/math/0306302v1
+    """
     def __init__(self, limexp=3):
         self.limexp = 2 * (limexp // 2) + 1
         self.epstab = np.zeros(limexp+5)

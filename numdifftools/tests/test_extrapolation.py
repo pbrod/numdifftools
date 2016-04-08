@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 from numpy.testing import assert_array_almost_equal, assert_allclose
-from numdifftools.extrapolation import Dea, dea3, Richardson
+from numdifftools.extrapolation import Dea, dea3, Richardson, EpsAlg
 
 
 class TestRichardson(unittest.TestCase):
@@ -124,35 +124,11 @@ class TestExtrapolation(unittest.TestCase):
         assert_allclose(En,  1.)
         self.assertTrue(np.all(err < 0.0022))
 
-
-#     def test_epsal():
-#         HUGE = 1.E+60
-#         TINY = 1.E-60
-#         ZERO = 0.E0
-#         ONE = 1.E0
-#         true_vals = [0.78539816, 0.94805945, 0.99945672]
-#         E = []
-#         for N, SOFN in enumerate([0.78539816, 0.94805945, 0.98711580]):
-#             E.append(SOFN)
-#             if N == 0:
-#                 ESTLIM = SOFN
-#             else:
-#                 AUX2 = ZERO
-#                 for J in range(N, 0, -1):
-#                     AUX1 = AUX2
-#                     AUX2 = E[J-1]
-#                     DIFF = E[J] - AUX2
-#                     if (abs(DIFF) <= TINY):
-#                         E[J-1] = HUGE
-#                     else:
-#                         E[J-1] = AUX1 + ONE/DIFF
-#
-#                 if (N % 2) == 0:
-#                     ESTLIM = E[0]
-#                 else:
-#                     ESTLIM = E[1]
-#             print(ESTLIM, true_vals[N])
-
+    def test_epsal(self):
+        true_vals = [0.78539816, 0.94805945, 0.99945672]
+        dea = EpsAlg(limexp=7)
+        E = [dea(val) for val in [0.78539816, 0.94805945, 0.98711580]]
+        assert_array_almost_equal(true_vals, E)
 
 if __name__ == "__main__":
     unittest.main()
