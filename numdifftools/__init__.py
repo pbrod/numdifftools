@@ -1,6 +1,8 @@
 import pkg_resources
 from .info import __doc__
 from .core import *
+from . import extrapolation, limits
+
 from numpy.testing import Tester
 try:
     __version__ = pkg_resources.get_distribution(__name__).version

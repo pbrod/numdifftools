@@ -7,7 +7,8 @@ from numdifftools.example_functions import function_names, get_function
 
 
 class TestExampleFunctions(unittest.TestCase):
-    def test_high_order_derivative(self):
+    @staticmethod
+    def test_high_order_derivative():
         x = 0.5
         methods = ['complex', 'central', 'forward', 'backward']
         for name in function_names:
