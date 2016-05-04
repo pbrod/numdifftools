@@ -103,7 +103,6 @@ class _Common(object):
         self.f = f
         self.method = method
         self.n = 1
-        self._computational_graph = None
 
     @property
     def f(self):
@@ -118,12 +117,12 @@ class _Common(object):
         if self._computational_graph is None:
             # STEP 1: trace the function evaluation
             cg = algopy.CGraph()
-            x = algopy.Function(x)
+            tmp = algopy.Function(x)
 
-            y = self.f(x, *args, **kwds)
+            y = self.f(tmp, *args, **kwds)
             # y = UTPM.as_utpm(z)
             cg.trace_off()
-            cg.independentFunctionList = [x]
+            cg.independentFunctionList = [tmp]
             cg.dependentFunctionList = [y]
             self._computational_graph = cg
         return self._computational_graph
@@ -229,7 +228,7 @@ class Jacobian(_Common):
     >>> f = lambda c: (c[0]+c[1]*np.exp(c[2]*xdata) - ydata)**2
 
     Jfun = nda.Jacobian(f) # Todo: This does not work
-    Jfun([1,2,0.75]) # should be numerically zero
+    Jfun([1,2,0.75]).T # should be numerically zero
     array([[ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
            [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
            [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]])
@@ -256,20 +255,6 @@ class Jacobian(_Common):
     Hessdiag,
     Hessian,
     """)
-
-    #     def _jacobian_forward(self, x, *args, **kwds):
-    #         x = np.asarray(x, dtype=float)
-    #         # shape = x.shape
-    #         D, Nm = 2, x.size
-    #         P = Nm
-    #         y = UTPM(np.zeros((D, P, Nm)))
-    #
-    #         y.data[0, :] = x.ravel()
-    #         y.data[1, :] = np.eye(Nm)
-    #         z0 = self.f(y, *args, **kwds)
-    #         z = UTPM.as_utpm(z0)
-    #         J = z.data[1, :, :, 0]
-    #         return J
 
     def _forward(self, x, *args, **kwds):
         # forward mode without building the computational graph
@@ -328,17 +313,17 @@ class Gradient(_Common):
     Hessian,
     """)
 
-    def _reverse(self, x, *args, **kwds):
-
-        c_graph = self.computational_graph(x, *args, **kwds)
-        return c_graph.gradient(x)
-
     def _forward(self, x, *args, **kwds):
         # forward mode without building the computational graph
 
         tmp = algopy.UTPM.init_jacobian(x)
         y = self.f(tmp, *args, **kwds)
         return algopy.UTPM.extract_jacobian(y)
+
+    def _reverse(self, x, *args, **kwds):
+
+        c_graph = self.computational_graph(x, *args, **kwds)
+        return c_graph.gradient(x)
 
 
 class Hessian(_Common):
@@ -391,7 +376,6 @@ class Hessian(_Common):
     def __init__(self, f, method='forward'):
         super(Hessian, self).__init__(f, method)
         self.n = 2
-
 
     def _forward(self, x, *args, **kwds):
         x = np.atleast_1d(x)
@@ -465,7 +449,6 @@ class Hessdiag(Hessian):
 
     def _reverse(self, x, *args, **kwds):
         return np.diag(super(Hessdiag, self)._reverse(x, *args, **kwds))
-
 
 
 def directionaldiff(f, x0, vec, **options):

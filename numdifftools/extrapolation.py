@@ -65,7 +65,7 @@ class Dea(object):
             raise ValueError('LIMEXP IS LESS THAN 3')
 
     @staticmethod
-    def _compute_error( RES3LA, NRES, RES):
+    def _compute_error(RES3LA, NRES, RES):
         fact = [6.0, 2.0, 1.0][min(NRES-1, 2)]
         error = fact * np.abs(RES - RES3LA[:NRES]).sum()
         return error
@@ -89,10 +89,81 @@ class Dea(object):
         else:
             RES3LA[NRES] = RESULT
 
+    def _dea(self, EPSTAB, N, NRES):
+        RES3LA = EPSTAB[-3:]
+        ABSERR = self.ABSERR
+        EPSTAB[N + 2] = EPSTAB[N]
+        NEWELM = N // 2
+        NUM = N
+        K1 = N
+        for I in range(NEWELM):
+            E0, E1, E2 = EPSTAB[K1 - 2], EPSTAB[K1 - 1], EPSTAB[K1 + 2]
+            RES = E2
+            DELTA2, DELTA3 = E2 - E1, E1 - E0
+            ERR2, ERR3 = abs(DELTA2), abs(DELTA3)
+            TOL2 = max(abs(E2), abs(E1)) * _EPS
+            TOL3 = max(abs(E1), abs(E0)) * _EPS
+            converged = (ERR2 <= TOL2 and ERR3 <= TOL3)
+            if converged:
+                ABSERR = ERR2 + ERR3
+                RESULT = RES
+                break
+
+            if (I == 0):
+                converged = (ERR2 <= TOL2 or ERR3 <= TOL3)
+                if not converged:
+                    SS = 1.0 / DELTA2 - 1.0 / DELTA3
+            else:
+                E3 = EPSTAB[K1]
+                DELTA1 = E1 - E3
+                ERR1 = abs(DELTA1)
+                TOL1 = max(abs(E1), abs(E3)) * _EPS
+                converged = (ERR1 <= TOL1 or ERR2 <= TOL2 or ERR3 <= TOL3)
+                if not converged:
+                    SS = 1.0 / DELTA1 + 1.0 / DELTA2 - 1.0 / DELTA3
+
+            EPSTAB[K1] = E1
+            if (converged or abs(SS * E1) <= 1e-04):
+                N = 2 * I
+                if (NRES == 0):
+                    ABSERR = ERR2 + ERR3
+                    RESULT = RES
+                else:
+                    RESULT = RES3LA[min(NRES-1, 2)]
+                break
+
+            RES = E1 + 1.0 / SS
+            EPSTAB[K1] = RES
+            K1 = K1 - 2
+            if (NRES == 0):
+                ABSERR = ERR2 + abs(RES - E2) + ERR3
+                RESULT = RES
+                continue
+            ERROR = self._compute_error(RES3LA, NRES, RES)
+
+            if (ERROR > 10.0 * ABSERR):
+                continue
+            ABSERR = ERROR
+            RESULT = RES
+        else:
+            ABSERR = self._compute_error(RES3LA, NRES, RES)
+            RESULT = RES
+
+        # 50
+        if (N == self.limexp - 1):
+            N = 2 * (self.limexp // 2) - 1
+        EPSTAB = self._shift_table(EPSTAB, N, NEWELM, NUM)
+        self._update_RES3LA(RES3LA, RESULT, NRES)
+
+        ABSERR = max(ABSERR, 10.0*_EPS * abs(RESULT))
+        NRES = NRES + 1
+
+        return RESULT, ABSERR, N, NRES
+
     def __call__(self, SVALUE):
 
         EPSTAB = self.epstab
-        RES3LA = EPSTAB[-3:]
+
         RESULT = SVALUE
         N = self._n
         NRES = self._nres
@@ -102,88 +173,26 @@ class Dea(object):
         elif (N == 1):
             ABSERR = 6.0 * abs(RESULT - EPSTAB[0])
         else:
-            ABSERR = self.ABSERR
-            EPSTAB[N + 2] = EPSTAB[N]
-            NEWELM = N // 2
-            NUM = N
-            K1 = N
-            for I in range(NEWELM):
-                E0 = EPSTAB[K1 - 2]
-                E1 = EPSTAB[K1 - 1]
-                E2 = RES = EPSTAB[K1 + 2]
-                DELTA2, DELTA3 = E2 - E1, E1 - E0
-                ERR2, ERR3 = abs(DELTA2), abs(DELTA3)
-                TOL2 = max(abs(E2), abs(E1)) * _EPS
-                TOL3 = max(abs(E1), abs(E0)) * _EPS
-                converged = (ERR2 <= TOL2 and ERR3 <= TOL3)
-                if converged:
-                    ABSERR = ERR2 + ERR3
-                    RESULT = RES
-                    break
-                if (I != 0):
-                    E3 = EPSTAB[K1]
-                    DELTA1 = E1 - E3
-                    ERR1 = abs(DELTA1)
-                    TOL1 = max(abs(E1), abs(E3)) * _EPS
-                    converged = (ERR1 <= TOL1 or ERR2 <= TOL2 or ERR3 <= TOL3)
-                    if not converged:
-                        SS = 1.0 / DELTA1 + 1.0 / DELTA2 - 1.0 / DELTA3
-                else:
-                    converged = (ERR2 <= TOL2 or ERR3 <= TOL3)
-                    if not converged:
-                        SS = 1.0 / DELTA2 - 1.0 / DELTA3
-                EPSTAB[K1] = E1
-                if (converged or abs(SS * E1) <= 1e-04):
-                    N = 2 * I
-                    if (NRES == 0):
-                        ABSERR = ERR2 + ERR3
-                        RESULT = RES
-                    else:
-                        RESULT = RES3LA[min(NRES-1, 2)]
-                    break
-                RES = E1 + 1.0 / SS
-                EPSTAB[K1] = RES
-                K1 = K1 - 2
-                if (NRES == 0):
-                    ABSERR = ERR2 + abs(RES - E2) + ERR3
-                    RESULT = RES
-                    continue
-                ERROR = self._compute_error(RES3LA, NRES, RES)
-
-                if (ERROR > 10.0 * ABSERR):
-                    continue
-                ABSERR = ERROR
-                RESULT = RES
-            else:
-                ERROR = self._compute_error(RES3LA, NRES, RES)
-
-            # 50
-            if (N == self.limexp - 1):
-                N = 2 * (self.limexp // 2) - 1
-            EPSTAB = self._shift_table(EPSTAB, N, NEWELM, NUM)
-            self._update_RES3LA(RES3LA, RESULT, NRES)
-
-            ABSERR = max(ABSERR, 10.0*_EPS * abs(RESULT))
-            NRES = NRES + 1
-
+            RESULT, ABSERR, N, NRES = self._dea(EPSTAB, N, NRES)
         N += 1
         self._n = N
         self._nres = NRES
-        # EPSTAB[-3:] = RES3LA
+
         self.ABSERR = ABSERR
         return RESULT, ABSERR
 
 
-def test_dea():
+def dea_demo():
     def linfun(i):
         return np.linspace(0, np.pi/2., 2**i+1)
     dea = Dea(limexp=11)
     print('NO. PANELS      TRAP. APPROX          APPROX W/EA           ABSERR')
+    txt = '{0:5d} {1:20.8f}  {2:20.8f}  {3:20.8f}'
     for k in np.arange(10):
         x = linfun(k)
         val = np.trapz(np.sin(x), x)
         vale, err = dea(val)
-        print('{0:5d} {1:20.8f}  {2:20.8f}  {3:20.8f}'.format(len(x)-1, val, vale, err))
+        print(txt.format(len(x)-1, val, vale, err))
 
 
 def dea3(v0, v1, v2, symmetric=False):
@@ -232,10 +241,19 @@ def dea3(v0, v1, v2, symmetric=False):
 
      Reference
      ---------
-     .. [1] C. Brezinski (1977)
+     .. [1] C. Brezinski and M. Redivo Zaglia (1991)
+            "Extrapolation Methods. Theory and Practice", North-Holland.
+
+    ..  [2] C. Brezinski (1977)
             "Acceleration de la convergence en analyse numerique",
             "Lecture Notes in Math.", vol. 584,
             Springer-Verlag, New York, 1977.
+
+    ..  [3] E. J. Weniger (1989)
+            "Nonlinear sequence transformations for the acceleration of
+            convergence and the summation of divergent series"
+            Computer Physics Reports Vol. 10, 189 - 371
+            http://arxiv.org/abs/math/0306302v1
     """
     E0, E1, E2 = np.atleast_1d(v0, v1, v2)
     abs, max = np.abs, np.maximum  # @ReservedAssignment

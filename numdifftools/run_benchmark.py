@@ -28,7 +28,7 @@ def _plot(plot, problem_sizes, objects, symbols, ylabel='', loc=2, logx=False):
         plt.title(title)
         for i, method in enumerate(funcs):
             plot(problem_sizes, results[i], symbols[i],
-                markerfacecolor='None', label=method)
+                 markerfacecolor='None', label=method)
 
         plt.ylabel(ylabel)
         plt.xlabel('problem size $N$')
@@ -62,7 +62,8 @@ fixed_step = MinStepGenerator(num_steps=1, use_exact_steps=True, offset=0)
 epsilon = MaxStepGenerator(num_steps=14, use_exact_steps=True,
                            step_ratio=1.6, offset=0)
 adaptiv_txt = '_adaptive_{0:d}_{1!s}_{2:d}'.format(epsilon.num_steps,
-                                      str(epsilon.step_ratio), epsilon.offset)
+                                                   str(epsilon.step_ratio),
+                                                   epsilon.offset)
 gradient_funs = OrderedDict()
 nda_method = 'forward'
 nda_txt = 'algopy_' + nda_method
@@ -74,7 +75,7 @@ for method in ['forward', 'central', 'complex']:
     gradient_funs[method2] = nd.Jacobian(1, method=method, step=epsilon)
 
 HessianFun = 'Hessdiag'
-ndcHessian = getattr(nd, HessianFun)  # ndc.Hessian #
+ndcHessian = getattr(nd, HessianFun)
 hessian_funs = OrderedDict()
 hessian_funs[nda_txt] = getattr(nda, HessianFun)(1, method=nda_method)
 
