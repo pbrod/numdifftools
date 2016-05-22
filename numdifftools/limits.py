@@ -71,8 +71,7 @@ class MinStepGenerator(object):
     offset : real scalar, optional, default 0
         offset to the base step
     scale : real scalar, optional
-        scale used in base step. If not None it will override the default
-        computed with the default_scale function.
+        scale used in base step.
     use_exact_steps: bool
 
     path : 'spiral' or 'radial'

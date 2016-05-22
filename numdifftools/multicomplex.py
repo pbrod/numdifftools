@@ -135,7 +135,8 @@ class bicomplex(object):
 
     def __repr__(self):
         name = self.__class__.__name__
-        return """{0!s}(z1={1!s}, z2={2!s})""".format(name, str(self.z1), str(self.z2))
+        return """{0!s}(z1={1!s}, z2={2!s})""".format(name, str(self.z1),
+                                                      str(self.z2))
 
     def __lt__(self, other):
         other = self._coerce(other)
@@ -367,5 +368,3 @@ class bicomplex(object):
 
     def arg_c(self):
         return self._arg_c(self.z1, self.z2)
-
-
