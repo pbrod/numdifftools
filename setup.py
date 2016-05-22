@@ -28,7 +28,15 @@ Build
 
   python setup.py sdist
 
+
 PyPi upload:
+  git pull origin
+  git tag v0.9.16 master
+  git shortlog v0.9.15..v0.9.16 > log.txt  # update Changes.rst
+  git commit 
+  git tag v0.9.17 master
+  python setup.py bdist_wheel --universal
+  git push --tags
   twine upload dist/*
 """
 

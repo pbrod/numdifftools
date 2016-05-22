@@ -2,7 +2,55 @@
 Changelog
 =========
 
-Created with gitcommand: git shortlog v0.9.13..v0.9.14
+Created with gitcommand: git shortlog v0.9.14..v0.9.15
+
+Version 0.9.15, May 10, 2016
+---------------------------------
+
+Cody (2):
+      * Migrated `%` string formating
+      * Migrated `%` string formating
+
+Per A Brodtkorb (28):
+      * Updated README.rst + setup.cfg
+      * Replaced instance methods with static methods +pep8
+      * Merge branch 'master' of https://github.com/pbrod/numdifftools
+      * Fixed a bug: replaced missing triple quote
+      * Added depsy badge
+      * added .checkignore for quantificode
+      * Added .codeclimate.yml
+      * Fixed failing tests
+      * Changed instance methods to static methods
+      * Made untyped exception handlers specific
+      * Replaced local function with a static method
+      * Simplified tests
+      * Removed duplicated code Simplified _Derivative._get_function_name
+      * exclude tests from testclimate
+      * Renamed test_functions.py to example_functions.py Added test_example_functions.py
+
+Per A. Brodtkorb (2):
+      * Merge pull request #17 from pbrod/autofix/wrapped2_to3_fix
+      * Merge pull request #18 from pbrod/autofix/wrapped2_to3_fix-0
+
+pbrod (17):
+      * updated conf.py
+      * added numpydoc>=0.5, sphinx_rtd_theme>=0.1.7 to setup_requires if sphinx
+      * updated setup.py
+      * added requirements.readthedocs.txt
+      * Updated README.rst with info about how to install it using conda in an anaconda package.
+      * updated conda install description
+      * Fixed number of arguments so it does not differs from overridden '_default_base_step' method
+      * Added codecov to .travis.yml
+      * Attempt to remove coverage of test-files
+      * Added directionaldiff function in order to calculate directional derivatives. Fixes issue #16. Also added supporting tests and examples to the documentation.
+      * Fixed isssue #19 multiple observations mishandled in Jacobian
+      * Moved rosen function into numdifftools.testing.py
+      * updated import of rosen function from numdifftools.testing
+      * Simplified code + pep8 + added TestResidue
+      * Updated readme.rst and replaced string interpolation with format()
+      * Cleaned Dea class + pep8
+      * Updated references for Wynn extrapolation method.
+
 
 
 Version 0.9.14, November 10, 2015
