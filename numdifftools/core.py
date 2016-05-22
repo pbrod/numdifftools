@@ -488,6 +488,8 @@ _cmn_doc = """
 
 
 class _Derivative(object):
+    """ Base class for derivatives
+    """
 
     info = namedtuple('info', ['error_estimate', 'final_step', 'index'])
 
@@ -1067,7 +1069,8 @@ class Jacobian(Derivative):
                                        order=order, full_output=full_output,
                                        **step_options)
 
-    def _vstack(self, sequence, steps):
+    @staticmethod
+    def _vstack(sequence, steps):
         original_shape = list(np.shape(np.atleast_1d(sequence[0].squeeze())))
         ndim = len(original_shape)
         axes = [0, 1, 2][:ndim]
@@ -1094,7 +1097,8 @@ class Jacobian(Derivative):
             original_shape = (1,) + tuple(original_shape)
         return f_del, h, tuple(original_shape)
 
-    def _identity(self, n):
+    @staticmethod
+    def _identity(n):
         m = np.zeros((n, n, n))
         np.put(m, np.arange(0, n ** 3, n * (n + 1) + 1), 1)
         return m

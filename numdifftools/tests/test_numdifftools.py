@@ -364,7 +364,7 @@ def _get_epsilon(x, s, epsilon, n):
     return h
 
 
-def approx_fprime(x, f, epsilon=None, args=(), kwargs={}, centered=True):
+def approx_fprime(x, f, epsilon=None, args=(), kwargs=None, centered=True):
     '''
     Gradient of function, or Jacobian if function f returns 1d array
 
@@ -397,6 +397,7 @@ def approx_fprime(x, f, epsilon=None, args=(), kwargs={}, centered=True):
     with the Jacobian of each observation with shape xk x nobs x xk. I.e.,
     the Jacobian of the first observation would be [:, 0, :]
     '''
+    kwargs = {} if kwargs is None else kwargs
     n = len(x)
     # TODO:  add scaled stepsize
     f0 = f(*((x,) + args), **kwargs)
