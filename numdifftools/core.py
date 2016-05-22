@@ -591,17 +591,20 @@ class _Derivative(object):
         der, info = self._get_best_estimate(der, errors, steps, shape)
         return der, info
 
-    def _get_middle_name(self):
-        if self._even_derivative and self.method in ('central', 'complex'):
-            return '_even'
-        if self._complex_high_order and self._odd_derivative:
-            return '_odd'
+    def _multicomplex_middle_name_or_empty(self):
         if self.method == 'multicomplex' and self.n > 1:
             if self.n > 2:
                 raise ValueError('Multicomplex method only support first '
                                  'and second order derivatives.')
             return '2'
         return ''
+
+    def _get_middle_name(self):
+        if self._even_derivative and self.method in ('central', 'complex'):
+            return '_even'
+        if self._complex_high_order and self._odd_derivative:
+            return '_odd'
+        return self._multicomplex_middle_name_or_empty()
 
     def _get_last_name(self):
         last = ''
@@ -1069,8 +1072,29 @@ class Jacobian(Derivative):
                                        order=order, full_output=full_output,
                                        **step_options)
 
-    @staticmethod
-    def _vstack(sequence, steps):
+    def _check_equal_size(self, f_del, h):
+        if f_del.size != h.size:
+            raise ValueError('fun did not return data of correct size ' +
+                             '(it must be vectorized)')
+
+    def _atleast_2d(self, original_shape, ndim):
+        if ndim == 1:
+            original_shape = (1, ) + tuple(original_shape)
+        return tuple(original_shape)
+
+    def _vstack_steps(self, steps, original_shape, axes, n):
+        h_shape = (n, ) + steps[0].shape
+        h = [np.atleast_2d(step).repeat(n, axis=0).reshape(h_shape)
+             for step in steps]
+        one = np.ones(original_shape)
+        if len(h_shape) < 3:
+            h = np.vstack([(one * hi).ravel()] for hi in h)
+        else:
+            h = np.vstack([(one * hi.transpose(axes)).ravel()]
+                          for hi in h)
+        return h
+
+    def _vstack(self, sequence, steps):
         original_shape = list(np.shape(np.atleast_1d(sequence[0].squeeze())))
         ndim = len(original_shape)
         axes = [0, 1, 2][:ndim]
@@ -1080,22 +1104,11 @@ class Jacobian(Derivative):
 
         f_del = np.vstack([np.atleast_1d(r.squeeze()).transpose(axes).ravel()]
                           for r in sequence)
-        one = np.ones(original_shape)
-        h_shape = (n,) + steps[0].shape
-        h = [np.atleast_2d(step).repeat(n, axis=0).reshape(h_shape)
-             for step in steps]
-        if len(h_shape) < 3:
-            h = np.vstack([(one * hi).ravel()] for hi in h)
-        else:
-            h = np.vstack([(one * hi.transpose(axes)).ravel()]
-                          for hi in h)
 
-        if f_del.size != h.size:
-            raise ValueError('fun did not return data of correct size ' +
-                             '(it must be vectorized)')
-        if ndim == 1:
-            original_shape = (1,) + tuple(original_shape)
-        return f_del, h, tuple(original_shape)
+        h = self._vstack_steps(steps, original_shape, axes, n)
+
+        self._check_equal_size(f_del, h)
+        return f_del, h, self._atleast_2d(original_shape, ndim)
 
     @staticmethod
     def _identity(n):
