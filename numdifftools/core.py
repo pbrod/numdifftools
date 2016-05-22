@@ -1072,17 +1072,20 @@ class Jacobian(Derivative):
                                        order=order, full_output=full_output,
                                        **step_options)
 
-    def _check_equal_size(self, f_del, h):
+    @staticmethod
+    def _check_equal_size(f_del, h):
         if f_del.size != h.size:
             raise ValueError('fun did not return data of correct size ' +
                              '(it must be vectorized)')
 
-    def _atleast_2d(self, original_shape, ndim):
+    @staticmethod
+    def _atleast_2d(original_shape, ndim):
         if ndim == 1:
             original_shape = (1, ) + tuple(original_shape)
         return tuple(original_shape)
 
-    def _vstack_steps(self, steps, original_shape, axes, n):
+    @staticmethod
+    def _vstack_steps(steps, original_shape, axes, n):
         h_shape = (n, ) + steps[0].shape
         h = [np.atleast_2d(step).repeat(n, axis=0).reshape(h_shape)
              for step in steps]
