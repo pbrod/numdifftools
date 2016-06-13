@@ -324,9 +324,11 @@ class MinMaxStepGenerator(object):
                 for name in self.__dict__.keys()]
         return """{0!s}({1!s})""".format(class_name, ','.join(kwds))
 
-    def _steps(self, x):
+    def _steps(self, x, method, n, order):
         if self.scale is not None:
             scale = self.scale
+        else:
+            scale = default_scale(method, n, order)
         xi = np.asarray(x)
         step_min, step_max = self.step_min, self.step_max
         delta = _default_base_step(xi, scale, step_min)
@@ -335,11 +337,11 @@ class MinMaxStepGenerator(object):
         if step_max is None:
             step_max = np.exp(np.log(step_min) * scale / (scale + 1.5))
         steps = np.logspace(0, np.log10(step_max) - np.log10(step_min),
-                            self.num_steps)[:-1]
+                            self.num_steps)
         return steps, delta
 
-    def __call__(self, x, method='forward', n=1, order=None):
-        steps, delta = self._steps(x)
+    def __call__(self, x, method='forward', n=1, order=2):
+        steps, delta = self._steps(x, method, n, order)
 
         for step in steps:
             h = _make_exact(delta * step)
@@ -1503,13 +1505,3 @@ class Hessian(_Derivative):
     def _backward(self, f, fx, x, h, *args, **kwargs):
         return self._forward(f, fx, x, -h, *args, **kwargs)
 
-
-def test_docstrings(filename):
-    import doctest
-    print('Testing docstrings in {0!s}'.format(filename))
-    doctest.testmod(optionflags=doctest.NORMALIZE_WHITESPACE)
-    print('Docstrings tested')
-
-
-if __name__ == '__main__':  # pragma : no cover
-    test_docstrings(__file__)

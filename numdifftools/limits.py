@@ -528,12 +528,3 @@ class Residue(Limit):
 
     def __call__(self, x, *args, **kwds):
         return self.limit(x, *args, **kwds)
-
-
-def test_docstrings():
-    import doctest
-    doctest.testmod(optionflags=doctest.NORMALIZE_WHITESPACE)
-
-
-if __name__ == '__main__':
-    test_docstrings()
