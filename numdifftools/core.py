@@ -735,44 +735,6 @@ class Derivative(_Derivative):
     Gradient,
     Hessian
     """)
-    """
-    Find the n-th derivative of a function at a point.
-
-    Given a function, use a difference formula with spacing `dx` to
-    compute the `n`-th derivative at `x0`.
-
-    Parameters
-    ----------
-    f : function
-        Input function.
-    x0 : float
-        The point at which `n`-th derivative is found.
-    dx : float, optional
-        Spacing.
-    method : Method of estimation.  Valid options are:
-        'central', 'forward' or 'backward'.          (Default 'central')
-    n : int, optional (Default 1)
-        Order of the derivative.
-    order : int, optional       (Default 2)
-        defining order of basic method used.
-        For 'central' methods, it must be an even number eg. [2,4].
-
-    Notes
-    -----
-    Decreasing the step size too small can result in round-off error.
-
-    Note on order: higher order methods will generally be more accurate,
-             but may also suffer more from numerical problems. First order
-             methods would usually not be recommended.
-    Complex methods are usually the most accurate provided the function to
-        differentiate is analytic. The complex-step methods also requires fewer
-        steps than the other methods and can work very close to the support of
-        a function. Central difference methods are almost as accurate and has
-        no restriction on type of function, but sometimes one can only allow
-        evaluation in forward or backward direction.
-
-
-    """
     @property
     def n(self):
         return self._n
@@ -1505,3 +1467,6 @@ class Hessian(_Derivative):
     def _backward(self, f, fx, x, h, *args, **kwargs):
         return self._forward(f, fx, x, -h, *args, **kwargs)
 
+if __name__=='__main__':
+    print(default_scale(method='central', n=2, order=2))
+    pass

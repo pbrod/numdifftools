@@ -2,7 +2,7 @@
 Introduction to Numdifftools
 ============================
 
-|pkg_img| |tests_img| |docs_img| |health_img| |coverage_img| |versions_img|
+|pkg_img| |tests_img| |docs_img| |health_img| |coverage_img| |versions_img| |depsy_img|
 
 
 Numdifftools is a suite of tools written in `_Python <http://www.python.org/>`_
@@ -16,6 +16,8 @@ forward or backward differences are used.
 The methods provided are:
 
 - **Derivative**: Compute the derivatives of order 1 through 10 on any scalar function.
+
+- **directionaldiff**: Compute directional derivative of a function of n variables
 
 - **Gradient**: Compute the gradient vector of a scalar function of one or more variables.
 
@@ -52,6 +54,7 @@ Visualize high order derivatives of the tanh function
 
 .. image:: https://raw.githubusercontent.com/pbrod/numdifftools/master/examples/fun.png
     :target: https://github.com/pbrod/numdifftools/blob/master/examples/fun.py
+
 
 
 Compute 1'st and 2'nd derivative of exp(x), at x == 1::
@@ -135,6 +138,7 @@ to get the lastest stable version. Using pip also has the advantage that all
 requirements are automatically installed.
 
 
+
 Unit tests
 ==========
 To test if the toolbox is working paste the following in an interactive
@@ -152,6 +156,7 @@ based on the adaptive numerical differentiation toolbox written in `Matlab <http
 
 Numdifftools has as of version 0.9 been extended with some of the functionality
 found in the statsmodels.tools.numdiff module written by Josef Perktold [Perktold2014]_.
+
 
 
 References
@@ -183,5 +188,8 @@ References
 
 .. |versions_img| image:: https://img.shields.io/pypi/pyversions/numdifftools.svg
    :target: https://github.com/pbrod/numdifftools
+
+.. |depsy_img| image:: http://depsy.org/api/package/pypi/Numdifftools/badge.svg
+   :target: http://depsy.org/package/python/Numdifftools
 
 """
