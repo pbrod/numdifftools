@@ -44,9 +44,7 @@ Visualize high order derivatives of the tanh function
 
     >>> import numpy as np
     >>> import numdifftools as nd
-    >>> import matplotlib
-    >>> matplotlib.use('Agg')
-    >>> from matplotlib import pyplot as plt
+    >>> import matplotlib.pyplot as plt
 
     >>> x = np.linspace(-2, 2, 100)
     >>> for i in range(10):
