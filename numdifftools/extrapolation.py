@@ -214,29 +214,29 @@ class EpsAlg(object):
         if (limexp < 3):
             raise ValueError('LIMEXP IS LESS THAN 3')
 
-    def __call__(self, SOFN):
-        N = self._n
-        E = self.epstab
-        E[N] = SOFN
-        if (N == 0):
-            ESTLIM = SOFN
+    def __call__(self, s_n):
+        n = self._n
+        epstab = self.epstab
+        epstab[n] = s_n
+        if (n == 0):
+            estlim = s_n
         else:
-            AUX2 = 0.0
-            for J in range(N, 0, -1):
-                AUX1 = AUX2
-                AUX2 = E[J-1]
-                DIFF = E[J] - AUX2
-                if (np.abs(DIFF) <= 1e-60):
-                    E[J-1] = 1.0e+60
+            aux2 = 0.0
+            for i in range(n, 0, -1):
+                aux1 = aux2
+                aux2 = epstab[i-1]
+                delta = epstab[i] - aux2
+                if (np.abs(delta) <= 1e-60):
+                    epstab[i-1] = 1.0e+60
                 else:
-                    E[J-1] = AUX1 + 1.0/DIFF
-            ESTLIM = E[np.mod(N, 2)]
-            if N > self.limexp - 1:
+                    epstab[i-1] = aux1 + 1.0/delta
+            estlim = epstab[np.mod(n, 2)]
+            if n > self.limexp - 1:
                 raise ValueError("Eps table to small!")
 
-        N += 1
-        self._n = N
-        return ESTLIM
+        n += 1
+        self._n = n
+        return estlim
 
 
 def epsalg_demo():

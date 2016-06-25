@@ -124,12 +124,17 @@ class TestExtrapolation(unittest.TestCase):
         assert_allclose(e_n, 1.)
         self.assertTrue(np.all(err < 0.0022))
 
-    @staticmethod
-    def test_epsal():
+    def test_epsal(self):
         true_vals = [0.78539816, 0.94805945, 0.99945672]
         dea = EpsAlg(limexp=7)
         vals = [dea(val) for val in [0.78539816, 0.94805945, 0.98711580]]
         assert_array_almost_equal(true_vals, vals)
+        dea2 = EpsAlg(limexp=7)
+        vals2 =[dea2(val) for val in self.e_i]
+        assert_array_almost_equal(vals2,
+                                  [0.99979919432001874, 0.99994980009210122,
+                                   0.99999999949599017, 0.99999999996850009,
+                                   1.0, 1.0, 1.0])
 
 if __name__ == "__main__":
     unittest.main()
