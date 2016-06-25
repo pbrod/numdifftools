@@ -34,7 +34,7 @@ before_install:
   - source activate condaenv
 # Install packages
 install:
-  - conda install --yes python=$TRAVIS_PYTHON_VERSION numpy scipy algopy pytest
+  - conda install --yes python=$TRAVIS_PYTHON_VERSION numpy scipy algopy pytest matplotlib
   - pip install coveralls
   - pip install codecov
   - python setup.py install
