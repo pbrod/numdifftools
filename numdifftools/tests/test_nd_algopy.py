@@ -5,115 +5,22 @@ from __future__ import division
 import unittest
 import numdifftools.nd_algopy as nd
 import numpy as np
-from numpy import pi, r_, sqrt, array
 from numpy.testing import assert_array_almost_equal
-from scipy import linalg, optimize, constants
 import algopy
 from numdifftools.testing import rosen
-
-_TINY = np.finfo(float).machar.tiny
-
-
-class ClassicalHamiltonian(object):
-    """
-    Hamiltonian
-
-    Parameters
-    ----------
-    N : scalar
-        number of ions in the chain
-    w : scalar
-        angular trap frequency
-    C : scalar
-        Coulomb constant times the electronic charge in SI units.
-    m : scalar
-        the mass of a single trapped ion in the chain
-    """
-
-    def __init__(self):
-        self.N = 2
-        f = 1000000      # f is a scalar, it's the trap frequency
-        self.w = 2 * pi * f
-        self.C = (4 * pi * constants.epsilon_0) ** (-1) * constants.e ** 2
-        # C is a scalar, it's the I
-        self.m = 39.96 * 1.66e-27
-
-    def potential(self, positionvector):
-        """
-        Return potential
-
-        Parameters
-        ----------
-        positionvector:  1-d array (vector) of length N
-            positions of the N ions
-        """
-        x = positionvector
-        w = self.w
-        C = self.C
-        m = self.m
-
-        # First we consider the potential of the harmonic oscillator
-        v_x = 0.5 * m * (w ** 2) * sum(x ** 2)
-        # then we add the coulomb interaction:
-        for i, xi in enumerate(x):
-            for xj in x[i + 1:]:
-                v_x += C / (abs(xi - xj))
-        return v_x
-
-    def initialposition(self):
-        """Defines initial position as an estimate for the minimize process."""
-        N = self.N
-        x_0 = r_[-(N - 1) / 2:(N - 1) / 2:N * 1j]
-        return x_0
-
-    def normal_modes(self, eigenvalues):
-        """Return normal modes
-
-        Computed eigenvalues of the matrix Vx are of the form
-            (normal_modes)**2*m.
-        """
-        m = self.m
-        normal_modes = sqrt(eigenvalues / m)
-        return normal_modes
-
-
-def _run_hamiltonian(verbose=True):
-    c = ClassicalHamiltonian()
-    if verbose:
-        print(c.potential(array([-0.5, 0.5])))
-        print(c.potential(array([-0.5, 0.0])))
-        print(c.potential(array([0.0, 0.0])))
-
-    xopt = optimize.fmin(c.potential, c.initialposition(), xtol=1e-10)
-
-    hessian = nd.Hessian(c.potential)
-
-    h = hessian(xopt)
-    true_h = np.array([[5.23748385e-12, -2.61873829e-12],
-                       [-2.61873829e-12, 5.23748385e-12]])
-    error_estimate = np.NAN
-    if verbose:
-        print(xopt)
-        print('h', h)
-        print('h-true_h', np.abs(h - true_h))
-        # print('error_estimate', info.error_estimate)
-
-        eigenvalues = linalg.eigvals(h)
-        normal_modes = c.normal_modes(eigenvalues)
-
-        print('eigenvalues', eigenvalues)
-        print('normal_modes', normal_modes)
-    return h, error_estimate, true_h
+from numdifftools.tests.hamiltonian import run_hamiltonian
+from Orange.testing.regression.tests_20.modules_logreg2 import out
 
 
 class TestHessian(unittest.TestCase):
 
     def test_run_hamiltonian(self):
-        H, _error_estimate, true_H = _run_hamiltonian(verbose=False)
-        self.assertTrue((np.abs(H - true_H) < 1e-18).all())
+        h, _error_estimate, true_h = run_hamiltonian(nd.Hessian(None),
+                                                     verbose=False)
+        self.assertTrue((np.abs((h - true_h)/true_h) < 1e-4).all())
 
     @staticmethod
-    def test_hessian_cosIx_yI_at_I0_0I():
+    def test_hessian_cos_x_y__at_0_0():
         # cos(x-y), at (0,0)
 
         def fun(xy):
@@ -224,6 +131,20 @@ class TestDerivative(unittest.TestCase):
 
 
 class TestJacobian(unittest.TestCase):
+    @staticmethod
+    def test_scalar_to_vector():
+        def fun(x):
+            out = algopy.zeros((3, ), dtype=x)
+            out[0] = x
+            out[1] = x**2
+            out[2] = x**3
+            return out
+
+        for method in ['reverse', 'forward']:
+            val = np.random.randn()
+            assert np.allclose(nd.Jacobian(fun, method=method)(val).T,
+                               [1., 2*val, 3*val**2])
+
     @staticmethod
     def test_on_scalar_function():
         def f2(x):

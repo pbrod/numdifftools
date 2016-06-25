@@ -5,6 +5,7 @@ import numdifftools.core as nd
 import numpy as np
 from numpy.testing import assert_array_almost_equal
 from numdifftools.testing import rosen
+from numdifftools.tests.hamiltonian import run_hamiltonian
 
 
 class TestGlobalFunctions(unittest.TestCase):
@@ -458,6 +459,12 @@ def approx_fprime(x, f, epsilon=None, args=(), kwargs=None, centered=True):
 
 
 class TestJacobian(unittest.TestCase):
+    @staticmethod
+    def test_scalar_to_vector():
+        fun = lambda x: np.array([x, x**2, x**3])
+        val = np.random.randn()
+        j0 = nd.Jacobian(fun)(val)
+        assert np.allclose(j0, [1., 2*val, 3*val**2])
 
     @staticmethod
     def test_on_scalar_function():
@@ -623,6 +630,20 @@ class TestHessdiag(unittest.TestCase):
 
 
 class TestHessian(unittest.TestCase):
+
+    def test_run_hamiltonian(self):
+        # Important to restrict the step in order to avoid the
+        # discontinutiy at x=[0,0] of the hamiltonian
+
+        for method in ['central', 'complex']:
+            step = nd.MaxStepGenerator(step_max=1e-3)
+            hessian = nd.Hessian(None, step=step, method=method)
+
+            # hessian = nd.Hessian(None)  # does not work
+
+            h, _error_estimate, true_h = run_hamiltonian(hessian,
+                                                         verbose=False)
+            self.assertTrue((np.abs((h-true_h)/true_h) < 1e-4).all())
 
     @staticmethod
     def test_hessian_cos_x_y_at_0_0():

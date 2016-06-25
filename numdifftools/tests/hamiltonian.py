@@ -1,15 +1,14 @@
-# -*- coding:utf-8 -*-
-from __future__ import division
-import unittest
-import numdifftools as nd
-import numpy as np
-from numpy import pi, r_, sqrt, array
-from scipy import linalg, optimize, constants
-from numdifftools.multicomplex import c_abs as abs
-_TINY = np.finfo(float).machar.tiny
+'''
+Created on Jun 25, 2016
 
-#  Hamiltonian
-#     H = sum_i(p_i2/(2m)+ 1/2 * m * w2 x_i2) + sum_(i!=j)(a/|x_i-x_j|)
+@author: pab
+'''
+import numpy as np
+from numpy import pi, r_, sqrt
+from scipy import constants, linalg, optimize
+from numdifftools.multicomplex import c_abs
+
+
 class ClassicalHamiltonian(object):
     """
     Hamiltonian
@@ -38,10 +37,12 @@ class ClassicalHamiltonian(object):
         """
         Return potential
 
-        positionvector is an 1-d array (vector) of length n that contains the
-        positions of the n ions
+        Parameters
+        ----------
+        positionvector:  1-d array (vector) of length n
+            positions of the n ions
         """
-        x = positionvector
+        x = np.asarray(positionvector)
         w = self.w
         C = self.C
         m = self.m
@@ -51,7 +52,7 @@ class ClassicalHamiltonian(object):
         # then we add the coulomb interaction:
         for i, xi in enumerate(x):
             for xj in x[i + 1:]:
-                v_x += C / (abs(xi - xj))
+                v_x += C / (c_abs(xi - xj))
         return v_x
 
     def initialposition(self):
@@ -61,56 +62,45 @@ class ClassicalHamiltonian(object):
         return x_0
 
     def normal_modes(self, eigenvalues):
-        """
-        Return normal modes
+        """Return normal modes
 
-        the computed eigenvalues of the matrix Vx are of the form
-        (normal_modes)2*m.
+        Computed eigenvalues of the matrix Vx are of the form
+            (normal_modes)**2*m.
         """
         m = self.m
         normal_modes = sqrt(eigenvalues / m)
         return normal_modes
 
 
-def _run_hamiltonian(verbose=True):
+def run_hamiltonian(hessian, verbose=True):
     c = ClassicalHamiltonian()
-    if verbose:
-        print(c.potential(array([-0.5, 0.5])))
-        print(c.potential(array([-0.5, 0.0])))
-        print(c.potential(array([0.0, 0.0])))
 
     xopt = optimize.fmin(c.potential, c.initialposition(), xtol=1e-10)
-    # Important to restrict the step in order to avoid the discontinutiy at
-    # x=[0,0]
-    # hessian = nd.Hessian(c.potential, step_max=1.0, step_nom=np.abs(xopt))
-    step = nd.MaxStepGenerator(step_max=2, step_ratio=4, num_steps=16)
-    hessian = nd.Hessian(c.potential, step=step, method='central',
-                         full_output=True)
-    # hessian = algopy.Hessian(c.potential) # Does not work
-    # hessian = scientific.Hessian(c.potential) # does not work
+
+    hessian.f = c.potential
+    hessian.full_output = True
+
     h, info = hessian(xopt)
     true_h = np.array([[5.23748385e-12, -2.61873829e-12],
                        [-2.61873829e-12, 5.23748385e-12]])
+    true_h = np.array([[5.23748399e-12, -2.61873843e-12],
+                       [-2.61873843e-12, 5.23748399e-12]])
+    eigenvalues = linalg.eigvals(h)
+    normal_modes = c.normal_modes(eigenvalues)
+
     if verbose:
+        print(c.potential([-0.5, 0.5]))
+        print(c.potential([-0.5, 0.0]))
+        print(c.potential([0.0, 0.0]))
         print(xopt)
         print('h', h)
-        print('h-true_h', np.abs(h-true_h))
+        print('h-true_h', np.abs(h - true_h))
         print('error_estimate', info.error_estimate)
-
-        eigenvalues = linalg.eigvals(h)
-        normal_modes = c.normal_modes(eigenvalues)
 
         print('eigenvalues', eigenvalues)
         print('normal_modes', normal_modes)
     return h, info.error_estimate, true_h
 
 
-class TestHessian(unittest.TestCase):
-    def test_hessian(self):
-        H, _error_estimate, true_H = _run_hamiltonian(verbose=False)
-        self.assertTrue((np.abs(H-true_H) < 1e-18).all())
-
-
 if __name__ == '__main__':
-    # _run_hamiltonian()
-    unittest.main()
+    pass

@@ -55,12 +55,14 @@ https://pythonhosted.org/algopy/index.html
 from __future__ import division
 import numpy as np
 from scipy import misc
+from collections import namedtuple
 try:
     import algopy
     from algopy import UTPM
 except ImportError:
     algopy = None
 
+EPS = np.MachAr().eps
 
 _cmn_doc = """
     Calculate %(derivative)s with Algorithmic Differentiation method
@@ -100,10 +102,13 @@ _cmn_doc = """
 
 class _Derivative(object):
     """Base class"""
-    def __init__(self, f, method='forward'):
+    info = namedtuple('info', ['error_estimate', 'final_step', 'index'])
+
+    def __init__(self, f, n=1, method='forward', full_output=False):
         self.f = f
         self.method = method
-        self.n = 1
+        self.n = n
+        self.full_output = full_output
 
     @property
     def f(self):
@@ -137,8 +142,10 @@ class _Derivative(object):
     def __call__(self, x, *args, **kwds):
         fun = self._get_function()
         x0 = np.asarray(x, dtype=float)
-        return fun(x0, *args, **kwds)
-
+        df = fun(x0, *args, **kwds)
+        if self.full_output:
+            return df, self.info(EPS, EPS, 0)
+        return df
 
 class Derivative(_Derivative):
     __doc__ = _cmn_doc % dict(
@@ -180,10 +187,6 @@ class Derivative(_Derivative):
     Jacobian
     """)
 
-    def __init__(self, f, n=1, method='forward'):
-        self.f = f
-        self.n = n
-        self.method = method
 
     def _forward(self, x, *args, **kwds):
         x0 = np.asarray(x)
@@ -374,9 +377,9 @@ class Hessian(_Derivative):
     Hessdiag,
     """)
 
-    def __init__(self, f, method='forward'):
-        super(Hessian, self).__init__(f, method)
-        self.n = 2
+    def __init__(self, f, method='forward', full_output=False):
+        super(Hessian, self).__init__(f, n=2, method=method,
+                                      full_output=full_output)
 
     def _forward(self, x, *args, **kwds):
         x = np.atleast_1d(x)
