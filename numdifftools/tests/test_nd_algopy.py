@@ -9,7 +9,6 @@ from numpy.testing import assert_array_almost_equal
 import algopy
 from numdifftools.testing import rosen
 from numdifftools.tests.hamiltonian import run_hamiltonian
-from Orange.testing.regression.tests_20.modules_logreg2 import out
 
 
 class TestHessian(unittest.TestCase):
