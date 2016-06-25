@@ -8,6 +8,7 @@ import numpy as np
 from scipy import linalg
 from scipy.ndimage.filters import convolve1d
 import warnings
+from _curses import ERR
 EPS = np.finfo(float).eps
 _EPS = EPS
 _TINY = np.finfo(float).tiny
@@ -74,122 +75,122 @@ class Dea(object):
         self._limexp = n
 
     @staticmethod
-    def _compute_error(RES3LA, NRES, RES):
-        fact = [6.0, 2.0, 1.0][min(NRES-1, 2)]
-        error = fact * np.abs(RES - RES3LA[:NRES]).sum()
+    def _compute_error(res3la, nres, res):
+        fact = [6.0, 2.0, 1.0][min(nres-1, 2)]
+        error = fact * np.abs(res - res3la[:nres]).sum()
         return error
 
     @staticmethod
-    def _shift_table(EPSTAB, N, NEWELM, old_N):
-        i_0 = old_N % 2  # 1 if ((old_N // 2) * 2 == old_N - 1) else 0
-        i_n = 2 * NEWELM + 2
-        EPSTAB[i_0:i_n:2] = EPSTAB[i_0 + 2:i_n + 2:2]
+    def _shift_table(epstab, n, newelm, old_n):
+        i_0 = old_n % 2  # 1 if ((old_n // 2) * 2 == old_n - 1) else 0
+        i_n = 2 * newelm + 2
+        epstab[i_0:i_n:2] = epstab[i_0 + 2:i_n + 2:2]
 
-        if (old_N != N):
-            i_n = old_N - N
-            EPSTAB[:N + 1] = EPSTAB[i_n:i_n + N + 1]
-        return EPSTAB
+        if (old_n != n):
+            i_n = old_n - n
+            epstab[:n + 1] = epstab[i_n:i_n + n + 1]
+        return epstab
 
     @staticmethod
-    def _update_RES3LA(RES3LA, RESULT, NRES):
-        if NRES > 2:
-            RES3LA[:2] = RES3LA[1:]
-            RES3LA[2] = RESULT
+    def _update_res3la(res3la, result, nres):
+        if nres > 2:
+            res3la[:2] = res3la[1:]
+            res3la[2] = result
         else:
-            RES3LA[NRES] = RESULT
+            res3la[nres] = result
 
-    def _dea(self, EPSTAB, N):
-        NRES = self._nres
-        RES3LA = EPSTAB[-3:]
-        ABSERR = self.abserr
-        EPSTAB[N + 2] = EPSTAB[N]
-        NEWELM = N // 2
-        old_N = N
-        K1 = N
-        for I in range(NEWELM):
-            E0, E1, E2 = EPSTAB[K1 - 2], EPSTAB[K1 - 1], EPSTAB[K1 + 2]
-            RES = E2
-            DELTA2, DELTA3 = E2 - E1, E1 - E0
-            ERR2, ERR3 = abs(DELTA2), abs(DELTA3)
-            TOL2 = max(abs(E2), abs(E1)) * _EPS
-            TOL3 = max(abs(E1), abs(E0)) * _EPS
-            all_converged = (ERR2 <= TOL2 and ERR3 <= TOL3)
+    def _dea(self, epstab, n):
+        nres = self._nres
+        res3la = epstab[-3:]
+        abserr = self.abserr
+        epstab[n + 2] = epstab[n]
+        newelm = n // 2
+        old_n = n
+        k1 = n
+        for I in range(newelm):
+            e0, e1, e2 = epstab[k1 - 2], epstab[k1 - 1], epstab[k1 + 2]
+            res = e2
+            delta2, delta3 = e2 - e1, e1 - e0
+            err2, err3 = abs(delta2), abs(delta3)
+            tol2 = max(abs(e2), abs(e1)) * _EPS
+            tol3 = max(abs(e1), abs(e0)) * _EPS
+            all_converged = (err2 <= tol2 and err3 <= tol3)
             if all_converged:
-                ABSERR = ERR2 + ERR3
-                RESULT = RES
+                abserr = err2 + err3
+                result = res
                 break
 
             if (I == 0):
-                any_converged = (ERR2 <= TOL2 or ERR3 <= TOL3)
+                any_converged = (err2 <= tol2 or err3 <= tol3)
                 if not any_converged:
-                    SS = 1.0 / DELTA2 - 1.0 / DELTA3
+                    SS = 1.0 / delta2 - 1.0 / delta3
             else:
-                E3 = EPSTAB[K1]
-                DELTA1 = E1 - E3
-                ERR1 = abs(DELTA1)
-                TOL1 = max(abs(E1), abs(E3)) * _EPS
-                any_converged = (ERR1 <= TOL1 or ERR2 <= TOL2 or ERR3 <= TOL3)
+                e3 = epstab[k1]
+                delta1 = e1 - e3
+                err1 = abs(delta1)
+                tol1 = max(abs(e1), abs(e3)) * _EPS
+                any_converged = (err1 <= tol1 or err2 <= tol2 or err3 <= tol3)
                 if not any_converged:
-                    SS = 1.0 / DELTA1 + 1.0 / DELTA2 - 1.0 / DELTA3
+                    SS = 1.0 / delta1 + 1.0 / delta2 - 1.0 / delta3
 
-            EPSTAB[K1] = E1
-            if (any_converged or abs(SS * E1) <= 1e-04):
-                N = 2 * I
-                if (NRES == 0):
-                    ABSERR = ERR2 + ERR3
-                    RESULT = RES
+            epstab[k1] = e1
+            if (any_converged or abs(SS * e1) <= 1e-04):
+                n = 2 * I
+                if (nres == 0):
+                    abserr = err2 + err3
+                    result = res
                 else:
-                    RESULT = RES3LA[min(NRES-1, 2)]
+                    result = res3la[min(nres-1, 2)]
                 break
 
-            RES = E1 + 1.0 / SS
-            EPSTAB[K1] = RES
-            K1 = K1 - 2
-            if (NRES == 0):
-                ABSERR = ERR2 + abs(RES - E2) + ERR3
-                RESULT = RES
+            res = e1 + 1.0 / SS
+            epstab[k1] = res
+            k1 = k1 - 2
+            if (nres == 0):
+                abserr = err2 + abs(res - e2) + err3
+                result = res
                 continue
-            ERROR = self._compute_error(RES3LA, NRES, RES)
+            error = self._compute_error(res3la, nres, res)
 
-            if (ERROR > 10.0 * ABSERR):
+            if (error > 10.0 * abserr):
                 continue
-            ABSERR = ERROR
-            RESULT = RES
+            abserr = error
+            result = res
 #        else:
 #            pass
-#            ERROR = self._compute_error(RES3LA, NRES, RES)
-            # RESULT = RES
+#            error = self._compute_error(res3la, nres, res)
+            # result = res
 
         # 50
-        if (N == self.limexp - 1):
-            N = 2 * (self.limexp // 2) - 1
-        EPSTAB = self._shift_table(EPSTAB, N, NEWELM, old_N)
-        self._update_RES3LA(RES3LA, RESULT, NRES)
+        if (n == self.limexp - 1):
+            n = 2 * (self.limexp // 2) - 1
+        epstab = self._shift_table(epstab, n, newelm, old_n)
+        self._update_res3la(res3la, result, nres)
 
-        ABSERR = max(ABSERR, 10.0*_EPS * abs(RESULT))
+        abserr = max(abserr, 10.0*_EPS * abs(result))
 
         self._nres += 1
-        return RESULT, ABSERR, N
+        return result, abserr, n
 
-    def __call__(self, SVALUE):
+    def __call__(self, s_value):
 
-        EPSTAB = self.epstab
+        epstab = self.epstab
 
-        RESULT = SVALUE
-        N = self._n
+        result = s_value
+        n = self._n
 
-        EPSTAB[N] = SVALUE
-        if (N == 0):
-            ABSERR = abs(RESULT)
-        elif (N == 1):
-            ABSERR = 6.0 * abs(RESULT - EPSTAB[0])
+        epstab[n] = s_value
+        if (n == 0):
+            abserr = abs(result)
+        elif (n == 1):
+            abserr = 6.0 * abs(result - epstab[0])
         else:
-            RESULT, ABSERR, N = self._dea(EPSTAB, N)
-        N += 1
-        self._n = N
+            result, abserr, n = self._dea(epstab, n)
+        n += 1
+        self._n = n
 
-        self.abserr = ABSERR
-        return RESULT, ABSERR
+        self.abserr = abserr
+        return result, abserr
 
 
 class EpsAlg(object):

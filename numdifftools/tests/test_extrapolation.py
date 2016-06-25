@@ -85,51 +85,51 @@ class TestExtrapolation(unittest.TestCase):
 
     def setUp(self):
         n = 7
-        Ei = np.zeros(n)
+        e_i = np.zeros(n)
         h = np.zeros(n)
         for k in np.arange(n):
             x = np.linspace(0, np.pi/2., 2**(k+5)+1)
-            Ei[k] = np.trapz(np.sin(x), x)
+            e_i[k] = np.trapz(np.sin(x), x)
             h[k] = x[1]
-        self.Ei = Ei
+        self.e_i = e_i
         self.h = h
 
     def test_dea3_on_trapz_sin(self):
-        Ei = self.Ei
-        [En, err] = dea3(Ei[0], Ei[1], Ei[2])
-        truErr = Ei[:3]-1.
-        assert_allclose(truErr,
+        e_i = self.e_i
+        e_n, err = dea3(e_i[0], e_i[1], e_i[2])
+        true_err = e_i[:3]-1.
+        assert_allclose(true_err,
                         [-2.00805680e-04, -5.01999079e-05, -1.25498825e-05])
-        assert_allclose(En, 1.)
+        assert_allclose(e_n, 1.)
         self.assertLessEqual(err, 0.00021)
 
     def test_dea_on_trapz_sin(self):
-        Ei = self.Ei
+        e_i = self.e_i
         dea_3 = Dea(3)
-        for E in Ei:
-            En, err = dea_3(E)
+        for val in e_i:
+            e_n, err = dea_3(val)
 
-        truErr = np.abs(Ei-1.)
+        true_err = np.abs(e_i-1.)
         err_bound = 10 * np.array([2.00805680e-04, 5.01999079e-05,
                                    1.25498825e-05, 3.13746471e-06,
                                    7.84365809e-07, 1.96091429e-07,
                                    4.90228558e-08])
-        self.assertTrue(np.all(truErr < err_bound))
-        assert_allclose(En, 1.)
+        self.assertTrue(np.all(true_err < err_bound))
+        assert_allclose(e_n, 1.)
         self.assertLessEqual(err, 1e-10)
 
     def test_richardson(self):
-        Ei, h = self.Ei[:, np.newaxis], self.h[:, np.newaxis]
-        En, err, _step = Richardson(step=1, order=1)(Ei, h)
-        assert_allclose(En, 1.)
+        e_i, h = self.e_i[:, np.newaxis], self.h[:, np.newaxis]
+        e_n, err, _step = Richardson(step=1, order=1)(e_i, h)
+        assert_allclose(e_n, 1.)
         self.assertTrue(np.all(err < 0.0022))
 
     @staticmethod
     def test_epsal():
         true_vals = [0.78539816, 0.94805945, 0.99945672]
         dea = EpsAlg(limexp=7)
-        E = [dea(val) for val in [0.78539816, 0.94805945, 0.98711580]]
-        assert_array_almost_equal(true_vals, E)
+        vals = [dea(val) for val in [0.78539816, 0.94805945, 0.98711580]]
+        assert_array_almost_equal(true_vals, vals)
 
 if __name__ == "__main__":
     unittest.main()

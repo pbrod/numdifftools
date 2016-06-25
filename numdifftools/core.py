@@ -1192,12 +1192,6 @@ class Gradient(Jacobian):
 
 
 class Hessdiag(Derivative):
-
-    def __init__(self, f, step=None, method='central', order=2,
-                 full_output=False, **step_options):
-        super(Hessdiag, self).__init__(f, step=step, method=method, n=2,
-                                       order=order, full_output=full_output,
-                                       **step_options)
     __doc__ = _cmn_doc % dict(
         derivative='Hessian diagonal',
         extra_parameter="""order : int, optional
@@ -1230,6 +1224,12 @@ class Hessdiag(Derivative):
     --------
     Derivative, Hessian, Jacobian, Gradient
     """)
+
+    def __init__(self, f, step=None, method='central', order=2,
+                 full_output=False, **step_options):
+        super(Hessdiag, self).__init__(f, step=step, method=method, n=2,
+                                       order=order, full_output=full_output,
+                                       **step_options)
 
     @staticmethod
     def _central2(f, fx, x, h, *args, **kwds):
@@ -1289,12 +1289,6 @@ class Hessdiag(Derivative):
 
 
 class Hessian(_Derivative):
-
-    def __init__(self, f, step=None, method='central', full_output=False):
-        order = dict(backward=1, forward=1, complex=2).get(method, 2)
-        super(Hessian, self).__init__(f, n=2, step=step, method=method,
-                                      order=order, full_output=full_output)
-
     __doc__ = _cmn_doc % dict(
         derivative='Hessian',
         extra_parameter="",
@@ -1349,6 +1343,11 @@ class Hessian(_Derivative):
     --------
     Derivative, Hessian
     """)
+
+    def __init__(self, f, step=None, method='central', full_output=False):
+        order = dict(backward=1, forward=1, complex=2).get(method, 2)
+        super(Hessian, self).__init__(f, n=2, step=step, method=method,
+                                      order=order, full_output=full_output)
 
     @staticmethod
     def _complex_high_order():
@@ -1468,6 +1467,7 @@ class Hessian(_Derivative):
     def _backward(self, f, fx, x, h, *args, **kwargs):
         return self._forward(f, fx, x, -h, *args, **kwargs)
 
-if __name__=='__main__':
+
+if __name__ == '__main__':
     print(default_scale(method='central', n=2, order=2))
     pass

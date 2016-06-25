@@ -52,12 +52,12 @@ class ClassicalHamiltonian(object):
         m = self.m
 
         # First we consider the potential of the harmonic oscillator
-        Vx = 0.5 * m * (w ** 2) * sum(x ** 2)
+        v_x = 0.5 * m * (w ** 2) * sum(x ** 2)
         # then we add the coulomb interaction:
         for i, xi in enumerate(x):
             for xj in x[i + 1:]:
-                Vx += C / (abs(xi - xj))
-        return Vx
+                v_x += C / (abs(xi - xj))
+        return v_x
 
     def initialposition(self):
         """Defines initial position as an estimate for the minimize process."""
@@ -87,22 +87,22 @@ def _run_hamiltonian(verbose=True):
 
     hessian = nd.Hessian(c.potential)
 
-    H = hessian(xopt)
-    true_H = np.array([[5.23748385e-12, -2.61873829e-12],
+    h = hessian(xopt)
+    true_h = np.array([[5.23748385e-12, -2.61873829e-12],
                        [-2.61873829e-12, 5.23748385e-12]])
     error_estimate = np.NAN
     if verbose:
         print(xopt)
-        print('H', H)
-        print('H-true_H', np.abs(H - true_H))
+        print('h', h)
+        print('h-true_h', np.abs(h - true_h))
         # print('error_estimate', info.error_estimate)
 
-        eigenvalues = linalg.eigvals(H)
+        eigenvalues = linalg.eigvals(h)
         normal_modes = c.normal_modes(eigenvalues)
 
         print('eigenvalues', eigenvalues)
         print('normal_modes', normal_modes)
-    return H, error_estimate, true_H
+    return h, error_estimate, true_h
 
 
 class TestHessian(unittest.TestCase):
@@ -121,8 +121,8 @@ class TestHessian(unittest.TestCase):
         methods = ['forward', ]  # 'reverse']
 
         for method in methods:
-            Hfun2 = nd.Hessian(fun, method=method)
-            h2 = Hfun2([0, 0])
+            h_fun = nd.Hessian(fun, method=method)
+            h2 = h_fun([0, 0])
             # print(method, (h2-np.array(htrue)))
             assert_array_almost_equal(h2, htrue)
 
@@ -162,7 +162,7 @@ class TestDerivative(unittest.TestCase):
         def func(x, a, b=1):
             return b * a * x * x * x
         methods = ['reverse', 'forward']
-        dfuns = [nd.Jacobian, nd.Derivative, nd.Gradient,  nd.Hessdiag,
+        dfuns = [nd.Jacobian, nd.Derivative, nd.Gradient, nd.Hessdiag,
                  nd.Hessian]
         for dfun in dfuns:
             for method in methods:
@@ -228,8 +228,8 @@ class TestJacobian(unittest.TestCase):
         def f2(x):
             return x[0] * x[1] * x[2] + np.exp(x[0]) * x[1]
         for method in ['forward', 'reverse']:
-            Jfun3 = nd.Jacobian(f2, method=method)
-            x = Jfun3([3., 5., 7.])
+            j_fun = nd.Jacobian(f2, method=method)
+            x = j_fun([3., 5., 7.])
             assert_array_almost_equal(x, [[135.42768462, 41.08553692, 15.]])
 
     @staticmethod
@@ -242,8 +242,8 @@ class TestJacobian(unittest.TestCase):
 
         for method in ['reverse']:  # TODO: 'forward' fails
 
-            Jfun = nd.Jacobian(fun, method=method)
-            J = Jfun([1, 2, 0.75])  # should be numerically zero
+            j_fun = nd.Jacobian(fun, method=method)
+            J = j_fun([1, 2, 0.75])  # should be numerically zero
             assert_array_almost_equal(J, np.zeros((ydata.size, 3)))
 
     @staticmethod
@@ -313,8 +313,8 @@ class TestHessdiag(unittest.TestCase):
         def fun(x):
             return x[0] + x[1] ** 2 + x[2] ** 3
         htrue = np.array([0., 2., 18.])
-        Hfun = nd.Hessdiag(fun)
-        hd = Hfun([1, 2, 3])
+        h_fun = nd.Hessdiag(fun)
+        hd = h_fun([1, 2, 3])
         _error = hd - htrue
         assert_array_almost_equal(hd, htrue)
 
@@ -323,8 +323,8 @@ class TestHessdiag(unittest.TestCase):
         def fun(x):
             return x[0] + x[1] ** 2 + x[2] ** 3
         htrue = np.array([0., 2., 18.])
-        Hfun = nd.Hessdiag(fun, method='reverse')
-        hd = Hfun([1, 2, 3])
+        h_fun = nd.Hessdiag(fun, method='reverse')
+        hd = h_fun([1, 2, 3])
         _error = hd - htrue
         assert_array_almost_equal(hd, htrue)
 

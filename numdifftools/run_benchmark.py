@@ -12,14 +12,14 @@ import matplotlib.pyplot as plt
 
 
 class BenchmarkFunction(object):
+    """Return 0.5 * np.dot(x**2, np.dot(A,x))"""
     def __init__(self, N):
         A = np.arange(N * N, dtype=float).reshape((N, N))
         self.A = np.dot(A.T, A)
 
     def __call__(self, xi):
         x = np.array(xi)
-        tmp = dot(self.A, x)
-        return 0.5 * dot(x * x, tmp)
+        return 0.5 * dot(x * x, dot(self.A, x))
 
 
 def _plot(plot, problem_sizes, objects, symbols, ylabel='', loc=2, logx=False):
@@ -74,32 +74,32 @@ for method in ['forward', 'central', 'complex']:
     gradient_funs[method] = nd.Jacobian(1, method=method, step=fixed_step)
     gradient_funs[method2] = nd.Jacobian(1, method=method, step=epsilon)
 
-HessianFun = 'Hessdiag'
-ndcHessian = getattr(nd, HessianFun)
+hessian_fun = 'Hessdiag'
+ndc_hessian = getattr(nd, hessian_fun)
 hessian_funs = OrderedDict()
-hessian_funs[nda_txt] = getattr(nda, HessianFun)(1, method=nda_method)
+hessian_funs[nda_txt] = getattr(nda, hessian_fun)(1, method=nda_method)
 
 for method in ['forward', 'central', 'complex']:
     method2 = method + adaptiv_txt
-    hessian_funs[method] = ndcHessian(1, method=method, step=fixed_step)
-    hessian_funs[method2] = ndcHessian(1, method=method, step=epsilon)
+    hessian_funs[method] = ndc_hessian(1, method=method, step=fixed_step)
+    hessian_funs[method2] = ndc_hessian(1, method=method, step=epsilon)
 
 
 def compute_gradients(gradient_funs, problem_sizes):
 
     results_gradient_list = []
-    for N in problem_sizes:
-        print('N=', N)
+    for n in problem_sizes:
+        print('n=', n)
         num_methods = len(gradient_funs)
         results_gradient = np.zeros((num_methods, 3))
         ref_g = None
-        f = BenchmarkFunction(N)
+        f = BenchmarkFunction(n)
         for i, (_key, gradient_f) in enumerate(gradient_funs.items()):
             t = timeit.default_timer()
             gradient_f.f = f
             preproc_time = timeit.default_timer() - t
             t = timeit.default_timer()
-            x = 3 * np.ones(N)
+            x = 3 * np.ones(n)
             val = gradient_f(x)
             run_time = timeit.default_timer() - t
             if ref_g is None:
@@ -120,19 +120,18 @@ def compute_gradients(gradient_funs, problem_sizes):
 def compute_hessians(hessian_funs, problem_sizes):
     print('starting hessian computation ')
     results_hessian_list = []
-    hessian_N_list = problem_sizes
-    for N in hessian_N_list:
-        print('N=', N)
+    for n in problem_sizes:
+        print('n=', n)
         num_methods = len(hessian_funs)
         results_hessian = np.zeros((num_methods, 3))
         ref_h = None
-        f = BenchmarkFunction(N)
+        f = BenchmarkFunction(n)
         for i, (_key, hessian_f) in enumerate(hessian_funs.items()):
             t = timeit.default_timer()
             hessian_f.f = f
             preproc_time = timeit.default_timer() - t
             t = timeit.default_timer()
-            x = 3 * np.ones(N)
+            x = 3 * np.ones(n)
             val = hessian_f(x)
             run_time = timeit.default_timer() - t
             if ref_h is None:
@@ -146,7 +145,7 @@ def compute_hessians(hessian_funs, problem_sizes):
         results_hessian_list.append(results_hessian)
 
     results_hessians = np.array(results_hessian_list) + 1e-16
-    print(hessian_N_list)
+    print(problem_sizes)
     print('results_hessians=\n', results_hessians)
     return results_hessians
 

@@ -16,7 +16,7 @@ class ClassicalHamiltonian(object):
 
     Parameters
     ----------
-    N : scalar
+    n : scalar
         number of ions in the chain
     w : scalar
         angular trap frequency
@@ -27,7 +27,7 @@ class ClassicalHamiltonian(object):
     """
 
     def __init__(self):
-        self.N = 2
+        self.n = 2
         f = 1000000      # f is a scalar, it's the trap frequency
         self.w = 2 * pi * f
         self.C = (4 * pi * constants.epsilon_0) ** (-1) * constants.e ** 2
@@ -38,8 +38,8 @@ class ClassicalHamiltonian(object):
         """
         Return potential
 
-        positionvector is an 1-d array (vector) of length N that contains the
-        positions of the N ions
+        positionvector is an 1-d array (vector) of length n that contains the
+        positions of the n ions
         """
         x = positionvector
         w = self.w
@@ -47,17 +47,17 @@ class ClassicalHamiltonian(object):
         m = self.m
 
         # First we consider the potential of the harmonic oscillator
-        Vx = 0.5 * m * (w ** 2) * sum(x ** 2)
+        v_x = 0.5 * m * (w ** 2) * sum(x ** 2)
         # then we add the coulomb interaction:
         for i, xi in enumerate(x):
             for xj in x[i + 1:]:
-                Vx += C / (abs(xi - xj))
-        return Vx
+                v_x += C / (abs(xi - xj))
+        return v_x
 
     def initialposition(self):
         """Defines initial position as an estimate for the minimize process."""
-        N = self.N
-        x_0 = r_[-(N - 1) / 2:(N - 1) / 2:N * 1j]
+        n = self.n
+        x_0 = r_[-(n - 1) / 2:(n - 1) / 2:n * 1j]
         return x_0
 
     def normal_modes(self, eigenvalues):
@@ -88,21 +88,21 @@ def _run_hamiltonian(verbose=True):
                          full_output=True)
     # hessian = algopy.Hessian(c.potential) # Does not work
     # hessian = scientific.Hessian(c.potential) # does not work
-    H, info = hessian(xopt)
-    true_H = np.array([[5.23748385e-12, -2.61873829e-12],
+    h, info = hessian(xopt)
+    true_h = np.array([[5.23748385e-12, -2.61873829e-12],
                        [-2.61873829e-12, 5.23748385e-12]])
     if verbose:
         print(xopt)
-        print('H', H)
-        print('H-true_H', np.abs(H-true_H))
+        print('h', h)
+        print('h-true_h', np.abs(h-true_h))
         print('error_estimate', info.error_estimate)
 
-        eigenvalues = linalg.eigvals(H)
+        eigenvalues = linalg.eigvals(h)
         normal_modes = c.normal_modes(eigenvalues)
 
         print('eigenvalues', eigenvalues)
         print('normal_modes', normal_modes)
-    return H, info.error_estimate, true_H
+    return h, info.error_estimate, true_h
 
 
 class TestHessian(unittest.TestCase):

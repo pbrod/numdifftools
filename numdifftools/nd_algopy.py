@@ -98,7 +98,8 @@ _cmn_doc = """
     """
 
 
-class _Common(object):
+class _Derivative(object):
+    """Base class"""
     def __init__(self, f, method='forward'):
         self.f = f
         self.method = method
@@ -139,7 +140,7 @@ class _Common(object):
         return fun(x0, *args, **kwds)
 
 
-class Derivative(_Common):
+class Derivative(_Derivative):
     __doc__ = _cmn_doc % dict(
         derivative='n-th derivative',
         extra_parameter="""
@@ -207,7 +208,7 @@ class Derivative(_Common):
         return y.reshape(shape0)
 
 
-class Jacobian(_Common):
+class Jacobian(_Derivative):
     __doc__ = _cmn_doc % dict(
         derivative='Jacobian',
         extra_parameter="",
@@ -268,7 +269,7 @@ class Jacobian(_Common):
         return c_graph.jacobian(x)
 
 
-class Gradient(_Common):
+class Gradient(_Derivative):
     __doc__ = _cmn_doc % dict(
         derivative='Gradient',
         extra_parameter="",
@@ -326,7 +327,7 @@ class Gradient(_Common):
         return c_graph.gradient(x)
 
 
-class Hessian(_Common):
+class Hessian(_Derivative):
     __doc__ = _cmn_doc % dict(
         derivative='Hessian',
         extra_parameter="",

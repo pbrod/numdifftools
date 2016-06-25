@@ -10,13 +10,13 @@ from numdifftools.testing import rosen
 class TestGlobalFunctions(unittest.TestCase):
 
     def test_dea3(self):
-        Ei = np.zeros(3)
+        e_i = np.zeros(3)
         for k in np.arange(3):
             x = np.linspace(0, np.pi / 2., 2. ** (k + 5) + 1)
-            Ei[k] = np.trapz(np.sin(x), x)
-        [En, err] = nd.dea3(Ei[0], Ei[1], Ei[2])
-        self.assertTrue(np.abs(En - 1) < err)
-        assert_array_almost_equal(En, 1.0, decimal=8)
+            e_i[k] = np.trapz(np.sin(x), x)
+        e_n, err = nd.dea3(e_i[0], e_i[1], e_i[2])
+        self.assertTrue(np.abs(e_n - 1) < err)
+        assert_array_almost_equal(e_n, 1.0, decimal=8)
 
 
 class TestRichardson(unittest.TestCase):
@@ -165,11 +165,11 @@ class TestMinMaxStepGenerator(unittest.TestCase):
                                           num_steps=10, scale=None,
                                           num_extrap=0)
         h = np.array([h for h in step_gen(0)])
-        desired = np.array([5.47742059e-07,  9.61174159e-07,
-                            1.68666209e-06,  2.95974352e-06,
-                            5.19373845e-06,  9.11393803e-06,
-                            1.59930785e-05,  2.80645488e-05,
-                            4.92474854e-05,  8.64191631e-05])
+        desired = np.array([5.47742059e-07, 9.61174159e-07,
+                            1.68666209e-06, 2.95974352e-06,
+                            5.19373845e-06, 9.11393803e-06,
+                            1.59930785e-05, 2.80645488e-05,
+                            4.92474854e-05, 8.64191631e-05])
         print(h)
         assert_array_almost_equal((h - desired) / desired, 0)
 
@@ -464,8 +464,8 @@ class TestJacobian(unittest.TestCase):
             return x[0] * x[1] * x[2] + np.exp(x[0]) * x[1]
 
         for method in ['complex', 'central', 'forward', 'backward']:
-            Jfun3 = nd.Jacobian(f2, method=method)
-            x = Jfun3([3., 5., 7.])
+            j_fun = nd.Jacobian(f2, method=method)
+            x = j_fun([3., 5., 7.])
             assert_array_almost_equal(x, [[135.42768462, 41.08553692, 15.]])
 
     @staticmethod
@@ -476,13 +476,13 @@ class TestJacobian(unittest.TestCase):
         def fun(c):
             return (c[0] + c[1] * np.exp(c[2] * xdata) - ydata) ** 2
 
-        _J0 = approx_fprime([1, 2, 0.75], fun)
+        _j_0 = approx_fprime([1, 2, 0.75], fun)
 
         for method in ['complex', 'central', 'forward', 'backward']:
             for order in [2, 4]:
-                Jfun = nd.Jacobian(fun, method=method, order=order)
-                J = Jfun([1, 2, 0.75])  # should be numerically zero
-                assert_array_almost_equal(J, np.zeros((ydata.size, 3)))
+                j_fun = nd.Jacobian(fun, method=method, order=order)
+                j_val = j_fun([1, 2, 0.75])  # should be numerically zero
+                assert_array_almost_equal(j_val, np.zeros((ydata.size, 3)))
 
     @staticmethod
     def test_on_matrix_valued_function():
@@ -587,11 +587,11 @@ class TestHessdiag(unittest.TestCase):
             steps = nd.MinStepGenerator(num_steps=num_steps,
                                         use_exact_steps=True,
                                         step_ratio=2.0, offset=4)
-            Hfun = nd.Hessdiag(self._fun, step=steps, method=method,
+            h_fun = nd.Hessdiag(self._fun, step=steps, method=method,
                                full_output=True)
-            hd, _info = Hfun([1, 2, 3])
-            _error = hd - htrue
-            assert_array_almost_equal(hd, htrue)
+            h_val, _info = h_fun([1, 2, 3])
+            _error = h_val - htrue
+            assert_array_almost_equal(h_val, htrue)
 
     def test_fixed_step(self):
         htrue = np.array([0., 2., 18.])
@@ -602,11 +602,11 @@ class TestHessdiag(unittest.TestCase):
                                         use_exact_steps=True,
                                         step_ratio=3., offset=0)
             for method in methods:
-                Hfun = nd.Hessdiag(self._fun, step=steps, method=method,
+                h_fun = nd.Hessdiag(self._fun, step=steps, method=method,
                                    order=order, full_output=True)
-                hd, _info = Hfun([1, 2, 3])
-                _error = hd - htrue
-                assert_array_almost_equal(hd, htrue)
+                h_val, _info = h_fun([1, 2, 3])
+                _error = h_val - htrue
+                assert_array_almost_equal(h_val, htrue)
 
     def test_default_step(self):
         htrue = np.array([0., 2., 18.])
@@ -614,11 +614,11 @@ class TestHessdiag(unittest.TestCase):
                    'backward']
         for order in range(2, 7, 2):
             for method in methods:
-                Hfun = nd.Hessdiag(self._fun, method=method, order=order,
+                h_fun = nd.Hessdiag(self._fun, method=method, order=order,
                                    full_output=True)
-                hd, _info = Hfun([1, 2, 3])
-                _error = hd - htrue
-                assert_array_almost_equal(hd, htrue)
+                h_val, _info = h_fun([1, 2, 3])
+                _error = h_val - htrue
+                assert_array_almost_equal(h_val, htrue)
 
 
 class TestHessian(unittest.TestCase):
@@ -635,11 +635,11 @@ class TestHessian(unittest.TestCase):
         for num_steps in [10, 1]:
             step = nd.MinStepGenerator(num_steps=num_steps)
             for method in methods:
-                Hfun2 = nd.Hessian(fun, method=method, step=step,
+                h_fun = nd.Hessian(fun, method=method, step=step,
                                    full_output=True)
-                h2, _info = Hfun2([0, 0])
-                # print(method, (h2-np.array(htrue)))
-                assert_array_almost_equal(h2, htrue)
+                h_val, _info = h_fun([0, 0])
+                # print(method, (h_val-np.array(htrue)))
+                assert_array_almost_equal(h_val, htrue)
 
 
 if __name__ == '__main__':
