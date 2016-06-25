@@ -461,7 +461,9 @@ def approx_fprime(x, f, epsilon=None, args=(), kwargs=None, centered=True):
 class TestJacobian(unittest.TestCase):
     @staticmethod
     def test_scalar_to_vector():
-        fun = lambda x: np.array([x, x**2, x**3])
+        def fun(x):
+            return np.array([x, x**2, x**3])
+
         val = np.random.randn()
         j0 = nd.Jacobian(fun)(val)
         assert np.allclose(j0, [1., 2*val, 3*val**2])
