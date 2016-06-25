@@ -141,8 +141,8 @@ class TestJacobian(unittest.TestCase):
 
         for method in ['reverse', 'forward']:
             val = np.random.randn()
-            assert np.allclose(nd.Jacobian(fun, method=method)(val).T,
-                               [1., 2*val, 3*val**2])
+            assert_array_almost_equal(nd.Jacobian(fun, method=method)(val).T,
+                                      [[1., 2*val, 3*val**2]])
 
     @staticmethod
     def test_on_scalar_function():

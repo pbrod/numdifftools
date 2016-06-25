@@ -463,10 +463,10 @@ class TestJacobian(unittest.TestCase):
     def test_scalar_to_vector():
         def fun(x):
             return np.array([x, x**2, x**3])
-
-        val = np.random.randn()
-        j0 = nd.Jacobian(fun)(val)
-        assert np.allclose(j0, [1., 2*val, 3*val**2])
+        for method in ['complex', 'central', 'forward', 'backward']:
+            val = np.random.randn()
+            j0 = nd.Jacobian(fun, method=method)(val)
+            assert_array_almost_equal(j0, [[1., 2*val, 3*val**2]])
 
     @staticmethod
     def test_on_scalar_function():
