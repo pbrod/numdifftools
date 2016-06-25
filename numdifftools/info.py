@@ -44,7 +44,10 @@ Visualize high order derivatives of the tanh function
 
     >>> import numpy as np
     >>> import numdifftools as nd
-    >>> import matplotlib.pyplot as plt
+    >>> import matplotlib
+    >>> matplotlib.use('Agg')
+    >>> from matplotlib import plot as plt
+
     >>> x = np.linspace(-2, 2, 100)
     >>> for i in range(10):
     ...    df = nd.Derivative(np.tanh, n=i)
@@ -139,7 +142,6 @@ to get the lastest stable version. Using pip also has the advantage that all
 requirements are automatically installed.
 
 
-
 Unit tests
 ==========
 To test if the toolbox is working paste the following in an interactive
@@ -157,7 +159,6 @@ based on the adaptive numerical differentiation toolbox written in `Matlab <http
 
 Numdifftools has as of version 0.9 been extended with some of the functionality
 found in the statsmodels.tools.numdiff module written by Josef Perktold [Perktold2014]_.
-
 
 
 References
