@@ -624,12 +624,13 @@ class TestHessdiag(unittest.TestCase):
 class TestHessian(unittest.TestCase):
 
     @staticmethod
-    def test_hessian_cosIx_yI_at_I0_0I():
+    def test_hessian_cos_x_y_at_0_0():
         # cos(x-y), at (0,0)
 
         def fun(xy):
             return np.cos(xy[0] - xy[1])
-        htrue = [[-1., 1.], [1., -1.]]
+        htrue = [[-1., 1.],
+                 [1., -1.]]
         methods = ['multicomplex', 'complex', 'central', 'central2', 'forward',
                    'backward']
         for num_steps in [10, 1]:

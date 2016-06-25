@@ -10,11 +10,10 @@ from numpy.testing import assert_array_almost_equal
 from scipy import linalg, optimize, constants
 import algopy
 from numdifftools.testing import rosen
+
 _TINY = np.finfo(float).machar.tiny
 
 
-#  Hamiltonian
-#     H = sum_i(p_i2/(2m)+ 1/2 * m * w2 x_i2) + sum_(i!=j)(a/|x_i-x_j|)
 class ClassicalHamiltonian(object):
     """
     Hamiltonian
@@ -43,8 +42,10 @@ class ClassicalHamiltonian(object):
         """
         Return potential
 
-        positionvector is an 1-d array (vector) of length N that contains the
-        positions of the N ions
+        Parameters
+        ----------
+        positionvector:  1-d array (vector) of length N
+            positions of the N ions
         """
         x = positionvector
         w = self.w
@@ -240,7 +241,7 @@ class TestJacobian(unittest.TestCase):
         def fun(c):
             return (c[0] + c[1] * np.exp(c[2] * xdata) - ydata) ** 2
 
-        for method in ['reverse']:  # TODO: 'forward' fails
+        for method in ['reverse',]:  # TODO: 'forward' fails
 
             j_fun = nd.Jacobian(fun, method=method)
             J = j_fun([1, 2, 0.75])  # should be numerically zero
@@ -266,30 +267,32 @@ class TestJacobian(unittest.TestCase):
         y = f(x)
         assert_array_almost_equal(y, [[26., 40., 58., 80.],
                                       [126., 224., 370., 576.]])
-        jaca = nd.Jacobian(f)
 
-        assert_array_almost_equal(jaca([1, 2]), [[[2., 4.]],
-                                                 [[3., 12.]]])
-        assert_array_almost_equal(jaca([3, 4]), [[[6., 8.]],
-                                                 [[27., 48.]]])
+        for method in ['forward', ]:  # TODO: 'reverse' fails
+            jaca = nd.Jacobian(f, method=method)
 
-        assert_array_almost_equal(jaca([[1, 2],
-                                        [3, 4]]),
-                                  [[[2., 0., 6., 0.],
-                                    [0., 4., 0., 8.]],
-                                   [[3., 0., 27., 0.],
-                                    [0., 12., 0., 48.]]])
-        # v0 = df([1, 2])
-        val = jaca(x)
-        assert_array_almost_equal(val,
-                                  [[[2., 0., 0., 0., 10., 0., 0., 0.],
-                                    [0., 4., 0., 0., 0., 12., 0., 0.],
-                                    [0., 0., 6., 0., 0., 0., 14., 0.],
-                                    [0., 0., 0., 8., 0., 0., 0., 16.]],
-                                   [[3., 0., 0., 0., 75., 0., 0., 0.],
-                                    [0., 12., 0., 0., 0., 108., 0., 0.],
-                                    [0., 0., 27., 0., 0., 0., 147., 0.],
-                                    [0., 0., 0., 48., 0., 0., 0., 192.]]])
+            assert_array_almost_equal(jaca([1, 2]), [[[2., 4.]],
+                                                     [[3., 12.]]])
+            assert_array_almost_equal(jaca([3, 4]), [[[6., 8.]],
+                                                     [[27., 48.]]])
+
+            assert_array_almost_equal(jaca([[1, 2],
+                                            [3, 4]]),
+                                      [[[2., 0., 6., 0.],
+                                        [0., 4., 0., 8.]],
+                                       [[3., 0., 27., 0.],
+                                        [0., 12., 0., 48.]]])
+            # v0 = df([1, 2])
+            val = jaca(x)
+            assert_array_almost_equal(val,
+                                      [[[2., 0., 0., 0., 10., 0., 0., 0.],
+                                        [0., 4., 0., 0., 0., 12., 0., 0.],
+                                        [0., 0., 6., 0., 0., 0., 14., 0.],
+                                        [0., 0., 0., 8., 0., 0., 0., 16.]],
+                                       [[3., 0., 0., 0., 75., 0., 0., 0.],
+                                        [0., 12., 0., 0., 0., 108., 0., 0.],
+                                        [0., 0., 27., 0., 0., 0., 147., 0.],
+                                        [0., 0., 0., 48., 0., 0., 0., 192.]]])
 
 
 class TestGradient(unittest.TestCase):
