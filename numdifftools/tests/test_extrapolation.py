@@ -100,7 +100,7 @@ class TestExtrapolation(unittest.TestCase):
         truErr = Ei[:3]-1.
         assert_allclose(truErr,
                         [-2.00805680e-04, -5.01999079e-05, -1.25498825e-05])
-        assert_allclose(En,  1.)
+        assert_allclose(En, 1.)
         self.assertLessEqual(err, 0.00021)
 
     def test_dea_on_trapz_sin(self):
@@ -110,21 +110,22 @@ class TestExtrapolation(unittest.TestCase):
             En, err = dea_3(E)
 
         truErr = np.abs(Ei-1.)
-        err_bound = 10 * np.array([2.00805680e-04,  5.01999079e-05,
+        err_bound = 10 * np.array([2.00805680e-04, 5.01999079e-05,
                                    1.25498825e-05, 3.13746471e-06,
                                    7.84365809e-07, 1.96091429e-07,
                                    4.90228558e-08])
         self.assertTrue(np.all(truErr < err_bound))
-        assert_allclose(En,  1.)
+        assert_allclose(En, 1.)
         self.assertLessEqual(err, 1e-10)
 
     def test_richardson(self):
         Ei, h = self.Ei[:, np.newaxis], self.h[:, np.newaxis]
         En, err, _step = Richardson(step=1, order=1)(Ei, h)
-        assert_allclose(En,  1.)
+        assert_allclose(En, 1.)
         self.assertTrue(np.all(err < 0.0022))
 
-    def test_epsal(self):
+    @staticmethod
+    def test_epsal():
         true_vals = [0.78539816, 0.94805945, 0.99945672]
         dea = EpsAlg(limexp=7)
         E = [dea(val) for val in [0.78539816, 0.94805945, 0.98711580]]

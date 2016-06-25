@@ -445,7 +445,7 @@ def approx_fprime(x, f, epsilon=None, args=(), kwargs=None, centered=True):
             ei[k] = 0.0
     else:
         epsilon = _get_epsilon(x, 3, epsilon, n) / 2.
-        for k in range(len(x)):
+        for k in range(n):
             ei[k] = epsilon[k]
             grad[k, :] = (f(*((x + ei,) + args), **kwargs) -
                           f(*((x - ei,) + args), **kwargs)) / (2 * epsilon[k])

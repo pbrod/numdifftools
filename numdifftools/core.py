@@ -735,6 +735,7 @@ class Derivative(_Derivative):
     Gradient,
     Hessian
     """)
+
     @property
     def n(self):
         return self._n

@@ -50,14 +50,14 @@ class Dea(object):
              An estimate of the absolute error of RES.
              Routine decides whether RESULT=RES or
              RESULT=SVALUE by comparing ERROR with
-             ABSERR from the previous call.
+             abserr from the previous call.
     RES3LA - DOUBLE PREISION
              Vector of DIMENSION 3 containing at most
              the last 3 results.
     """
     def __init__(self, limexp=3):
         self.limexp = limexp
-        self.ABSERR = 10.
+        self.abserr = 10.
         self._n = 0
         self._nres = 0
 
@@ -101,7 +101,7 @@ class Dea(object):
     def _dea(self, EPSTAB, N):
         NRES = self._nres
         RES3LA = EPSTAB[-3:]
-        ABSERR = self.ABSERR
+        ABSERR = self.abserr
         EPSTAB[N + 2] = EPSTAB[N]
         NEWELM = N // 2
         old_N = N
@@ -188,7 +188,7 @@ class Dea(object):
         N += 1
         self._n = N
 
-        self.ABSERR = ABSERR
+        self.abserr = ABSERR
         return RESULT, ABSERR
 
 
@@ -207,7 +207,7 @@ class EpsAlg(object):
     def __init__(self, limexp=3):
         self.limexp = 2 * (limexp // 2) + 1
         self.epstab = np.zeros(limexp+5)
-        self.ABSERR = 10.
+        self.abserr = 10.
         self._n = 0
         self._nres = 0
         if (limexp < 3):
@@ -242,7 +242,7 @@ def epsalg_demo():
     def linfun(i):
         return np.linspace(0, np.pi/2., 2**i+1)
     dea = EpsAlg(limexp=15)
-    print('NO. PANELS      TRAP. APPROX          APPROX W/EA           ABSERR')
+    print('NO. PANELS      TRAP. APPROX          APPROX W/EA           abserr')
     txt = '{0:5d} {1:20.8f}  {2:20.8f}  {3:20.8f}'
     for k in np.arange(10):
         x = linfun(k)
@@ -256,7 +256,7 @@ def dea_demo():
     def linfun(i):
         return np.linspace(0, np.pi/2., 2**i+1)
     dea = Dea(limexp=6)
-    print('NO. PANELS      TRAP. APPROX          APPROX W/EA           ABSERR')
+    print('NO. PANELS      TRAP. APPROX          APPROX W/EA           abserr')
     txt = '{0:5d} {1:20.8f}  {2:20.8f}  {3:20.8f}'
     for k in np.arange(12):
         x = linfun(k)
