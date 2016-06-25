@@ -241,7 +241,7 @@ class TestJacobian(unittest.TestCase):
         def fun(c):
             return (c[0] + c[1] * np.exp(c[2] * xdata) - ydata) ** 2
 
-        for method in ['reverse',]:  # TODO: 'forward' fails
+        for method in ['reverse', ]:  # TODO: 'forward' fails
 
             j_fun = nd.Jacobian(fun, method=method)
             J = j_fun([1, 2, 0.75])  # should be numerically zero

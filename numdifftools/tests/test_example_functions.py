@@ -1,7 +1,5 @@
 import unittest
 import numdifftools.core as nd
-
-import numpy as np
 from numpy.testing import assert_array_almost_equal
 from numdifftools.example_functions import function_names, get_function
 
@@ -17,7 +15,7 @@ class TestExampleFunctions(unittest.TestCase):
                 if true_df is None:
                     continue
                 for method in methods:
-                    if n>7 and method not in ['complex']:
+                    if n > 7 and method not in ['complex']:
                         continue
                     val = nd.Derivative(f, method=method, n=n)(x)
                     print(name, method, n)

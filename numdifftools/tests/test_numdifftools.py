@@ -184,11 +184,12 @@ class TestMinMaxStepGenerator(unittest.TestCase):
     @staticmethod
     def test_fixed_base_step():
         desired = 0.1
-        step_gen = nd.MinMaxStepGenerator(step_min=desired,
-                                       num_steps=1, scale=2)
+        step_gen = nd.MinMaxStepGenerator(step_min=desired, num_steps=1,
+                                          scale=2)
         h = [h for h in step_gen(0)]
         print(h)
         assert_array_almost_equal((h[0] - desired) / desired, 0)
+
 
 class TestMinStepGenerator(unittest.TestCase):
 
@@ -588,7 +589,7 @@ class TestHessdiag(unittest.TestCase):
                                         use_exact_steps=True,
                                         step_ratio=2.0, offset=4)
             h_fun = nd.Hessdiag(self._fun, step=steps, method=method,
-                               full_output=True)
+                                full_output=True)
             h_val, _info = h_fun([1, 2, 3])
             _error = h_val - htrue
             assert_array_almost_equal(h_val, htrue)
@@ -603,7 +604,7 @@ class TestHessdiag(unittest.TestCase):
                                         step_ratio=3., offset=0)
             for method in methods:
                 h_fun = nd.Hessdiag(self._fun, step=steps, method=method,
-                                   order=order, full_output=True)
+                                    order=order, full_output=True)
                 h_val, _info = h_fun([1, 2, 3])
                 _error = h_val - htrue
                 assert_array_almost_equal(h_val, htrue)
@@ -615,7 +616,7 @@ class TestHessdiag(unittest.TestCase):
         for order in range(2, 7, 2):
             for method in methods:
                 h_fun = nd.Hessdiag(self._fun, method=method, order=order,
-                                   full_output=True)
+                                    full_output=True)
                 h_val, _info = h_fun([1, 2, 3])
                 _error = h_val - htrue
                 assert_array_almost_equal(h_val, htrue)

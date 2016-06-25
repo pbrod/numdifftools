@@ -47,10 +47,11 @@ Visualize high order derivatives of the tanh function
     >>> import matplotlib.pyplot as plt
     >>> x = np.linspace(-2, 2, 100)
     >>> for i in range(10):
-    ...    df = Derivative(np.tanh, n=i)
+    ...    df = nd.Derivative(np.tanh, n=i)
     ...    y = df(x)
-    ...    plt.plot(x, y/np.abs(y).max())
-    >>> plt.show()
+    ...    h = plt.plot(x, y/np.abs(y).max())
+
+    plt.show()
 
 .. image:: https://raw.githubusercontent.com/pbrod/numdifftools/master/examples/fun.png
     :target: https://github.com/pbrod/numdifftools/blob/master/examples/fun.py

@@ -113,9 +113,8 @@ class MinStepGenerator(object):
 
     @property
     def dtheta(self):
-        if self.path[0].lower() == 'r':  # radial path
-            return 0
-        return self._dtheta  # radial path
+        radial_path = self.path[0].lower() == 'r'
+        return 0 if radial_path else self._dtheta
 
     @dtheta.setter
     def dtheta(self, dtheta):
@@ -267,11 +266,11 @@ class Limit(object):
     example, the cancellation is second order. The true limit
     should be 0.5.
 
-    >>> def k(x): return (x*np.exp(x)-np.exp(x)+1)/x**2
+    >>> def k(x): return (x*np.exp(x)-np.expm1(x))/x**2
     >>> lim_k0,err = Limit(k, full_output=True)(0)
     >>> np.allclose(lim_k0, 0.5)
     True
-    >>> np.allclose(err.error_estimate, 7.4e-9)
+    >>> err.error_estimate < 1.0e-8
     True
 
     >>> def h(x): return  (x-np.sin(x))/x**3
@@ -310,14 +309,12 @@ class Limit(object):
             min_errors = np.nanmin(errors, axis=0)
         except ValueError as msg:
             warnings.warn(str(msg))
-            ix = np.arange(shape[1])
-            return ix
+            return np.arange(shape[1])
 
         for i, min_error in enumerate(min_errors):
             idx = np.flatnonzero(errors[:, i] == min_error)
             arg_mins[i] = idx[idx.size // 2]
-        ix = np.ravel_multi_index((arg_mins, np.arange(shape[1])), shape)
-        return ix
+        return np.ravel_multi_index((arg_mins, np.arange(shape[1])), shape)
 
     @staticmethod
     def _add_error_to_outliers(der, trim_fact=10):

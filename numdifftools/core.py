@@ -1306,11 +1306,14 @@ class Hessian(_Derivative):
         :label: 7
 
     .. math::
-        \quad  ((f(x + d_j e_j + d_k e_k) - f(x + d_j e_j - d_k e_k)) -  (f(x - d_j e_j + d_k e_k) - f(x - d_j e_j - d_k e_k)) / (4 d_j d_k)
+        \quad  ((f(x + d_j e_j + d_k e_k) - f(x + d_j e_j - d_k e_k)) -
+                (f(x - d_j e_j + d_k e_k) - f(x - d_j e_j - d_k e_k)) /
+                (4 d_j d_k)
         :label: 9
 
     .. math::
-        imag(f(x + i d_j e_j + d_k e_k) - f(x + i d_j e_j - d_k e_k)) /(2 d_j d_k)
+        imag(f(x + i d_j e_j + d_k e_k) - f(x + i d_j e_j - d_k e_k)) /
+            (2 d_j d_k)
         :label: 10
 
     where :math:`e_j` is a vector with element :math:`j` is one and the rest
@@ -1466,8 +1469,3 @@ class Hessian(_Derivative):
 
     def _backward(self, f, fx, x, h, *args, **kwargs):
         return self._forward(f, fx, x, -h, *args, **kwargs)
-
-
-if __name__ == '__main__':
-    print(default_scale(method='central', n=2, order=2))
-    pass

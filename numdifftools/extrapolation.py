@@ -8,7 +8,7 @@ import numpy as np
 from scipy import linalg
 from scipy.ndimage.filters import convolve1d
 import warnings
-from _curses import ERR
+
 EPS = np.finfo(float).eps
 _EPS = EPS
 _TINY = np.finfo(float).tiny

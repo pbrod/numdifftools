@@ -55,9 +55,9 @@ class BicomplexTester(unittest.TestCase):
         z = bicomplex(t, 2 * t)
         z2 = bicomplex(1, 2)
         val = z < z2
-        truth = np.array([[ True, False, False],
-                           [False, False, False],
-                           [False, False, False]], dtype=bool)
+        truth = np.array([[True, False, False],
+                          [False, False, False],
+                          [False, False, False]], dtype=bool)
         np.testing.assert_array_equal(val, truth)
 
     @staticmethod
@@ -67,9 +67,9 @@ class BicomplexTester(unittest.TestCase):
         z = bicomplex(t, 2 * t)
         z2 = bicomplex(1, 2)
         val = z <= z2
-        truth = np.array([[ True, True, False],
-                           [False, False, False],
-                           [False, False, False]], dtype=bool)
+        truth = np.array([[True, True, False],
+                          [False, False, False],
+                          [False, False, False]], dtype=bool)
         np.testing.assert_array_equal(val, truth)
 
     @staticmethod
@@ -79,9 +79,9 @@ class BicomplexTester(unittest.TestCase):
         z = bicomplex(t, 2 * t)
         z2 = bicomplex(1, 2)
         val = z >= z2
-        truth = np.array([[False,  True,  True],
-                          [ True,  True,  True],
-                          [ True,  True,  True]], dtype=bool)
+        truth = np.array([[False, True, True],
+                          [True, True, True],
+                          [True, True, True]], dtype=bool)
         np.testing.assert_array_equal(val, truth)
 
     @staticmethod
@@ -91,11 +91,10 @@ class BicomplexTester(unittest.TestCase):
         z = bicomplex(t, 2 * t)
         z2 = bicomplex(1, 2)
         val = z > z2
-        truth = np.array([[False,  False,  True],
-                          [ True,  True,  True],
-                          [ True,  True,  True]], dtype=bool)
+        truth = np.array([[False, False, True],
+                          [True, True, True],
+                          [True, True, True]], dtype=bool)
         np.testing.assert_array_equal(val, truth)
-
 
     @staticmethod
     def test_eq():
@@ -104,22 +103,22 @@ class BicomplexTester(unittest.TestCase):
         z = bicomplex(t, 2 * t)
         z2 = bicomplex(1, 2)
         val = z == z2
-        truth = np.array([[ False, True, False],
-                           [False, False, False],
-                           [False, False, False]], dtype=bool)
+        truth = np.array([[False, True, False],
+                          [False, False, False],
+                          [False, False, False]], dtype=bool)
         np.testing.assert_array_equal(val, truth)
 
     def test_conjugate(self):
         z = bicomplex(1, 2)
         z2 = bicomplex(1, -2)
-        self.assertTrue(z.conjugate()==z2)
+        self.assertTrue(z.conjugate() == z2)
 
     def test_flat(self):
         shape = (3, 3)
         t = np.arange(9).reshape(shape)
         z = bicomplex(t, 2 * t)
         t = z.flat(1)
-        self.assertTrue(t==bicomplex(1, 2))
+        self.assertTrue(t == bicomplex(1, 2))
 
     @staticmethod
     def test_subsref():
