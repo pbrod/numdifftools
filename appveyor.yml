@@ -32,7 +32,7 @@ install:
   - conda config --add channels https://conda.anaconda.org/omnia
   - "conda create -q -n test-environment python=%PYTHON_VERSION% numpy scipy nose algopy pytest matplotlib pip"
   
-  - source activate test-environment
+  - activate test-environment
   - pip install coverage
   - python setup.py install
 
