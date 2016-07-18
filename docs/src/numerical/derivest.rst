@@ -334,7 +334,7 @@ The solution of these equations are simply:
         \delta^4 a_1
     \end{bmatrix} =  \frac{1}{45}
     \begin{bmatrix}
-        1 & 20 & 64 \\
+        1 & -20 & 64 \\
         -20 & 340 & -320 \\
         64 & -320 & 256
     \end{bmatrix}
