@@ -230,7 +230,7 @@ class EpsAlg(object):
                     epstab[i-1] = 1.0e+60
                 else:
                     epstab[i-1] = aux1 + 1.0/delta
-            estlim = epstab[np.mod(n, 2)]
+            estlim = epstab[n % 2]
             if n > self.limexp - 1:
                 raise ValueError("Eps table to small!")
 
