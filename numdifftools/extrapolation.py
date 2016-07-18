@@ -226,7 +226,7 @@ class EpsAlg(object):
                 aux1 = aux2
                 aux2 = epstab[i-1]
                 delta = epstab[i] - aux2
-                if (np.abs(delta) <= 1e-60):
+                if (np.abs(delta) <= 1.0e-60):
                     epstab[i-1] = 1.0e+60
                 else:
                     epstab[i-1] = aux1 + 1.0/delta
