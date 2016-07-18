@@ -28,10 +28,13 @@ install:
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
   - conda info -a
-  - "conda create -q -n test-environment python=%PYTHON_VERSION% numpy scipy nose"
-  - activate test-environment
+  - conda install --yes conda-build
+  - conda config --add channels https://conda.anaconda.org/omnia
+  - "conda create -q -n test-environment python=%PYTHON_VERSION% numpy scipy nose algopy pytest matplotlib pip"
+  
+  - source activate test-environment
   - pip install coverage
-  - pip install algopy
+  - python setup.py install
 
 test_script:
   - coverage run --source=numdifftools setup.py test
