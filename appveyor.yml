@@ -1,3 +1,5 @@
+build: off
+
 environment:
   matrix:
     - PYTHON_VERSION: 2.7
