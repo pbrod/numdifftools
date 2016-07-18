@@ -32,7 +32,7 @@ install:
   - conda info -a
   - conda install --yes conda-build
   - conda config --add channels https://conda.anaconda.org/omnia
-  - "conda create -q -n test-environment python=%PYTHON_VERSION% numpy scipy nose algopy pytest matplotlib pip"
+  - "conda create -q -n test-environment python=%PYTHON_VERSION% numpy scipy algopy pytest matplotlib pip"
   
   - activate test-environment
   - pip install coverage
@@ -45,7 +45,7 @@ after_test:
   # If tests are successful, create binary packages for the project.
   - python setup.py bdist_wheel"
   - python setup.py bdist_wininst"
-  - python setup.py bdist_msi"
+  # - python setup.py bdist_msi"
   - ps: "ls dist"
 
 artifacts:
