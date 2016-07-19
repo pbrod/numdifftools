@@ -22,7 +22,7 @@ statsmodels.tools.numdiff module released in 2014 written by Josef Perktold.
 from __future__ import division, print_function
 import numpy as np
 from collections import namedtuple
-from numdifftools.multicomplex import bicomplex
+from numdifftools.multicomplex import Bicomplex
 from numdifftools.extrapolation import Richardson, dea3, convolve
 from numpy import linalg
 from scipy import misc
@@ -924,12 +924,12 @@ class Derivative(_Derivative):
 
     @staticmethod
     def _multicomplex(f, fx, x, h, *args, **kwds):
-        z = bicomplex(x + 1j * h, 0)
+        z = Bicomplex(x + 1j * h, 0)
         return f(z, *args, **kwds).imag
 
     @staticmethod
     def _multicomplex2(f, fx, x, h, *args, **kwds):
-        z = bicomplex(x + 1j * h, h)
+        z = Bicomplex(x + 1j * h, h)
         return f(z, *args, **kwds).imag12
 
 
@@ -1123,7 +1123,7 @@ class Jacobian(Derivative):
     def _multicomplex(self, f, fx, x, h, *args, **kwds):
         n = len(x)
         increments = self._increments(n, 1j * h)
-        partials = [f(bicomplex(x + hi, 0), *args, **kwds).imag
+        partials = [f(Bicomplex(x + hi, 0), *args, **kwds).imag
                     for hi in increments]
         return np.array(partials)
 
@@ -1271,7 +1271,7 @@ class Hessdiag(Derivative):
     def _multicomplex2(f, fx, x, h, *args, **kwds):
         n = len(x)
         increments = np.identity(n) * h
-        partials = [f(bicomplex(x + 1j * hi, hi), *args, **kwds).imag12
+        partials = [f(Bicomplex(x + 1j * hi, hi), *args, **kwds).imag12
                     for hi in increments]
         return np.array(partials)
 
@@ -1389,13 +1389,13 @@ class Hessian(_Derivative):
 
     @staticmethod
     def _multicomplex2(f, fx, x, h, *args, **kwargs):
-        """Calculate Hessian with bicomplex-step derivative approximation"""
+        """Calculate Hessian with Bicomplex-step derivative approximation"""
         n = len(x)
         ee = np.diag(h)
         hess = np.outer(h, h)
         for i in range(n):
             for j in range(i, n):
-                zph = bicomplex(x + 1j * ee[i, :], ee[j, :])
+                zph = Bicomplex(x + 1j * ee[i, :], ee[j, :])
                 hess[i, j] = (f(zph, *args, **kwargs)).imag12 / hess[j, i]
                 hess[j, i] = hess[i, j]
         return hess
