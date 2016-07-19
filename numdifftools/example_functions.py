@@ -61,15 +61,14 @@ def get_function(fun_name, n=1):
                           ),
                  arcsinh=(np.arcsinh,
                           lambda x: 1./np.sqrt(1+x**2),
-                          lambda x: -x/(1+x**2)**(3./2),
-                          lambda x: -1./(1+x**2)**(3./2) +
-                          3*x**2/(1+x**2)**(5./2),
+                          lambda x: -x/(1+x**2)**(1.5),
+                          lambda x: -1./(1+x**2)**(1.5) +
+                          3*x**2/(1+x**2)**(2.5),
                           ),
                  arctanh=(np.arctanh,
                           lambda x: 1./(1-x**2),
                           lambda x: 2*x/(1-x**2)**2,
-                          lambda x: 2./(1-x**2)**2 +
-                          8*x**2/(1-x**2)**3,
+                          lambda x: 2./(1-x**2)**2 + 8*x**2/(1-x**2)**3,
                           ),
                  arccos=(np.arccos, darccos, ddarccos, dddarccos),
                  arcsin=(np.arcsin, darcsin, ddarcsin, dddarcsin),
