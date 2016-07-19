@@ -51,7 +51,7 @@ Visualize high order derivatives of the tanh function
     ...    y = df(x)
     ...    h = plt.plot(x, y/np.abs(y).max())
 
-    >>> plt.show()
+    plt.show()
 
 .. image:: https://raw.githubusercontent.com/pbrod/numdifftools/master/examples/fun.png
     :target: https://github.com/pbrod/numdifftools/blob/master/examples/fun.py
