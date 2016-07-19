@@ -2,7 +2,7 @@
 Introduction to Numdifftools
 ============================
 
-|pkg_img| |tests_img| |docs_img| |health_img| |coverage_img| |versions_img| |depsy_img|
+|pkg_img| |tests_img| |tests2_img| |docs_img| |health_img| |coverage_img| |versions_img| |depsy_img|
 
 
 Numdifftools is a suite of tools written in `_Python <http://www.python.org/>`_
@@ -45,14 +45,13 @@ Visualize high order derivatives of the tanh function
     >>> import numpy as np
     >>> import numdifftools as nd
     >>> import matplotlib.pyplot as plt
-
     >>> x = np.linspace(-2, 2, 100)
     >>> for i in range(10):
     ...    df = nd.Derivative(np.tanh, n=i)
     ...    y = df(x)
     ...    h = plt.plot(x, y/np.abs(y).max())
 
-    plt.show()
+    >>> plt.show()
 
 .. image:: https://raw.githubusercontent.com/pbrod/numdifftools/master/examples/fun.png
     :target: https://github.com/pbrod/numdifftools/blob/master/examples/fun.py
@@ -124,7 +123,7 @@ Numdifftools works on Python 2.7+ and Python 3.0+.
 
 Official releases available at: http://pypi.python.org/pypi/numdifftools |pkg_img|
 
-Official documentation available at: http://numdifftools.readthedocs.org/ |docs_img|
+Official documentation available at: http://numdifftools.readthedocs.io/en/latest/ |docs_img|
 
 Bleeding edge: https://github.com/pbrod/numdifftools.
 
@@ -175,6 +174,10 @@ References
 
 .. |tests_img| image:: https://travis-ci.org/pbrod/numdifftools.svg?branch=master
     :target: https://travis-ci.org/pbrod/numdifftools
+
+.. |tests2_img| image:: https://ci.appveyor.com/api/projects/status/qeoegaocw41lkarv/branch/master?svg=true
+    :target: https://ci.appveyor.com/project/pbrod/numdifftools
+
 
 .. |docs_img| image:: https://readthedocs.org/projects/pip/badge/?version=latest
     :target: http://numdifftools.readthedocs.org/en/latest/

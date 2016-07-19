@@ -2,7 +2,7 @@
 Numdifftools
 ============
 
-|pkg_img| |tests_img| |docs_img| |health_img| |coverage_img| |versions_img| |depsy_img|
+|pkg_img| |tests_img| |tests2_img| |docs_img| |health_img| |coverage_img| |versions_img| |depsy_img|
 
 
 Numdifftools is a suite of tools written in `_Python <http://www.python.org/>`_
@@ -47,9 +47,10 @@ Visualize high order derivatives of the tanh function
     >>> import matplotlib.pyplot as plt
     >>> x = np.linspace(-2, 2, 100)
     >>> for i in range(10):
-    ...    df = Derivative(np.tanh, n=i)
+    ...    df = nd.Derivative(np.tanh, n=i)
     ...    y = df(x)
-    ...    plt.plot(x, y/np.abs(y).max())
+    ...    h = plt.plot(x, y/np.abs(y).max())
+
     >>> plt.show()
 
 .. image:: https://raw.githubusercontent.com/pbrod/numdifftools/master/examples/fun.png
@@ -138,7 +139,6 @@ to get the lastest stable version. Using pip also has the advantage that all
 requirements are automatically installed.
 
 
-
 Unit tests
 ==========
 To test if the toolbox is working paste the following in an interactive
@@ -158,7 +158,6 @@ Numdifftools has as of version 0.9 been extended with some of the functionality
 found in the statsmodels.tools.numdiff module written by Josef Perktold [Perktold2014]_.
 
 
-
 References
 ===========
 
@@ -175,6 +174,10 @@ References
 
 .. |tests_img| image:: https://travis-ci.org/pbrod/numdifftools.svg?branch=master
     :target: https://travis-ci.org/pbrod/numdifftools
+
+.. |tests2_img| image:: https://ci.appveyor.com/api/projects/status/qeoegaocw41lkarv/branch/master?svg=true
+    :target: https://ci.appveyor.com/project/pbrod/numdifftools
+
 
 .. |docs_img| image:: https://readthedocs.org/projects/pip/badge/?version=latest
     :target: http://numdifftools.readthedocs.org/en/latest/
