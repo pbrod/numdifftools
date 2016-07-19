@@ -35,6 +35,18 @@ def dddarcsin(x):
     return 1./(1-x**2)**(3./2) + 3*x**2./(1-x**2)**(5./2)
 
 
+def darccos(x):
+    return - darcsin(x)
+
+
+def ddarccos(x):
+    return - ddarcsin(x)
+
+
+def dddarccos(x):
+    return - dddarcsin(x)
+
+
 def get_function(fun_name, n=1):
 
     sinh, cosh, tanh = np.sinh, np.cosh, np.tanh
@@ -59,12 +71,7 @@ def get_function(fun_name, n=1):
                           lambda x: 2./(1-x**2)**2 +
                           8*x**2/(1-x**2)**3,
                           ),
-                 arccos=(np.arccos,
-                         lambda x: -1./np.sqrt(1-x**2),
-                         lambda x: -x/(1-x**2)**(3./2),
-                         lambda x: -1./(1-x**2)**(3./2) -
-                         3*x**2/(1-x**2)**(5./2),
-                         ),
+                 arccos=(np.arccos, darccos, ddarccos, dddarccos),
                  arcsin=(np.arcsin, darcsin, ddarcsin, dddarcsin),
                  square=(lambda x: x * x,  # np.square,
                          lambda x: 2 * x,
