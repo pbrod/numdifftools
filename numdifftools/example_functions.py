@@ -5,7 +5,12 @@ Created on 17. mai 2015
 """
 from __future__ import division
 import numpy as np
-
+import scipy.special as special
+from numpy import (cos, sin, tan, cosh, sinh, tanh,
+                   arccosh, arcsinh, arctanh,
+                   exp, expm1, exp2, square, sqrt,
+                   log, log1p, log10, log2,
+                   arccos, arcsin, arctan)
 function_names = ['cos', 'sin', 'tan',
                   'cosh', 'sinh', 'tanh',
                   'arcsinh',
@@ -15,24 +20,17 @@ function_names = ['cos', 'sin', 'tan',
                   'arccos', 'arcsin', 'arctan', ]
 
 
-def dcos(x):
-    return -np.sin(x)
-
-
-def ddcos(x):
-    return -np.cos(x)
-
-
 def darcsin(x):
-    return 1./np.sqrt(1-x**2)
+    return 1./sqrt(1-x**2)
 
 
 def ddarcsin(x):
-    return x/(1-x**2)**(3./2)
+    return x * darcsin(x)**3
 
 
 def dddarcsin(x):
-    return 1./(1-x**2)**(3./2) + 3*x**2./(1-x**2)**(5./2)
+    y = darcsin(x)
+    return y**3 * (1 + 3 * x**2 * y**2)
 
 
 def darccos(x):
@@ -47,104 +45,211 @@ def dddarccos(x):
     return - dddarcsin(x)
 
 
+def derivative_arcsin(n):
+    return (arcsin, darcsin, ddarcsin, dddarcsin, None)[min(n, 4)]
+
+def derivative_arccos(n):
+    return (arccos, darccos, ddarccos, dddarccos, None)[min(n, 4)]
+
+def derivative_arctan(n):
+    def darctan(x):
+        return 1./(1+x**2)
+
+    def ddarctan(x):
+        return -2*x*darctan(x)**2
+
+    def dddarctan(x):
+        y = darctan(x)
+        return (8.0 * x**2 * y - 2.0) * y**2
+
+    def ddddarctan(x):
+        y = darctan(x)
+        return (1.0 - 2 * x**2 * y) * 24 * x * y**3
+    return (arctan, darctan, ddarctan, dddarctan, ddddarctan, None)[min(n, 5)]
+
+
+def  derivative_sin(n):
+    def dcos(x):
+        return -sin(x)
+
+    def ddcos(x):
+        return -cos(x)
+    return (sin, cos, dcos, ddcos)[n % 4]
+
+
+def  derivative_cos(n):
+    return derivative_sin(n + 1)
+
+
+def derivative_sinh(n):
+    return (sinh, cosh)[n % 2]
+
+def derivative_tan(n):
+    def dtan(x):
+        return 1./np.cos(x)**2
+    def ddtan(x):
+        return 2*tan(x)/cos(x)**2
+    def dddtan(x):
+        y = tan(x)
+        return (4*(y**2 + 1)*y**2 + 2*(y**2 + 1)**2)
+    def ddddtan(x):
+        y = tan(x)
+        return 8*(y**2 + 1)*y**3 + 16*(y**2 + 1)**2*y
+    return (tan, dtan, ddtan, dddtan, ddddtan, None)[min(n, 5)]
+
+def derivative_cosh(n):
+    return derivative_sinh(n + 1)
+
+def derivative_tanh(n):
+    def dtanh(x):
+        return 1. / cosh(x) ** 2
+    def ddtanh(x):
+        return -2 * sinh(x) / cosh(x) ** 3
+    def dddtanh(x):
+        y = cosh(x)
+        return 4*(tanh(x)/y)**2 - 2./y**4
+    def ddddtanh(x):
+        y = tanh(x)
+        return (8*(y**2 - 1)*y**3 + 16*(y**2 - 1)**2*y)
+    return (tanh, dtanh, ddtanh, dddtanh, ddddtanh, None)[min(n, 5)]
+
+def  derivative_arccosh(n):
+    def darccosh(x):
+        return 1.0 / sqrt(x**2 - 1)
+    def ddarccosh(x):
+        return -x * darccosh(x)**3
+    def dddarccosh(x):
+        y = darccosh(x)
+        return - y**3 + 3*x**2 * y**5
+    return (arccosh, darccosh, ddarccosh, dddarccosh, None)[min(n, 4)]
+
+def derivative_arcsinh(n):
+    def darcsinh(x):
+        return 1.0 / sqrt(1+x**2)
+    def ddarcsinh(x):
+        return -x * darcsinh(x)**3
+    def dddarcsinh(x):
+        y = darcsinh(x)
+        return - y**3 + 3*x**2 * y**5
+    return (arcsinh, darcsinh, ddarcsinh, dddarcsinh, None)[min(n, 4)]
+
+
+def derivative_arctanh(n):
+    def darctanh(x):
+        return 1.0 / (1-x**2)
+    def ddarctanh(x):
+        return 2*x*darctanh(x)**2
+    def dddarctanh(x):
+        y = darctanh(x)
+        return 2 * y**2 + 8 * x**2 * y**3
+    return (arctanh, darctanh, ddarctanh, ddarctanh, None)[min(n, 4)]
+
+
+def derivative_exp(n):
+     return exp
+
+
+def derivative_expm1(n):
+     return (expm1, exp)[min(n, 1)]
+
+
+def derivative_exp2(n):
+    def dexp2(x):
+        return exp2(x) * log(2)**n
+    return dexp2
+
+
+def derivative_square(n):
+    def square(x):
+        return x*x
+    def dsquare(x):
+        return 2 * x
+    def ddsquare(x):
+        return 2 * np.ones_like(x)
+    def dddsquare(x):
+        return np.zeros_like(x)
+    return (square, dsquare, ddsquare, dddsquare)[min(n,3)]
+
+
+def derivative_log1p(n):
+    def dlog1p(x):
+        return (-1)**(n+1)* special.gamma(n) / (1+x)**n
+    if n > 5:
+        return None
+    return (log1p, dlog1p)[min(n, 1)]
+
+
+def derivative_log2(n):
+    def dlog2(x):
+        return (-1)**(n+1)* special.gamma(n) / (x**n * log(2))
+    if n > 4:
+        return None
+    return (log2, dlog2)[min(n, 1)]
+
+def derivative_log10(n):
+    def dlog10(x):
+        return (-1)**(n+1)* special.gamma(n) / (x**n * log(10))
+    if n > 4:
+        return None
+    return (log10, dlog10)[min(n, 1)]
+
+def derivative_log(n):
+    def dlog(x):
+        return (-1)**(n+1)* special.gamma(n) / x**n
+    if n > 4:
+        return None
+    return (log, dlog)[min(n, 1)]
+
+
+def derivative_sqrt(n):
+    fact = 0.5*(-1)**(n+1)
+    for k in np.arange(.5, n-1):
+        fact *= k
+
+    def dsqrt(x):
+        sx = sqrt(x)
+        return fact / sx**(2*n-1)
+    if n>5:
+        return None
+    return (sqrt, dsqrt)[min(n, 1)]
+
+def derivative_inv(n):
+    def inv(x):
+        return 1./x
+    def dinv(x):
+        return (-1)**n * special.gamma(n) / x**(n+1)
+    return (inv, dinv)[min(n,1)]
+
+
 def get_function(fun_name, n=1):
 
-    sinh, cosh, tanh = np.sinh, np.cosh, np.tanh
-    sin, cos, tan = np.sin, np.cos, np.tan
-    f_dic = dict(sinh=(sinh, cosh) * 6,
-                 cosh=(cosh, sinh) * 6,
-                 arccosh=(np.arccosh,
-                          lambda x: 1./np.sqrt(x**2-1),
-                          lambda x: -x/(x**2-1)**(1.5),
-                          lambda x: -1./(x**2-1)**(1.5) +
-                          3*x**2/(x**2-1)**(2.5),
-                          ),
-                 arcsinh=(np.arcsinh,
-                          lambda x: 1./np.sqrt(1+x**2),
-                          lambda x: -x/(1+x**2)**(1.5),
-                          lambda x: -1./(1+x**2)**(1.5) +
-                          3*x**2/(1+x**2)**(2.5),
-                          ),
-                 arctanh=(np.arctanh,
-                          lambda x: 1./(1-x**2),
-                          lambda x: 2*x/(1-x**2)**2,
-                          lambda x: 2./(1-x**2)**2 + 8*x**2/(1-x**2)**3,
-                          ),
-                 arccos=(np.arccos, darccos, ddarccos, dddarccos),
-                 arcsin=(np.arcsin, darcsin, ddarcsin, dddarcsin),
-                 square=(lambda x: x * x,  # np.square,
-                         lambda x: 2 * x,
-                         lambda x: 2 * np.ones_like(x)) + (
-                         lambda x: np.zeros_like(x),)*15,
-                 exp=(np.exp,)*20,
-                 expm1=(np.expm1,) + (np.exp,)*20,
-                 exp2=(np.exp2,
-                       lambda x: np.exp2(x)*np.log(2),
-                       lambda x: np.exp2(x)*np.log(2)**2,
-                       lambda x: np.exp2(x)*np.log(2)**3,
-                       lambda x: np.exp2(x)*np.log(2)**4
-                       ),
-                 arctan=(np.arctan,
-                         lambda x: 1./(1+x**2),
-                         lambda x: -2*x/(1+x**2)**2,
-                         lambda x: 8.0*x**2/(1+x**2)**3 - 2./(1+x**2)**2,
-                         lambda x: 24*x/(1+x**2)**3 - 48*x**3./(1+x**2)**4,
-                         ),
-                 cos=(cos, dcos, ddcos, sin) * 6,
-                 sin=(sin, np.cos, dcos, ddcos) * 6,
-                 tan=(tan,
-                      lambda x: 1./np.cos(x)**2,
-                      lambda x: 2*np.tan(x)/np.cos(x)**2,
-                      lambda x: (4*(tan(x)**2 + 1)*tan(x)**2 +
-                                 2*(tan(x)**2 + 1)**2),
-                      lambda x: (8*(tan(x)**2 + 1)*tan(x)**3 +
-                                 16*(tan(x)**2 + 1)**2*tan(x))
-                      ),
-                 tanh=(tanh,
-                       lambda x: 1. / cosh(x) ** 2,
-                       lambda x: -2 * sinh(x) / cosh(x) ** 3,
-                       lambda x: 4*(tanh(x)/cosh(x))**2 - 2./cosh(x)**4,
-                       lambda x: (8*(tanh(x)**2 - 1)*tanh(x)**3 +
-                                  16*(tanh(x)**2 - 1)**2*tanh(x))),
-                 log1p=(np.log1p,
-                        lambda x: 1. / (1+x),
-                        lambda x: -1. / (1+x) ** 2,
-                        lambda x: 2. / (1+x) ** 3,
-                        lambda x: -6. / (1+x) ** 4),
-                 log2=(np.log2,
-                       lambda x: 1. / (x*np.log(2)),
-                       lambda x: -1. / (x ** 2 * np.log(2)),
-                       lambda x: 2. / (x ** 3 * np.log(2)),
-                       lambda x: -6. / (x ** 4 * np.log(2))),
-                 log10=(np.log10,
-                        lambda x: 1. / (x * np.log(10)),
-                        lambda x: -1. / (x ** 2 * np.log(10)),
-                        lambda x: 2. / (x ** 3 * np.log(10)),
-                        lambda x: -6. / (x ** 4 * np.log(10))),
-                 log=(np.log,
-                      lambda x: 1. / x,
-                      lambda x: -1. / x ** 2,
-                      lambda x: 2. / x ** 3,
-                      lambda x: -6. / x ** 4),
-                 sqrt=(np.sqrt,
-                       lambda x: 0.5/np.sqrt(x),
-                       lambda x: -0.25/x**(1.5),
-                       lambda x: 1.5*0.25/x**(2.5),
-                       lambda x: -2.5*1.5*0.25/x**(3.5)),
-                 inv=(lambda x: 1. / x,
-                      lambda x: -1. / x ** 2,
-                      lambda x: 2. / x ** 3,
-                      lambda x: -6. / x ** 4,
-                      lambda x: 24. / x ** 5))
+    f_dic = dict(sinh=derivative_sinh,
+                 cosh=derivative_cosh,
+                 arccosh=derivative_arccosh,
+                 arcsinh=derivative_arcsinh,
+                 arctanh=derivative_arctanh,
+                 arccos=derivative_arccos,
+                 arcsin=derivative_arcsin,
+                 square=derivative_square,
+                 exp=derivative_exp,
+                 expm1=derivative_expm1,
+                 exp2=derivative_exp2,
+                 arctan=derivative_arctan,
+                 cos=derivative_cos,
+                 sin=derivative_sin,
+                 tan=derivative_tan,
+                 tanh=derivative_tanh,
+                 log1p=derivative_log1p,
+                 log2=derivative_log2,
+                 log10=derivative_log10,
+                 log=derivative_log,
+                 sqrt=derivative_sqrt,
+                 inv=derivative_inv)
     if fun_name == 'all':
         return f_dic.keys()
 
     funs = f_dic.get(fun_name)
-    fun0 = funs[0]
-    if n < len(funs):
-        return fun0, funs[n]
-
-    return fun0, None
+    return funs(0), funs(n)
 
 if __name__ == '__main__':
     pass

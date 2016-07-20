@@ -1,4 +1,5 @@
 import unittest
+import numpy as np
 import numdifftools.core as nd
 from numpy.testing import assert_array_almost_equal
 from numdifftools.example_functions import function_names, get_function
@@ -19,7 +20,8 @@ class TestExampleFunctions(unittest.TestCase):
                         continue
                     val = nd.Derivative(f, method=method, n=n)(x)
                     print(name, method, n)
-                    assert_array_almost_equal(val, true_df(x), decimal=2)
+                    tval = true_df(x)
+                    assert_array_almost_equal(val, tval, decimal=2)
 
 
 if __name__ == '__main__':
