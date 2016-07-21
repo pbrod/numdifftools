@@ -152,16 +152,19 @@ Acknowledgement
 ===============
 The `numdifftools package <http://pypi.python.org/pypi/numdifftools/>`_ for
 `Python <https://www.python.org/>`_ was written by Per A. Brodtkorb
-based on the adaptive numerical differentiation toolbox written in `Matlab <http://www.mathworks.com>`_  by John D'Errico [DErrico2006]_.
+based on the adaptive numerical differentiation toolbox written in
+`Matlab <http://www.mathworks.com>`_  by John D'Errico [DErrico2006]_.
 
 Numdifftools has as of version 0.9 been extended with some of the functionality
-found in the statsmodels.tools.numdiff module written by Josef Perktold [Perktold2014]_.
+found in the statsmodels.tools.numdiff module written by Josef Perktold
+[Perktold2014]_.
 
 
 References
 ===========
 
-.. [DErrico2006] D'Errico, J. R.  (2006), Adaptive Robust Numerical Differentiation
+.. [DErrico2006] D'Errico, J. R.  (2006),
+    Adaptive Robust Numerical Differentiation
     http://www.mathworks.com/matlabcentral/fileexchange/13490-adaptive-robust-numerical-differentiation
 
 .. [Perktold2014] Perktold, J (2014), numdiff package

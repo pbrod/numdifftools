@@ -85,22 +85,21 @@ for method in ['forward', 'central', 'complex']:
     hessian_funs[method2] = ndc_hessian(1, method=method, step=epsilon)
 
 
-def compute_gradients(gradient_funs, problem_sizes):
-
-    results_gradient_list = []
+def _compute_benchmark(functions, problem_sizes):
+    result_list = []
     for n in problem_sizes:
         print('n=', n)
-        num_methods = len(gradient_funs)
-        results_gradient = np.zeros((num_methods, 3))
+        num_methods = len(functions)
+        results = np.zeros((num_methods, 3))
         ref_g = None
         f = BenchmarkFunction(n)
-        for i, (_key, gradient_f) in enumerate(gradient_funs.items()):
+        for i, (_key, function) in enumerate(functions.items()):
             t = timeit.default_timer()
-            gradient_f.f = f
+            function.f = f
             preproc_time = timeit.default_timer() - t
             t = timeit.default_timer()
             x = 3 * np.ones(n)
-            val = gradient_f(x)
+            val = function(x)
             run_time = timeit.default_timer() - t
             if ref_g is None:
                 ref_g = val
@@ -108,43 +107,22 @@ def compute_gradients(gradient_funs, problem_sizes):
                 norm_ref_g = np.linalg.norm(ref_g)
             else:
                 err = np.linalg.norm(val - ref_g) / norm_ref_g
-            results_gradient[i] = run_time, err, preproc_time
+            results[i] = run_time, err, preproc_time
 
-        results_gradient_list.append(results_gradient)
+        result_list.append(results)
 
-    results_gradients = np.array(results_gradient_list) + 1e-16
+    return np.array(result_list) + 1e-16
+
+def compute_gradients(gradient_funs, problem_sizes):
+    print('starting gradient computation ')
+    results_gradients = _compute_benchmark(gradient_funs, problem_sizes)
     print('results_gradients=\n', results_gradients)
     return results_gradients
 
 
 def compute_hessians(hessian_funs, problem_sizes):
     print('starting hessian computation ')
-    results_hessian_list = []
-    for n in problem_sizes:
-        print('n=', n)
-        num_methods = len(hessian_funs)
-        results_hessian = np.zeros((num_methods, 3))
-        ref_h = None
-        f = BenchmarkFunction(n)
-        for i, (_key, hessian_f) in enumerate(hessian_funs.items()):
-            t = timeit.default_timer()
-            hessian_f.f = f
-            preproc_time = timeit.default_timer() - t
-            t = timeit.default_timer()
-            x = 3 * np.ones(n)
-            val = hessian_f(x)
-            run_time = timeit.default_timer() - t
-            if ref_h is None:
-                ref_h = val
-                err = 0.0
-                norm_ref_h = np.linalg.norm(ref_h.ravel())
-            else:
-                err = np.linalg.norm((val - ref_h).ravel()) / norm_ref_h
-            results_hessian[i] = run_time, err, preproc_time
-
-        results_hessian_list.append(results_hessian)
-
-    results_hessians = np.array(results_hessian_list) + 1e-16
+    results_hessians = _compute_benchmark(hessian_funs, problem_sizes)
     print(problem_sizes)
     print('results_hessians=\n', results_hessians)
     return results_hessians

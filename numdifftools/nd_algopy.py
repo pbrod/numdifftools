@@ -211,67 +211,6 @@ class Derivative(_Derivative):
         return y.reshape(shape0)
 
 
-class Jacobian(_Derivative):
-    __doc__ = _cmn_doc % dict(
-        derivative='Jacobian',
-        extra_parameter="",
-        extra_note="", returns="""
-    Returns
-    -------
-    jacob : array
-        Jacobian
-    """, example="""
-    Example
-    -------
-    >>> import numdifftools.nd_algopy as nda
-
-    #(nonlinear least squares)
-
-    >>> xdata = np.reshape(np.arange(0,1,0.1),(-1,1))
-    >>> ydata = 1+2*np.exp(0.75*xdata)
-    >>> f = lambda c: (c[0]+c[1]*np.exp(c[2]*xdata) - ydata)**2
-
-    Jfun = nda.Jacobian(f) # Todo: This does not work
-    Jfun([1,2,0.75]).T # should be numerically zero
-    array([[ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
-           [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
-           [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]])
-
-    >>> Jfun2 = nda.Jacobian(f, method='reverse')
-    >>> Jfun2([1,2,0.75]).T # should be numerically zero
-    array([[ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
-           [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
-           [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]])
-
-    >>> f2 = lambda x : x[0]*x[1]*x[2] + np.exp(x[0])*x[1]
-    >>> Jfun3 = nda.Jacobian(f2)
-    >>> Jfun3([3.,5.,7.])
-    array([[ 135.42768462,   41.08553692,   15.        ]])
-
-    >>> Jfun4 = nda.Jacobian(f2, method='reverse')
-    >>> Jfun4([3,5,7])
-    array([[ 135.42768462,   41.08553692,   15.        ]])
-    """, see_also="""
-    See also
-    --------
-    Derivative
-    Gradient,
-    Hessdiag,
-    Hessian,
-    """)
-
-    def _forward(self, x, *args, **kwds):
-        # forward mode without building the computational graph
-        tmp = algopy.UTPM.init_jacobian(x)
-        y = self.f(tmp, *args, **kwds)
-        return np.atleast_2d(algopy.UTPM.extract_jacobian(y))
-
-    def _reverse(self, x, *args, **kwds):
-        x = np.atleast_1d(x)
-        c_graph = self.computational_graph(x, *args, **kwds)
-        return c_graph.jacobian(x)
-
-
 class Gradient(_Derivative):
     __doc__ = _cmn_doc % dict(
         derivative='Gradient',
@@ -328,6 +267,64 @@ class Gradient(_Derivative):
 
         c_graph = self.computational_graph(x, *args, **kwds)
         return c_graph.gradient(x)
+
+
+class Jacobian(Gradient):
+    __doc__ = _cmn_doc % dict(
+        derivative='Jacobian',
+        extra_parameter="",
+        extra_note="", returns="""
+    Returns
+    -------
+    jacob : array
+        Jacobian
+    """, example="""
+    Example
+    -------
+    >>> import numdifftools.nd_algopy as nda
+
+    #(nonlinear least squares)
+
+    >>> xdata = np.reshape(np.arange(0,1,0.1),(-1,1))
+    >>> ydata = 1+2*np.exp(0.75*xdata)
+    >>> f = lambda c: (c[0]+c[1]*np.exp(c[2]*xdata) - ydata)**2
+
+    Jfun = nda.Jacobian(f) # Todo: This does not work
+    Jfun([1,2,0.75]).T # should be numerically zero
+    array([[ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
+           [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
+           [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]])
+
+    >>> Jfun2 = nda.Jacobian(f, method='reverse')
+    >>> Jfun2([1,2,0.75]).T # should be numerically zero
+    array([[ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
+           [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
+           [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]])
+
+    >>> f2 = lambda x : x[0]*x[1]*x[2] + np.exp(x[0])*x[1]
+    >>> Jfun3 = nda.Jacobian(f2)
+    >>> Jfun3([3.,5.,7.])
+    array([[ 135.42768462,   41.08553692,   15.        ]])
+
+    >>> Jfun4 = nda.Jacobian(f2, method='reverse')
+    >>> Jfun4([3,5,7])
+    array([[ 135.42768462,   41.08553692,   15.        ]])
+    """, see_also="""
+    See also
+    --------
+    Derivative
+    Gradient,
+    Hessdiag,
+    Hessian,
+    """)
+
+    def _forward(self, x, *args, **kwds):
+        return np.atleast_2d(super(Jacobian, self)._forward(x, *args, **kwds))
+
+    def _reverse(self, x, *args, **kwds):
+        x = np.atleast_1d(x)
+        c_graph = self.computational_graph(x, *args, **kwds)
+        return c_graph.jacobian(x)
 
 
 class Hessian(_Derivative):
