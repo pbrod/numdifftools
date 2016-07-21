@@ -12,43 +12,8 @@ from __future__ import division, print_function
 import numpy as np
 from collections import namedtuple
 import warnings
-from numdifftools.extrapolation import Richardson, dea3, EPS
-_EPS = EPS
-
-
-def _make_exact(h):
-    """Make sure h is an exact representable number
-
-    This is important when calculating numerical derivatives and is
-    accomplished by adding 1 and then subtracting 1..
-    """
-    return (h + 1.0) - 1.0
-
-
-def valarray(shape, value=np.NaN, typecode=None):
-    """Return an array of all value."""
-    if typecode is None:
-        typecode = bool
-    out = np.ones(shape, dtype=typecode) * value
-
-    if not isinstance(out, np.ndarray):
-        out = np.asarray(out)
-    return out
-
-
-def nom_step(x=None):
-    """Return nominal step"""
-    if x is None:
-        return 1.0
-    return np.maximum(np.log1p(np.abs(x)), 1.0)
-
-
-def _default_base_step(x, scale, epsilon=None):
-    if epsilon is None:
-        h = _EPS ** (1. / scale) * nom_step(x)
-    else:
-        h = valarray(x.shape, value=epsilon)
-    return h
+from numdifftools.step_generators import default_base_step, make_exact
+from numdifftools.extrapolation import Richardson, dea3
 
 
 class MinStepGenerator(object):
@@ -104,7 +69,7 @@ class MinStepGenerator(object):
         if dtheta != 0:
             _step_ratio = np.exp(1j * dtheta) * _step_ratio  # a spiral path
         if self.use_exact_steps:
-            _step_ratio = _make_exact(_step_ratio)
+            _step_ratio = make_exact(_step_ratio)
         return _step_ratio
 
     @step_ratio.setter
@@ -128,9 +93,9 @@ class MinStepGenerator(object):
 
     def _default_base_step(self, xi):
         scale = self.scale
-        base_step = _default_base_step(xi, scale, self.base_step)
+        base_step = default_base_step(xi, scale, self.base_step)
         if self.use_exact_steps:
-            base_step = _make_exact(base_step)
+            base_step = make_exact(base_step)
         return base_step
 
     @property

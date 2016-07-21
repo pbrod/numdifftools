@@ -6,7 +6,8 @@ Created on 28. aug. 2015
 import unittest
 import numpy as np
 from numpy.testing import assert_array_almost_equal, assert_allclose
-from numdifftools.limits import Limit, Residue, MinStepGenerator, _make_exact
+from numdifftools.limits import Limit, Residue, MinStepGenerator
+from numdifftools.step_generators import make_exact
 from numdifftools.extrapolation import EPS
 
 
@@ -27,7 +28,7 @@ class TestMinStepGenerator(unittest.TestCase):
     def test_default_base_step():
         step_gen = MinStepGenerator(num_steps=1, offset=0)
         h = [h for h in step_gen(0)]
-        desired = _make_exact(EPS ** (1. / 1.2))
+        desired = make_exact(EPS ** (1. / 1.2))
         assert_array_almost_equal((h[0] - desired) / desired, 0)
 
     @staticmethod

@@ -1,7 +1,7 @@
 import pkg_resources
 from .info import __doc__
 from .core import *
-from . import extrapolation, limits
+from . import extrapolation, limits, step_generators
 
 from numpy.testing import Tester
 try:
