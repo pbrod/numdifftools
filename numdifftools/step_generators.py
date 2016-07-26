@@ -1,6 +1,5 @@
 import numpy as np
 from numdifftools.extrapolation import EPS
-_EPS = EPS
 
 
 def make_exact(h):
@@ -23,16 +22,20 @@ def valarray(shape, value=np.NaN, typecode=None):
     return out
 
 
-def nom_step(x=None):
+def nominal_step(x=None):
     """Return nominal step"""
     if x is None:
         return 1.0
     return np.maximum(np.log1p(np.abs(x)), 1.0)
 
 
+def base_step(scale):
+    return EPS ** (1. / scale)
+
+
 def default_base_step(x, scale, epsilon=None):
     if epsilon is None:
-        h = _EPS ** (1. / scale) * nom_step(x)
+        h = base_step(scale) * nominal_step(x)
     else:
         h = valarray(x.shape, value=epsilon)
     return h
@@ -53,7 +56,7 @@ def default_scale(method='forward', n=1, order=2):
                                 ).get(method, 0) +
             (n % 4 == 2) * dict(complex=3.65 + n4 * (5 + 1.7**n4)
                                 ).get(method, 0) +
-            (n % 4 == 0) * dict(complex=(n // 4) * (10 + 1.5 * int(n > 10))
+            (n % 4 == 0) * dict(complex=n4 * (10 + 1.5 * int(n > 10))
                                 ).get(method, 0))
 
 
@@ -76,6 +79,54 @@ class _StepGenerator(object):
             h = delta * step
             if (np.abs(h) > 0).all():
                 yield h
+
+class StepGenerator(_StepGenerator):
+    def __init__(self, step_min=None, step_ratio=2, num_steps=None,
+                 step_nom=None, use_exact_steps=True):
+        self.step_min = step_min
+        self.num_steps = num_steps
+        self.step_ratio = step_ratio
+        self.step_nom = step_nom
+        self.use_exact_steps = use_exact_steps
+
+    @staticmethod
+    def _min_num_steps(method, n, order):
+        num_steps = int(n + order - 1)
+
+        if method in ['central', 'central2', 'complex', 'multicomplex']:
+            step = 2
+            if method == 'complex':
+                step = 4 if n > 2 or order >= 4 else 2
+            num_steps = num_steps // step
+        return max(num_steps, 1)
+
+    def _default_num_steps(self, method, n, order):
+        min_num_steps = self._min_num_steps(method, n, order)
+        if self.num_steps is not None:
+            num_steps = int(self.num_steps)
+            if self.check_num_steps:
+                num_steps = max(num_steps, min_num_steps)
+            return num_steps
+        return min_num_steps + int(self.num_extrap)
+
+    def _default_step_ratio(self, n):
+        if self.step_ratio is None:
+            step_ratio = {1: 2.0}.get(n, 1.6)
+        else:
+            step_ratio = float(self.step_ratio)
+        if self.use_exact_steps:
+            step_ratio = make_exact(step_ratio)
+        return step_ratio
+
+    def _steps(self, x, method='forward', n=1, order=2):
+        xi = np.asarray(x)
+        base_step = self._default_base_step(xi, method, n, order)
+        step_ratio = self._default_step_ratio(n)
+
+        num_steps = self._default_num_steps(method, n, order)
+        offset = self.offset
+        steps = step_ratio ** (np.arange(num_steps-1, -1, -1) + offset)
+        return steps, base_step
 
 
 class MinStepGenerator(_StepGenerator):
@@ -160,11 +211,12 @@ class MinStepGenerator(_StepGenerator):
 
         num_steps = self._default_num_steps(method, n, order)
         offset = self.offset
-        steps = step_ratio ** (np.arange(num_steps-1, -1, -1) + offset)
+        #steps = step_ratio ** (np.arange(num_steps-1, -1, -1) + offset)
+        steps = step_ratio ** (np.arange(num_steps)[::-1] + offset)
         return steps, base_step
 
-    def __call__(self, x, method='central', n=1, order=2):
-        return super(MinStepGenerator, self).__call__(x, method, n, order)
+#     def __call__(self, x, method='central', n=1, order=2):
+#         return super(MinStepGenerator, self).__call__(x, method, n, order)
 
 
 class MinMaxStepGenerator(_StepGenerator):
@@ -237,7 +289,7 @@ class MaxStepGenerator(MinStepGenerator):
     step_nom :  default maximum(log1p(abs(x)), 1)
         Nominal step.
     offset : real scalar, optional, default 0
-        offset to the base step: max_step * nom_step
+        offset to the base step: max_step * nominal_step
     """
 
     def __init__(self, step_max=2.0, step_ratio=2.0, num_steps=15,
@@ -255,7 +307,7 @@ class MaxStepGenerator(MinStepGenerator):
 
     def _default_step_nom(self, x):
         if self.step_nom is None:
-            return nom_step(x)
+            return nominal_step(x)
         return valarray(x.shape, value=self.step_nom)
 
     def _default_base_step(self, xi, method, n, order=1):
@@ -276,5 +328,3 @@ class MaxStepGenerator(MinStepGenerator):
         steps = step_ratio ** (-np.arange(num_steps) + offset)
         return steps, base_step
 
-    def __call__(self, x, method='forward', n=1, order=None):
-        return super(MaxStepGenerator, self).__call__(x, method, n, order)
