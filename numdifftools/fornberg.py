@@ -300,7 +300,7 @@ def taylor(f, z0, n=1, r=0.6, max_iter=30, min_iter=5, full_output=False):
     # Extrapolation and zero out error terms, *greatly* improving the quality
     # of the approximation.
     num_changes = 0
-    for i in xrange(max_iter):
+    for i in range(max_iter):
         # print 'r = %g' % (r)
 
         bn = np.fft.fft(f(_circle(z0, r, m)))
