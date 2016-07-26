@@ -56,6 +56,7 @@ class Dea(object):
              Vector of DIMENSION 3 containing at most
              the last 3 results.
     """
+
     def __init__(self, limexp=3):
         self.limexp = limexp
         self.abserr = 10.
@@ -71,12 +72,12 @@ class Dea(object):
         n = 2 * (limexp // 2) + 1
         if (n < 3):
             raise ValueError('LIMEXP IS LESS THAN 3')
-        self.epstab = np.zeros(n+5)
+        self.epstab = np.zeros(n + 5)
         self._limexp = n
 
     @staticmethod
     def _compute_error(res3la, nres, res):
-        fact = [6.0, 2.0, 1.0][min(nres-1, 2)]
+        fact = [6.0, 2.0, 1.0][min(nres - 1, 2)]
         error = fact * np.abs(res - res3la[:nres]).sum()
         return error
 
@@ -140,7 +141,7 @@ class Dea(object):
                     abserr = err2 + err3
                     result = res
                 else:
-                    result = res3la[min(nres-1, 2)]
+                    result = res3la[min(nres - 1, 2)]
                 break
 
             res = e1 + 1.0 / SS
@@ -167,7 +168,7 @@ class Dea(object):
         epstab = self._shift_table(epstab, n, newelm, old_n)
         self._update_res3la(res3la, result, nres)
 
-        abserr = max(abserr, 10.0*_EPS * abs(result))
+        abserr = max(abserr, 10.0 * _EPS * abs(result))
 
         self._nres += 1
         return result, abserr, n
@@ -205,9 +206,10 @@ class EpsAlg(object):
             Computer Physics Reports Vol. 10, 189 - 371
             http://arxiv.org/abs/math/0306302v1
     """
+
     def __init__(self, limexp=3):
         self.limexp = 2 * (limexp // 2) + 1
-        self.epstab = np.zeros(limexp+5)
+        self.epstab = np.zeros(limexp + 5)
         self.abserr = 10.
         self._n = 0
         self._nres = 0
@@ -224,12 +226,12 @@ class EpsAlg(object):
             aux2 = 0.0
             for i in range(n, 0, -1):
                 aux1 = aux2
-                aux2 = epstab[i-1]
+                aux2 = epstab[i - 1]
                 delta = epstab[i] - aux2
                 if (np.abs(delta) <= 1.0e-60):
-                    epstab[i-1] = 1.0e+60
+                    epstab[i - 1] = 1.0e+60
                 else:
-                    epstab[i-1] = aux1 + 1.0/delta
+                    epstab[i - 1] = aux1 + 1.0 / delta
             estlim = epstab[n % 2]
             if n > self.limexp - 1:
                 raise ValueError("Eps table to small!")
@@ -241,7 +243,7 @@ class EpsAlg(object):
 
 def epsalg_demo():
     def linfun(i):
-        return np.linspace(0, np.pi/2., 2**i+1)
+        return np.linspace(0, np.pi / 2., 2**i + 1)
     dea = EpsAlg(limexp=15)
     print('NO. PANELS      TRAP. APPROX          APPROX W/EA           abserr')
     txt = '{0:5d} {1:20.8f}  {2:20.8f}  {3:20.8f}'
@@ -249,13 +251,13 @@ def epsalg_demo():
         x = linfun(k)
         val = np.trapz(np.sin(x), x)
         vale = dea(val)
-        err = np.abs(1.0-vale)
-        print(txt.format(len(x)-1, val, vale, err))
+        err = np.abs(1.0 - vale)
+        print(txt.format(len(x) - 1, val, vale, err))
 
 
 def dea_demo():
     def linfun(i):
-        return np.linspace(0, np.pi/2., 2**i+1)
+        return np.linspace(0, np.pi / 2., 2**i + 1)
     dea = Dea(limexp=6)
     print('NO. PANELS      TRAP. APPROX          APPROX W/EA           abserr')
     txt = '{0:5d} {1:20.8f}  {2:20.8f}  {3:20.8f}'
@@ -263,7 +265,7 @@ def dea_demo():
         x = linfun(k)
         val = np.trapz(np.sin(x), x)
         vale, err = dea(val)
-        print(txt.format(len(x)-1, val, vale, err))
+        print(txt.format(len(x) - 1, val, vale, err))
 
 
 def dea3(v0, v1, v2, symmetric=False):
@@ -339,7 +341,7 @@ def dea3(v0, v1, v2, symmetric=False):
         smalle2 = (abs(ss * E1) <= 1.0e-3)
         converged = (err1 <= tol1) & (err2 <= tol2) | smalle2
         result = np.where(converged, E2 * 1.0, E1 + 1.0 / ss)
-        abserr = err1 + err2 + np.where(converged, tol2 * 10, abs(result-E2))
+        abserr = err1 + err2 + np.where(converged, tol2 * 10, abs(result - E2))
     if symmetric and len(result) > 1:
         return result[:-1], abserr[1:]
     return result, abserr
@@ -381,6 +383,7 @@ class Richardson(object):
            [ -1.25498825e-05]]), array([[ 0.00320501]]), array([[ 1.]]))
 
     """
+
     def __init__(self, step_ratio=2.0, step=1, order=1, num_terms=2):
         self.num_terms = num_terms
         self.order = order
@@ -389,9 +392,9 @@ class Richardson(object):
 
     def _r_matrix(self, num_terms):
         step = self.step
-        i, j = np.ogrid[0:num_terms+1, 0:num_terms]
+        i, j = np.ogrid[0:num_terms + 1, 0:num_terms]
         r_mat = np.ones((num_terms + 1, num_terms + 1))
-        r_mat[:, 1:] = (1.0 / self.step_ratio) ** (i*(step*j + self.order))
+        r_mat[:, 1:] = (1.0 / self.step_ratio) ** (i * (step * j + self.order))
         return r_mat
 
     def rule(self, sequence_length=None):
@@ -416,7 +419,7 @@ class Richardson(object):
                          np.abs(new_sequence[:-1])) * EPS * fact
         converged = err <= tol
         abserr = err + np.where(converged, tol * 10,
-                                abs(new_sequence[:-1]-old_sequence[1:])*fact)
+                                abs(new_sequence[:-1] - old_sequence[1:]) * fact)
         # abserr = err1 + err2 + np.where(converged, tol2 * 10, abs(result-E2))
         # abserr = s * fact + np.abs(new_sequence) * EPS * 10.0
         return abserr

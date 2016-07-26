@@ -128,7 +128,7 @@ def compute_hessians(hessian_funs, problem_sizes):
     return results_hessians
 
 
-if __name__ == '__main__':
+def main():
     problem_sizes = (4, 8, 16, 32, 64, 96)
     symbols = ('-kx', ':k>', ':k<', '--k^', '--kv', '-kp', '-ks',
                'b', '--b', '-k+')
@@ -147,3 +147,7 @@ if __name__ == '__main__':
             plot_runtimes(objects, problem_sizes, symbols)
         else:
             plot_errors(objects, problem_sizes, symbols)
+
+
+if __name__ == '__main__':
+    main()

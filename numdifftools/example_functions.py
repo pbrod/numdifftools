@@ -181,9 +181,6 @@ def derivative_exp2(n):
 
 
 def derivative_square(n):
-    def square(x):
-        return x * x
-
     def dsquare(x):
         return 2 * x
 
