@@ -496,12 +496,12 @@ def main():
     der, info = derivative(f, z0=0.5, r=0.01, n=21, max_iter=30, min_iter=5,
                            full_output=True)
     print(info)
-    print 'answer:'
+    print('answer:')
     for i in range(len(der)):
-        print '%3i: %24.18f + %24.18fj (%g)' % (i,
+        print('%3i: %24.18f + %24.18fj (%g)' % (i,
                                            np.real(der[i]),
                                            np.imag(der[i]),
-                                           info.error_estimate[i])
+                                           info.error_estimate[i]))
 
 
 if __name__ == '__main__':
