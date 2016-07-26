@@ -55,86 +55,6 @@ _CENTRAL_WEIGHTS_AND_POINTS = {
              np.arange(-4, 5))}
 
 
-def fornberg_weights_all(x, x0, M=1):
-    """
-    Return finite difference weights_and_points for derivatives of all orders.
-
-    Parameters
-    ----------
-    x : vector, length n
-        x-coordinates for grid points
-    x0 : scalar
-        location where approximations are to be accurate
-    m : scalar integer
-        highest derivative that we want to find weights_and_points for
-
-    Returns
-    -------
-    C :  array, shape n x m+1
-        contains coefficients for the j'th derivative in column j (0 <= j <= m)
-
-    See also:
-    ---------
-    fornberg_weights
-
-    Reference
-    ---------
-    B. Fornberg (1998)
-    "Calculation of weights_and_points in finite difference formulas",
-    SIAM Review 40, pp. 685-691.
-
-    http://www.scholarpedia.org/article/Finite_difference_method
-    """
-    N = len(x)
-    if M >= N:
-        raise ValueError('length(x) must be larger than m')
-
-    c1, c4 = 1, x[0] - x0
-    C = np.zeros((N, M + 1))
-    C[0, 0] = 1
-    for n in range(1, N):
-        m = np.arange(0, min(n, M) + 1)
-        c2, c5, c4 = 1, c4, x[n] - x0
-        for v in range(n):
-            c3 = x[n] - x[v]
-            c2, c6, c7 = c2 * c3, m * C[v, m - 1], C[v, m]
-            C[v, m] = (c4 * c7 - c6) / c3
-        C[n, m] = c1 * (c6 - c5 * c7) / c2
-        c1 = c2
-    return C
-
-
-def fornberg_weights(x, x0, m=1):
-    """
-    Return weights for finite difference approximation of the m'th derivative
-    U^m(x0), evaluated at x0, based on n values of U at x[0], x[1],... x[n-1]:
-
-        U^m(x0) = sum weights[i] * U(x[i])
-
-    Parameters
-    ----------
-    x : vector
-        abscissas used for the evaluation for the derivative at x0.
-    x0 : scalar
-        location where approximations are to be accurate
-    m : integer
-        order of derivative. Note for m=0 this can be used to evaluate the
-        interpolating polynomial itself.
-
-    Notes
-    -----
-    The x values can be arbitrarily spaced but must be distinct and len(x) > m.
-
-    The Fornberg algorithm is much more stable numerically than regular
-    vandermonde systems for large values of n.
-
-    See also
-    --------
-    fornberg_weights_all
-    """
-    return fornberg_weights_all(x, x0, m)[:, -1]
-
-
 _cmn_doc = """
     Calculate %(derivative)s with finite difference approximation
 
@@ -229,11 +149,13 @@ class _Derivative(object):
     def _make_generator(self, step, step_options):
         if hasattr(step, '__call__'):
             return step
+        options = dict(step_ratio=None, num_extrap=14)
         if step is None and self.method not in ['complex', 'multicomplex']:
-            return MaxStepGenerator(step_ratio=None, num_extrap=14,
-                                    **step_options)
-        return MinStepGenerator(base_step=step, step_ratio=None, num_extrap=0,
-                                **step_options)
+            options.update(**step_options)
+            return MaxStepGenerator(**options)
+        options['num_extrap'] = 0
+        options.update(**step_options)
+        return MinStepGenerator(base_step=step, **options)
 
     @staticmethod
     def _get_arg_min(errors):
@@ -1068,10 +990,12 @@ class Hessian(_Derivative):
     Derivative, Hessian
     """)
 
-    def __init__(self, f, step=None, method='central', full_output=False):
+    def __init__(self, f, step=None, method='central', full_output=False,
+                 **step_options):
         order = dict(backward=1, forward=1, complex=2).get(method, 2)
         super(Hessian, self).__init__(f, n=2, step=step, method=method,
-                                      order=order, full_output=full_output)
+                                      order=order, full_output=full_output,
+                                      **step_options)
 
     @staticmethod
     def _complex_high_order():

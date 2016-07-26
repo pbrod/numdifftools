@@ -189,7 +189,7 @@ class TestMinMaxStepGenerator(unittest.TestCase):
                                           scale=2)
         h = [h for h in step_gen(0)]
         print(h)
-        assert_array_almost_equal((h[0] - desired) / desired, 0)
+        assert_array_almost_equal((h[-1] - desired) / desired, 0)
 
 
 class TestMinStepGenerator(unittest.TestCase):
@@ -211,29 +211,57 @@ class TestMinStepGenerator(unittest.TestCase):
         step_gen = nd.MinStepGenerator(num_steps=1, offset=0)
         h = [h for h in step_gen(0)]
         desired = nd.EPS ** (1. / 2.5)
+        assert_array_almost_equal((h[-1] - desired) / desired, 0)
+
+    @staticmethod
+    def test_fixed_base_step():
+        desired = 0.1
+        step_gen = nd.MinStepGenerator(base_step=desired, num_steps=1,
+                                       offset=0)
+        h = [h for h in step_gen(0)]
+        assert_array_almost_equal((h[-1] - desired) / desired, 0)
+
+
+class TestMaxStepGenerator(unittest.TestCase):
+
+    @staticmethod
+    def test_default_generator():
+        step_gen = nd.MaxStepGenerator(num_steps=10)
+        h = np.array([h for h in step_gen(0)])
+
+        desired = 2.0* 2.0 ** (-np.arange(10)+ 0)
+
+        assert_array_almost_equal((h - desired) / desired, 0)
+
+    @staticmethod
+    def test_default_base_step():
+        step_gen = nd.MaxStepGenerator(num_steps=1, offset=0)
+        h = [h for h in step_gen(0)]
+        desired = 2.0
         assert_array_almost_equal((h[0] - desired) / desired, 0)
 
     @staticmethod
     def test_fixed_base_step():
         desired = 0.1
-        step_gen = nd.MinStepGenerator(base_step=desired, num_steps=1, scale=2,
-                                       offset=0)
+        step_gen = nd.MaxStepGenerator(step_max=desired, num_steps=1, offset=0)
         h = [h for h in step_gen(0)]
         assert_array_almost_equal((h[0] - desired) / desired, 0)
 
 
-class TestFornbergWeights(unittest.TestCase):
-
-    @staticmethod
-    def test_weights():
-        x = np.r_[-1, 0, 1]
-        xbar = 0
-        k = 1
-        weights = nd.fornberg_weights(x, xbar, k)
-        np.testing.assert_allclose(weights, [-.5, 0, .5])
-
-
 class TestDerivative(unittest.TestCase):
+    #     def test_finite_difference_rules(self):
+    #         step = nd.MaxStepGenerator(step_ratio=2.0)
+    #         for method in ['central']:
+    #             d = nd.Derivative(np.exp, step=step, method=method)
+    #             for order in [2, 6]:
+    #                 d.order = order
+    #                 fd_rule = d._get_finite_difference_rule(step_ratio=2.0)
+    #                 print(fd_rule)
+    #
+    #         x = [2, 1, .5]
+    #         weights = nd.fornberg_weights(x, m=1)
+    #         #self.assert_(False)
+
 
     @staticmethod
     def test_directional_diff():
@@ -332,6 +360,20 @@ class TestDerivative(unittest.TestCase):
                 assert_array_almost_equal(val, 0)
 
     @staticmethod
+    def test_derivative_with_step_options():
+        def func(x, a, b=1):
+            return b * a * x * x * x
+        methods = ['forward', 'backward', 'central', 'complex', 'multicomplex']
+        dfuns = [nd.Gradient, nd.Derivative, nd.Jacobian, nd.Hessdiag,
+                 nd.Hessian]
+        step_options = dict(num_extrap=5)
+        for dfun in dfuns:
+            for method in methods:
+                df = dfun(func, method=method, **step_options)
+                val = df(0.0, 1.0, b=2)
+                assert_array_almost_equal(val, 0)
+
+    @staticmethod
     def test_derivative_cube():
         """Test for Issue 7"""
         def cube(x):
@@ -361,7 +403,7 @@ class TestDerivative(unittest.TestCase):
         dsin = nd.Derivative(np.sin)
         x = np.linspace(0, 2. * np.pi, 13)
         y = dsin(x)
-        np.testing.assert_almost_equal(y, np.cos(x), decimal=8)
+        assert_array_almost_equal(y, np.cos(x), decimal=8)
 
     def test_backward_derivative_on_sinh(self):
         # Compute the derivative of a function using a backward difference
