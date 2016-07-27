@@ -163,7 +163,7 @@ def derivative_arctanh(n):
     def dddarctanh(x):
         y = darctanh(x)
         return 2 * y**2 * (1 + 4 * x**2 * y)
-    return (arctanh, darctanh, ddarctanh, ddarctanh, None)[min(n, 4)]
+    return (arctanh, darctanh, ddarctanh, dddarctanh, None)[min(n, 4)]
 
 
 def derivative_exp(n):
@@ -252,27 +252,27 @@ def derivative_inv(n):
 
 def get_function(fun_name, n=1):
 
-    f_dic = dict(sinh=derivative_sinh,
-                 cosh=derivative_cosh,
+    f_dic = dict(cosh=derivative_cosh,
+                 cos=derivative_cos,
+                 sin=derivative_sin,
+                 sinh=derivative_sinh,
+                 tan=derivative_tan,
+                 tanh=derivative_tanh,
                  arccosh=derivative_arccosh,
                  arcsinh=derivative_arcsinh,
                  arctanh=derivative_arctanh,
                  arccos=derivative_arccos,
                  arcsin=derivative_arcsin,
-                 square=derivative_square,
+                 arctan=derivative_arctan,
                  exp=derivative_exp,
                  expm1=derivative_expm1,
                  exp2=derivative_exp2,
-                 arctan=derivative_arctan,
-                 cos=derivative_cos,
-                 sin=derivative_sin,
-                 tan=derivative_tan,
-                 tanh=derivative_tanh,
                  log1p=derivative_log1p,
                  log2=derivative_log2,
                  log10=derivative_log10,
                  log=derivative_log,
                  sqrt=derivative_sqrt,
+                 square=derivative_square,
                  inv=derivative_inv)
     if fun_name == 'all':
         return f_dic.keys()
