@@ -4,8 +4,6 @@ from scipy.special import factorial
 from numdifftools.extrapolation import EPS, dea3
 from collections import namedtuple
 
-EPSILON = EPS
-EPSILON_3_14 = np.power(EPSILON, 3. / 14)
 _INFO = namedtuple('info', ['error_estimate',
                                    'degenerate',
                                    'final_radius',
@@ -97,40 +95,28 @@ def _circle(z, r, m):
     return z + r * np.exp(theta*1j)
 
 
-def poor_convergence(z, r, f, m, bn):
+def _poor_convergence(z, r, f, m, bn):
     """
     Test for poor convergence based on three function evaluations.
 
-    To avoid letting randomness enter the algorithm, three fixed
-    points are used, as defined by check_points
     This test evaluates the function at the three points and returns false if
     the relative error is greater than 1e-3.
     """
     check_points = (-0.4 + 0.3j, 0.7 + 0.2j, 0.02 - 0.06j)
-    rtest1 = r * check_points[0]
-    rtest2 = r * check_points[1]
-    rtest3 = r * check_points[2]
-    ztest1 = z + rtest1
-    ztest2 = z + rtest2
-    ztest3 = z + rtest3
+    diffs = []
+    ftests = []
+    for check_point in check_points:
+        rtest = r * check_point
+        ztest = z + rtest
+        ftest = f(ztest)
+        comp = np.sum(bn * np.power(check_point, np.arange(m)))
+        ftests.append(ftest)
+        diffs.append(comp-ftest)
 
-    ftest1 = f(ztest1)
-    ftest2 = f(ztest2)
-    ftest3 = f(ztest3)
+    #return np.any(np.abs(diffs) > 1e-3 * np.abs(ftests))
 
-    brn = bn / m
-    comp1 = np.sum(brn * np.power(rtest1 / r, np.arange(m)))
-    comp2 = np.sum(brn * np.power(rtest2 / r, np.arange(m)))
-    comp3 = np.sum(brn * np.power(rtest3 / r, np.arange(m)))
-    # print ftest1
-    # print comp1
-
-    diff1 = comp1 - ftest1
-    diff2 = comp2 - ftest2
-    diff3 = comp3 - ftest3
-
-    max_abs_error = np.max(np.abs([diff1, diff2, diff3]))
-    max_f_value = np.max(np.abs([ftest1, ftest2, ftest3]))
+    max_abs_error = np.max(np.abs(diffs))
+    max_f_value = np.max(np.abs(ftests))
     # max_relative_error = max_abs_error / max_f_value
     # print(max_abs_error, max_f_value)
     return max_abs_error > 1e-3 * max_f_value
@@ -149,7 +135,8 @@ def _num_taylor_coefficients(n):
          256 if 103 < n <= 206
     """
     if n>103:
-        raise
+        msg = 'Number of derivatives too large.  Must be less than 104'
+        raise ValueError(msg)
     correction = np.array([0, 0, 1, 3, 4, 7])[_get_logn(n)]
     log2n = _get_logn(n - correction)
     m = 2 ** (log2n + 3)
@@ -160,7 +147,7 @@ def richardson_parameter(Q, k, c):
     c = np.real((Q[k - 1] - Q[k - 2]) / (Q[k] - Q[k - 1])) - 1.
     # The lower bound 0.07 admits the singularity x.^-0.9
     c = np.maximum(c, 0.07)
-    return c
+    return -c
 
 def richardson(Q, k, c=None):
     """Richardson extrapolation with parameter estimation"""
@@ -210,7 +197,8 @@ def _get_best_estimate(der, errors):
     return der.flat[ix], errors.flat[ix]
 
 
-def taylor(f, z0, n=1, r=0.6, max_iter=30, min_iter=5, full_output=False):
+def taylor(f, z0, n=1, r=0.0061, max_iter=30, min_iter=None,
+           full_output=False, num_extrap=3, step_ratio=1.6):
     """
     Return Taylor coefficients of complex analytic function using FFT
 
@@ -221,13 +209,13 @@ def taylor(f, z0, n=1, r=0.6, max_iter=30, min_iter=5, full_output=False):
     z0 : real or complex scalar at which to evaluate the derivatives
     n : scalar integer, default 1
         Number of taylor coefficents to compute. Maximum number is 100.
-    r : real scalar, default 0.6
+    r : real scalar, default 0.0061
         Initial radius at which to evaluate. For well-behaved functions,
         the computation should be insensitive to the initial radius to within
         about four orders of magnitude.
     max_iter : scalar integer, default 30
         Maximum number of iterations
-    min_iter : scalar integer, default 5
+    min_iter : scalar integer, default max_iter // 2
         Minimum number of iterations before the solution may be deemed
         degenerate.  A larger number allows the algorithm to correct a bad
         initial radius.
@@ -267,7 +255,17 @@ def taylor(f, z0, n=1, r=0.6, max_iter=30, min_iter=5, full_output=False):
     Example
     -------
 
-    To compute the first five derivatives of 1 / (1 - z) at z = 0:
+    Compute the first 6 taylor coefficients 1 / (1 - z) expanded round  z0 = 0:
+    >>> import numdifftools.fornberg as ndf
+    >>> import numpy as np
+    >>> c, info = ndf.taylor(lambda x: 1./(1-x), z0=0, n=6, full_output=True)
+    >>> np.allclose(c, np.ones(8))
+    True
+    >>> np.all(info.error_estimate < 1e-9)
+    True
+    >>> (info.function_count, info.iterations, info.failed) == (144, 18, False)
+    True
+
 
     References
     ----------
@@ -283,15 +281,14 @@ def taylor(f, z0, n=1, r=0.6, max_iter=30, min_iter=5, full_output=False):
     bs = []
 
     # Initial grow/shring factor for the circle:
-    fac = 2
-    pdirec = None
+    # step_ratio = 2
+    previous_direction = None
     degenerate = False
     m = _num_taylor_coefficients(n)
-
-    # A factor for testing against the targeted geometric progression of
-    # fourier coefficients:
     mvec = np.arange(m)
-    crat = (np.exp(np.log(1e-4) / (m - 1))) ** mvec
+    # A factor for testing against the targeted geometric progression of
+    # FFT coefficients:
+    crat = m * (np.exp(np.log(1e-4) / (m - 1))) ** mvec
 
     # Start iterating. The goal of this loops is to select a circle radius that
     # yields a nice geometric progression of the coefficients (which controls
@@ -299,18 +296,19 @@ def taylor(f, z0, n=1, r=0.6, max_iter=30, min_iter=5, full_output=False):
     # function of the circle radius r so that we can perform Richardson
     # Extrapolation and zero out error terms, *greatly* improving the quality
     # of the approximation.
+
     num_changes = 0
     for i in range(max_iter):
         # print 'r = %g' % (r)
 
-        bn = np.fft.fft(f(_circle(z0, r, m)))
-        bs.append(bn / m * np.power(r, -mvec))
+        bn = np.fft.fft(f(_circle(z0, r, m))) / m
+
+        bs.append(bn * np.power(r, -mvec))
         rs.append(r)
         if direction_changes > 1 or degenerate:
-
             num_changes += 1
-            #if len(rs) >= 3:
-            if num_changes >= 3:
+            # if len(rs) >= 3:
+            if num_changes >= 1 + num_extrap:
                 break
 
         if not degenerate:
@@ -333,34 +331,30 @@ def taylor(f, z0, n=1, r=0.6, max_iter=30, min_iter=5, full_output=False):
             needs_smaller = i % 2 == 0
         else:
             needs_smaller = (m1 != m1 or m2 != m2 or m1 < m2 or
-                             poor_convergence(z0, r, f, m, bn))
+                             _poor_convergence(z0, r, f, m, bn))
 
-        if pdirec is not None and needs_smaller != pdirec:
+        if previous_direction is not None and needs_smaller != previous_direction:
             direction_changes += 1
 
         if direction_changes > 0:
-            # Once we've started changing directions, we've found our range so start
-            # taking the square root of the growth factor so that richardson
-            # extrapolation is well-behaved:
-            fac = np.sqrt(fac)
+            # Once we've started changing directions, we've found our range so
+            # start taking the square root of the growth factor so that
+            # richardson extrapolation is well-behaved:
+            step_ratio = np.sqrt(step_ratio)
 
         if needs_smaller:
-            r /= fac
+            r /= step_ratio
         else:
-            r *= fac
+            r *= step_ratio
 
-        pdirec = needs_smaller
-
-    #     print np.real(bs[0])
-    #     print np.real(bs[1])
-    #     print np.real(bs[2])
+        previous_direction = needs_smaller
 
     # Begin Richardson Extrapolation. Presumably we have bs[i]'s around three
-    # successive circles and can now extrapolate those coefficients, zeroing out
-    # higher order error terms.
-#     extrap1 = bs[1] - (bs[1] - bs[0]) / (1.0 - (rs[0] / rs[1])**m)
-#     extrap2 = bs[2] - (bs[2] - bs[1]) / (1.0 - (rs[1] / rs[2])**m)
-#     extrap3 = extrap2 - (extrap2 - extrap1) / (1.0 - (rs[0] / rs[2])**m)
+    # successive circles and can now extrapolate those coefficients, zeroing
+    # out higher order error terms.
+    #     extrap1 = bs[1] - (bs[1] - bs[0]) / (1.0 - (rs[0] / rs[1])**m)
+    #     extrap2 = bs[2] - (bs[2] - bs[1]) / (1.0 - (rs[1] / rs[2])**m)
+    #     extrap3 = extrap2 - (extrap2 - extrap1) / (1.0 - (rs[0] / rs[2])**m)
 
     nk = len(rs)
     extrap = []
@@ -370,35 +364,22 @@ def taylor(f, z0, n=1, r=0.6, max_iter=30, min_iter=5, full_output=False):
         all_coefs, all_errors = dea3(extrap[:-2], extrap[1:-1], extrap[2:])
         coefs, errors = _get_best_estimate(all_coefs, all_errors)
     else:
-        errors = EPSILON / np.power(rs[2], np.arange(m)) * np.maximum(m1, m2)
+        errors = EPS / np.power(rs[2], np.arange(m)) * np.maximum(m1, m2)
         k = len(extrap)-1
         coefs = richardson(extrap, k=k, c=(1.0 - (rs[-3] / rs[-1])**m))
 
 
     if full_output:
-        # compute the truncation error:
-
-        truncation_error = EPSILON_3_14 * np.abs(coefs)
-        rounding_error = EPSILON / np.power(rs[2], np.arange(m)) * np.maximum(m1, m2)
-        info = _INFO(errors,
-                     degenerate, final_radius=r,
+        info = _INFO(errors, degenerate, final_radius=r,
                      function_count=i*m, iterations=i, failed=i==max_iter)
-        # print(info)
-
-#     print 'answer:'
-#     for i in range(len(coefs)):
-#         print '%3i: %24.18f + %24.18fj (%g, %g)' % (i,
-#                                            np.real(coefs[i]),
-#                                            np.imag(coefs[i]),
-#                                            truncation_error[i],
-#                                            rounding_error[i])
 
     if full_output:
         return coefs, info
     return coefs
 
 
-def derivative(f, z0, n=1, r=0.6, max_iter=30, min_iter=5, full_output=False):
+def derivative(f, z0, n=1, r=0.0061, max_iter=30, min_iter=None, full_output=False,
+               num_extrap=3, step_ratio=1.6):
     """
     Calculate n-th derivative of complex analytic function using FFT
 
@@ -411,13 +392,13 @@ def derivative(f, z0, n=1, r=0.6, max_iter=30, min_iter=5, full_output=False):
         Number of derivatives to compute where 0 represents the value of the
         function and n represents the nth derivative. Maximum number is 100.
 
-    r : real scalar, default 0.6
+    r : real scalar, default 0.0061
         Initial radius at which to evaluate. For well-behaved functions,
         the computation should be insensitive to the initial radius to within
         about four orders of magnitude.
     max_iter : scalar integer, default 30
         Maximum number of iterations
-    min_iter : scalar integer, default 5
+    min_iter : scalar integer, default max_iter // 2
         Minimum number of iterations before the solution may be deemed
         degenerate.  A larger number allows the algorithm to correct a bad
         initial radius.
@@ -460,6 +441,19 @@ def derivative(f, z0, n=1, r=0.6, max_iter=30, min_iter=5, full_output=False):
     -------
 
     To compute the first five derivatives of 1 / (1 - z) at z = 0:
+    Compute the first 6 taylor derivatives of 1 / (1 - z) at z0 = 0:
+    >>> import numdifftools.fornberg as ndf
+    >>> import numpy as np
+    >>> def f(x):
+    ...    return 1./(1-x)
+    >>> c, info = ndf.derivative(f, z0=0, n=6, full_output=True)
+    >>> np.allclose(c, [1, 1, 2, 6, 24, 120, 720, 5040])
+    True
+    >>> np.all(info.error_estimate < 1e-9*c.real)
+    True
+    >>> (info.function_count, info.iterations, info.failed) == (144, 18, False)
+    True
+
 
     References
     ----------
@@ -468,7 +462,9 @@ def derivative(f, z0, n=1, r=0.6, max_iter=30, min_iter=5, full_output=False):
         ACM Transactions on Mathematical Software (TOMS),
         7(4), 512-526. http://doi.org/10.1145/355972.355979
     """
-    result = taylor(f, z0, n, r, max_iter, min_iter, full_output)
+    result = taylor(f, z0, n=n, r=r, max_iter=max_iter, min_iter=min_iter,
+                    full_output=full_output, num_extrap=num_extrap,
+                    step_ratio=step_ratio)
     # convert taylor series --> actual derivatives.
     m = _num_taylor_coefficients(n)
     fact = factorial(np.arange(m))
@@ -488,21 +484,27 @@ def main():
         # return np.tan(z)
         # return 1.0j + z + 1.0j * z**2
         # return 1.0 / (1.0 - z)
+        # return (1+z)**10*np.log1p(z)
+        # return 10*5 + 1./(1-z)
+        # return 1./(1-z)
         return np.sqrt(z)
-        return np.arcsinh(z)
-        return np.cos(z)
-        return np.log1p(z)
+        # return np.arcsinh(z)
+        # return np.cos(z)
+        # return np.log1p(z)
 
-    der, info = derivative(f, z0=0.5, r=0.01, n=21, max_iter=30, min_iter=5,
-                           full_output=True)
+    der, info = derivative(f, z0=0.1, r=0.0062, n=6, max_iter=30, min_iter=15,
+                           full_output=True, step_ratio=1.6)
     print(info)
     print('answer:')
-    for i in range(len(der)):
-        print('%3i: %24.18f + %24.18fj (%g)' % (i,
-                                           np.real(der[i]),
-                                           np.imag(der[i]),
-                                           info.error_estimate[i]))
+    for i, der_i in enumerate(der):
+        err = info.error_estimate[i]
+        print('{0:3d}: {1:24.18f} + {2:24.18f}j ({3:g})'.format(i,
+                                                            der_i.real,
+                                                            der_i.imag,
+                                                            err))
 
 
 if __name__ == '__main__':
+    # from numdifftools.testing import test_docstrings
+    # test_docstrings()
     main()
