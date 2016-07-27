@@ -136,7 +136,7 @@ class _Derivative(object):
     def _get_function(self):
         if self.n == 0:
             return self.f
-        name = '_' + self.method
+        name = '_' + dict(backward='reverse').get(self.method, self.method)
         return getattr(self, name)
 
     def __call__(self, x, *args, **kwds):
@@ -144,7 +144,7 @@ class _Derivative(object):
         x0 = np.asarray(x, dtype=float)
         df = fun(x0, *args, **kwds)
         if self.full_output:
-            return df, self.info(EPS, EPS, 0)
+            return df, self.info(np.maximum(10*EPS * np.abs(df), EPS), EPS, 0)
         return df
 
 class Derivative(_Derivative):
