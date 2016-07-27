@@ -143,7 +143,7 @@ def _num_taylor_coefficients(n):
     return m
 
 
-def richardson_parameter(Q, k, c):
+def richardson_parameter(Q, k):
     c = np.real((Q[k - 1] - Q[k - 2]) / (Q[k] - Q[k - 1])) - 1.
     # The lower bound 0.07 admits the singularity x.^-0.9
     c = np.maximum(c, 0.07)
