@@ -20,5 +20,5 @@ def rosen(x):
 def test_docstrings():
     # np.set_printoptions(precision=6)
     import doctest
-    print('Testing docstrings in %s' % inspect.stack()[1][1])
+    print('Testing docstrings in {}'.format(inspect.stack()[1][1]))
     doctest.testmod(optionflags=doctest.NORMALIZE_WHITESPACE|doctest.ELLIPSIS)
