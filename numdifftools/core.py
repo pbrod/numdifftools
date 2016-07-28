@@ -25,7 +25,7 @@ from collections import namedtuple
 from numdifftools.multicomplex import Bicomplex
 from numdifftools.extrapolation import Richardson, dea3, convolve
 from numdifftools.step_generators import (MaxStepGenerator, MinStepGenerator,
-                                          MinMaxStepGenerator, default_scale)
+                                          default_scale)
 from numpy import linalg
 from scipy import misc
 import warnings
@@ -273,7 +273,8 @@ class _Derivative(object):
 
     def _get_steps(self, xi):
         method, n, order = self.method, self.n, self._method_order
-        return [step for step in self.step(xi, method, n, order)]
+        step_gen =  self.step.step_generator_function(xi, method, n, order)
+        return [step for step in step_gen()], step_gen.step_ratio
 
     @property
     def _odd_derivative(self):
@@ -313,12 +314,6 @@ class _Derivative(object):
             raise ValueError('fun did not return data of correct size ' +
                              '(it must be vectorized)')
         return f_del, h, original_shape
-
-    @staticmethod
-    def _compute_step_ratio(steps):
-        if len(steps) < 2:
-            return 1
-        return np.unique(steps[0] / steps[1]).mean()
 
     def __call__(self, x, *args, **kwds):
         xi = np.asarray(x)
@@ -510,10 +505,9 @@ class Derivative(_Derivative):
 
     def _derivative_nonzero_order(self, xi, args, kwds):
         diff, f = self._get_functions()
-        steps = self._get_steps(xi)
+        steps, step_ratio = self._get_steps(xi)
         fxi = self._eval_first(f, xi, *args, **kwds)
         results = [diff(f, fxi, xi, h, *args, **kwds) for h in steps]
-        step_ratio = self._compute_step_ratio(steps)
 
         self.set_richardson_rule(step_ratio, self.richardson_terms)
         fd_rule = self._get_finite_difference_rule(step_ratio)
@@ -1004,11 +998,10 @@ class Hessian(_Derivative):
     def _derivative(self, xi, args, kwds):
         xi = np.atleast_1d(xi)
         diff, f = self._get_functions()
-        steps = self._get_steps(xi)
+        steps, step_ratio = self._get_steps(xi)
 
         fxi = self._eval_first(f, xi, *args, **kwds)
         results = [diff(f, fxi, xi, h, *args, **kwds) for h in steps]
-        step_ratio = self._compute_step_ratio(steps)
         self.set_richardson_rule(step_ratio, self.richardson_terms)
         return self._vstack(results, steps)
 
