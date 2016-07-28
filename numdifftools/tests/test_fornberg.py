@@ -14,12 +14,13 @@ class TestExampleFunctions(unittest.TestCase):
         small_radius = ['sqrt', 'log', 'log2', 'log10', 'arccos', 'log1p',
                         'arcsin', 'arctan', 'arcsinh', 'tan', 'tanh',
                         'arctanh', 'arccosh']
+        r = 0.061
         n_max = 20
         for name in function_names + ['arctanh', 'arccosh']:
             f, true_df = get_function(name, n=1)
             x = 0.5 if name != 'arccosh' else 1.5
-            r = 0.061 if name != 'log' else 0.061
-            vals, info = derivative(f, x, r=r, n=n_max, full_output=True)
+            # r = 0.0061 if name != 'log' else 0.061
+            vals, info = derivative(f, x, r=r, n=n_max, full_output=True, step_ratio=1.6)
             for n in range(1, n_max):
                 f, true_df = get_function(name, n=n)
                 if true_df is None:
@@ -27,9 +28,9 @@ class TestExampleFunctions(unittest.TestCase):
 
                 tval = true_df(x)
                 dm = int(-np.log10(info.error_estimate[n] + 1e-16)) - 1
-                print(name, n, dm)
-                assert_array_almost_equal(vals[n], tval, decimal=max(dm, 8))
-
+                print(n, name, info.iterations, dm)
+                assert_array_almost_equal(vals[n], tval, decimal=max(dm, 6))
+        # assert(False)
 
 class TestFornbergWeights(unittest.TestCase):
 

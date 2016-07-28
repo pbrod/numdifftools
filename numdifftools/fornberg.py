@@ -1,5 +1,6 @@
 
 import numpy as np
+import warnings
 from scipy.special import factorial
 from numdifftools.extrapolation import EPS, dea3
 from collections import namedtuple
@@ -10,23 +11,23 @@ _INFO = namedtuple('info', ['error_estimate',
                                    'function_count',
                                    'iterations', 'failed'])
 
-def fornberg_weights_all(x, x0=0, m=1):
+def fornberg_weights_all(x, x0=0, n=1):
     """
     Return finite difference weights_and_points for derivatives of all orders.
 
     Parameters
     ----------
-    x : vector, length i
+    x : vector, length m
         x-coordinates for grid points
     x0 : scalar
         location where approximations are to be accurate
-    j : scalar integer
+    n : scalar integer
         highest derivative that we want to find weights_and_points for
 
     Returns
     -------
-    C :  array, shape i x j+1
-        contains coefficients for the j'th derivative in column j (0 <= j <= j)
+    C :  array, shape m x n+1
+        contains coefficients for the j'th derivative in column j (0 <= j <= n)
 
     See also:
     ---------
@@ -40,15 +41,15 @@ def fornberg_weights_all(x, x0=0, m=1):
 
     http://www.scholarpedia.org/article/Finite_difference_method
     """
-    n = len(x)
-    if m >= n:
-        raise ValueError('length(x) must be larger than j')
+    m = len(x)
+    if n >= m:
+        raise ValueError('length(x) must be larger than n')
 
     c1, c4 = 1, x[0] - x0
-    C = np.zeros((n, m + 1))
+    C = np.zeros((m, n + 1))
     C[0, 0] = 1
-    for i in range(1, n):
-        j = np.arange(0, min(i, m) + 1)
+    for i in range(1, m):
+        j = np.arange(0, min(i, n) + 1)
         c2, c5, c4 = 1, c4, x[i] - x0
         for v in range(i):
             c3 = x[i] - x[v]
@@ -59,7 +60,7 @@ def fornberg_weights_all(x, x0=0, m=1):
     return C
 
 
-def fornberg_weights(x, x0=0, m=1):
+def fornberg_weights(x, x0=0, n=1):
     """
     Return weights for finite difference approximation of the m'th derivative
     U^m(x0), evaluated at x0, based on n values of U at x[0], x[1],... x[n-1]:
@@ -72,7 +73,7 @@ def fornberg_weights(x, x0=0, m=1):
         abscissas used for the evaluation for the derivative at x0.
     x0 : scalar
         location where approximations are to be accurate
-    m : integer
+    n : integer
         order of derivative. Note for m=0 this can be used to evaluate the
         interpolating polynomial itself.
 
@@ -83,11 +84,21 @@ def fornberg_weights(x, x0=0, m=1):
     The Fornberg algorithm is much more stable numerically than regular
     vandermonde systems for large values of n.
 
+    Example
+    -------
+    >>> import numpy as np
+    >>> import numdifftools.fornberg as ndf
+    >>> x = np.linspace(-1, 1, 5) * 1e-3
+    >>> w = ndf.fornberg_weights(x, x0=0, n=1)
+    >>> df = np.dot(w, np.exp(x))
+    >>> np.allclose(df, 1)
+    True
+
     See also
     --------
     fornberg_weights_all
     """
-    return fornberg_weights_all(x, x0, m)[:, -1]
+    return fornberg_weights_all(x, x0, n)[:, -1]
 
 
 def _circle(z, r, m):
@@ -95,7 +106,7 @@ def _circle(z, r, m):
     return z + r * np.exp(theta*1j)
 
 
-def _poor_convergence(z, r, f, m, bn):
+def _poor_convergence(z, r, f, bn, mvec):
     """
     Test for poor convergence based on three function evaluations.
 
@@ -109,16 +120,15 @@ def _poor_convergence(z, r, f, m, bn):
         rtest = r * check_point
         ztest = z + rtest
         ftest = f(ztest)
-        comp = np.sum(bn * np.power(check_point, np.arange(m)))
+        # Evaluate powerseries:
+        comp = np.sum(bn * np.power(check_point, mvec))
         ftests.append(ftest)
         diffs.append(comp-ftest)
 
-    #return np.any(np.abs(diffs) > 1e-3 * np.abs(ftests))
+    # return np.any(np.abs(diffs) > 1e-3 * np.abs(ftests))
 
     max_abs_error = np.max(np.abs(diffs))
     max_f_value = np.max(np.abs(ftests))
-    # max_relative_error = max_abs_error / max_f_value
-    # print(max_abs_error, max_f_value)
     return max_abs_error > 1e-3 * max_f_value
 
 
@@ -132,10 +142,10 @@ def _num_taylor_coefficients(n):
           32 if  12 < n <= 25
           64 if  25 < n <= 51
          128 if  51 < n <= 103
-         256 if 103 < n <= 206
+         256 if 103 < n <= 192
     """
-    if n>103:
-        msg = 'Number of derivatives too large.  Must be less than 104'
+    if n>192:
+        msg = 'Number of derivatives too large.  Must be less than 193'
         raise ValueError(msg)
     correction = np.array([0, 0, 1, 3, 4, 7])[_get_logn(n)]
     log2n = _get_logn(n - correction)
@@ -197,8 +207,8 @@ def _get_best_estimate(der, errors):
     return der.flat[ix], errors.flat[ix]
 
 
-def taylor(f, z0, n=1, r=0.0061, max_iter=30, min_iter=None,
-           full_output=False, num_extrap=3, step_ratio=1.6):
+def taylor(f, z0=0, n=1, r=0.0061, max_iter=30, min_iter=None, num_extrap=3,
+           step_ratio=1.6, full_output=False):
     """
     Return Taylor coefficients of complex analytic function using FFT
 
@@ -219,6 +229,10 @@ def taylor(f, z0, n=1, r=0.0061, max_iter=30, min_iter=None,
         Minimum number of iterations before the solution may be deemed
         degenerate.  A larger number allows the algorithm to correct a bad
         initial radius.
+    step_ratio : real scalar, default 1.6
+        Initial grow/shrinking factor for finding the best radius.
+    num_extrap : scalar integer, default 3
+        number of extrapolation steps used in the calculation
     full_output : bool, optional
         If `full_output` is False, only the coefficents is returned.
         If `full_output` is True, then (coefs, status) is returned
@@ -279,11 +293,8 @@ def taylor(f, z0, n=1, r=0.0061, max_iter=30, min_iter=None,
     direction_changes = 0
     rs = []
     bs = []
-
-    # Initial grow/shring factor for the circle:
-    # step_ratio = 2
     previous_direction = None
-    degenerate = False
+    degenerate = failed = False
     m = _num_taylor_coefficients(n)
     mvec = np.arange(m)
     # A factor for testing against the targeted geometric progression of
@@ -298,11 +309,11 @@ def taylor(f, z0, n=1, r=0.0061, max_iter=30, min_iter=None,
     # of the approximation.
 
     num_changes = 0
+    i = 0
     for i in range(max_iter):
-        # print 'r = %g' % (r)
+        # print('r = %g' % (r))
 
         bn = np.fft.fft(f(_circle(z0, r, m))) / m
-
         bs.append(bn * np.power(r, -mvec))
         rs.append(r)
         if direction_changes > 1 or degenerate:
@@ -331,9 +342,10 @@ def taylor(f, z0, n=1, r=0.0061, max_iter=30, min_iter=None,
             needs_smaller = i % 2 == 0
         else:
             needs_smaller = (m1 != m1 or m2 != m2 or m1 < m2 or
-                             _poor_convergence(z0, r, f, m, bn))
+                             _poor_convergence(z0, r, f, bn, mvec))
 
-        if previous_direction is not None and needs_smaller != previous_direction:
+        if (previous_direction is not None and
+                needs_smaller != previous_direction):
             direction_changes += 1
 
         if direction_changes > 0:
@@ -348,38 +360,35 @@ def taylor(f, z0, n=1, r=0.0061, max_iter=30, min_iter=None,
             r *= step_ratio
 
         previous_direction = needs_smaller
-
+    else:
+        failed = True
     # Begin Richardson Extrapolation. Presumably we have bs[i]'s around three
     # successive circles and can now extrapolate those coefficients, zeroing
     # out higher order error terms.
-    #     extrap1 = bs[1] - (bs[1] - bs[0]) / (1.0 - (rs[0] / rs[1])**m)
-    #     extrap2 = bs[2] - (bs[2] - bs[1]) / (1.0 - (rs[1] / rs[2])**m)
-    #     extrap3 = extrap2 - (extrap2 - extrap1) / (1.0 - (rs[0] / rs[2])**m)
 
     nk = len(rs)
+    extrap0 = []
     extrap = []
     for k in range(1, nk):
-        extrap.append(richardson(bs, k=k, c=(1.0 - (rs[k-1] / rs[k])**m)))
+        extrap0.append(richardson(bs, k=k, c=(1.0 - (rs[k-1] / rs[k])**m)))
+    for k in range(1, nk-1):
+        extrap.append(richardson(extrap0, k=k, c=(1.0 - (rs[k-1] / rs[k+1])**m)))
     if len(extrap)>2:
         all_coefs, all_errors = dea3(extrap[:-2], extrap[1:-1], extrap[2:])
         coefs, errors = _get_best_estimate(all_coefs, all_errors)
     else:
-        errors = EPS / np.power(rs[2], np.arange(m)) * np.maximum(m1, m2)
-        k = len(extrap)-1
-        coefs = richardson(extrap, k=k, c=(1.0 - (rs[-3] / rs[-1])**m))
-
+        errors = EPS / np.power(rs[2], mvec) * np.maximum(m1, m2)
+        coefs = extrap[-1]
 
     if full_output:
         info = _INFO(errors, degenerate, final_radius=r,
-                     function_count=i*m, iterations=i, failed=i==max_iter)
-
-    if full_output:
+                     function_count=i*m, iterations=i, failed=failed)
         return coefs, info
     return coefs
 
 
-def derivative(f, z0, n=1, r=0.0061, max_iter=30, min_iter=None, full_output=False,
-               num_extrap=3, step_ratio=1.6):
+def derivative(f, z0, n=1, r=0.0061, max_iter=30, min_iter=None, num_extrap=3,
+               step_ratio=1.6, full_output=False):
     """
     Calculate n-th derivative of complex analytic function using FFT
 
@@ -402,6 +411,10 @@ def derivative(f, z0, n=1, r=0.0061, max_iter=30, min_iter=None, full_output=Fal
         Minimum number of iterations before the solution may be deemed
         degenerate.  A larger number allows the algorithm to correct a bad
         initial radius.
+    step_ratio : real scalar, default 1.6
+        Initial grow/shrinking factor for finding the best radius.
+    num_extrap : scalar integer, default 3
+        number of extrapolation steps used in the calculation
     full_output : bool, optional
         If `full_output` is False, only the derivative is returned.
         If `full_output` is True, then (der, status) is returned `der` is the
@@ -463,8 +476,8 @@ def derivative(f, z0, n=1, r=0.0061, max_iter=30, min_iter=None, full_output=Fal
         7(4), 512-526. http://doi.org/10.1145/355972.355979
     """
     result = taylor(f, z0, n=n, r=r, max_iter=max_iter, min_iter=min_iter,
-                    full_output=full_output, num_extrap=num_extrap,
-                    step_ratio=step_ratio)
+                    num_extrap=num_extrap, step_ratio=step_ratio,
+                    full_output=full_output)
     # convert taylor series --> actual derivatives.
     m = _num_taylor_coefficients(n)
     fact = factorial(np.arange(m))
@@ -477,23 +490,24 @@ def derivative(f, z0, n=1, r=0.0061, max_iter=30, min_iter=None, full_output=Fal
 
 def main():
     def f(z):
+        # return np.exp(z) / (np.sin(z)**3+ np.cos(z)**3)
         # return np.exp(1.0j * z)
         # return z**6
         # return z * (0.5 + 1./np.expm1(z))
-        # return np.exp(z)
+        return np.exp(z)
         # return np.tan(z)
         # return 1.0j + z + 1.0j * z**2
         # return 1.0 / (1.0 - z)
         # return (1+z)**10*np.log1p(z)
         # return 10*5 + 1./(1-z)
         # return 1./(1-z)
-        return np.sqrt(z)
+        # return np.sqrt(z)
         # return np.arcsinh(z)
         # return np.cos(z)
         # return np.log1p(z)
 
-    der, info = derivative(f, z0=0.1, r=0.0062, n=6, max_iter=30, min_iter=15,
-                           full_output=True, step_ratio=1.6)
+    der, info = derivative(f, z0=0., r=0.06, n=51, max_iter=30, min_iter=15,
+                       full_output=True, step_ratio=1.6)
     print(info)
     print('answer:')
     for i, der_i in enumerate(der):
