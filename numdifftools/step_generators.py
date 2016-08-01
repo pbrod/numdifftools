@@ -107,7 +107,7 @@ class BasicMaxStepGenerator(object):
         sgn, offset = self._sign, self.offset
         for i in self._range():
             step = base_step * step_ratio ** (sgn * i + offset)
-            if (np.abs(step)>0).all():
+            if (np.abs(step) > 0).all():
                 yield step
 
 
@@ -141,7 +141,7 @@ class BasicMinStepGenerator(BasicMaxStepGenerator):
     _sign = 1
 
     def _range(self):
-        return range(self.num_steps-1, -1, -1)
+        return range(self.num_steps - 1, -1, -1)
 
 
 class MinStepGenerator(object):
@@ -270,14 +270,14 @@ class MinStepGenerator(object):
 
     def step_generator_function(self, x, method='forward', n=1, order=2):
         self._state = _STATE(np.asarray(x), method, n, order)
-        base_step, step_ratio = self.base_step*self.step_nom, self.step_ratio
+        base_step, step_ratio = self.base_step * self.step_nom, self.step_ratio
         if self.use_exact_steps:
             base_step = make_exact(base_step)
             step_ratio = make_exact(step_ratio)
         return self._step_generator(base_step=base_step,
-                                        step_ratio=step_ratio,
-                                        num_steps=self.num_steps,
-                                        offset=self.offset)
+                                    step_ratio=step_ratio,
+                                    num_steps=self.num_steps,
+                                    offset=self.offset)
 
     def __call__(self, x, method='forward', n=1, order=2):
         step_generator = self.step_generator_function(x, method, n, order)
@@ -318,6 +318,7 @@ class MaxStepGenerator(MinStepGenerator):
         scale used in base step.
     """
     _step_generator = BasicMaxStepGenerator
+
     def __init__(self, base_step=2.0, step_ratio=2.0, num_steps=15,
                  step_nom=None, offset=0, num_extrap=0,
                  use_exact_steps=False, check_num_steps=True, scale=500):
@@ -329,6 +330,6 @@ class MaxStepGenerator(MinStepGenerator):
                              check_num_steps=check_num_steps, scale=scale)
 
 
-if __name__ =='__main__':
+if __name__ == '__main__':
     from numdifftools.testing import test_docstrings
     test_docstrings()
