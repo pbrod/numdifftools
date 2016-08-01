@@ -14,7 +14,7 @@ class TestExampleFunctions(unittest.TestCase):
         small_radius = ['sqrt', 'log', 'log2', 'log10', 'arccos', 'log1p',
                         'arcsin', 'arctan', 'arcsinh', 'tan', 'tanh',
                         'arctanh', 'arccosh']
-        r = 0.061
+        r = 0.0061
         n_max = 20
         for name in function_names + ['arctanh', 'arccosh']:
             f, true_df = get_function(name, n=1)
