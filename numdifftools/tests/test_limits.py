@@ -6,16 +6,16 @@ Created on 28. aug. 2015
 import unittest
 import numpy as np
 from numpy.testing import assert_array_almost_equal, assert_allclose
-from numdifftools.limits import Limit, Residue, MinStepGenerator
+from numdifftools.limits import Limit, Residue, CStepGenerator
 from numdifftools.step_generators import make_exact
 from numdifftools.extrapolation import EPS
 
 
-class TestMinStepGenerator(unittest.TestCase):
+class TestCStepGenerator(unittest.TestCase):
 
     @staticmethod
     def test_default_generator():
-        step_gen = MinStepGenerator(num_steps=8)
+        step_gen = CStepGenerator(num_steps=8)
         h = np.array([h for h in step_gen(0)])
         print(h)
         desired = np.array([[1.47701940e-09, 3.69254849e-10, 9.23137122e-11,
@@ -26,7 +26,7 @@ class TestMinStepGenerator(unittest.TestCase):
 
     @staticmethod
     def test_default_base_step():
-        step_gen = MinStepGenerator(num_steps=1, offset=0)
+        step_gen = CStepGenerator(num_steps=1, offset=0)
         h = [h for h in step_gen(0)]
         desired = make_exact(EPS ** (1. / 1.2))
         assert_array_almost_equal((h[0] - desired) / desired, 0)
@@ -34,7 +34,7 @@ class TestMinStepGenerator(unittest.TestCase):
     @staticmethod
     def test_fixed_base_step():
         desired = 0.1
-        step_gen = MinStepGenerator(base_step=desired, num_steps=1, scale=2,
+        step_gen = CStepGenerator(base_step=desired, num_steps=1, scale=2,
                                     offset=0)
         h = [h for h in step_gen(0)]
         assert_array_almost_equal((h[0] - desired) / desired, 0)
@@ -58,7 +58,7 @@ class TestLimit(unittest.TestCase):
 
         def g(x):
             return (np.cos(x0+x)-np.cos(x0))/x
-        lim, err = Limit(g, step=MinStepGenerator(), full_output=True)(0)
+        lim, err = Limit(g, step=CStepGenerator(), full_output=True)(0)
         assert_allclose(lim, -1)
         self.assertTrue(err.error_estimate < 1e-14)
 

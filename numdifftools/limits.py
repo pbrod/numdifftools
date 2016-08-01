@@ -12,33 +12,35 @@ from __future__ import division, print_function
 import numpy as np
 from collections import namedtuple
 import warnings
-from numdifftools.step_generators import default_base_step, make_exact
+from numdifftools.step_generators import MinStepGenerator
 from numdifftools.extrapolation import Richardson, dea3
 
 
-class MinStepGenerator(object):
+class CStepGenerator(MinStepGenerator):
     """
     Generates a sequence of steps
 
-    where steps = base_step * step_ratio ** (np.arange(num_steps) + offset)
+    where
+        steps = base_step * step_nom * (exp(1j*dtheta) * step_ratio) ** (i + offset)
+    for i = 0, 1, ..., num_steps-1
 
     Parameters
     ----------
-    base_step : float, array-like, optional
-        Defines the base step, if None, then base_step is set to
-        EPS**(1/scale)*max(log(1+|x|), 1) where x is supplied at runtime
-        through the __call__ method.
-    step_ratio : real scalar, optional, default 4
+    base_step : float, array-like, default None
+        Defines the minimum step, if None, the value is set to EPS**(1/scale)
+    step_ratio : real scalar, optional, default 4.0
         Ratio between sequential steps generated.
-    num_steps : scalar integer, optional, default  n + order - 1 + num_extrap
-        defines number of steps generated. It should be larger than
-        n + order - 1
+    num_steps : scalar integer, optional,
+        defines number of steps generated.
+        If None the value is 2 * int(round(16.0/log(abs(step_ratio)))) + 1
+    step_nom :  default maximum(log(1+|x|), 1)
+        Nominal step where x is supplied at runtime through the __call__ method.
     offset : real scalar, optional, default 0
         offset to the base step
-    scale : real scalar, optional
+    use_exact_steps : boolean
+        If true make sure exact steps are generated
+    scale : real scalar, default 1.2
         scale used in base step.
-    use_exact_steps: bool
-
     path : 'spiral' or 'radial'
         Specifies the type of path to take the limit along.
     dtheta: real scalar
@@ -48,19 +50,20 @@ class MinStepGenerator(object):
     """
 
     def __init__(self, base_step=None, step_ratio=4.0, num_steps=None,
-                 offset=0, scale=1.2, use_exact_steps=True, path='radial',
-                 dtheta=np.pi/8):
-        self.base_step = base_step
-        self.num_steps = num_steps
-        self.step_ratio = step_ratio
-        self.offset = offset
-        self.scale = scale
-        self.use_exact_steps = use_exact_steps
+                 step_nom=None, offset=0, scale=1.2, use_exact_steps=True,
+                 path='radial', dtheta=np.pi/8):
         self.path = path
         self.dtheta = dtheta
+        super(CStepGenerator,
+              self).__init__(base_step=base_step, step_ratio=step_ratio,
+                             num_steps=num_steps, offset=offset, scale=scale,
+                             use_exact_steps=use_exact_steps)
+        self._check_path()
 
-        if path not in ['spiral', 'radial']:
-            raise ValueError('Invalid Path: {}'.format(str(path)))
+    def _check_path(self):
+        if self.path not in ['spiral', 'radial']:
+            raise ValueError('Invalid Path: {}'.format(str(self.path)))
+
 
     @property
     def step_ratio(self):
@@ -68,8 +71,6 @@ class MinStepGenerator(object):
         _step_ratio = float(self._step_ratio)  # radial path
         if dtheta != 0:
             _step_ratio = np.exp(1j * dtheta) * _step_ratio  # a spiral path
-        if self.use_exact_steps:
-            _step_ratio = make_exact(_step_ratio)
         return _step_ratio
 
     @step_ratio.setter
@@ -85,19 +86,6 @@ class MinStepGenerator(object):
     def dtheta(self, dtheta):
         self._dtheta = dtheta
 
-    def __repr__(self):
-        class_name = self.__class__.__name__
-        kwds = ['{0!s}={1!s}'.format(name, str(getattr(self, name)))
-                for name in self.__dict__.keys()]
-        return """{0!s}({1!s})""".format(class_name, ','.join(kwds))
-
-    def _default_base_step(self, xi):
-        scale = self.scale
-        base_step = default_base_step(xi, scale, self.base_step)
-        if self.use_exact_steps:
-            base_step = make_exact(base_step)
-        return base_step
-
     @property
     def num_steps(self):
         if self._num_steps is None:
@@ -107,16 +95,6 @@ class MinStepGenerator(object):
     @num_steps.setter
     def num_steps(self, num_steps):
         self._num_steps = num_steps
-
-    def __call__(self, x):
-        xi = np.asarray(x)
-        base_step = self._default_base_step(xi)
-        step_ratio = self.step_ratio
-        offset = self.offset
-        for i in range(self.num_steps-1, -1, -1):
-            h = (base_step * step_ratio**(i + offset))
-            if (np.abs(h) > 0).all():
-                yield h
 
 
 class Limit(object):
@@ -131,7 +109,7 @@ class Limit(object):
         size as its input, `z`.
     step: float, complex, array-like or StepGenerator object, optional
         Defines the spacing used in the approximation.
-        Default is MinStepGenerator(base_step=step, **options)
+        Default is CStepGenerator(base_step=step, **options)
     method : {'above', 'below'}
         defines if the limit is taken from `above` or `below`
     order: positive scalar integer, optional.
@@ -140,7 +118,7 @@ class Limit(object):
     full_output: bool
         If true return additional info.
     options:
-        options to pass on to MinStepGenerator
+        options to pass on to CStepGenerator
 
     Returns
     -------
@@ -264,7 +242,7 @@ class Limit(object):
     def _make_generator(step, options):
         if hasattr(step, '__call__'):
             return step
-        return MinStepGenerator(base_step=step, **options)
+        return CStepGenerator(base_step=step, **options)
 
     @staticmethod
     def _get_arg_min(errors):
@@ -403,7 +381,7 @@ class Residue(Limit):
         size as its input, `z`.
     step: float, complex, array-like or StepGenerator object, optional
         Defines the spacing used in the approximation.
-        Default is MinStepGenerator(base_step=step, **options)
+        Default is CStepGenerator(base_step=step, **options)
     method : {'above', 'below'}
         defines if the limit is taken from `above` or `below`
     order: positive scalar integer, optional.
@@ -414,7 +392,7 @@ class Residue(Limit):
     full_output: bool
         If true return additional info.
     options:
-        options to pass on to MinStepGenerator
+        options to pass on to CStepGenerator
 
     Returns
     -------
@@ -490,3 +468,8 @@ class Residue(Limit):
 
     def __call__(self, x, *args, **kwds):
         return self.limit(x, *args, **kwds)
+
+
+if __name__ == '__main__':
+    from numdifftools.testing import test_docstrings
+    test_docstrings()

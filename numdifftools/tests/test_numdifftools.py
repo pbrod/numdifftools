@@ -578,7 +578,7 @@ class TestHessian(unittest.TestCase):
         # discontinutiy at x=[0,0] of the hamiltonian
 
         for method in ['central', 'complex']:
-            step = nd.MaxStepGenerator(step_max=1e-3)
+            step = nd.MaxStepGenerator(base_step=1e-3)
             hessian = nd.Hessian(None, step=step, method=method)
 
             # hessian = nd.Hessian(None)  # does not work

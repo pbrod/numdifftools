@@ -34,15 +34,16 @@ def nominal_step(x=None):
 
 
 def base_step(scale):
+    """Return base_step = EPS ** (1. / scale)"""
     return EPS ** (1. / scale)
 
 
-def default_base_step(x, scale, epsilon=None):
-    if epsilon is None:
-        h = base_step(scale) * nominal_step(x)
-    else:
-        h = valarray(x.shape, value=epsilon)
-    return h
+# def default_base_step(x, scale, epsilon=None):
+#     if epsilon is None:
+#         h = base_step(scale) * nominal_step(x)
+#     else:
+#         h = valarray(x.shape, value=epsilon)
+#     return h
 
 
 def default_scale(method='forward', n=1, order=2):
@@ -63,20 +64,17 @@ def default_scale(method='forward', n=1, order=2):
                                 ).get(method, 0))
 
 
-
-
-
 class BasicMaxStepGenerator(object):
     """
     Generates a sequence of steps of decreasing magnitude
 
     where
-        steps = step0 * step_ratio ** (-i + offset), i=0, 1,..., num_steps-1.
+        steps = base_step * step_ratio ** (-i + offset), i=0, 1,.., num_steps-1.
 
 
     Parameters
     ----------
-    step0 : float, array-like.
+    base_step : float, array-like.
        Defines the start step, i.e., maximum step
     step_ratio : real scalar.
         Ratio between sequential steps generated.  Note: Ratio > 1
@@ -88,21 +86,27 @@ class BasicMaxStepGenerator(object):
 
     Example
     -------
-    >>> step_gen = BasicMaxStepGenerator(step0=2.0, step_ratio=2, num_steps=4)
+    >>> step_gen = BasicMaxStepGenerator(base_step=2.0, step_ratio=2, num_steps=4)
     >>> [s for s in step_gen()]
     [2.0, 1.0, 0.5, 0.25]
 
     """
-    def __init__(self, step0, step_ratio, num_steps, offset=0):
-        self.step0 = step0
+    _sign = -1
+
+    def __init__(self, base_step, step_ratio, num_steps, offset=0):
+        self.base_step = base_step
         self.step_ratio = step_ratio
         self.num_steps = num_steps
         self.offset = offset
 
+    def _range(self):
+        return range(self.num_steps)
+
     def __call__(self):
-        start, step_ratio, offset = self.step0, self.step_ratio, self.offset
-        for i in range(self.num_steps):
-            step = start * step_ratio ** (-i + offset)
+        base_step, step_ratio = self.base_step, self.step_ratio
+        sgn, offset = self._sign, self.offset
+        for i in self._range():
+            step = base_step * step_ratio ** (sgn * i + offset)
             if (np.abs(step)>0).all():
                 yield step
 
@@ -112,12 +116,12 @@ class BasicMinStepGenerator(BasicMaxStepGenerator):
     Generates a sequence of steps of decreasing magnitude
 
     where
-        steps = step0 * step_ratio ** (i + offset), i=num_steps-1, ... 1, 0.
+        steps = base_step * step_ratio ** (i + offset), i=num_steps-1,... 1, 0.
 
 
     Parameters
     ----------
-    step0 : float, array-like.
+    base_step : float, array-like.
        Defines the end step, i.e., minimum step
     step_ratio : real scalar.
         Ratio between sequential steps generated.  Note: Ratio > 1
@@ -129,18 +133,15 @@ class BasicMinStepGenerator(BasicMaxStepGenerator):
 
     Example
     -------
-    >>> step_gen = BasicMinStepGenerator(step0=0.25, step_ratio=2, num_steps=4)
+    >>> step_gen = BasicMinStepGenerator(base_step=0.25, step_ratio=2, num_steps=4)
     >>> [s for s in step_gen()]
     [2.0, 1.0, 0.5, 0.25]
 
     """
+    _sign = 1
 
-    def __call__(self):
-        end_step, step_ratio, offset = self.step0, self.step_ratio, self.offset
-        for i in range(self.num_steps-1, -1, -1):
-            step = end_step * step_ratio ** (i + offset)
-            if (np.abs(step)>0).all():
-                yield step
+    def _range(self):
+        return range(self.num_steps-1, -1, -1)
 
 
 class MinStepGenerator(object):
@@ -148,42 +149,51 @@ class MinStepGenerator(object):
     """
     Generates a sequence of steps
 
-    where steps = base_step * step_ratio ** (np.arange(num_steps) + offset)
+    where
+        steps = step_nom * base_step * step_ratio ** (i + offset)
+    for  i = num_steps-1,... 1, 0.
 
     Parameters
     ----------
     base_step : float, array-like, optional
-        Defines the base step, if None, then base_step is set to
-        EPS**(1/scale)*max(log(1+|x|), 1) where x is supplied at runtime
-        through the __call__ method.
+        Defines the minimum step, if None, the value is set to EPS**(1/scale)
     step_ratio : real scalar, optional, default 2
         Ratio between sequential steps generated.
         Note: Ratio > 1
         If None then step_ratio is 2 for n=1 otherwise step_ratio is 1.6
-    num_steps : scalar integer, optional, default  n + order - 1 + num_extrap
+    num_steps : scalar integer, optional, default  min_num_steps + num_extrap
         defines number of steps generated. It should be larger than
-        n + order - 1
+        min_num_steps = (n + order - 1) / fact where fact is 1, 2 or 4 depending
+        on differentiation method used.
+    step_nom :  default maximum(log(1+|x|), 1)
+        Nominal step where x is supplied at runtime through the __call__ method.
     offset : real scalar, optional, default 0
         offset to the base step
+    num_extrap : scalar integer
+        num_extrap
+    check_num_steps : boolean
+        If True make sure num_steps larger than the minimum required steps.
+    use_exact_steps : boolean
+        If true make sure exact steps are generated
     scale : real scalar, optional
         scale used in base step. If not None it will override the default
         computed with the default_scale function.
     """
-    _BasicStepGenerator = BasicMinStepGenerator
+    _step_generator = BasicMinStepGenerator
 
-    def __init__(self, base_step=None, step_min=None, step_ratio=2,
-                 num_steps=None, step_nom=None, offset=0, scale=None,
-                 num_extrap=0, use_exact_steps=True, check_num_steps=True):
+    def __init__(self, base_step=None, step_ratio=2.0, num_steps=None,
+                 step_nom=None, offset=0, num_extrap=0, use_exact_steps=True,
+                 check_num_steps=True, scale=None):
         self.base_step = base_step
-        self.step_min = step_min
         self.step_nom = step_nom
         self.num_steps = num_steps
         self.step_ratio = step_ratio
         self.offset = offset
-        self.scale = scale
+        self.num_extrap = num_extrap
         self.check_num_steps = check_num_steps
         self.use_exact_steps = use_exact_steps
-        self.num_extrap = num_extrap
+        self.scale = scale
+
         self._state = _STATE(x=np.asarray(1), method='forward', n=1, order=2)
 
     def __repr__(self):
@@ -204,25 +214,10 @@ class MinStepGenerator(object):
         self._scale = scale
 
     @property
-    def step_min(self):
-        if self._step_min is None:
-            return base_step(self.scale)
-        return self._step_min
-
-    @step_min.setter
-    def step_min(self, step_min):
-        self._step_min = step_min
-
-    @property
     def base_step(self):
-        base_step = self._base_step
-        if base_step is None:
-            base_step = self.step_min * self.step_nom
-        # else:
-        #     base_step = valarray(xi.shape, base_step)
-        if self.use_exact_steps:
-            base_step = make_exact(base_step)
-        return base_step
+        if self._base_step is None:
+            return base_step(self.scale)
+        return self._base_step
 
     @base_step.setter
     def base_step(self, base_step):
@@ -256,8 +251,6 @@ class MinStepGenerator(object):
         step_ratio = self._step_ratio
         if step_ratio is None:
             step_ratio = {1: 2.0}.get(self._state.n, 1.6)
-        if self.use_exact_steps:
-            return make_exact(float(step_ratio))
         return float(step_ratio)
 
     @step_ratio.setter
@@ -277,8 +270,12 @@ class MinStepGenerator(object):
 
     def step_generator_function(self, x, method='forward', n=1, order=2):
         self._state = _STATE(np.asarray(x), method, n, order)
-        return self._BasicStepGenerator(step0=self.base_step,
-                                        step_ratio=self.step_ratio,
+        base_step, step_ratio = self.base_step*self.step_nom, self.step_ratio
+        if self.use_exact_steps:
+            base_step = make_exact(base_step)
+            step_ratio = make_exact(step_ratio)
+        return self._step_generator(base_step=base_step,
+                                        step_ratio=step_ratio,
                                         num_steps=self.num_steps,
                                         offset=self.offset)
 
@@ -292,57 +289,44 @@ class MaxStepGenerator(MinStepGenerator):
     Generates a sequence of steps
 
     where
-        steps = base_step * step_ratio ** (-np.arange(num_steps) + offset)
-
+        steps = step_nom * base_step * step_ratio ** (-i + offset)
+    for  i = 0, 1, ..., num_steps-1.
 
     Parameters
     ----------
-    base_step:
-        If None base_step = step_max * step_nom
-    max_step : float, array-like, optional default 2
-       Defines the maximum step
+    base_step : float, array-like, default 2.0
+        Defines the maximum step, if None, the value is set to EPS**(1/scale)
     step_ratio : real scalar, optional, default 2
         Ratio between sequential steps generated.
         Note: Ratio > 1
         If None then step_ratio is 2 for n=1 otherwise step_ratio is 1.6
-    num_steps : scalar integer, optional, default  n + order - 1 + num_extrap
+    num_steps : scalar integer, optional, default  min_num_steps + num_extrap
         defines number of steps generated. It should be larger than
-        n + order - 1
-    step_nom :  default maximum(log1p(abs(x)), 1)
-        Nominal step.
+        min_num_steps = (n + order - 1) / fact where fact is 1, 2 or 4 depending
+        on differentiation method used.
+    step_nom :  default maximum(log(1+|x|), 1)
+        Nominal step where x is supplied at runtime through the __call__ method.
     offset : real scalar, optional, default 0
-        offset to the base step: max_step * nominal_step
+        offset to the base step
+    num_extrap : scalar integer
+        num_extrap
+    check_num_steps : boolean
+        If True make sure num_steps larger than the minimum required steps.
+    use_exact_steps : boolean
+        If true make sure exact steps are generated
+    scale : real scalar, default 500
+        scale used in base step.
     """
-    _BasicStepGenerator = BasicMaxStepGenerator
-    def __init__(self, step_max=2.0, step_ratio=2.0, num_steps=15,
+    _step_generator = BasicMaxStepGenerator
+    def __init__(self, base_step=2.0, step_ratio=2.0, num_steps=15,
                  step_nom=None, offset=0, num_extrap=0,
-                 use_exact_steps=False, check_num_steps=True):
-        self.base_step = None
-        self.step_max = step_max
-        self.step_ratio = step_ratio
-        self.num_steps = num_steps
-        self.step_nom = step_nom
-        self.offset = offset
-        self.num_extrap = num_extrap
-        self.check_num_steps = check_num_steps
-        self.use_exact_steps = use_exact_steps
-        self._state = _STATE(x=np.asarray(1), method='forward', n=1, order=2)
-
-    @property
-    def base_step(self):
-        base_step = self._base_step
-        if base_step is None:
-            base_step = self.step_max * self.step_nom
-        #else:
-        #    base_step = valarray(xi.shape, base_step)
-        if self.use_exact_steps:
-            base_step = make_exact(base_step)
-        return base_step
-
-    @base_step.setter
-    def base_step(self, base_step):
-        self._base_step = base_step
-
+                 use_exact_steps=False, check_num_steps=True, scale=500):
+        super(MaxStepGenerator,
+              self).__init__(base_step=base_step, step_ratio=step_ratio,
+                             num_steps=num_steps, step_nom=step_nom,
+                             offset=offset, num_extrap=num_extrap,
+                             use_exact_steps=use_exact_steps,
+                             check_num_steps=check_num_steps, scale=scale)
 
 
 if __name__ =='__main__':
