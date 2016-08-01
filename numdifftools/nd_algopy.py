@@ -516,11 +516,8 @@ def directionaldiff(f, x0, vec, **options):
 #     print('coefficients of y =', y.data[:, 0])
 
 
-def test_docstrings():
-    import doctest
-    doctest.testmod(optionflags=doctest.NORMALIZE_WHITESPACE)
-
-
 if __name__ == '__main__':
+    from numdifftools.testing import test_docstrings
     test_docstrings()
+
     # _example_taylor()
