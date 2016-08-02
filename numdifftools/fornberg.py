@@ -15,7 +15,7 @@ _INFO = namedtuple('info', ['error_estimate',
 
 def fornberg_weights_all(x, x0=0, n=1):
     """
-    Return finite difference weights_and_points for derivatives of all orders.
+    Return finite difference weights for derivatives of all orders up to n.
 
     Parameters
     ----------
@@ -24,7 +24,7 @@ def fornberg_weights_all(x, x0=0, n=1):
     x0 : scalar
         location where approximations are to be accurate
     n : scalar integer
-        highest derivative that we want to find weights_and_points for
+        highest derivative that we want to find weights for
 
     Returns
     -------
@@ -64,10 +64,7 @@ def fornberg_weights_all(x, x0=0, n=1):
 
 def fornberg_weights(x, x0=0, n=1):
     """
-    Return weights for finite difference approximation of the m'th derivative
-    U^m(x0), evaluated at x0, based on n values of U at x[0], x[1],... x[n-1]:
-
-        U^m(x0) = sum weights[i] * U(x[i])
+    Return finite difference weights for the n'th derivative.
 
     Parameters
     ----------

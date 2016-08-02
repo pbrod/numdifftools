@@ -23,7 +23,10 @@ def convolve(sequence, rule, **kwds):
 
 
 class Dea(object):
+
     """
+    Extrapolate a slowly convergent sequence
+
     LIMEXP  is the maximum number of elements the
     epsilon table data can contain. The epsilon table
     is stored in the first (LIMEXP+2) entries of EPSTAB.
@@ -195,7 +198,10 @@ class Dea(object):
 
 
 class EpsAlg(object):
+
     """
+    Extrapolate a slowly convergent sequence
+
     This implementaion is from [1]_
 
     Reference
@@ -348,6 +354,7 @@ def dea3(v0, v1, v2, symmetric=False):
 
 
 class Richardson(object):
+
     """
     Extrapolates as sequence with Richardsons method
 

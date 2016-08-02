@@ -1,8 +1,8 @@
-'''
+"""
 Created on Apr 4, 2016
 
 @author: pab
-'''
+"""
 import inspect
 import numpy as np
 

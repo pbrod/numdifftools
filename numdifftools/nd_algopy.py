@@ -101,7 +101,9 @@ _cmn_doc = """
 
 
 class _Derivative(object):
+
     """Base class"""
+
     info = namedtuple('info', ['error_estimate', 'final_step', 'index'])
 
     def __init__(self, f, n=1, method='forward', full_output=False):
@@ -148,6 +150,7 @@ class _Derivative(object):
         return df
 
 class Derivative(_Derivative):
+
     __doc__ = _cmn_doc % dict(
         derivative='n-th derivative',
         extra_parameter="""
@@ -187,7 +190,6 @@ class Derivative(_Derivative):
     Jacobian
     """)
 
-
     def _forward(self, x, *args, **kwds):
         x0 = np.asarray(x)
         shape = x0.shape
@@ -212,6 +214,7 @@ class Derivative(_Derivative):
 
 
 class Gradient(_Derivative):
+
     __doc__ = _cmn_doc % dict(
         derivative='Gradient',
         extra_parameter="",
@@ -270,6 +273,7 @@ class Gradient(_Derivative):
 
 
 class Jacobian(Gradient):
+
     __doc__ = _cmn_doc % dict(
         derivative='Jacobian',
         extra_parameter="",
@@ -328,6 +332,7 @@ class Jacobian(Gradient):
 
 
 class Hessian(_Derivative):
+
     __doc__ = _cmn_doc % dict(
         derivative='Hessian',
         extra_parameter="",
@@ -391,6 +396,7 @@ class Hessian(_Derivative):
 
 
 class Hessdiag(Hessian):
+
     __doc__ = _cmn_doc % dict(
         derivative='Hessian diagonal',
         extra_parameter="",

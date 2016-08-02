@@ -130,8 +130,8 @@ _cmn_doc = """
 
 
 class _Derivative(_Limit):
-    """ Base class for derivatives
-    """
+
+    """Base class for derivatives"""
 
     def __init__(self, f, step=None, method='central', order=2, n=1,
                  full_output=False, **step_options):
@@ -213,7 +213,7 @@ class _Derivative(_Limit):
 
     def _get_steps(self, xi):
         method, n, order = self.method, self.n, self._method_order
-        step_gen =  self.step.step_generator_function(xi, method, n, order)
+        step_gen = self.step.step_generator_function(xi, method, n, order)
         return [step for step in step_gen()], step_gen.step_ratio
 
     @property
@@ -253,6 +253,7 @@ class _Derivative(_Limit):
 
 
 class Derivative(_Derivative):
+
     __doc__ = _cmn_doc % dict(
         derivative='n-th derivative',
         extra_parameter="""
@@ -540,6 +541,7 @@ def directionaldiff(f, x0, vec, **options):
     Derivative,
     Gradient
     """
+
     x0 = np.asarray(x0)
     vec = np.asarray(vec)
     if x0.size != vec.size:
@@ -550,6 +552,7 @@ def directionaldiff(f, x0, vec, **options):
 
 
 class Jacobian(Derivative):
+
     __doc__ = _cmn_doc % dict(
         derivative='Jacobian',
         extra_parameter="""
@@ -701,6 +704,7 @@ class Jacobian(Derivative):
 
 
 class Gradient(Jacobian):
+
     __doc__ = _cmn_doc % dict(
         derivative='Gradient',
         extra_parameter="""
@@ -757,6 +761,7 @@ class Gradient(Jacobian):
 
 
 class Hessdiag(Derivative):
+
     __doc__ = _cmn_doc % dict(
         derivative='Hessian diagonal',
         extra_parameter="""order : int, optional
@@ -854,6 +859,7 @@ class Hessdiag(Derivative):
 
 
 class Hessian(_Derivative):
+
     __doc__ = _cmn_doc % dict(
         derivative='Hessian',
         extra_parameter="",

@@ -52,6 +52,7 @@ def c_abs(z):
 
 
 class Bicomplex(object):
+
     """
     BICOMPLEX(z1, z2)
 

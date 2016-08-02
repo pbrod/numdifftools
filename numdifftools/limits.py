@@ -17,6 +17,7 @@ from numdifftools.extrapolation import Richardson, dea3
 
 
 class CStepGenerator(MinStepGenerator):
+
     """
     Generates a sequence of steps
 
@@ -98,9 +99,8 @@ class CStepGenerator(MinStepGenerator):
 
 
 class _Limit(object):
-    """
-    Common methods and member variables
-    """
+
+    """Common methods and member variables"""
 
     info = namedtuple('info', ['error_estimate', 'final_step', 'index'])
 
@@ -184,6 +184,7 @@ class _Limit(object):
 
 
 class Limit(_Limit):
+
     """
     Compute limit of a function at a given point
 
@@ -376,6 +377,7 @@ class Limit(_Limit):
 
 
 class Residue(Limit):
+
     """
     Compute residue of a function at a given point
 
