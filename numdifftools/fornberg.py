@@ -3,13 +3,15 @@ import numpy as np
 import warnings
 from scipy.special import factorial
 from numdifftools.extrapolation import EPS, dea3
+from numdifftools.limits import _Limit
 from collections import namedtuple
 
 _INFO = namedtuple('info', ['error_estimate',
-                                   'degenerate',
-                                   'final_radius',
-                                   'function_count',
-                                   'iterations', 'failed'])
+                            'degenerate',
+                            'final_radius',
+                            'function_count',
+                            'iterations', 'failed'])
+
 
 def fornberg_weights_all(x, x0=0, n=1):
     """
@@ -103,7 +105,7 @@ def fornberg_weights(x, x0=0, n=1):
 
 def _circle(z, r, m):
     theta = np.linspace(0.0, 2.0 * np.pi, num=m, endpoint=False)
-    return z + r * np.exp(theta*1j)
+    return z + r * np.exp(theta * 1j)
 
 
 def _poor_convergence(z, r, f, bn, mvec):
@@ -123,7 +125,7 @@ def _poor_convergence(z, r, f, bn, mvec):
         # Evaluate powerseries:
         comp = np.sum(bn * np.power(check_point, mvec))
         ftests.append(ftest)
-        diffs.append(comp-ftest)
+        diffs.append(comp - ftest)
 
     # return np.any(np.abs(diffs) > 1e-3 * np.abs(ftests))
 
@@ -133,7 +135,8 @@ def _poor_convergence(z, r, f, bn, mvec):
 
 
 def _get_logn(n):
-    return np.int_(np.log2(n-1)-1.5849625007211561).clip(min=0)
+    return np.int_(np.log2(n - 1) - 1.5849625007211561).clip(min=0)
+
 
 def _num_taylor_coefficients(n):
     """
@@ -144,7 +147,7 @@ def _num_taylor_coefficients(n):
          128 if  51 < n <= 103
          256 if 103 < n <= 192
     """
-    if n>192:
+    if n > 192:
         msg = 'Number of derivatives too large.  Must be less than 193'
         raise ValueError(msg)
     correction = np.array([0, 0, 1, 3, 4, 7])[_get_logn(n)]
@@ -159,52 +162,13 @@ def richardson_parameter(Q, k):
     c = np.maximum(c, 0.07)
     return -c
 
+
 def richardson(Q, k, c=None):
     """Richardson extrapolation with parameter estimation"""
     if c is None:
         c = richardson_parameter(Q, k)
     R = Q[k] - (Q[k] - Q[k - 1]) / c
     return R
-
-
-def _add_error_to_outliers(der, trim_fact=10):
-    try:
-        median = np.nanmedian(der, axis=0)
-        p75 = np.nanpercentile(der, 75, axis=0)
-        p25 = np.nanpercentile(der, 25, axis=0)
-        iqr = np.abs(p75 - p25)
-    except ValueError as msg:
-        warnings.warn(str(msg))
-        return 0 * der
-
-    a_median = np.abs(median)
-    outliers = (((abs(der) < (a_median / trim_fact)) +
-                 (abs(der) > (a_median * trim_fact))) * (a_median > 1e-8) +
-                ((der < p25 - 1.5 * iqr) + (p75 + 1.5 * iqr < der)))
-    errors = outliers * np.abs(der - median)
-    return errors
-
-def _get_arg_min(errors):
-    shape = errors.shape
-    try:
-        arg_mins = np.nanargmin(errors, axis=0)
-        min_errors = np.nanmin(errors, axis=0)
-    except ValueError as msg:
-        warnings.warn(str(msg))
-        ix = np.arange(shape[1])
-        return ix
-
-    for i, min_error in enumerate(min_errors):
-        idx = np.flatnonzero(errors[:, i] == min_error)
-        arg_mins[i] = idx[idx.size // 2]
-    ix = np.ravel_multi_index((arg_mins, np.arange(shape[1])), shape)
-    return ix
-
-
-def _get_best_estimate(der, errors):
-    errors += _add_error_to_outliers(der)
-    ix = _get_arg_min(errors)
-    return der.flat[ix], errors.flat[ix]
 
 
 def taylor(f, z0=0, n=1, r=0.0061, max_iter=30, min_iter=None, num_extrap=3,
@@ -370,19 +334,22 @@ def taylor(f, z0=0, n=1, r=0.0061, max_iter=30, min_iter=None, num_extrap=3,
     extrap0 = []
     extrap = []
     for k in range(1, nk):
-        extrap0.append(richardson(bs, k=k, c=(1.0 - (rs[k-1] / rs[k])**m)))
-    for k in range(1, nk-1):
-        extrap.append(richardson(extrap0, k=k, c=(1.0 - (rs[k-1] / rs[k+1])**m)))
-    if len(extrap)>2:
+        extrap0.append(richardson(bs, k=k, c=(1.0 - (rs[k - 1] / rs[k])**m)))
+    for k in range(1, nk - 1):
+        extrap.append(
+            richardson(extrap0, k=k, c=(1.0 - (rs[k - 1] / rs[k + 1])**m)))
+    if len(extrap) > 2:
         all_coefs, all_errors = dea3(extrap[:-2], extrap[1:-1], extrap[2:])
-        coefs, errors = _get_best_estimate(all_coefs, all_errors)
+        coefs, info = _Limit._get_best_estimate(all_coefs, all_errors,
+                                                np.atleast_1d(rs[4:])[:, None]*mvec, (m,))
+        errors = info.error_estimate
     else:
         errors = EPS / np.power(rs[2], mvec) * np.maximum(m1, m2)
         coefs = extrap[-1]
 
     if full_output:
         info = _INFO(errors, degenerate, final_radius=r,
-                     function_count=i*m, iterations=i, failed=failed)
+                     function_count=i * m, iterations=i, failed=failed)
         return coefs, info
     return coefs
 
@@ -483,7 +450,7 @@ def derivative(f, z0, n=1, r=0.0061, max_iter=30, min_iter=None, num_extrap=3,
     fact = factorial(np.arange(m))
     if full_output:
         coefs, info_ = result
-        info = _INFO(info_.error_estimate*fact, *info_[1:])
+        info = _INFO(info_.error_estimate * fact, *info_[1:])
         return coefs * fact, info
     return result * fact
 
@@ -507,15 +474,15 @@ def main():
         # return np.log1p(z)
 
     der, info = derivative(f, z0=0., r=0.06, n=51, max_iter=30, min_iter=15,
-                       full_output=True, step_ratio=1.6)
+                           full_output=True, step_ratio=1.6)
     print(info)
     print('answer:')
     for i, der_i in enumerate(der):
         err = info.error_estimate[i]
         print('{0:3d}: {1:24.18f} + {2:24.18f}j ({3:g})'.format(i,
-                                                            der_i.real,
-                                                            der_i.imag,
-                                                            err))
+                                                                der_i.real,
+                                                                der_i.imag,
+                                                                err))
 
 
 if __name__ == '__main__':

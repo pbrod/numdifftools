@@ -21,11 +21,10 @@ statsmodels.tools.numdiff module released in 2014 written by Josef Perktold.
 
 from __future__ import division, print_function
 import numpy as np
-from collections import namedtuple
 from numdifftools.multicomplex import Bicomplex
 from numdifftools.extrapolation import Richardson, dea3, convolve
-from numdifftools.step_generators import (MaxStepGenerator, MinStepGenerator,
-                                          default_scale)
+from numdifftools.step_generators import MaxStepGenerator, MinStepGenerator
+from numdifftools.limits import _Limit
 from numpy import linalg
 from scipy import misc
 import warnings
@@ -130,21 +129,17 @@ _cmn_doc = """
     """
 
 
-class _Derivative(object):
+class _Derivative(_Limit):
     """ Base class for derivatives
     """
 
-    info = namedtuple('info', ['error_estimate', 'final_step', 'index'])
-
     def __init__(self, f, step=None, method='central', order=2, n=1,
                  full_output=False, **step_options):
-        self.f = f
         self.n = n
-        self.order = order
-        self.method = method
-        self.full_output = full_output
         self.richardson_terms = 2
-        self.step = self._make_generator(step, step_options)
+        super(_Derivative,
+              self).__init__(f, step=step, method=method, order=order,
+                             full_output=full_output, **step_options)
 
     def _make_generator(self, step, step_options):
         if hasattr(step, '__call__'):
@@ -156,48 +151,6 @@ class _Derivative(object):
         options['num_extrap'] = 0
         options.update(**step_options)
         return MinStepGenerator(base_step=step, **options)
-
-    @staticmethod
-    def _get_arg_min(errors):
-        shape = errors.shape
-        try:
-            arg_mins = np.nanargmin(errors, axis=0)
-            min_errors = np.nanmin(errors, axis=0)
-        except ValueError as msg:
-            warnings.warn(str(msg))
-            ix = np.arange(shape[1])
-            return ix
-
-        for i, min_error in enumerate(min_errors):
-            idx = np.flatnonzero(errors[:, i] == min_error)
-            arg_mins[i] = idx[idx.size // 2]
-        ix = np.ravel_multi_index((arg_mins, np.arange(shape[1])), shape)
-        return ix
-
-    @staticmethod
-    def _add_error_to_outliers(der, trim_fact=10):
-        try:
-            median = np.nanmedian(der, axis=0)
-            p75 = np.nanpercentile(der, 75, axis=0)
-            p25 = np.nanpercentile(der, 25, axis=0)
-            iqr = np.abs(p75 - p25)
-        except ValueError as msg:
-            warnings.warn(str(msg))
-            return 0 * der
-
-        a_median = np.abs(median)
-        outliers = (((abs(der) < (a_median / trim_fact)) +
-                     (abs(der) > (a_median * trim_fact))) * (a_median > 1e-8) +
-                    ((der < p25 - 1.5 * iqr) + (p75 + 1.5 * iqr < der)))
-        errors = outliers * np.abs(der - median)
-        return errors
-
-    def _get_best_estimate(self, der, errors, steps, shape):
-        errors += self._add_error_to_outliers(der)
-        ix = self._get_arg_min(errors)
-        final_step = steps.flat[ix].reshape(shape)
-        err = errors.flat[ix].reshape(shape)
-        return der.flat[ix].reshape(shape), self.info(err, final_step, ix)
 
     @property
     def _method_order(self):
@@ -222,19 +175,6 @@ class _Derivative(object):
         self.richardson = Richardson(step_ratio=step_ratio,
                                      step=step, order=order,
                                      num_terms=num_terms)
-
-    @staticmethod
-    def _wynn_extrapolate(der, steps):
-        der, errors = dea3(der[0:-2], der[1:-1], der[2:], symmetric=False)
-        return der, errors, steps[2:]
-
-    def _extrapolate(self, results, steps, shape):
-        der, errors, steps = self.richardson(results, steps)
-        if len(der) > 2:
-            # der, errors, steps = self.richardson(results, steps)
-            der, errors, steps = self._wynn_extrapolate(der, steps)
-        der, info = self._get_best_estimate(der, errors, steps, shape)
-        return der, info
 
     def _multicomplex_middle_name_or_empty(self):
         if self.method == 'multicomplex' and self.n > 1:
@@ -302,18 +242,6 @@ class _Derivative(object):
         if self._eval_first_condition():
             return f(x, *args, **kwds)
         return 0.0
-
-    @staticmethod
-    def _vstack(sequence, steps):
-        # sequence = np.atleast_2d(sequence)
-        original_shape = np.shape(sequence[0])
-        f_del = np.vstack(list(np.ravel(r)) for r in sequence)
-        h = np.vstack(list(np.ravel(np.ones(original_shape) * step))
-                      for step in steps)
-        if f_del.size != h.size:
-            raise ValueError('fun did not return data of correct size ' +
-                             '(it must be vectorized)')
-        return f_del, h, original_shape
 
     def __call__(self, x, *args, **kwds):
         xi = np.asarray(x)

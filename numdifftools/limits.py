@@ -97,7 +97,93 @@ class CStepGenerator(MinStepGenerator):
         self._num_steps = num_steps
 
 
-class Limit(object):
+class _Limit(object):
+    """
+    Common methods and member variables
+    """
+
+    info = namedtuple('info', ['error_estimate', 'final_step', 'index'])
+
+    def __init__(self, f, step=None, method='above', order=4,
+                 full_output=False, **options):
+        self.f = f
+        self.method = method
+        self.order = order
+        self.full_output = full_output
+        self.step = self._make_generator(step, options)
+
+    @staticmethod
+    def _get_arg_min(errors):
+        shape = errors.shape
+        try:
+            arg_mins = np.nanargmin(errors, axis=0)
+            min_errors = np.nanmin(errors, axis=0)
+        except ValueError as msg:
+            warnings.warn(str(msg))
+            return np.arange(shape[1])
+
+        for i, min_error in enumerate(min_errors):
+            idx = np.flatnonzero(errors[:, i] == min_error)
+            arg_mins[i] = idx[idx.size // 2]
+        return np.ravel_multi_index((arg_mins, np.arange(shape[1])), shape)
+
+    @staticmethod
+    def _add_error_to_outliers(der, trim_fact=10):
+        # discard any estimate that differs wildly from the
+        # median of all estimates. A factor of 10 to 1 in either
+        # direction is probably wild enough here. The actual
+        # trimming factor is defined as a parameter.
+        try:
+            median = np.nanmedian(der, axis=0)
+            p75 = np.nanpercentile(der, 75, axis=0)
+            p25 = np.nanpercentile(der, 25, axis=0)
+            iqr = np.abs(p75-p25)
+        except ValueError as msg:
+            warnings.warn(str(msg))
+            return 0 * der
+
+        a_median = np.abs(median)
+        outliers = (((abs(der) < (a_median / trim_fact)) +
+                    (abs(der) > (a_median * trim_fact))) * (a_median > 1e-8) +
+                    ((der < p25-1.5*iqr) + (p75+1.5*iqr < der)))
+        errors = outliers * np.abs(der - median)
+        return errors
+
+    @staticmethod
+    def _get_best_estimate(der, errors, steps, shape):
+        errors += _Limit._add_error_to_outliers(der)
+        ix = _Limit._get_arg_min(errors)
+        final_step = steps.flat[ix].reshape(shape)
+        err = errors.flat[ix].reshape(shape)
+        return der.flat[ix].reshape(shape), _Limit.info(err, final_step, ix)
+
+    @staticmethod
+    def _wynn_extrapolate(der, steps):
+        der, errors = dea3(der[0:-2], der[1:-1], der[2:], symmetric=False)
+        return der, errors, steps[2:]
+
+    def _extrapolate(self, results, steps, shape):
+        der1, errors1, steps = self.richardson(results, steps)
+        if len(der1) > 2:
+            # der, errors, steps = self.richardson(results, steps)
+            der1, errors1, steps = self._wynn_extrapolate(der1, steps)
+        der, info = self._get_best_estimate(der1, errors1, steps, shape)
+        return der, info
+
+    @staticmethod
+    def _vstack(sequence, steps):
+        # sequence = np.atleast_2d(sequence)
+        original_shape = np.shape(sequence[0])
+        f_del = np.vstack(list(np.ravel(r)) for r in sequence)
+        h = np.vstack(list(np.ravel(np.ones(original_shape)*step))
+                      for step in steps)
+        if f_del.size != h.size:
+            raise ValueError('fun did not return data of correct size ' +
+                             '(it must be vectorized)')
+        return f_del, h, original_shape
+
+
+class Limit(_Limit):
     """
     Compute limit of a function at a given point
 
@@ -225,16 +311,6 @@ class Limit(object):
 
     """
 
-    info = namedtuple('info', ['error_estimate', 'final_step', 'index'])
-
-    def __init__(self, f, step=None, method='above', order=4,
-                 full_output=False, **options):
-        self.f = f
-        self.method = method
-        self.order = order
-        self.full_output = full_output
-        self.step = self._make_generator(step, options)
-
     def _f(self, z, dz, *args, **kwds):
         return self.f(z+dz, *args, **kwds)
 
@@ -244,82 +320,12 @@ class Limit(object):
             return step
         return CStepGenerator(base_step=step, **options)
 
-    @staticmethod
-    def _get_arg_min(errors):
-        shape = errors.shape
-        try:
-            arg_mins = np.nanargmin(errors, axis=0)
-            min_errors = np.nanmin(errors, axis=0)
-        except ValueError as msg:
-            warnings.warn(str(msg))
-            return np.arange(shape[1])
-
-        for i, min_error in enumerate(min_errors):
-            idx = np.flatnonzero(errors[:, i] == min_error)
-            arg_mins[i] = idx[idx.size // 2]
-        return np.ravel_multi_index((arg_mins, np.arange(shape[1])), shape)
-
-    @staticmethod
-    def _add_error_to_outliers(der, trim_fact=10):
-        # discard any estimate that differs wildly from the
-        # median of all estimates. A factor of 10 to 1 in either
-        # direction is probably wild enough here. The actual
-        # trimming factor is defined as a parameter.
-        try:
-            median = np.nanmedian(der, axis=0)
-            p75 = np.nanpercentile(der, 75, axis=0)
-            p25 = np.nanpercentile(der, 25, axis=0)
-            iqr = np.abs(p75-p25)
-        except ValueError as msg:
-            warnings.warn(str(msg))
-            return 0 * der
-
-        a_median = np.abs(median)
-        outliers = (((abs(der) < (a_median / trim_fact)) +
-                    (abs(der) > (a_median * trim_fact))) * (a_median > 1e-8) +
-                    ((der < p25-1.5*iqr) + (p75+1.5*iqr < der)))
-        errors = outliers * np.abs(der - median)
-        return errors
-
-    def _get_best_estimate(self, der, errors, steps, shape):
-        errors += self._add_error_to_outliers(der)
-        ix = self._get_arg_min(errors)
-        final_step = steps.flat[ix].reshape(shape)
-        err = errors.flat[ix].reshape(shape)
-        return der.flat[ix].reshape(shape), self.info(err, final_step, ix)
-
-    def _set_richardson_rule(self, step_ratio, num_terms=2):
-        self._richardson_extrapolate = Richardson(step_ratio=step_ratio,
-                                                  step=1, order=1,
-                                                  num_terms=num_terms)
-
-    @staticmethod
-    def _wynn_extrapolate(der, steps):
-        der, errors = dea3(der[0:-2], der[1:-1], der[2:], symmetric=False)
-        return der, errors, steps[2:]
-
-    def _extrapolate(self, results, steps, shape):
-        der1, errors1, steps = self._richardson_extrapolate(results, steps)
-        if len(der1) > 2:
-            # der, errors, steps = self._richardson_extrapolate(results, steps)
-            der1, errors1, steps = self._wynn_extrapolate(der1, steps)
-        der, info = self._get_best_estimate(der1, errors1, steps, shape)
-        return der, info
-
     def _get_steps(self, xi):
         return [step for step in self.step(xi)]
 
-    @staticmethod
-    def _vstack(sequence, steps):
-        # sequence = np.atleast_2d(sequence)
-        original_shape = np.shape(sequence[0])
-        f_del = np.vstack(list(np.ravel(r)) for r in sequence)
-        h = np.vstack(list(np.ravel(np.ones(original_shape)*step))
-                      for step in steps)
-        if f_del.size != h.size:
-            raise ValueError('fun did not return data of correct size ' +
-                             '(it must be vectorized)')
-        return f_del, h, original_shape
+    def _set_richardson_rule(self, step_ratio, num_terms=2):
+        self.richardson = Richardson(step_ratio=step_ratio, step=1, order=1,
+                                     num_terms=num_terms)
 
     def _lim(self, f, z, args, kwds):
         sign = dict(forward=1, above=1, backward=-1, below=-1)[self.method]

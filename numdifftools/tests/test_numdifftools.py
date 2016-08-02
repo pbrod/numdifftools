@@ -2,6 +2,7 @@
 from __future__ import print_function
 import unittest
 import numdifftools.core as nd
+from numdifftools.step_generators import default_scale
 import numpy as np
 from numpy.testing import assert_array_almost_equal
 from numdifftools.testing import rosen
@@ -240,7 +241,7 @@ class TestDerivative(unittest.TestCase):
         for method, scale in zip(['complex', 'central', 'forward', 'backward',
                                   'multicomplex'],
                                  [1.35, 2.5, 2.5, 2.5, 1.35]):
-            np.testing.assert_allclose(scale, nd.default_scale(method, n=1))
+            np.testing.assert_allclose(scale, default_scale(method, n=1))
 
     @staticmethod
     def test_fun_with_additional_parameters():
