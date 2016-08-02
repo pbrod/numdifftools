@@ -137,7 +137,18 @@ def _get_logn(n):
 
 def _num_taylor_coefficients(n):
     """
-    Return 8 if       n <= 6
+    Return number of taylor coefficients
+
+    Parameters
+    ----------
+    n : scalar integer
+        Wanted number of taylor coefficients
+
+    Returns
+    -------
+    m : scalar integer
+        Number of taylor coefficients calculated
+           8 if       n <= 6
           16 if   6 < n <= 12
           32 if  12 < n <= 25
           64 if  25 < n <= 51

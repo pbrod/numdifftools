@@ -540,8 +540,8 @@ def directionaldiff(f, x0, vec, **options):
     --------
     Derivative,
     Gradient
-    """
 
+    """
     x0 = np.asarray(x0)
     vec = np.asarray(vec)
     if x0.size != vec.size:

@@ -12,7 +12,9 @@ import matplotlib.pyplot as plt
 
 
 class BenchmarkFunction(object):
+
     """Return 0.5 * np.dot(x**2, np.dot(A,x))"""
+
     def __init__(self, N):
         A = np.arange(N * N, dtype=float).reshape((N, N))
         self.A = np.dot(A.T, A)

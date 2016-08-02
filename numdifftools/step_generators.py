@@ -65,6 +65,7 @@ def default_scale(method='forward', n=1, order=2):
 
 
 class BasicMaxStepGenerator(object):
+
     """
     Generates a sequence of steps of decreasing magnitude
 
@@ -91,6 +92,7 @@ class BasicMaxStepGenerator(object):
     [2.0, 1.0, 0.5, 0.25]
 
     """
+
     _sign = -1
 
     def __init__(self, base_step, step_ratio, num_steps, offset=0):
@@ -112,6 +114,7 @@ class BasicMaxStepGenerator(object):
 
 
 class BasicMinStepGenerator(BasicMaxStepGenerator):
+
     """
     Generates a sequence of steps of decreasing magnitude
 
@@ -138,6 +141,7 @@ class BasicMinStepGenerator(BasicMaxStepGenerator):
     [2.0, 1.0, 0.5, 0.25]
 
     """
+
     _sign = 1
 
     def _range(self):
@@ -179,6 +183,7 @@ class MinStepGenerator(object):
         scale used in base step. If not None it will override the default
         computed with the default_scale function.
     """
+
     _step_generator = BasicMinStepGenerator
 
     def __init__(self, base_step=None, step_ratio=2.0, num_steps=None,
@@ -285,6 +290,7 @@ class MinStepGenerator(object):
 
 
 class MaxStepGenerator(MinStepGenerator):
+
     """
     Generates a sequence of steps
 
@@ -317,6 +323,7 @@ class MaxStepGenerator(MinStepGenerator):
     scale : real scalar, default 500
         scale used in base step.
     """
+
     _step_generator = BasicMaxStepGenerator
 
     def __init__(self, base_step=2.0, step_ratio=2.0, num_steps=15,
