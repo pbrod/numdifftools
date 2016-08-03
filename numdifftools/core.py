@@ -141,6 +141,35 @@ class _Derivative(_Limit):
               self).__init__(f, step=step, method=method, order=order,
                              full_output=full_output, **step_options)
 
+    @property
+    def n(self):
+        return self._n
+
+    @n.setter
+    def n(self, n):
+        self._n = n
+
+        if n == 0:
+            self._derivative = self._derivative_zero_order
+        else:
+            self._derivative = self._derivative_nonzero_order
+
+    def _derivative_zero_order(self, xi, args, kwds):
+        steps = [np.zeros_like(xi)]
+        results = [self.f(xi, *args, **kwds)]
+        self.set_richardson_rule(2, 0)
+        return self._vstack(results, steps)
+
+    def _derivative_nonzero_order(self, xi, args, kwds):
+        diff, f = self._get_functions()
+        steps, step_ratio = self._get_steps(xi)
+        fxi = self._eval_first(f, xi, *args, **kwds)
+        results = [diff(f, fxi, xi, h, *args, **kwds) for h in steps]
+
+        self.set_richardson_rule(step_ratio, self.richardson_terms)
+
+        return self._apply_fd_rule(step_ratio, results, steps)
+
     def _make_generator(self, step, step_options):
         if hasattr(step, '__call__'):
             return step
@@ -303,19 +332,6 @@ class Derivative(_Derivative):
     Hessian
     """)
 
-    @property
-    def n(self):
-        return self._n
-
-    @n.setter
-    def n(self, n):
-        self._n = n
-
-        if n == 0:
-            self._derivative = self._derivative_zero_order
-        else:
-            self._derivative = self._derivative_nonzero_order
-
     @staticmethod
     def _fd_matrix(step_ratio, parity, nterms):
         """
@@ -402,7 +418,7 @@ class Derivative(_Derivative):
             fd_rule *= -1
         return fd_rule
 
-    def _apply_fd_rule(self, fd_rule, sequence, steps):
+    def _apply_fd_rule(self, step_ratio, sequence, steps):
         """
         Return derivative estimates of f at x0 for a sequence of stepsizes h
 
@@ -411,7 +427,7 @@ class Derivative(_Derivative):
         n
         """
         f_del, h, original_shape = self._vstack(sequence, steps)
-
+        fd_rule = self._get_finite_difference_rule(step_ratio)
         ne = h.shape[0]
         if ne < fd_rule.size:
             raise ValueError('num_steps ({0:d}) must  be larger than '
@@ -425,22 +441,6 @@ class Derivative(_Derivative):
         der_init = f_diff / (h ** self.n)
         ne = max(ne - nr, 1)
         return der_init[:ne], h[:ne], original_shape
-
-    def _derivative_zero_order(self, xi, args, kwds):
-        steps = [np.zeros_like(xi)]
-        results = [self.f(xi, *args, **kwds)]
-        self.set_richardson_rule(2, 0)
-        return self._vstack(results, steps)
-
-    def _derivative_nonzero_order(self, xi, args, kwds):
-        diff, f = self._get_functions()
-        steps, step_ratio = self._get_steps(xi)
-        fxi = self._eval_first(f, xi, *args, **kwds)
-        results = [diff(f, fxi, xi, h, *args, **kwds) for h in steps]
-
-        self.set_richardson_rule(step_ratio, self.richardson_terms)
-        fd_rule = self._get_finite_difference_rule(step_ratio)
-        return self._apply_fd_rule(fd_rule, results, steps)
 
     @staticmethod
     def _central_even(f, f_x0i, x0i, h, *args, **kwds):
@@ -599,11 +599,13 @@ class Jacobian(Derivative):
     Derivative, Hessian, Gradient
     """)
 
-    def __init__(self, f, step=None, method='central', order=2,
-                 full_output=False, **step_options):
-        super(Jacobian, self).__init__(f, step=step, method=method, n=1,
-                                       order=order, full_output=full_output,
-                                       **step_options)
+    @property
+    def n(self):
+        return 1
+
+    @n.setter
+    def n(self, n):
+        self._derivative = self._derivative_nonzero_order
 
     @staticmethod
     def _check_equal_size(f_del, h):
@@ -801,6 +803,14 @@ class Hessdiag(Derivative):
                                        order=order, full_output=full_output,
                                        **step_options)
 
+    @property
+    def n(self):
+        return 2
+
+    @n.setter
+    def n(self, n):
+        self._derivative = self._derivative_nonzero_order
+
     @staticmethod
     def _central2(f, fx, x, h, *args, **kwds):
         """Eq. 8"""
@@ -858,7 +868,7 @@ class Hessdiag(Derivative):
         return super(Hessdiag, self).__call__(np.atleast_1d(x), *args, **kwds)
 
 
-class Hessian(_Derivative):
+class Hessian(Hessdiag):
 
     __doc__ = _cmn_doc % dict(
         derivative='Hessian',
@@ -918,26 +928,25 @@ class Hessian(_Derivative):
     Derivative, Hessian
     """)
 
-    def __init__(self, f, step=None, method='central', full_output=False,
-                 **step_options):
-        order = dict(backward=1, forward=1, complex=2).get(method, 2)
-        super(Hessian, self).__init__(f, n=2, step=step, method=method,
-                                      order=order, full_output=full_output,
-                                      **step_options)
+    @property
+    def order(self):
+        return dict(backward=1, forward=1, complex=2).get(self.method, 2)
+
+    @order.setter
+    def order(self, order):
+        pass
+
+    def _apply_fd_rule(self, step_ratio, sequence, steps):
+        """
+        Return derivative estimates of f at x0 for a sequence of stepsizes h
+        """
+        # fd_rule = self._get_finite_difference_rule(step_ratio)
+        # Difference rule is already applied. Just return result.
+        return self._vstack(sequence, steps)
 
     @staticmethod
     def _complex_high_order():
         return False
-
-    def _derivative(self, xi, args, kwds):
-        xi = np.atleast_1d(xi)
-        diff, f = self._get_functions()
-        steps, step_ratio = self._get_steps(xi)
-
-        fxi = self._eval_first(f, xi, *args, **kwds)
-        results = [diff(f, fxi, xi, h, *args, **kwds) for h in steps]
-        self.set_richardson_rule(step_ratio, self.richardson_terms)
-        return self._vstack(results, steps)
 
     @staticmethod
     def _complex_even(f, fx, x, h, *args, **kwargs):
@@ -949,15 +958,15 @@ class Hessian(_Derivative):
         n = len(x)
         # h = default_base_step(x, 3, base_step, n)
         ee = np.diag(h)
-        hes = 2. * np.outer(h, h)
+        hess = 2. * np.outer(h, h)
 
         for i in range(n):
             for j in range(i, n):
-                hes[i, j] = (f(x + 1j * ee[i] + ee[j], *args, **kwargs) -
+                hess[i, j] = (f(x + 1j * ee[i] + ee[j], *args, **kwargs) -
                              f(x + 1j * ee[i] - ee[j], *args, **kwargs)
-                             ).imag / hes[j, i]
-                hes[j, i] = hes[i, j]
-        return hes
+                             ).imag / hess[j, i]
+                hess[j, i] = hess[i, j]
+        return hess
 
     @staticmethod
     def _multicomplex2(f, fx, x, h, *args, **kwargs):

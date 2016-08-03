@@ -33,8 +33,18 @@ class TestMinStepGenerator(unittest.TestCase):
         desired = 0.1
         step_gen = nd.MinStepGenerator(base_step=desired, num_steps=1,
                                        offset=0)
-        h = [h for h in step_gen(0)]
-        assert_array_almost_equal((h[-1] - desired) / desired, 0)
+        methods = ['forward', 'backward', 'central', 'complex']
+        for n in range(1, 5):
+            for order in [1, 2, 4, 6, 8]:
+                min_length =  n + order - 1
+                lengths = [min_length, min_length, max(min_length // 2, 1),
+                           max(min_length // 4, 1)]
+                for m, method in zip(lengths,methods):
+                    h = [h for h in step_gen(0, method=method, n=n,
+                                             order=order)]
+                    # print(len(h), n, order, method)
+                    assert_array_almost_equal((h[-1] - desired) / desired, 0)
+                    assert(m==len(h))
 
 
 class TestMaxStepGenerator(unittest.TestCase):
@@ -59,5 +69,9 @@ class TestMaxStepGenerator(unittest.TestCase):
     def test_fixed_base_step():
         desired = 0.1
         step_gen = nd.MaxStepGenerator(base_step=desired, num_steps=1, offset=0)
-        h = [h for h in step_gen(0)]
-        assert_array_almost_equal((h[0] - desired) / desired, 0)
+        methods = ['forward', 'backward', 'central', 'complex']
+        lengths = [2, 2, 1, 1]
+        for n, method in zip(lengths,methods):
+            h = [h for h in step_gen(0, method=method)]
+            assert_array_almost_equal((h[0] - desired) / desired, 0)
+            assert(n==len(h))

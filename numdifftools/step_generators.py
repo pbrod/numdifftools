@@ -233,7 +233,7 @@ class MinStepGenerator(object):
         _x, method, n, order = self._state
         num_steps = int(n + order - 1)
         if method in ['central', 'central2', 'complex', 'multicomplex']:
-            step = 4 if method == 'complex' and n > 2 or order >= 4 else 2
+            step = 4 if method == 'complex' and (n > 1 or order >= 4) else 2
             num_steps = num_steps // step
         return max(num_steps, 1)
 

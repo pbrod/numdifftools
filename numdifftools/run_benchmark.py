@@ -70,21 +70,20 @@ gradient_funs = OrderedDict()
 nda_method = 'forward'
 nda_txt = 'algopy_' + nda_method
 gradient_funs[nda_txt] = nda.Jacobian(1, method=nda_method)
-# gradient_funs['numdifftools'] = nd.Jacobian(1, **options)
-for method in ['forward', 'central', 'complex']:
-    method2 = method + adaptiv_txt
-    gradient_funs[method] = nd.Jacobian(1, method=method, step=fixed_step)
-    gradient_funs[method2] = nd.Jacobian(1, method=method, step=epsilon)
 
 hessian_fun = 'Hessdiag'
 ndc_hessian = getattr(nd, hessian_fun)
 hessian_funs = OrderedDict()
 hessian_funs[nda_txt] = getattr(nda, hessian_fun)(1, method=nda_method)
 
+order = 2
 for method in ['forward', 'central', 'complex']:
     method2 = method + adaptiv_txt
-    hessian_funs[method] = ndc_hessian(1, method=method, step=fixed_step)
-    hessian_funs[method2] = ndc_hessian(1, method=method, step=epsilon)
+    options = dict(method=method, order=order)
+    gradient_funs[method] = nd.Jacobian(1, step=fixed_step, **options)
+    gradient_funs[method2] = nd.Jacobian(1, step=epsilon, **options)
+    hessian_funs[method] = ndc_hessian(1, step=fixed_step, **options)
+    hessian_funs[method2] = ndc_hessian(1, step=epsilon, **options)
 
 
 def _compute_benchmark(functions, problem_sizes):
