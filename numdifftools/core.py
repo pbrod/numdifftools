@@ -141,15 +141,12 @@ class _Derivative(_Limit):
               self).__init__(f, step=step, method=method, order=order,
                              full_output=full_output, **step_options)
 
-    @property
-    def n(self):
-        return self._n
+    n = property(fget=lambda cls: cls._n,
+                 fset=lambda cls, n: (setattr(cls, '_n', n),
+                                      cls._set_derivative()))
 
-    @n.setter
-    def n(self, n):
-        self._n = n
-
-        if n == 0:
+    def _set_derivative(self):
+        if self.n == 0:
             self._derivative = self._derivative_zero_order
         else:
             self._derivative = self._derivative_nonzero_order
@@ -598,14 +595,8 @@ class Jacobian(Derivative):
     --------
     Derivative, Hessian, Gradient
     """)
-
-    @property
-    def n(self):
-        return 1
-
-    @n.setter
-    def n(self, n):
-        self._derivative = self._derivative_nonzero_order
+    n = property(fget=lambda cls: 1,
+                 fset=lambda cls, val: cls._set_derivative())
 
     @staticmethod
     def _check_equal_size(f_del, h):
@@ -803,13 +794,8 @@ class Hessdiag(Derivative):
                                        order=order, full_output=full_output,
                                        **step_options)
 
-    @property
-    def n(self):
-        return 2
-
-    @n.setter
-    def n(self, n):
-        self._derivative = self._derivative_nonzero_order
+    n = property(fget=lambda cls: 2,
+                 fset=lambda cls, n: cls._set_derivative())
 
     @staticmethod
     def _central2(f, fx, x, h, *args, **kwds):
@@ -928,13 +914,9 @@ class Hessian(Hessdiag):
     Derivative, Hessian
     """)
 
-    @property
-    def order(self):
-        return dict(backward=1, forward=1, complex=2).get(self.method, 2)
-
-    @order.setter
-    def order(self, order):
-        pass
+    order = property(fget=lambda cls: dict(backward=1, forward=1,
+                                           complex=2).get(cls.method, 2),
+                     fset=lambda cls, order: None)
 
     def _apply_fd_rule(self, step_ratio, sequence, steps):
         """
