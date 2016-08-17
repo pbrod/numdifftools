@@ -921,9 +921,9 @@ class Hessian(Hessdiag):
     def _apply_fd_rule(self, step_ratio, sequence, steps):
         """
         Return derivative estimates of f at x0 for a sequence of stepsizes h
+
+        Here the difference rule is already applied. Just return result.
         """
-        # fd_rule = self._get_finite_difference_rule(step_ratio)
-        # Difference rule is already applied. Just return result.
         return self._vstack(sequence, steps)
 
     @staticmethod
