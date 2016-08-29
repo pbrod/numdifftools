@@ -165,14 +165,12 @@ class _Limit(object):
     def _extrapolate(self, results, steps, shape):
         der1, errors1, steps = self.richardson(results, steps)
         if len(der1) > 2:
-            # der, errors, steps = self.richardson(results, steps)
             der1, errors1, steps = self._wynn_extrapolate(der1, steps)
         der, info = self._get_best_estimate(der1, errors1, steps, shape)
         return der, info
 
     @staticmethod
     def _vstack(sequence, steps):
-        # sequence = np.atleast_2d(sequence)
         original_shape = np.shape(sequence[0])
         f_del = np.vstack(list(np.ravel(r)) for r in sequence)
         h = np.vstack(list(np.ravel(np.ones(original_shape)*step))
