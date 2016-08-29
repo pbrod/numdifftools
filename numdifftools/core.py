@@ -4,19 +4,9 @@
 Derivative, Gradient, Jacobian, and Hessian
 
 Author:      Per A. Brodtkorb
-
 Created:     01.08.2008
 Copyright:   (c) pab 2008
 Licence:     New BSD
-
-Based on matlab functions derivest.m gradest.m hessdiag.m, hessian.m
-and jacobianest.m version 1.0 released 12/27/2006 by  John D'Errico
-(e-mail: woodchips@rochester.rr.com)
-
-Also based on the python functions approx_fprime, approx_fprime_cs,
-approx_hess_cs, approx_hess1, approx_hess2 and approx_hess3 in the
-statsmodels.tools.numdiff module released in 2014 written by Josef Perktold.
-
 """
 
 from __future__ import division, print_function
@@ -28,7 +18,6 @@ from numdifftools.limits import _Limit
 from numpy import linalg
 from scipy import misc
 import warnings
-
 
 __all__ = ('dea3', 'Derivative', 'Jacobian', 'Gradient', 'Hessian', 'Hessdiag',
            'MinStepGenerator', 'MaxStepGenerator', 'Richardson',
@@ -168,7 +157,7 @@ class Derivative(_Limit):
                  full_output=False, **step_options):
         self.n = n
         self.richardson_terms = 2
-        super(_Derivative,
+        super(Derivative,
               self).__init__(f, step=step, method=method, order=order,
                              full_output=full_output, **step_options)
 

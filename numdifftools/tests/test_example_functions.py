@@ -31,7 +31,7 @@ class TestExampleFunctions(unittest.TestCase):
                         print(i, name, method, n, dm)
                         tval = true_df(x)
                         assert_array_almost_equal(val, tval, decimal=dm)
-        # assert(False)
+
 
 if __name__ == '__main__':
     unittest.main()

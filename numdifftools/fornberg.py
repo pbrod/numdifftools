@@ -189,14 +189,14 @@ def richardson(vals, k, c=None):
     return vals[k] - (vals[k] - vals[k - 1]) / c
 
 
-def taylor(f, z0=0, n=1, r=0.0061, max_iter=30, min_iter=None, num_extrap=3,
+def taylor(fun, z0=0, n=1, r=0.0061, max_iter=30, min_iter=None, num_extrap=3,
            step_ratio=1.6, full_output=False):
     """
     Return Taylor coefficients of complex analytic function using FFT
 
     Parameters
     ----------
-    f : callable
+    fun : callable
         function to differentiate
     z0 : real or complex scalar at which to evaluate the derivatives
     n : scalar integer, default 1
@@ -295,7 +295,7 @@ def taylor(f, z0=0, n=1, r=0.0061, max_iter=30, min_iter=None, num_extrap=3,
     for i in range(max_iter):
         # print('r = %g' % (r))
 
-        bn = np.fft.fft(f(_circle(z0, r, m))) / m
+        bn = np.fft.fft(fun(_circle(z0, r, m))) / m
         bs.append(bn * np.power(r, -mvec))
         rs.append(r)
         if direction_changes > 1 or degenerate:
@@ -324,7 +324,7 @@ def taylor(f, z0=0, n=1, r=0.0061, max_iter=30, min_iter=None, num_extrap=3,
             needs_smaller = i % 2 == 0
         else:
             needs_smaller = (m1 != m1 or m2 != m2 or m1 < m2 or
-                             _poor_convergence(z0, r, f, bn, mvec))
+                             _poor_convergence(z0, r, fun, bn, mvec))
 
         if (previous_direction is not None and
                 needs_smaller != previous_direction):
@@ -379,7 +379,7 @@ def derivative(f, z0, n=1, r=0.0061, max_iter=30, min_iter=None, num_extrap=3,
 
     Parameters
     ----------
-    f : callable
+    fun : callable
         function to differentiate
     z0 : real or complex scalar at which to evaluate the derivatives
     n : scalar integer, default 1
@@ -442,9 +442,9 @@ def derivative(f, z0, n=1, r=0.0061, max_iter=30, min_iter=None, num_extrap=3,
     Compute the first 6 taylor derivatives of 1 / (1 - z) at z0 = 0:
     >>> import numdifftools.fornberg as ndf
     >>> import numpy as np
-    >>> def f(x):
+    >>> def fun(x):
     ...    return 1./(1-x)
-    >>> c, info = ndf.derivative(f, z0=0, n=6, full_output=True)
+    >>> c, info = ndf.derivative(fun, z0=0, n=6, full_output=True)
     >>> np.allclose(c, [1, 1, 2, 6, 24, 120, 720, 5040])
     True
     >>> np.all(info.error_estimate < 1e-9*c.real)
@@ -474,33 +474,45 @@ def derivative(f, z0, n=1, r=0.0061, max_iter=30, min_iter=None, num_extrap=3,
 
 
 def main():
-    def f(z):
-        # return np.exp(z) / (np.sin(z)**3+ np.cos(z)**3)
-        # return np.exp(1.0j * z)
-        # return z**6
-        # return z * (0.5 + 1./np.expm1(z))
+    def fun(z):
         return np.exp(z)
-        # return np.tan(z)
-        # return 1.0j + z + 1.0j * z**2
-        # return 1.0 / (1.0 - z)
-        # return (1+z)**10*np.log1p(z)
-        # return 10*5 + 1./(1-z)
-        # return 1./(1-z)
-        # return np.sqrt(z)
-        # return np.arcsinh(z)
-        # return np.cos(z)
-        # return np.log1p(z)
+    def fun1(z):
+        return np.exp(z) / (np.sin(z)**3+ np.cos(z)**3)
+    def fun2(z):
+        return np.exp(1.0j * z)
+    def fun3(z):
+        return z**6
+    def fun4(z):
+        return z * (0.5 + 1./np.expm1(z))
+    def fun5(z):
+        return np.tan(z)
+    def fun6(z):
+        return 1.0j + z + 1.0j * z**2
+    def fun7(z):
+        return 1.0 / (1.0 - z)
+    def fun8(z):
+        return (1+z)**10*np.log1p(z)
+    def fun9(z):
+        return 10*5 + 1./(1-z)
+    def fun10(z):
+        return 1./(1-z)
+    def fun11(z):
+        return np.sqrt(z)
+    def fun12(z):
+        return np.arcsinh(z)
+    def fun13(z):
+        return np.cos(z)
+    def fun14(z):
+        return np.log1p(z)
 
-    der, info = derivative(f, z0=0., r=0.06, n=51, max_iter=30, min_iter=15,
+    der, info = derivative(fun, z0=0., r=0.06, n=51, max_iter=30, min_iter=15,
                            full_output=True, step_ratio=1.6)
     print(info)
     print('answer:')
+    msg = '{0:3d}: {1:24.18f} + {2:24.18f}j ({3:g})'
     for i, der_i in enumerate(der):
         err = info.error_estimate[i]
-        print('{0:3d}: {1:24.18f} + {2:24.18f}j ({3:g})'.format(i,
-                                                                der_i.real,
-                                                                der_i.imag,
-                                                                err))
+        print(msg.format(i, der_i.real, der_i.imag, err))
 
 
 if __name__ == '__main__':

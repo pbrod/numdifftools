@@ -325,7 +325,7 @@ def approx_fprime(x, f, epsilon=None, args=(), kwargs=None, centered=True):
     kwargs = {} if kwargs is None else kwargs
     n = len(x)
     # TODO:  add scaled stepsize
-    f0 = f(*((x,) + args), **kwargs)
+    f0 = f(*(x,) + args, **kwargs)
     dim = np.atleast_1d(f0).shape  # it could be a scalar
     grad = np.zeros((n,) + dim, float)
     ei = np.zeros(np.shape(x), float)
@@ -333,14 +333,14 @@ def approx_fprime(x, f, epsilon=None, args=(), kwargs=None, centered=True):
         epsilon = _get_epsilon(x, 2, epsilon, n)
         for k in range(n):
             ei[k] = epsilon[k]
-            grad[k, :] = (f(*((x + ei,) + args), **kwargs) - f0) / epsilon[k]
+            grad[k, :] = (f(*(x + ei,) + args, **kwargs) - f0) / epsilon[k]
             ei[k] = 0.0
     else:
         epsilon = _get_epsilon(x, 3, epsilon, n) / 2.
         for k in range(n):
             ei[k] = epsilon[k]
-            grad[k, :] = (f(*((x + ei,) + args), **kwargs) -
-                          f(*((x - ei,) + args), **kwargs)) / (2 * epsilon[k])
+            grad[k, :] = (f(*(x + ei,) + args, **kwargs) -
+                          f(*(x - ei,) + args, **kwargs)) / (2 * epsilon[k])
             ei[k] = 0.0
     grad = grad.squeeze()
     axes = [0, 1, 2][:grad.ndim]
