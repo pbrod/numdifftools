@@ -4,7 +4,7 @@ import numdifftools.core as nd
 import numpy as np
 from numdifftools.step_generators import (MinStepGenerator, MaxStepGenerator,
                                           EPS)
-from numpy.testing import assert_array_almost_equal
+from numpy.testing import assert_array_almost_equal, assert_equal
 
 
 class TestMinStepGenerator(unittest.TestCase):
@@ -44,7 +44,7 @@ class TestMinStepGenerator(unittest.TestCase):
                                              order=order)]
                     # print(len(h), n, order, method)
                     assert_array_almost_equal((h[-1] - desired) / desired, 0)
-                    assert(m==len(h))
+                    assert_equal(m, len(h))
 
 
 class TestMaxStepGenerator(unittest.TestCase):
@@ -74,4 +74,4 @@ class TestMaxStepGenerator(unittest.TestCase):
         for n, method in zip(lengths,methods):
             h = [h for h in step_gen(0, method=method)]
             assert_array_almost_equal((h[0] - desired) / desired, 0)
-            assert(n==len(h))
+            assert_equal(n, len(h))

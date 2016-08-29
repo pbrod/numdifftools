@@ -33,26 +33,10 @@ import warnings
 __all__ = ('dea3', 'Derivative', 'Jacobian', 'Gradient', 'Hessian', 'Hessdiag',
            'MinStepGenerator', 'MaxStepGenerator', 'Richardson',
            'directionaldiff')
-# NOTE: we only do double precision internally so far
 _TINY = np.finfo(float).tiny
 _EPS = np.finfo(float).eps
 EPS = np.MachAr().eps
 _SQRT_J = (1j + 1.0) / np.sqrt(2.0)  # = 1j**0.5
-
-_CENTRAL_WEIGHTS_AND_POINTS = {
-    (1, 3): (np.array([-1, 0, 1]) / 2.0, np.arange(-1, 2)),
-    (1, 5): (np.array([1, -8, 0, 8, -1]) / 12.0, np.arange(-2, 3)),
-    (1, 7): (np.array([-1, 9, -45, 0, 45, -9, 1]) / 60.0, np.arange(-3, 4)),
-    (1, 9): (np.array([3, -32, 168, -672, 0, 672, -168, 32, -3]) / 840.0,
-             np.arange(-4, 5)),
-    (2, 3): (np.array([1, -2.0, 1]), np.arange(-1, 2)),
-    (2, 5): (np.array([-1, 16, -30, 16, -1]) / 12.0, np.arange(-2, 3)),
-    (2, 7): (np.array([2, -27, 270, -490, 270, -27, 2]) / 180.0,
-             np.arange(-3, 4)),
-    (2, 9): (np.array([-9, 128, -1008, 8064, -14350,
-                       8064, -1008, 128, -9]) / 5040.0,
-             np.arange(-4, 5))}
-
 
 _cmn_doc = """
     Calculate %(derivative)s with finite difference approximation
@@ -129,9 +113,56 @@ _cmn_doc = """
     """
 
 
-class _Derivative(_Limit):
+class Derivative(_Limit):
 
-    """Base class for derivatives"""
+    __doc__ = _cmn_doc % dict(
+        derivative='n-th derivative',
+        extra_parameter="""
+    order : int, optional
+        defines the order of the error term in the Taylor approximation used.
+        For 'central' and 'complex' methods, it must be an even number.
+    n : int, optional
+        Order of the derivative.""",
+        extra_note="""
+    Higher order approximation methods will generally be more accurate, but may
+    also suffer more from numerical problems. First order methods is usually
+    not recommended.
+    """, returns="""
+    Returns
+    -------
+    der : ndarray
+       array of derivatives
+    """, example="""
+    Example
+    -------
+    >>> import numpy as np
+    >>> import numdifftools as nd
+
+    # 1'st derivative of exp(x), at x == 1
+
+    >>> fd = nd.Derivative(np.exp)
+    >>> np.allclose(fd(1), 2.71828183)
+    True
+
+    >>> d2 = fd([1, 2])
+    >>> np.allclose(d2, [ 2.71828183,  7.3890561 ])
+    True
+
+    >>> def f(x):
+    ...     return x**3 + x**2
+
+    >>> df = nd.Derivative(f)
+    >>> np.allclose(df(1), 5)
+    True
+    >>> ddf = nd.Derivative(f, n=2)
+    >>> np.allclose(ddf(1), 8)
+    True
+    """, see_also="""
+    See also
+    --------
+    Gradient,
+    Hessian
+    """)
 
     def __init__(self, f, step=None, method='central', order=2, n=1,
                  full_output=False, **step_options):
@@ -277,58 +308,6 @@ class _Derivative(_Limit):
             return derivative, info
         return derivative
 
-
-class Derivative(_Derivative):
-
-    __doc__ = _cmn_doc % dict(
-        derivative='n-th derivative',
-        extra_parameter="""
-    order : int, optional
-        defines the order of the error term in the Taylor approximation used.
-        For 'central' and 'complex' methods, it must be an even number.
-    n : int, optional
-        Order of the derivative.""",
-        extra_note="""
-    Higher order approximation methods will generally be more accurate, but may
-    also suffer more from numerical problems. First order methods is usually
-    not recommended.
-    """, returns="""
-    Returns
-    -------
-    der : ndarray
-       array of derivatives
-    """, example="""
-    Example
-    -------
-    >>> import numpy as np
-    >>> import numdifftools as nd
-
-    # 1'st derivative of exp(x), at x == 1
-
-    >>> fd = nd.Derivative(np.exp)
-    >>> np.allclose(fd(1), 2.71828183)
-    True
-
-    >>> d2 = fd([1, 2])
-    >>> np.allclose(d2, [ 2.71828183,  7.3890561 ])
-    True
-
-    >>> def f(x):
-    ...     return x**3 + x**2
-
-    >>> df = nd.Derivative(f)
-    >>> np.allclose(df(1), 5)
-    True
-    >>> ddf = nd.Derivative(f, n=2)
-    >>> np.allclose(ddf(1), 8)
-    True
-    """, see_also="""
-    See also
-    --------
-    Gradient,
-    Hessian
-    """)
-
     @staticmethod
     def _fd_matrix(step_ratio, parity, nterms):
         """
@@ -432,7 +411,7 @@ class Derivative(_Derivative):
                              ' ({4:s})'.format(ne, fd_rule.size, self.n,
                                                self.order, self.method)
                              )
-        nr = (fd_rule.size - 1)
+        nr = fd_rule.size - 1
         f_diff = convolve(f_del, fd_rule[::-1], axis=0, origin=nr // 2)
 
         der_init = f_diff / (h ** self.n)
@@ -451,11 +430,11 @@ class Derivative(_Derivative):
 
     @staticmethod
     def _forward(f, f_x0i, x0i, h, *args, **kwds):
-        return (f(x0i + h, *args, **kwds) - f_x0i)
+        return f(x0i + h, *args, **kwds) - f_x0i
 
     @staticmethod
     def _backward(f, f_x0i, x0i, h, *args, **kwds):
-        return (f_x0i - f(x0i - h, *args, **kwds))
+        return f_x0i - f(x0i - h, *args, **kwds)
 
     @staticmethod
     def _complex(f, fx, x, h, *args, **kwds):
@@ -658,13 +637,13 @@ class Jacobian(Derivative):
     def _backward(self, f, fx, x, h, *args, **kwds):
         n = len(x)
         increments = self._increments(n, h)
-        partials = [(fx - f(x - hi, *args, **kwds)) for hi in increments]
+        partials = [fx - f(x - hi, *args, **kwds) for hi in increments]
         return np.array(partials)
 
     def _forward(self, f, fx, x, h, *args, **kwds):
         n = len(x)
         increments = self._increments(n, h)
-        partials = [(f(x + hi, *args, **kwds) - fx) for hi in increments]
+        partials = [f(x + hi, *args, **kwds) - fx for hi in increments]
         return np.array(partials)
 
     def _complex(self, f, fx, x, h, *args, **kwds):
@@ -823,14 +802,14 @@ class Hessdiag(Derivative):
     def _backward(f, fx, x, h, *args, **kwds):
         n = len(x)
         increments = np.identity(n) * h
-        partials = [(fx - f(x - hi, *args, **kwds)) for hi in increments]
+        partials = [fx - f(x - hi, *args, **kwds) for hi in increments]
         return np.array(partials)
 
     @staticmethod
     def _forward(f, fx, x, h, *args, **kwds):
         n = len(x)
         increments = np.identity(n) * h
-        partials = [(f(x + hi, *args, **kwds) - fx) for hi in increments]
+        partials = [f(x + hi, *args, **kwds) - fx for hi in increments]
         return np.array(partials)
 
     @staticmethod
@@ -938,7 +917,6 @@ class Hessian(Hessdiag):
         The stepsize is the same for the complex and the finite difference part
         """
         n = len(x)
-        # h = default_base_step(x, 3, base_step, n)
         ee = np.diag(h)
         hess = 2. * np.outer(h, h)
 
@@ -967,7 +945,6 @@ class Hessian(Hessdiag):
     def _central_even(f, fx, x, h, *args, **kwargs):
         """Eq 9."""
         n = len(x)
-        # h = default_base_step(x, 4, base_step, n)
         ee = np.diag(h)
         hess = np.outer(h, h)
 
@@ -988,8 +965,6 @@ class Hessian(Hessdiag):
     def _central2(f, fx, x, h, *args, **kwargs):
         """Eq. 8"""
         n = len(x)
-        # NOTE: ridout suggesting using eps**(1/4)*theta
-        # h = default_base_step(x, 3, base_step, n)
         ee = np.diag(h)
         dtype = np.result_type(fx)
         g = np.empty(n, dtype=dtype)

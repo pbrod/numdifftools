@@ -280,5 +280,3 @@ def get_function(fun_name, n=1):
     funs = f_dic.get(fun_name)
     return funs(0), funs(n)
 
-if __name__ == '__main__':
-    pass

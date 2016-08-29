@@ -128,7 +128,7 @@ class _Derivative(object):
             tmp = algopy.Function(x)
 
             y = self.f(tmp, *args, **kwds)
-            # y = UTPM.as_utpm(z)
+
             cg.trace_off()
             cg.independentFunctionList = [tmp]
             cg.dependentFunctionList = [y]
@@ -442,13 +442,12 @@ class Hessdiag(Hessian):
     """)
 
     def _forward(self, x, *args, **kwds):
-        # return np.diag(super(Hessdiag, self)._forward(x, *args, **kwds))
-        D, Nm = 2+1, x.size
-        P = Nm
-        y = UTPM(np.zeros((D, P, Nm)))
+        d, n = 2+1, x.size
+        p = n
+        y = UTPM(np.zeros((d, p, n)))
 
         y.data[0, :] = x.ravel()
-        y.data[1, :] = np.eye(Nm)
+        y.data[1, :] = np.eye(n)
         z0 = self.f(y, *args, **kwds)
         z = UTPM.as_utpm(z0)
         H = z.data[2, ...] * 2
@@ -509,21 +508,7 @@ def directionaldiff(f, x0, vec, **options):
     return Derivative(lambda t: f(x0+t*vec), **options)(0)
 
 
-# def _example_taylor():
-#     def f(x):
-#         return x*x*x*x  # np.sin(np.cos(x) + np.sin(x))
-#     D = 5
-#     P = 1
-#     x = UTPM(np.zeros((D, P)))
-#     x.data[0, 0] = 1.0
-#     x.data[1, 0] = 1
-#
-#     y = f(x)
-#     print('coefficients of y =', y.data[:, 0])
-
-
 if __name__ == '__main__':
     from numdifftools.testing import test_docstrings
     test_docstrings()
 
-    # _example_taylor()

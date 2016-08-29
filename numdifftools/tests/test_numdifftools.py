@@ -101,7 +101,7 @@ class TestRichardson(unittest.TestCase):
                         1.004166726519699],
             (2, 2, 6): [0.0002614379084968331, -0.07111111111111235,
                         1.070849673202616]}
-        # t = dict()
+
         for n in [1, 2, 3, 4]:
             for num_terms in [1, 2]:
                 for order in range(2, 9, 2):
@@ -109,58 +109,16 @@ class TestRichardson(unittest.TestCase):
                                       order=order)
                     d.set_richardson_rule(step_ratio=2.0, num_terms=num_terms)
                     rule = d.richardson.rule()
-                    # t[(n, num_terms, order)] = rule.tolist()
+
                     msg = "n={0}, num_terms={1}, order={2}".format(n,
                                                                    num_terms,
                                                                    order)
                     assert_array_almost_equal(rule,
                                               truth[(n, num_terms, order)],
                                               err_msg=msg)
-        # print(t)
-        # self.assert_(False)
-
-#     def _example_(self):
-#         def f(x, h):
-#             return (np.exp(x + h) - np.exp(x - h)) / (2.)
-#         # f = lambda x, h: (np.exp(x+h)-np.exp(x))
-#         steps = [h for h in 2.0**-np.arange(10)]
-#         df = [f(1, h) for h in steps]
-#         print([dfi / hi for dfi, hi in zip(df, steps)])
-#         step = nd.MaxStepGenerator(step_ratio=2.0)
-#         for method in ['central']:
-#             d = nd.Derivative(np.exp, step=step, method=method)
-#             for order in [2, 6]:
-#                 d.order = order
-#                 r_extrap = nd.Richardson(step_ratio=2.0, method=method,
-#                                          num_terms=2, order=order)
-#
-#                 fd_rule = d._get_finite_difference_rule(step_ratio=2.0)
-#                 print(fd_rule)
-#                 df1, stepsi, _shape = d._apply_fd_rule(fd_rule, df, steps)
-#
-#                 rule = r_extrap.rule()
-#                 df2, error, hi = r_extrap(df1, stepsi)
-#
-#                 print(rule)
-#                 print(np.hstack((df2, error)))
-#
-#         self.assert_(False)
 
 
 class TestDerivative(unittest.TestCase):
-    #     def test_finite_difference_rules(self):
-    #         step = nd.MaxStepGenerator(step_ratio=2.0)
-    #         for method in ['central']:
-    #             d = nd.Derivative(np.exp, step=step, method=method)
-    #             for order in [2, 6]:
-    #                 d.order = order
-    #                 fd_rule = d._get_finite_difference_rule(step_ratio=2.0)
-    #                 print(fd_rule)
-    #
-    #         x = [2, 1, .5]
-    #         weights = nd.fornberg_weights(x, m=1)
-    #         #self.assert_(False)
-
 
     @staticmethod
     def test_directional_diff():
@@ -225,16 +183,7 @@ class TestDerivative(unittest.TestCase):
                                           method=method, full_output=True)
                     y, _info = d3cos(x)
                     _error = np.abs(y - true_val)
-#                 small = error <= info.error_estimate
-#                 if not small.all():
-#                     small = np.where(small, small, error <= 10**(-11 + n))
-#                 if not small.all():
-#                     print('method=%s, n=%d, order=%d' % (method, n, order))
-#                     print(error, info.error_estimate)
                     assert_array_almost_equal(y, true_val, decimal=4)
-                    # self.assertTrue(small.all())
-                    # assert_allclose(y, true_val)
-        # self.assert_(False)
 
     @staticmethod
     def test_default_scale():
@@ -342,21 +291,21 @@ def _get_epsilon(x, s, epsilon, n):
 
 def approx_fprime(x, f, epsilon=None, args=(), kwargs=None, centered=True):
     '''
-    Gradient of function, or Jacobian if function f returns 1d array
+    Gradient of function, or Jacobian if function fun returns 1d array
 
     Parameters
     ----------
     x : array
         parameters at which the derivative is evaluated
-    f : function
-        `f(*((x,)+args), **kwargs)` returning either one value or 1d array
+    fun : function
+        `fun(*((x,)+args), **kwargs)` returning either one value or 1d array
     epsilon : float, optional
         Stepsize, if None, optimal stepsize is used. This is EPS**(1/2)*x for
         `centered` == False and EPS**(1/3)*x for `centered` == True.
     args : tuple
-        Tuple of additional arguments for function `f`.
+        Tuple of additional arguments for function `fun`.
     kwargs : dict
-        Dictionary of additional keyword arguments for function `f`.
+        Dictionary of additional keyword arguments for function `fun`.
     centered : bool
         Whether central difference should be returned. If not, does forward
         differencing.
@@ -368,8 +317,8 @@ def approx_fprime(x, f, epsilon=None, args=(), kwargs=None, centered=True):
 
     Notes
     -----
-    If f returns a 1d array, it returns a Jacobian. If a 2d array is returned
-    by f (e.g., with a value for each observation), it returns a 3d array
+    If fun returns a 1d array, it returns a Jacobian. If a 2d array is returned
+    by fun (e.g., with a value for each observation), it returns a 3d array
     with the Jacobian of each observation with shape xk x nobs x xk. I.e.,
     the Jacobian of the first observation would be [:, 0, :]
     '''
@@ -411,11 +360,11 @@ class TestJacobian(unittest.TestCase):
 
     @staticmethod
     def test_on_scalar_function():
-        def f2(x):
+        def fun(x):
             return x[0] * x[1] * x[2] + np.exp(x[0]) * x[1]
 
         for method in ['complex', 'central', 'forward', 'backward']:
-            j_fun = nd.Jacobian(f2, method=method)
+            j_fun = nd.Jacobian(fun, method=method)
             x = j_fun([3., 5., 7.])
             assert_array_almost_equal(x, [[135.42768462, 41.08553692, 15.]])
 
@@ -437,13 +386,13 @@ class TestJacobian(unittest.TestCase):
 
     @staticmethod
     def test_on_matrix_valued_function():
-        def f(x):
+        def fun(x):
             x = np.atleast_1d(x)
             f0 = x[0] ** 2 + x[1] ** 2
             f1 = x[0] ** 3 + x[1] ** 3
             return np.array([f0, f1])
 
-        def df(x):
+        def dfun(x):
             x = np.atleast_1d(x)
             f0_d0 = np.atleast_1d(x[0] * 2)
             f0_d1 = np.atleast_1d(x[1] * 2)
@@ -456,30 +405,28 @@ class TestJacobian(unittest.TestCase):
         x = np.array([(1, 2, 3, 4),
                       (5, 6, 7, 8)], dtype=float)
 
-        y = f(x)
+        y = fun(x)
         assert_array_almost_equal(y, [[26., 40., 58., 80.],
                                       [126., 224., 370., 576.]])
-        jaca = nd.Jacobian(f)
+        jaca = nd.Jacobian(fun)
         assert_array_almost_equal(jaca([1, 2]), [[2., 4.],
                                                  [3., 12.]])
         assert_array_almost_equal(jaca([3, 4]), [[6., 8.],
                                                  [27., 48.]])
-        assert_array_almost_equal(jaca([1, 2]), df([1, 2]))
-        assert_array_almost_equal(jaca([3, 4]), df([3, 4]))
-
-        # v0 = approx_fprime([[1, 2], [3, 4]], f)
+        assert_array_almost_equal(jaca([1, 2]), dfun([1, 2]))
+        assert_array_almost_equal(jaca([3, 4]), dfun([3, 4]))
 
         v0 = jaca([[1, 2], [3, 4]])
         assert_array_almost_equal(v0,
-                                  df([[1, 2],
-                                      [3, 4]]))
+                                  dfun([[1, 2],
+                                        [3, 4]]))
         assert_array_almost_equal(v0,
                                   [[[2., 0., 6., 0.],
                                     [0., 4., 0., 8.]],
                                    [[3., 0., 27., 0.],
                                     [0., 12., 0., 48.]]])
 
-        v0 = approx_fprime(x, f)
+        v0 = approx_fprime(x, fun)
         assert_array_almost_equal(v0,
                                   [[[2., 4., 6., 8.],
                                     [10., 12., 14., 16.]],
@@ -581,9 +528,6 @@ class TestHessian(unittest.TestCase):
         for method in ['central', 'complex']:
             step = nd.MaxStepGenerator(base_step=1e-3)
             hessian = nd.Hessian(None, step=step, method=method)
-
-            # hessian = nd.Hessian(None)  # does not work
-
             h, _error_estimate, true_h = run_hamiltonian(hessian,
                                                          verbose=False)
             self.assertTrue((np.abs((h-true_h)/true_h) < 1e-4).all())

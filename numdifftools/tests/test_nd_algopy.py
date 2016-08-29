@@ -146,10 +146,10 @@ class TestJacobian(unittest.TestCase):
 
     @staticmethod
     def test_on_scalar_function():
-        def f2(x):
+        def fun(x):
             return x[0] * x[1] * x[2] + np.exp(x[0]) * x[1]
         for method in ['forward', 'reverse']:
-            j_fun = nd.Jacobian(f2, method=method)
+            j_fun = nd.Jacobian(fun, method=method)
             x = j_fun([3., 5., 7.])
             assert_array_almost_equal(x, [[135.42768462, 41.08553692, 15.]])
 
@@ -169,7 +169,7 @@ class TestJacobian(unittest.TestCase):
 
     @staticmethod
     def test_on_matrix_valued_function():
-        def f(x):
+        def fun(x):
 
             f0 = x[0] ** 2 + x[1] ** 2
             f1 = x[0] ** 3 + x[1] ** 3
@@ -184,12 +184,12 @@ class TestJacobian(unittest.TestCase):
         x = np.array([(1, 2, 3, 4),
                       (5, 6, 7, 8)], dtype=float)
 
-        y = f(x)
+        y = fun(x)
         assert_array_almost_equal(y, [[26., 40., 58., 80.],
                                       [126., 224., 370., 576.]])
 
         for method in ['forward', ]:  # TODO: 'reverse' fails
-            jaca = nd.Jacobian(f, method=method)
+            jaca = nd.Jacobian(fun, method=method)
 
             assert_array_almost_equal(jaca([1, 2]), [[[2., 4.]],
                                                      [[3., 12.]]])
@@ -202,7 +202,7 @@ class TestJacobian(unittest.TestCase):
                                         [0., 4., 0., 8.]],
                                        [[3., 0., 27., 0.],
                                         [0., 12., 0., 48.]]])
-            # v0 = df([1, 2])
+
             val = jaca(x)
             assert_array_almost_equal(val,
                                       [[[2., 0., 0., 0., 10., 0., 0., 0.],

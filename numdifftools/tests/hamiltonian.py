@@ -83,8 +83,6 @@ def run_hamiltonian(hessian, verbose=True):
     h, info = hessian(xopt)
     true_h = np.array([[5.23748385e-12, -2.61873829e-12],
                        [-2.61873829e-12, 5.23748385e-12]])
-    #true_h = np.array([[5.23748399e-12, -2.61873843e-12],
-    #                   [-2.61873843e-12, 5.23748399e-12]])
     eigenvalues = linalg.eigvals(h)
     normal_modes = c.normal_modes(eigenvalues)
 
@@ -100,7 +98,3 @@ def run_hamiltonian(hessian, verbose=True):
         print('eigenvalues', eigenvalues)
         print('normal_modes', normal_modes)
     return h, info.error_estimate, true_h
-
-
-if __name__ == '__main__':
-    pass

@@ -38,14 +38,6 @@ def base_step(scale):
     return EPS ** (1. / scale)
 
 
-# def default_base_step(x, scale, epsilon=None):
-#     if epsilon is None:
-#         h = base_step(scale) * nominal_step(x)
-#     else:
-#         h = valarray(x.shape, value=epsilon)
-#     return h
-
-
 def default_scale(method='forward', n=1, order=2):
     high_order = int(n > 1 or order >= 4)
     order2 = max(order // 2 - 1, 0)
@@ -57,7 +49,7 @@ def default_scale(method='forward', n=1, order=2):
           7.30 + n4 * (5 + 2.1**n4)][n_mod_4]) if high_order else 0
 
     return (dict(multicomplex=1.35, complex=1.35+c).get(method, 2.5) +
-            int((n - 1)) * dict(multicomplex=0, complex=0.0).get(method, 1.3) +
+            int(n - 1) * dict(multicomplex=0, complex=0.0).get(method, 1.3) +
             order2 * dict(central=3, forward=2, backward=2).get(method, 0))
 
 

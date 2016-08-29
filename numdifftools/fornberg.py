@@ -11,6 +11,19 @@ _INFO = namedtuple('info', ['error_estimate',
                             'final_radius',
                             'function_count',
                             'iterations', 'failed'])
+_CENTRAL_WEIGHTS_AND_POINTS = {
+    (1, 3): (np.array([-1, 0, 1]) / 2.0, np.arange(-1, 2)),
+    (1, 5): (np.array([1, -8, 0, 8, -1]) / 12.0, np.arange(-2, 3)),
+    (1, 7): (np.array([-1, 9, -45, 0, 45, -9, 1]) / 60.0, np.arange(-3, 4)),
+    (1, 9): (np.array([3, -32, 168, -672, 0, 672, -168, 32, -3]) / 840.0,
+             np.arange(-4, 5)),
+    (2, 3): (np.array([1, -2.0, 1]), np.arange(-1, 2)),
+    (2, 5): (np.array([-1, 16, -30, 16, -1]) / 12.0, np.arange(-2, 3)),
+    (2, 7): (np.array([2, -27, 270, -490, 270, -27, 2]) / 180.0,
+             np.arange(-3, 4)),
+    (2, 9): (np.array([-9, 128, -1008, 8064, -14350,
+                       8064, -1008, 128, -9]) / 5040.0,
+             np.arange(-4, 5))}
 
 
 def fornberg_weights_all(x, x0=0, n=1):
@@ -124,8 +137,6 @@ def _poor_convergence(z, r, f, bn, mvec):
         ftests.append(ftest)
         diffs.append(comp - ftest)
 
-    # return np.any(np.abs(diffs) > 1e-3 * np.abs(ftests))
-
     max_abs_error = np.max(np.abs(diffs))
     max_f_value = np.max(np.abs(ftests))
     return max_abs_error > 1e-3 * max_f_value
@@ -164,19 +175,18 @@ def _num_taylor_coefficients(n):
     return m
 
 
-def richardson_parameter(Q, k):
-    c = np.real((Q[k - 1] - Q[k - 2]) / (Q[k] - Q[k - 1])) - 1.
+def richardson_parameter(vals, k):
+    c = np.real((vals[k - 1] - vals[k - 2]) / (vals[k] - vals[k - 1])) - 1.
     # The lower bound 0.07 admits the singularity x.^-0.9
     c = np.maximum(c, 0.07)
     return -c
 
 
-def richardson(Q, k, c=None):
+def richardson(vals, k, c=None):
     """Richardson extrapolation with parameter estimation"""
     if c is None:
-        c = richardson_parameter(Q, k)
-    R = Q[k] - (Q[k] - Q[k - 1]) / c
-    return R
+        c = richardson_parameter(vals, k)
+    return vals[k] - (vals[k] - vals[k - 1]) / c
 
 
 def taylor(f, z0=0, n=1, r=0.0061, max_iter=30, min_iter=None, num_extrap=3,
@@ -342,10 +352,10 @@ def taylor(f, z0=0, n=1, r=0.0061, max_iter=30, min_iter=None, num_extrap=3,
     extrap0 = []
     extrap = []
     for k in range(1, nk):
-        extrap0.append(richardson(bs, k=k, c=(1.0 - (rs[k - 1] / rs[k])**m)))
+        extrap0.append(richardson(bs, k=k, c=1.0 - (rs[k - 1] / rs[k])**m))
     for k in range(1, nk - 1):
         extrap.append(
-            richardson(extrap0, k=k, c=(1.0 - (rs[k - 1] / rs[k + 1])**m)))
+            richardson(extrap0, k=k, c=1.0 - (rs[k - 1] / rs[k + 1])**m))
     if len(extrap) > 2:
         all_coefs, all_errors = dea3(extrap[:-2], extrap[1:-1], extrap[2:])
         coefs, info = _Limit._get_best_estimate(all_coefs, all_errors,

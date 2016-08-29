@@ -78,7 +78,6 @@ class Bicomplex(object):
         r12, r22 = self.z1*self.z1, self.z2*self.z2
         r = np.sqrt(r12 + r22)
         return r
-        # return np.where(r == 0, np.sqrt(r12 - r22), r)
 
     def norm(self):
         z1, z2 = self.z1, self.z2
@@ -203,7 +202,7 @@ class Bicomplex(object):
         """elementwise multiplication"""
         other = self._coerce(other)
         return Bicomplex(self.z1 * other.z1 - self.z2 * other.z2,
-                         (self.z1 * other.z2 + self.z2 * other.z1))
+                         self.z1 * other.z2 + self.z2 * other.z1)
 
     def _pow_singular(self, other):
         z1, z2 = self.z1, self.z2
@@ -332,12 +331,9 @@ class Bicomplex(object):
     def arcsin(self):
         J = Bicomplex(0, 1)
         return -J * ((J*self + (1-self**2)**0.5).log())
-        # return (np.pi/2 - self.arccos())
 
     def arccos(self):
-        return (np.pi/2 - self.arcsin())
-        # J = Bicomplex(0, 1)
-        # return J * ((self - J * (1-self**2)**0.5).log())
+        return np.pi/2 - self.arcsin()
 
     def arctan(self):
         J = Bicomplex(0, 1)
@@ -346,10 +342,10 @@ class Bicomplex(object):
         return Bicomplex(tmp.z1, tmp.z2)
 
     def arccosh(self):
-        return ((self + (self**2-1)**0.5).log())
+        return (self + (self**2-1)**0.5).log()
 
     def arcsinh(self):
-        return ((self + (self**2+1)**0.5).log())
+        return (self + (self**2+1)**0.5).log()
 
     def arctanh(self):
         return 0.5 * (((1+self)/(1-self)).log())

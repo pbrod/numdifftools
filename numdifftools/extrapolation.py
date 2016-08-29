@@ -73,7 +73,7 @@ class Dea(object):
     @limexp.setter
     def limexp(self, limexp):
         n = 2 * (limexp // 2) + 1
-        if (n < 3):
+        if n < 3:
             raise ValueError('LIMEXP IS LESS THAN 3')
         self.epstab = np.zeros(n + 5)
         self._limexp = n
@@ -90,7 +90,7 @@ class Dea(object):
         i_n = 2 * newelm + 2
         epstab[i_0:i_n:2] = epstab[i_0 + 2:i_n + 2:2]
 
-        if (old_n != n):
+        if old_n != n:
             i_n = old_n - n
             epstab[:n + 1] = epstab[i_n:i_n + n + 1]
         return epstab
@@ -118,14 +118,14 @@ class Dea(object):
             err2, err3 = abs(delta2), abs(delta3)
             tol2 = max(abs(e2), abs(e1)) * _EPS
             tol3 = max(abs(e1), abs(e0)) * _EPS
-            all_converged = (err2 <= tol2 and err3 <= tol3)
+            all_converged = err2 <= tol2 and err3 <= tol3
             if all_converged:
                 abserr = err2 + err3
                 result = res
                 break
 
-            if (I == 0):
-                any_converged = (err2 <= tol2 or err3 <= tol3)
+            if I == 0:
+                any_converged = err2 <= tol2 or err3 <= tol3
                 if not any_converged:
                     SS = 1.0 / delta2 - 1.0 / delta3
             else:
@@ -133,14 +133,14 @@ class Dea(object):
                 delta1 = e1 - e3
                 err1 = abs(delta1)
                 tol1 = max(abs(e1), abs(e3)) * _EPS
-                any_converged = (err1 <= tol1 or err2 <= tol2 or err3 <= tol3)
+                any_converged = err1 <= tol1 or err2 <= tol2 or err3 <= tol3
                 if not any_converged:
                     SS = 1.0 / delta1 + 1.0 / delta2 - 1.0 / delta3
 
             epstab[k1] = e1
-            if (any_converged or abs(SS * e1) <= 1e-04):
+            if any_converged or abs(SS * e1) <= 1e-04:
                 n = 2 * I
-                if (nres == 0):
+                if nres == 0:
                     abserr = err2 + err3
                     result = res
                 else:
@@ -150,13 +150,13 @@ class Dea(object):
             res = e1 + 1.0 / SS
             epstab[k1] = res
             k1 = k1 - 2
-            if (nres == 0):
+            if nres == 0:
                 abserr = err2 + abs(res - e2) + err3
                 result = res
                 continue
             error = self._compute_error(res3la, nres, res)
 
-            if (error > 10.0 * abserr):
+            if error > 10.0 * abserr:
                 continue
             abserr = error
             result = res
@@ -166,7 +166,7 @@ class Dea(object):
             # result = res
 
         # 50
-        if (n == self.limexp - 1):
+        if n == self.limexp - 1:
             n = 2 * (self.limexp // 2) - 1
         epstab = self._shift_table(epstab, n, newelm, old_n)
         self._update_res3la(res3la, result, nres)
@@ -184,9 +184,9 @@ class Dea(object):
         n = self._n
 
         epstab[n] = s_value
-        if (n == 0):
+        if n == 0:
             abserr = abs(result)
-        elif (n == 1):
+        elif n == 1:
             abserr = 6.0 * abs(result - epstab[0])
         else:
             result, abserr, n = self._dea(epstab, n)
@@ -219,14 +219,14 @@ class EpsAlg(object):
         self.abserr = 10.
         self._n = 0
         self._nres = 0
-        if (limexp < 3):
+        if limexp < 3:
             raise ValueError('LIMEXP IS LESS THAN 3')
 
     def __call__(self, s_n):
         n = self._n
         epstab = self.epstab
         epstab[n] = s_n
-        if (n == 0):
+        if n == 0:
             estlim = s_n
         else:
             aux2 = 0.0
@@ -234,7 +234,7 @@ class EpsAlg(object):
                 aux1 = aux2
                 aux2 = epstab[i - 1]
                 delta = epstab[i] - aux2
-                if (np.abs(delta) <= 1.0e-60):
+                if np.abs(delta) <= 1.0e-60:
                     epstab[i - 1] = 1.0e+60
                 else:
                     epstab[i - 1] = aux1 + 1.0 / delta
@@ -344,7 +344,7 @@ def dea3(v0, v1, v2, symmetric=False):
         delta1[err1 < _TINY] = _TINY
         delta2[err2 < _TINY] = _TINY  # avoid division by zero and overflow
         ss = 1.0 / delta2 - 1.0 / delta1 + _TINY
-        smalle2 = (abs(ss * E1) <= 1.0e-3)
+        smalle2 = abs(ss * E1) <= 1.0e-3
         converged = (err1 <= tol1) & (err2 <= tol2) | smalle2
         result = np.where(converged, E2 * 1.0, E1 + 1.0 / ss)
         abserr = err1 + err2 + np.where(converged, tol2 * 10, abs(result - E2))
@@ -427,8 +427,6 @@ class Richardson(object):
         converged = err <= tol
         abserr = err + np.where(converged, tol * 10,
                                 abs(new_sequence[:-1] - old_sequence[1:]) * fact)
-        # abserr = err1 + err2 + np.where(converged, tol2 * 10, abs(result-E2))
-        # abserr = s * fact + np.abs(new_sequence) * EPS * 10.0
         return abserr
 
     def extrapolate(self, sequence, steps):
@@ -439,7 +437,7 @@ class Richardson(object):
         rule = self.rule(ne)
         nr = rule.size - 1
         m = ne - nr
-        new_sequence = convolve(sequence, rule[::-1], axis=0, origin=(nr // 2))
+        new_sequence = convolve(sequence, rule[::-1], axis=0, origin=nr // 2)
         abserr = self._estimate_error(new_sequence, sequence, steps, rule)
         return new_sequence[:m], abserr[:m], steps[:m]
 

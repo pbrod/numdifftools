@@ -4,7 +4,7 @@ Created on 22. apr. 2015
 @author: pab
 """
 import unittest
-# from functools import partial
+
 from numdifftools.multicomplex import Bicomplex
 from numdifftools.example_functions import get_function
 import numpy as np
@@ -201,7 +201,7 @@ class BicomplexTester(unittest.TestCase):
         np.testing.assert_allclose(z3.z1, z1.z1 * z1.z1 - z1.z2 * z1.z2)
         np.testing.assert_allclose(z3.z2, z1.z1 * z1.z2 + z1.z2 * z1.z1)
 
-        z1 = Bicomplex(z1=(-1j), z2=(-1-0j))
+        z1 = Bicomplex(z1=-1j, z2=-1-0j)
 
         z2 = z1 * z1
         z3 = z1 ** 2
@@ -345,18 +345,18 @@ def _test_first_derivative(name):
 
     der = f(Bicomplex(x + h * 1j, 0)).imag1 / h
     der_true = df(x)
-    np.testing.assert_allclose(der, der_true, err_msg=('{0!s}'.format(name)))
+    np.testing.assert_allclose(der, der_true, err_msg='{0!s}'.format(name))
 
 
 def _test_second_derivative(name):
     x = np.linspace(0.01, 0.98, 5)
     h = _default_base_step(x, scale=2.5)
-    # h = 1e-8
+
     f, df = get_function(name, n=2)
 
     der = f(Bicomplex(x + h * 1j, h)).imag12 / h**2
     der_true = df(x)
-    np.testing.assert_allclose(der, der_true, err_msg=('{0!s}'.format(name)))
+    np.testing.assert_allclose(der, der_true, err_msg='{0!s}'.format(name))
 
 _function_names = ['cos', 'sin', 'tan', 'arccos', 'arcsin', 'arctan', 'cosh',
                    'sinh', 'tanh', 'exp', 'log', 'exp2', 'square', 'sqrt',
@@ -376,15 +376,5 @@ class DerivativeTester(unittest.TestCase):
             _test_second_derivative(name)
 
 
-# for name in _function_names:
-#     for i, derivative in enumerate([_test_first_derivative,
-#                                     _test_second_derivative]):
-#         testname = 'test_n%d_derivative_%s' % (i+1, name)
-#         testfunc = partial(derivative, name)
-#         testfunc.__doc__ = testname
-#         setattr(DerivativeTester, testname, testfunc)
-
-
 if __name__ == "__main__":
-    # import sys;sys.argv = ['', 'Test.testName']
     unittest.main()

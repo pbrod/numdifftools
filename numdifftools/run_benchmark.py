@@ -5,7 +5,7 @@ import timeit
 import numdifftools as nd
 import numdifftools.nd_algopy as nda
 from algopy import dot
-# from numpy import dot
+
 from collections import OrderedDict
 from numdifftools.core import MinStepGenerator, MaxStepGenerator
 import matplotlib.pyplot as plt
@@ -15,8 +15,8 @@ class BenchmarkFunction(object):
 
     """Return 0.5 * np.dot(x**2, np.dot(A,x))"""
 
-    def __init__(self, N):
-        A = np.arange(N * N, dtype=float).reshape((N, N))
+    def __init__(self, n):
+        A = np.arange(n * n, dtype=float).reshape((n, n))
         self.A = np.dot(A.T, A)
 
     def __call__(self, xi):
