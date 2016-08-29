@@ -274,7 +274,7 @@ def dea_demo():
         print(txt.format(len(x) - 1, val, vale, err))
 
 
-def _max_abs(a1, a2):
+def max_abs(a1, a2):
     return np.maximum(np.abs(a1), np.abs(a2))
 
 
