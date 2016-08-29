@@ -274,6 +274,10 @@ def dea_demo():
         print(txt.format(len(x) - 1, val, vale, err))
 
 
+def _max_abs(a1, a2):
+    return np.maximum(np.abs(a1), np.abs(a2))
+
+
 def dea3(v0, v1, v2, symmetric=False):
     """
     Extrapolate a slowly convergent sequence
@@ -334,20 +338,20 @@ def dea3(v0, v1, v2, symmetric=False):
             Computer Physics Reports Vol. 10, 189 - 371
             http://arxiv.org/abs/math/0306302v1
     """
-    E0, E1, E2 = np.atleast_1d(v0, v1, v2)
-    abs, max = np.abs, np.maximum  # @ReservedAssignment
+    e0, e1, e2 = np.atleast_1d(v0, v1, v2)
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")  # ignore division by zero and overflow
-        delta2, delta1 = E2 - E1, E1 - E0
-        err2, err1 = abs(delta2), abs(delta1)
-        tol2, tol1 = max(abs(E2), abs(E1)) * _EPS, max(abs(E1), abs(E0)) * _EPS
+        delta2, delta1 = e2 - e1, e1 - e0
+        err2, err1 = np.abs(delta2), np.abs(delta1)
+        tol2, tol1 = max_abs(e2, e1) * _EPS, max_abs(e1, e0) * _EPS
         delta1[err1 < _TINY] = _TINY
         delta2[err2 < _TINY] = _TINY  # avoid division by zero and overflow
         ss = 1.0 / delta2 - 1.0 / delta1 + _TINY
-        smalle2 = abs(ss * E1) <= 1.0e-3
+        smalle2 = abs(ss * e1) <= 1.0e-3
         converged = (err1 <= tol1) & (err2 <= tol2) | smalle2
-        result = np.where(converged, E2 * 1.0, E1 + 1.0 / ss)
-        abserr = err1 + err2 + np.where(converged, tol2 * 10, abs(result - E2))
+        result = np.where(converged, e2 * 1.0, e1 + 1.0 / ss)
+        abserr = err1 + err2 + np.where(converged, tol2 * 10,
+                                        np.abs(result - e2))
     if symmetric and len(result) > 1:
         return result[:-1], abserr[1:]
     return result, abserr

@@ -1,6 +1,5 @@
 
 import numpy as np
-import warnings
 from scipy.special import factorial
 from numdifftools.extrapolation import EPS, dea3
 from numdifftools.limits import _Limit
