@@ -76,6 +76,7 @@ class BasicMaxStepGenerator(object):
 
     Example
     -------
+    >>> from numdifftools.step_generators import BasicMaxStepGenerator
     >>> step_gen = BasicMaxStepGenerator(base_step=2.0, step_ratio=2, num_steps=4)
     >>> [s for s in step_gen()]
     [2.0, 1.0, 0.5, 0.25]
@@ -125,6 +126,7 @@ class BasicMinStepGenerator(BasicMaxStepGenerator):
 
     Example
     -------
+    >>> from numdifftools.step_generators import BasicMinStepGenerator
     >>> step_gen = BasicMinStepGenerator(base_step=0.25, step_ratio=2, num_steps=4)
     >>> [s for s in step_gen()]
     [2.0, 1.0, 0.5, 0.25]
