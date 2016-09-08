@@ -2,7 +2,58 @@
 Changelog
 =========
 
-Created with gitcommand: git shortlog v0.9.14..v0.9.15
+Created with gitcommand: git shortlog v0.9.16..v0.9.18
+
+
+Version 0.9.18, Sep 8, 2016
+---------------------------------
+
+Andrew Fowlie (1):
+      * Fix ReadTheDocs link as mentioned in #21
+
+Per A Brodtkorb (79):
+      * Added test for MinMaxStepgenerator
+      * Removed obsolete docs from core.py
+      * Updated appveyor.yml
+      * Fixed sign in inverse matrix
+      * Simplified code 
+      * Added appveyor badge + synchronised info.py with README.rst.
+      * Removed plot in help header
+      * Added Programming Language :: Python :: 3.5
+      * Simplified code
+      * Renamed bicomplex to Bicomplex
+      * Simplified example_functions.py
+      * Moved MinStepGenerator, MaxStepGeneretor and MinMaxStepGenerator to step_generators.py
+		* Unified the step generators
+		* Moved step_generator tests to test_step_generators.py
+		* Major simplification of step_generators.py
+      * Removed duplicated code + pep8
+      * Moved fornberg_weights to fornberg.py + added taylor and derivative
+      * Fixed print statement
+      * Replace xrange with range
+      * Added examples + made computation more robust.
+      * Made 'backward' and alias for 'reverse' in nd_algopy.py
+      * Expanded the tests + added test_docstrings to testing.py
+      * Replace string interpolation with format()
+      * Removed obsolete parameter
+      * Smaller start radius for Fornberg method
+      * Simplified "n" and "order" properties
+      * Simplified default_scale
+      * Removed unecessary parenthesis and code. pep8
+      * Fixed a bug in Dea + small refactorings.
+      * Added test for EpsAlg
+      * Avoid mutable default args and prefer static methods over instance-meth.
+      * Refactored to reduce cyclomatic complexity
+      * Changed some instance methods to static methods
+      * Renamed non-pythonic variable names
+      * Turned on xvfb (X Virtual Framebuffer) to imitate a display.
+      * Added extra test for Jacobian
+      * Replace lambda function with a def
+      * Removed unused import
+      * Added test for epsalg
+      * Fixed test_scalar_to_vector
+      * Updated test_docstrings
+
 
 Version 0.9.15, May 10, 2016
 ---------------------------------
