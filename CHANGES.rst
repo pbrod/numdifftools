@@ -2,10 +2,10 @@
 Changelog
 =========
 
-Created with gitcommand: git shortlog v0.9.16..v0.9.18
+Created with gitcommand: git shortlog v0.9.16..v0.9.17
 
 
-Version 0.9.18, Sep 8, 2016
+Version 0.9.17, Sep 8, 2016
 ---------------------------------
 
 Andrew Fowlie (1):
