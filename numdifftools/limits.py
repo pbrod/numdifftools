@@ -478,4 +478,4 @@ class Residue(Limit):
 
 if __name__ == '__main__':
     from numdifftools.testing import test_docstrings
-    test_docstrings()
+    test_docstrings(__file__)

@@ -17,8 +17,10 @@ def rosen(x):
     return (1 - x[0])**2 + 105. * (x[1] - x[0]**2)**2
 
 
-def test_docstrings():
+def test_docstrings(name=''):
     # np.set_printoptions(precision=6)
     import doctest
-    print('Testing docstrings in {}'.format(inspect.stack()[1][1]))
+    if not name:
+        name = inspect.stack()[1][1]
+    print('Testing docstrings in {}'.format(name))
     doctest.testmod(optionflags=doctest.NORMALIZE_WHITESPACE|doctest.ELLIPSIS)
