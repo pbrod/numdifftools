@@ -8,6 +8,8 @@ from algopy import dot
 
 from collections import OrderedDict
 from numdifftools.core import MinStepGenerator, MaxStepGenerator
+from matplotlib import use
+use('WXAgg')
 import matplotlib.pyplot as plt
 
 
