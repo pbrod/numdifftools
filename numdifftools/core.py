@@ -662,8 +662,8 @@ class Jacobian(Derivative):
         if self.full_output:
             vals, info = vals
         if vals.ndim == 3:
-            vals =  np.array([np.hstack([np.diag(hj) for hj in hi])
-                              for hi in vals])
+            vals = np.array([np.hstack([np.diag(hj) for hj in hi])
+                            for hi in vals])
         if self.full_output:
             return vals, info
         return vals
@@ -919,8 +919,8 @@ class Hessian(Hessdiag):
         for i in range(n):
             for j in range(i, n):
                 hess[i, j] = (f(x + 1j * ee[i] + ee[j], *args, **kwargs) -
-                             f(x + 1j * ee[i] - ee[j], *args, **kwargs)
-                             ).imag / hess[j, i]
+                              f(x + 1j * ee[i] - ee[j], *args, **kwargs)
+                              ).imag / hess[j, i]
                 hess[j, i] = hess[i, j]
         return hess
 
