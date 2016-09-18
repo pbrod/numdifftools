@@ -16,10 +16,12 @@ _TINY = np.finfo(float).tiny
 
 def convolve(sequence, rule, **kwds):
     """Wrapper around scipy.ndimage.convolve1d that allows complex input."""
-    if np.iscomplexobj(sequence):
-        return (convolve1d(sequence.real, rule, **kwds) + 1j *
-                convolve1d(sequence.imag, rule, **kwds))
-    return convolve1d(sequence, rule, **kwds)
+    dtype = np.result_type(float, np.ravel(sequence)[0])
+    seq = np.asarray(sequence, dtype=dtype)
+    if np.iscomplexobj(seq):
+        return (convolve1d(seq.real, rule, **kwds) + 1j *
+                convolve1d(seq.imag, rule, **kwds))
+    return convolve1d(seq, rule, **kwds)
 
 
 class Dea(object):
@@ -350,8 +352,7 @@ def dea3(v0, v1, v2, symmetric=False):
         smalle2 = abs(ss * e1) <= 1.0e-3
         converged = (err1 <= tol1) & (err2 <= tol2) | smalle2
         result = np.where(converged, e2 * 1.0, e1 + 1.0 / ss)
-        abserr = err1 + err2 + np.where(converged, tol2 * 10,
-                                        np.abs(result - e2))
+    abserr = err1 + err2 + np.where(converged, tol2 * 10, np.abs(result - e2))
     if symmetric and len(result) > 1:
         return result[:-1], abserr[1:]
     return result, abserr
@@ -391,7 +392,7 @@ class Richardson(object):
     >>> (truErr, err, En)
     (array([[ -2.00805680e-04],
            [ -5.01999079e-05],
-           [ -1.25498825e-05]]), array([[ 0.00320501]]), array([[ 1.]]))
+           [ -1.25498825e-05]]), array([[ 0.00160242]]), array([[ 1.]]))
 
     """
 
@@ -419,18 +420,30 @@ class Richardson(object):
 
     @staticmethod
     def _estimate_error(new_sequence, old_sequence, steps, rule):
-        m, _n = new_sequence.shape
-
-        if m < 2:
-            return (np.abs(new_sequence) * EPS + steps) * 10.0
+        m = new_sequence.shape[0]
+        mo = old_sequence.shape[0]
         cov1 = np.sum(rule**2)  # 1 spare dof
         fact = np.maximum(12.7062047361747 * np.sqrt(cov1), EPS * 10.)
+        if mo < 2:
+            return (np.abs(new_sequence) * EPS + steps) * fact
+        if m < 2:
+            delta = np.diff(old_sequence, axis=0)
+            tol = max_abs(old_sequence[:-1], old_sequence[1:]) * fact
+            err = np.abs(delta)
+            converged = err <= tol
+            abserr = err[-m:] + np.where(converged[-m:], tol[-m:] * 10,
+                                abs(new_sequence - old_sequence[-m:]) * fact)
+            return abserr
+#         if mo>2:
+#             res, abserr = dea3(old_sequence[:-2], old_sequence[1:-1],
+#                               old_sequence[2:] )
+#             return abserr[-m:] * fact
         err = np.abs(np.diff(new_sequence, axis=0)) * fact
-        tol = np.maximum(np.abs(new_sequence[1:]),
-                         np.abs(new_sequence[:-1])) * EPS * fact
+        tol = max_abs(new_sequence[1:], new_sequence[:-1]) * EPS * fact
         converged = err <= tol
         abserr = err + np.where(converged, tol * 10,
-                                abs(new_sequence[:-1] - old_sequence[1:]) * fact)
+                                abs(new_sequence[:-1] -
+                                    old_sequence[-m+1:]) * fact)
         return abserr
 
     def extrapolate(self, sequence, steps):
@@ -441,8 +454,9 @@ class Richardson(object):
         rule = self.rule(ne)
         nr = rule.size - 1
         m = ne - nr
+        mm = min(ne, m+1)
         new_sequence = convolve(sequence, rule[::-1], axis=0, origin=nr // 2)
-        abserr = self._estimate_error(new_sequence, sequence, steps, rule)
+        abserr = self._estimate_error(new_sequence[:mm], sequence, steps, rule)
         return new_sequence[:m], abserr[:m], steps[:m]
 
 

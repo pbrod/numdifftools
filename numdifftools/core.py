@@ -455,12 +455,12 @@ class Derivative(_Limit):
     @staticmethod
     def _multicomplex(f, fx, x, h, *args, **kwds):
         z = Bicomplex(x + 1j * h, 0)
-        return f(z, *args, **kwds).imag
+        return Bicomplex.__array_wrap__(f(z, *args, **kwds)).imag
 
     @staticmethod
     def _multicomplex2(f, fx, x, h, *args, **kwds):
         z = Bicomplex(x + 1j * h, h)
-        return f(z, *args, **kwds).imag12
+        return Bicomplex.__array_wrap__(f(z, *args, **kwds)).imag12
 
 
 def directionaldiff(f, x0, vec, **options):
@@ -604,6 +604,7 @@ class Jacobian(Derivative):
         h = self._vstack_steps(steps, original_shape, axes, n)
 
         self._check_equal_size(f_del, h)
+
         return f_del, h, self._atleast_2d(original_shape, ndim)
 
     @staticmethod
@@ -651,15 +652,20 @@ class Jacobian(Derivative):
     def _multicomplex(self, f, fx, x, h, *args, **kwds):
         n = len(x)
         increments = self._increments(n, 1j * h)
-        partials = [f(Bicomplex(x + hi, 0), *args, **kwds).imag
+        cmplx_wrap = Bicomplex.__array_wrap__
+        partials = [cmplx_wrap(f(Bicomplex(x + hi, 0), *args, **kwds)).imag
                     for hi in increments]
         return np.array(partials)
 
     def __call__(self, x, *args, **kwds):
         vals = super(Jacobian, self).__call__(np.atleast_1d(x), *args, **kwds)
+        if self.full_output:
+            vals, info = vals
         if vals.ndim == 3:
-            return np.array([np.hstack([np.diag(hj) for hj in hi])
-                             for hi in vals])
+            vals =  np.array([np.hstack([np.diag(hj) for hj in hi])
+                              for hi in vals])
+        if self.full_output:
+            return vals, info
         return vals
 
 
@@ -804,7 +810,9 @@ class Hessdiag(Derivative):
     def _multicomplex2(f, fx, x, h, *args, **kwds):
         n = len(x)
         increments = np.identity(n) * h
-        partials = [f(Bicomplex(x + 1j * hi, hi), *args, **kwds).imag12
+        cmplx_wrap = Bicomplex.__array_wrap__
+        partials = [cmplx_wrap(f(Bicomplex(x + 1j * hi, hi), *args,
+                                 **kwds)).imag12
                     for hi in increments]
         return np.array(partials)
 
@@ -922,10 +930,12 @@ class Hessian(Hessdiag):
         n = len(x)
         ee = np.diag(h)
         hess = np.outer(h, h)
+        cmplx_wrap = Bicomplex.__array_wrap__
         for i in range(n):
             for j in range(i, n):
                 zph = Bicomplex(x + 1j * ee[i, :], ee[j, :])
-                hess[i, j] = (f(zph, *args, **kwargs)).imag12 / hess[j, i]
+                hess[i, j] = cmplx_wrap(f(zph, *args,
+                                          **kwargs)).imag12 / hess[j, i]
                 hess[j, i] = hess[i, j]
         return hess
 

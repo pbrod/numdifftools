@@ -4,9 +4,10 @@ import unittest
 import numdifftools.core as nd
 from numdifftools.step_generators import default_scale
 import numpy as np
-from numpy.testing import assert_array_almost_equal
+from numpy.testing import assert_allclose
 from numdifftools.testing import rosen
 from numdifftools.tests.hamiltonian import run_hamiltonian
+from hypothesis import given, example, note, strategies as st
 
 
 class TestRichardson(unittest.TestCase):
@@ -47,8 +48,7 @@ class TestRichardson(unittest.TestCase):
                     d = nd.Derivative(np.exp, method=method, order=order)
                     d.set_richardson_rule(step_ratio=2.0, num_terms=num_terms)
                     rule = d.richardson.rule()
-                    assert_array_almost_equal(rule,
-                                              truth[(num_terms, order)])
+                    assert_allclose(rule, truth[(num_terms, order)], atol=1e-8)
 
     @staticmethod
     def test_complex():
@@ -113,9 +113,9 @@ class TestRichardson(unittest.TestCase):
                     msg = "n={0}, num_terms={1}, order={2}".format(n,
                                                                    num_terms,
                                                                    order)
-                    assert_array_almost_equal(rule,
-                                              truth[(n, num_terms, order)],
-                                              err_msg=msg)
+                    assert_allclose(rule,
+                                    truth[(n, num_terms, order)],
+                                    err_msg=msg)
 
 
 class TestDerivative(unittest.TestCase):
@@ -126,7 +126,7 @@ class TestDerivative(unittest.TestCase):
         x0 = [2, 3]
 
         directional_diff = nd.directionaldiff(rosen, x0, v)
-        assert_array_almost_equal(directional_diff, 743.87633380824832)
+        assert_allclose(directional_diff, 743.87633380824832)
 
     def test_infinite_functions(self):
         def finf(x):
@@ -163,27 +163,40 @@ class TestDerivative(unittest.TestCase):
 #                     print('method=%s, n=%d, order=%d' % (method, n, order))
 #                     print(error, info.error_estimate)
 #                 self.assertTrue(small)
-                    assert_array_almost_equal(y, true_val, decimal=4)
+                    assert_allclose(y, true_val, atol=1e-4)
         # self.assert_(False)
 
     @staticmethod
-    def test_derivative_of_cos_x():
-        x = np.r_[0, np.pi / 6.0, np.pi / 2.0]
-        true_vals = (-np.sin(x), -np.cos(x), np.sin(x), np.cos(x), -np.sin(x),
-                     -np.cos(x))
+    @given(st.floats(min_value=0, max_value=10))
+    @example(7.6564547238847105)
+    def test_derivative_of_cos_x(x):
+        # x = np.r_[0, np.pi / 6.0, np.pi / 2.0]
+        note('x = {}'.format(x))
+        msg = 'order = {}, error = {}, err_est = {}'
+        true_vals = (-np.sin(x), -np.cos(x), np.sin(x), np.cos(x)) * 2
         for method in ['complex', 'central', 'forward', 'backward']:
-            n_max = dict(complex=2, central=6).get(method, 5)
+            note('method = {}'.format(method))
+            n_max = dict(complex=7, central=6).get(method, 4)
             for n in range(1, n_max + 1):
                 true_val = true_vals[n - 1]
                 start, stop, step = dict(central=(2, 7, 2),
                                          complex=(2, 3, 1)).get(method,
                                                                 (1, 5, 1))
+                note('n = {}, true_val = {}'.format(n, true_val))
                 for order in range(start, stop, step):
                     d3cos = nd.Derivative(np.cos, n=n, order=order,
                                           method=method, full_output=True)
                     y, _info = d3cos(x)
                     _error = np.abs(y - true_val)
-                    assert_array_almost_equal(y, true_val, decimal=4)
+                    aerr = 100 * _info.error_estimate + 1e-14
+#                     if aerr > 1e-5 and np.abs(true_val) > 0.3:
+#                         aerr = min(aerr, np.abs(true_val)*1e-6)
+#                     el
+                    if aerr < 1e-14 and np.abs(true_val) < 1e-3:
+                        aerr = 1e-8
+                    note(msg.format(order, _error, _info.error_estimate))
+                    assert_allclose(y, true_val, rtol=1e-6, atol=aerr)
+                    # assert_allclose(y, true_val, rtol=4)
 
     @staticmethod
     def test_default_scale():
@@ -204,8 +217,7 @@ class TestDerivative(unittest.TestCase):
             for method in methods:
                 df = dfun(func, method=method)
                 val = df(0.0, 1.0, b=2)
-
-                assert_array_almost_equal(val, 0)
+                assert_allclose(val, 0, atol=1e-14)
 
     @staticmethod
     def test_derivative_with_step_options():
@@ -219,7 +231,7 @@ class TestDerivative(unittest.TestCase):
             for method in methods:
                 df = dfun(func, method=method, **step_options)
                 val = df(0.0, 1.0, b=2)
-                assert_array_almost_equal(val, 0)
+                assert_allclose(val, 0, atol=1e-14)
 
     @staticmethod
     def test_derivative_cube():
@@ -230,19 +242,16 @@ class TestDerivative(unittest.TestCase):
         shape = (3, 2)
         x = np.ones(shape) * 2
         dx = dcube(x)
-        assert_array_almost_equal(list(dx.shape), list(shape),
-                                  decimal=8,
-                                  err_msg='Shape mismatch')
+        assert_allclose(list(dx.shape), list(shape), err_msg='Shape mismatch')
         txt = 'First differing element %d\n value = %g,\n true value = %g'
         for i, (val, tval) in enumerate(zip(dx.ravel(), (3 * x**2).ravel())):
-            assert_array_almost_equal(val, tval, decimal=8,
-                                      err_msg=txt % (i, val, tval))
+            assert_allclose(val, tval, rtol=1e-8, err_msg=txt % (i, val, tval))
 
     @staticmethod
     def test_derivative_exp():
         # derivative of exp(x), at x == 0
         dexp = nd.Derivative(np.exp)
-        assert_array_almost_equal(dexp(0), np.exp(0), decimal=8)
+        assert_allclose(dexp(0), np.exp(0), rtol=1e-8)
 
     @staticmethod
     def test_derivative_sin():
@@ -251,7 +260,7 @@ class TestDerivative(unittest.TestCase):
         dsin = nd.Derivative(np.sin)
         x = np.linspace(0, 2. * np.pi, 13)
         y = dsin(x)
-        assert_array_almost_equal(y, np.cos(x), decimal=8)
+        assert_allclose(y, np.cos(x), atol=1e-8)
 
     def test_backward_derivative_on_sinh(self):
         # Compute the derivative of a function using a backward difference
@@ -349,14 +358,20 @@ def approx_fprime(x, f, epsilon=None, args=(), kwargs=None, centered=True):
 
 
 class TestJacobian(unittest.TestCase):
+
     @staticmethod
-    def test_scalar_to_vector():
+    @given(st.floats(min_value=-1000, max_value=1000))
+    def test_scalar_to_vector(val):
         def fun(x):
             return np.array([x, x**2, x**3])
-        for method in ['complex', 'central', 'forward', 'backward']:
-            val = np.random.randn()
-            j0 = nd.Jacobian(fun, method=method)(val)
-            assert_array_almost_equal(j0, [[1., 2*val, 3*val**2]])
+        truth = np.array([[1., 2 * val, 3 * val**2]])
+        for method in ['multicomplex', 'complex', 'central', 'forward',
+                       'backward']:
+            j0, info = nd.Jacobian(fun, method=method, full_output=True)(val)
+            error = np.abs(j0-truth)
+            note('method={}, error={}, error_est={}'.format(method, error,
+                                                            info.error_estimate))
+            assert_allclose(j0, truth, rtol=1e-3, atol=1e-6)
 
     @staticmethod
     def test_on_scalar_function():
@@ -366,7 +381,7 @@ class TestJacobian(unittest.TestCase):
         for method in ['complex', 'central', 'forward', 'backward']:
             j_fun = nd.Jacobian(fun, method=method)
             x = j_fun([3., 5., 7.])
-            assert_array_almost_equal(x, [[135.42768462, 41.08553692, 15.]])
+            assert_allclose(x, [[135.42768462, 41.08553692, 15.]])
 
     @staticmethod
     def test_on_vector_valued_function():
@@ -382,7 +397,7 @@ class TestJacobian(unittest.TestCase):
             for order in [2, 4]:
                 j_fun = nd.Jacobian(fun, method=method, order=order)
                 j_val = j_fun([1, 2, 0.75])  # should be numerically zero
-                assert_array_almost_equal(j_val, np.zeros((ydata.size, 3)))
+                assert_allclose(j_val, np.zeros((ydata.size, 3)), atol=1e-12)
 
     @staticmethod
     def test_on_matrix_valued_function():
@@ -406,43 +421,43 @@ class TestJacobian(unittest.TestCase):
                       (5, 6, 7, 8)], dtype=float)
 
         y = fun(x)
-        assert_array_almost_equal(y, [[26., 40., 58., 80.],
-                                      [126., 224., 370., 576.]])
+        assert_allclose(y, [[26., 40., 58., 80.],
+                            [126., 224., 370., 576.]])
         jaca = nd.Jacobian(fun)
-        assert_array_almost_equal(jaca([1, 2]), [[2., 4.],
-                                                 [3., 12.]])
-        assert_array_almost_equal(jaca([3, 4]), [[6., 8.],
-                                                 [27., 48.]])
-        assert_array_almost_equal(jaca([1, 2]), dfun([1, 2]))
-        assert_array_almost_equal(jaca([3, 4]), dfun([3, 4]))
+        assert_allclose(jaca([1, 2]), [[2., 4.],
+                                       [3., 12.]])
+        assert_allclose(jaca([3, 4]), [[6., 8.],
+                                       [27., 48.]])
+        assert_allclose(jaca([1, 2]), dfun([1, 2]))
+        assert_allclose(jaca([3, 4]), dfun([3, 4]))
 
         v0 = jaca([[1, 2], [3, 4]])
-        assert_array_almost_equal(v0,
-                                  dfun([[1, 2],
-                                        [3, 4]]))
-        assert_array_almost_equal(v0,
-                                  [[[2., 0., 6., 0.],
-                                    [0., 4., 0., 8.]],
-                                   [[3., 0., 27., 0.],
-                                    [0., 12., 0., 48.]]])
+        assert_allclose(v0,
+                        dfun([[1, 2],
+                              [3, 4]]))
+        assert_allclose(v0,
+                        [[[2., 0., 6., 0.],
+                          [0., 4., 0., 8.]],
+                         [[3., 0., 27., 0.],
+                          [0., 12., 0., 48.]]])
 
         v0 = approx_fprime(x, fun)
-        assert_array_almost_equal(v0,
-                                  [[[2., 4., 6., 8.],
-                                    [10., 12., 14., 16.]],
-                                   [[3., 12., 27., 48.],
-                                    [75., 108., 147., 192.]]])
+        assert_allclose(v0,
+                        [[[2., 4., 6., 8.],
+                          [10., 12., 14., 16.]],
+                         [[3., 12., 27., 48.],
+                          [75., 108., 147., 192.]]])
 
         val = jaca(x)
-        assert_array_almost_equal(val,
-                                  [[[2., 0., 0., 0., 10., 0., 0., 0.],
-                                    [0., 4., 0., 0., 0., 12., 0., 0.],
-                                    [0., 0., 6., 0., 0., 0., 14., 0.],
-                                    [0., 0., 0., 8., 0., 0., 0., 16.]],
-                                   [[3., 0., 0., 0., 75., 0., 0., 0.],
-                                    [0., 12., 0., 0., 0., 108., 0., 0.],
-                                    [0., 0., 27., 0., 0., 0., 147., 0.],
-                                    [0., 0., 0., 48., 0., 0., 0., 192.]]])
+        assert_allclose(val,
+                        [[[2., 0., 0., 0., 10., 0., 0., 0.],
+                          [0., 4., 0., 0., 0., 12., 0., 0.],
+                          [0., 0., 6., 0., 0., 0., 14., 0.],
+                          [0., 0., 0., 8., 0., 0., 0., 16.]],
+                         [[3., 0., 0., 0., 75., 0., 0., 0.],
+                          [0., 12., 0., 0., 0., 108., 0., 0.],
+                          [0., 0., 27., 0., 0., 0., 147., 0.],
+                          [0., 0., 0., 48., 0., 0., 0., 192.]]])
 
 
 class TestGradient(unittest.TestCase):
@@ -453,9 +468,9 @@ class TestGradient(unittest.TestCase):
         v = v / np.linalg.norm(v)
         x0 = [2, 3]
         directional_diff = np.dot(nd.Gradient(rosen)(x0), v)
-        assert_array_almost_equal(directional_diff, 743.87633380824832)
+        assert_allclose(directional_diff, 743.87633380824832)
         dd, _info = nd.directionaldiff(rosen, x0, v, full_output=True)
-        assert_array_almost_equal(dd, 743.87633380824832)
+        assert_allclose(dd, 743.87633380824832)
 
     @staticmethod
     def test_gradient():
@@ -463,11 +478,12 @@ class TestGradient(unittest.TestCase):
             return np.sum(x ** 2)
         dtrue = [2., 4., 6.]
 
-        for method in ['complex', 'central', 'backward', 'forward']:
+        for method in ['multicomplex', 'complex', 'central', 'backward',
+                       'forward']:
             for order in [2, 4]:
                 dfun = nd.Gradient(fun, method=method, order=order)
                 d = dfun([1, 2, 3])
-                assert_array_almost_equal(d, dtrue)
+                assert_allclose(d, dtrue)
         # self.assert_(False)
 
 
@@ -476,6 +492,10 @@ class TestHessdiag(unittest.TestCase):
     @staticmethod
     def _fun(x):
         return x[0] + x[1] ** 2 + x[2] ** 3
+
+    @staticmethod
+    def _hfun(x):
+        return 0, 2, 6 * x[2]
 
     def test_complex(self):
 
@@ -489,22 +509,33 @@ class TestHessdiag(unittest.TestCase):
                                 full_output=True)
             h_val, _info = h_fun([1, 2, 3])
             _error = h_val - htrue
-            assert_array_almost_equal(h_val, htrue)
+            assert_allclose(h_val, htrue)
 
-    def test_fixed_step(self):
-        htrue = np.array([0., 2., 18.])
-
-        methods = ['multicomplex', 'complex', 'central', 'forward', 'backward']
+    @given(st.tuples(st.floats(-100, 100), st.floats(-100, 100),
+                     st.floats(-100, 100)) )
+    @example((0.0, 16.003907623933742, 68.02057249966789))
+    @example([1, 2, 3])
+    @example((1.2009289063e-314, 1.2009289063e-314, 1.2009289063e-314))
+    @example((88.01663712016305, 88.01663712016305, 88.01663712016305))
+    def test_fixed_step(self, vals):
+        # vals = [1, 2, 3]
+        # htrue = np.array([0., 2., 18.])
+        htrue = self._hfun(vals)
+        methods = ['central2', 'central', 'multicomplex', 'complex', 'forward',
+                   'backward']
         for order in range(2, 7, 2):
             steps = nd.MinStepGenerator(num_steps=order + 1,
                                         use_exact_steps=True,
                                         step_ratio=3., offset=0)
+            note('order = {}'.format(order))
             for method in methods:
                 h_fun = nd.Hessdiag(self._fun, step=steps, method=method,
                                     order=order, full_output=True)
-                h_val, _info = h_fun([1, 2, 3])
-                _error = h_val - htrue
-                assert_array_almost_equal(h_val, htrue)
+                h_val, _info = h_fun(vals)
+                _error = np.abs(h_val - htrue)
+                note('error = {}, error_est = {}'.format(_error,
+                                                         _info.error_estimate))
+                assert_allclose(h_val, htrue, atol=100*max(_info.error_estimate))
 
     def test_default_step(self):
         htrue = np.array([0., 2., 18.])
@@ -516,7 +547,8 @@ class TestHessdiag(unittest.TestCase):
                                     full_output=True)
                 h_val, _info = h_fun([1, 2, 3])
                 _error = h_val - htrue
-                assert_array_almost_equal(h_val, htrue)
+                tol = min(1e-8, _info.error_estimate.max())
+                assert_allclose(h_val, htrue, atol=tol)
 
 
 class TestHessian(unittest.TestCase):
@@ -526,11 +558,11 @@ class TestHessian(unittest.TestCase):
         # discontinutiy at x=[0,0] of the hamiltonian
 
         for method in ['central', 'complex']:
-            step = nd.MaxStepGenerator(base_step=1e-3)
+            step = nd.MaxStepGenerator(base_step=1e-4)
             hessian = nd.Hessian(None, step=step, method=method)
             h, _error_estimate, true_h = run_hamiltonian(hessian,
                                                          verbose=False)
-            self.assertTrue((np.abs((h-true_h)/true_h) < 1e-4).all())
+            self.assertTrue((np.abs((h - true_h) / true_h) < 1e-4).all())
 
     @staticmethod
     def test_hessian_cos_x_y_at_0_0():
@@ -549,7 +581,7 @@ class TestHessian(unittest.TestCase):
                                    full_output=True)
                 h_val, _info = h_fun([0, 0])
                 # print(method, (h_val-np.array(htrue)))
-                assert_array_almost_equal(h_val, htrue)
+                assert_allclose(h_val, htrue)
 
 
 if __name__ == '__main__':

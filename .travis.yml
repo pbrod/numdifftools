@@ -37,6 +37,7 @@ install:
   - conda install --yes python=$TRAVIS_PYTHON_VERSION numpy scipy algopy pytest matplotlib
   - pip install coveralls
   - pip install codecov
+  - pip install hypothesis
   - python setup.py install
 #  - conda build conda_recipe
 #  - conda install numdifftools --use-local

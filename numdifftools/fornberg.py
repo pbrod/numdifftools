@@ -188,6 +188,22 @@ def richardson(vals, k, c=None):
     return vals[k] - (vals[k] - vals[k - 1]) / c
 
 
+def _extrapolate(bs, rs, m):
+    # Begin Richardson Extrapolation. Presumably we have bs[i]'s around three
+    # successive circles and can now extrapolate those coefficients, zeroing
+    # out higher order error terms.
+
+    nk = len(rs)
+    extrap0 = []
+    extrap = []
+    for k in range(1, nk):
+        extrap0.append(richardson(bs, k=k, c=1.0 - (rs[k - 1] / rs[k]) ** m))
+
+    for k in range(1, nk - 1):
+        extrap.append(richardson(extrap0, k=k,
+                                 c=1.0 - (rs[k - 1] / rs[k + 1]) ** m))
+    return extrap
+
 def taylor(fun, z0=0, n=1, r=0.0061, max_iter=30, min_iter=None, num_extrap=3,
            step_ratio=1.6, full_output=False):
     """
@@ -343,18 +359,8 @@ def taylor(fun, z0=0, n=1, r=0.0061, max_iter=30, min_iter=None, num_extrap=3,
         previous_direction = needs_smaller
     else:
         failed = True
-    # Begin Richardson Extrapolation. Presumably we have bs[i]'s around three
-    # successive circles and can now extrapolate those coefficients, zeroing
-    # out higher order error terms.
 
-    nk = len(rs)
-    extrap0 = []
-    extrap = []
-    for k in range(1, nk):
-        extrap0.append(richardson(bs, k=k, c=1.0 - (rs[k - 1] / rs[k])**m))
-    for k in range(1, nk - 1):
-        extrap.append(
-            richardson(extrap0, k=k, c=1.0 - (rs[k - 1] / rs[k + 1])**m))
+    extrap = _extrapolate(bs, rs, m)
     if len(extrap) > 2:
         all_coefs, all_errors = dea3(extrap[:-2], extrap[1:-1], extrap[2:])
         coefs, info = _Limit._get_best_estimate(all_coefs, all_errors,

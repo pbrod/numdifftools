@@ -163,6 +163,9 @@ class _Limit(object):
         return der, errors, steps[2:]
 
     def _extrapolate(self, results, steps, shape):
+        #if len(results)>2:
+        #    der1, errors1, steps = self._wynn_extrapolate(results, steps)
+        #else:
         der1, errors1, steps = self.richardson(results, steps)
         if len(der1) > 2:
             der1, errors1, steps = self._wynn_extrapolate(der1, steps)

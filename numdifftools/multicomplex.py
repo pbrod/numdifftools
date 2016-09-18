@@ -124,7 +124,8 @@ class Bicomplex(object):
         slices = tuple([slice(None, None, 1)] + [slice(n) for n in shape[1:]])
         return Bicomplex(z1[slices], z2[slices])
 
-    def __array_wrap__(self, result):
+    @staticmethod
+    def __array_wrap__(result):
         if isinstance(result, Bicomplex):
             return result
         shape = result.shape
@@ -211,8 +212,9 @@ class Bicomplex(object):
         return Bicomplex(z01 + z02, (z01 - z02) * 1j)
 
     def __pow__(self, other):
+        # TODO: Check correctness
         out = (self.log()*other).exp()
-        non_invertible = self.mod_c() == 0
+        non_invertible = np.abs(self.mod_c()) < 1e-15
         if non_invertible.any():
             out[non_invertible] = self[non_invertible]._pow_singular(other)
         return out
