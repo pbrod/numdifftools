@@ -59,7 +59,7 @@ def setup_package():
     needs_sphinx = {'build_sphinx', 'upload_docs'}.intersection(sys.argv)
     sphinx = ['sphinx', 'numpydoc', 'sphinx_rtd_theme>=0.1.7'] if needs_sphinx else []
     setup(setup_requires=['six', 'pyscaffold>=2.4rc1,<2.5a0'] + sphinx,
-          tests_require=['pytest_cov', 'pytest', 'hypothesis'],
+          tests_require=['pytest_cov', 'pytest', 'hypothesis', 'matplotlib'],
           use_pyscaffold=True)
     print_version()
 

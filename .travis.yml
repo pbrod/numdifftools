@@ -30,12 +30,11 @@ before_install:
   - conda create --yes -n condaenv python=$TRAVIS_PYTHON_VERSION
   - conda install --yes -n condaenv pip
   - conda config --add channels https://conda.anaconda.org/omnia
-  - conda config --add channels https://conda.anaconda.org/qttesting
   - conda config --add channels https://conda.anaconda.org/pbrod
   - source activate condaenv
 # Install packages
 install:
-  - conda install --yes python=$TRAVIS_PYTHON_VERSION numpy scipy algopy pytest matplotlib pyqt=5.6.0
+  - conda install --yes python=$TRAVIS_PYTHON_VERSION numpy scipy algopy pytest matplotlib
   - pip install coveralls
   - pip install codecov
   - pip install hypothesis

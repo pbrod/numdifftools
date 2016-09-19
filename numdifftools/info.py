@@ -43,6 +43,7 @@ Getting Started
 Visualize high order derivatives of the tanh function
 
     >>> import numpy as np
+    >>> from numdifftools import set_matplotlib_gtkagg_backend
     >>> import numdifftools as nd
     >>> import matplotlib.pyplot as plt
     >>> x = np.linspace(-2, 2, 100)
