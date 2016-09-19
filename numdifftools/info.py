@@ -10,8 +10,8 @@ to solve automatic numerical differentiation problems in one or more variables.
 Finite differences are used in an adaptive manner, coupled with a Richardson
 extrapolation methodology to provide a maximally accurate result.
 The user can configure many options like; changing the order of the method or
-the extrapolation, even allowing the user to specify whether complex-step, central,
-forward or backward differences are used.
+the extrapolation, even allowing the user to specify whether complex-step,
+central, forward or backward differences are used.
 
 The methods provided are:
 
@@ -43,7 +43,6 @@ Getting Started
 Visualize high order derivatives of the tanh function
 
     >>> import numpy as np
-    >>> from numdifftools import set_matplotlib_gtkagg_backend
     >>> import numdifftools as nd
     >>> import matplotlib.pyplot as plt
     >>> x = np.linspace(-2, 2, 100)
