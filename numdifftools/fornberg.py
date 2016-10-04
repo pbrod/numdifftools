@@ -204,6 +204,7 @@ def _extrapolate(bs, rs, m):
                                  c=1.0 - (rs[k - 1] / rs[k + 1]) ** m))
     return extrap
 
+
 def taylor(fun, z0=0, n=1, r=0.0061, max_iter=30, min_iter=None, num_extrap=3,
            step_ratio=1.6, full_output=False):
     """
@@ -510,7 +511,7 @@ def main():
     def fun14(z):
         return np.log1p(z)
 
-    der, info = derivative(fun, z0=0., r=0.06, n=51, max_iter=30, min_iter=15,
+    der, info = derivative(fun6, z0=0., r=0.06, n=51, max_iter=30, min_iter=15,
                            full_output=True, step_ratio=1.6)
     print(info)
     print('answer:')
