@@ -119,16 +119,17 @@ def fd_weights(x, x0=0, n=1):
     return fd_weights_all(x, x0, n)[-1]
 
 
-def fd_derivative(x, fx, n=1, m=2):
+def fd_derivative(fx, x, n=1, m=2):
     """
     Return the n'th derivative for all points using Finite Difference method.
 
     Parameters
     ----------
-    x : vector
-        abscissas on which fx is evaluated.
     fx : vector
         function values which are evaluated on x i.e. fx[i] = f(x[i])
+    x : vector
+        abscissas on which fx is evaluated.  The x values can be arbitrarily
+        spaced but must be distinct and len(x) > n.
     n : scalar integer
         order of derivative.
     m : scalar integer
@@ -146,7 +147,7 @@ def fd_derivative(x, fx, n=1, m=2):
     >>> import numdifftools.fornberg as ndf
     >>> x = np.linspace(-1, 1, 25)
     >>> fx = np.exp(x)
-    >>> df = ndf.fd_derivative(x, fx, n=1)
+    >>> df = ndf.fd_derivative(fx, x, n=1)
     >>> np.allclose(df, fx)
     True
 

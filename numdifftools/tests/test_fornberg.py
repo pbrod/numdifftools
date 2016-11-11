@@ -73,7 +73,7 @@ class TestFornberg(unittest.TestCase):
         h = np.diff(x).mean()
         fx = np.exp(x)
         for n in range(1, 7):
-            df = fd_derivative(x, fx, n=n)
+            df = fd_derivative(fx, x, n=n)
             m = n // 2 + 2
             np.testing.assert_allclose(df[m:-m], fx[m:-m], atol=1e-5)
             np.testing.assert_allclose(df[-m:], fx[-m:], atol=1e-4)
