@@ -1,6 +1,8 @@
 from __future__ import print_function
 import unittest
-from numdifftools.fornberg import fornberg_weights, derivative
+from numdifftools.fornberg import (fd_weights, fd_weights_all, derivative,
+                                   fd_derivative,
+                                   CENTRAL_WEIGHTS_AND_POINTS)
 import numpy as np
 from numpy.testing import assert_array_almost_equal, assert_allclose
 from numdifftools.example_functions import function_names, get_function
@@ -41,12 +43,38 @@ class TestExampleFunctions(unittest.TestCase):
                 assert_allclose(np.real(vals[n]), tval, rtol=1e-6, atol=aerr)
 
 
-class TestFornbergWeights(unittest.TestCase):
+class TestFornberg(unittest.TestCase):
+    @staticmethod
+    def test_all_weights():
+        w = fd_weights_all(range(-2,3), n=4)
+        print(w)
+        true_w = [[0., 0., 1., 0., 0. ],
+                  [ 0.0833333333333, -0.6666666666667, 0., 0.6666666666667,
+                   -0.0833333333333],
+                  [-0.0833333333333, 1.333333333333, -2.5,  1.333333333333,
+                   -0.083333333333],
+                  [-0.5, 1., 0., -1., 0.5 ],
+                  [ 1., -4., 6., -4., 1.]]
+        np.testing.assert_allclose(w, true_w, atol=1e-12)
 
     @staticmethod
     def test_weights():
-        x = np.r_[-1, 0, 1]
-        xbar = 0
-        k = 1
-        weights = fornberg_weights(x, xbar, k)
-        np.testing.assert_allclose(weights, [-.5, 0, .5])
+        for name in CENTRAL_WEIGHTS_AND_POINTS:
+            # print(name)
+            n, m = name
+            w, x = CENTRAL_WEIGHTS_AND_POINTS[name]
+
+            weights = fd_weights(np.array(x, dtype=float), 0.0, n=n)
+            np.testing.assert_allclose(weights, w, atol=1e-15)
+
+    @staticmethod
+    def test_fd_derivative():
+        x = np.linspace(-1, 1, 25)
+        h = np.diff(x).mean()
+        fx = np.exp(x)
+        for n in range(1, 7):
+            df = fd_derivative(x, fx, n=n)
+            m = n // 2 + 2
+            np.testing.assert_allclose(df[m:-m], fx[m:-m], atol=1e-5)
+            np.testing.assert_allclose(df[-m:], fx[-m:], atol=1e-4)
+            np.testing.assert_allclose(df[:m], fx[:m], atol=1e-4)
