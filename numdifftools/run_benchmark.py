@@ -8,7 +8,6 @@ from algopy import dot
 
 from collections import OrderedDict
 from numdifftools.core import MinStepGenerator, MaxStepGenerator
-import matplotlib.pyplot as plt
 
 
 class BenchmarkFunction(object):
@@ -151,4 +150,5 @@ def main():
 
 
 if __name__ == '__main__':
+    import matplotlib.pyplot as plt
     main()

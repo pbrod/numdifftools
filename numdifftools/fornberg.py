@@ -4,28 +4,29 @@ from scipy.special import factorial
 from numdifftools.extrapolation import EPS, dea3
 from numdifftools.limits import _Limit
 from collections import namedtuple
+#from numba import jit, float64, int64, int32, int8, void
 
 _INFO = namedtuple('info', ['error_estimate',
                             'degenerate',
                             'final_radius',
                             'function_count',
                             'iterations', 'failed'])
-_CENTRAL_WEIGHTS_AND_POINTS = {
+CENTRAL_WEIGHTS_AND_POINTS = {
     (1, 3): (np.array([-1, 0, 1]) / 2.0, np.arange(-1, 2)),
     (1, 5): (np.array([1, -8, 0, 8, -1]) / 12.0, np.arange(-2, 3)),
     (1, 7): (np.array([-1, 9, -45, 0, 45, -9, 1]) / 60.0, np.arange(-3, 4)),
-    (1, 9): (np.array([3, -32, 168, -672, 0, 672, -168, 32, -3]) / 840.0,
+    (1, 9): (np.array([3, -32, 168, -672, 0, 672, -168, 32, -3], dtype=float) / 840.0,
              np.arange(-4, 5)),
     (2, 3): (np.array([1, -2.0, 1]), np.arange(-1, 2)),
-    (2, 5): (np.array([-1, 16, -30, 16, -1]) / 12.0, np.arange(-2, 3)),
-    (2, 7): (np.array([2, -27, 270, -490, 270, -27, 2]) / 180.0,
+    (2, 5): (np.array([-1, 16, -30, 16, -1], dtype=float) / 12.0, np.arange(-2, 3)),
+    (2, 7): (np.array([2, -27, 270, -490, 270, -27, 2], dtype=float) / 180.0,
              np.arange(-3, 4)),
     (2, 9): (np.array([-9, 128, -1008, 8064, -14350,
-                       8064, -1008, 128, -9]) / 5040.0,
+                       8064, -1008, 128, -9], dtype=float) / 5040.0,
              np.arange(-4, 5))}
 
 
-def fornberg_weights_all(x, x0=0, n=1):
+def fd_weights_all(x, x0=0, n=1):
     """
     Return finite difference weights for derivatives of all orders up to n.
 
@@ -40,12 +41,19 @@ def fornberg_weights_all(x, x0=0, n=1):
 
     Returns
     -------
-    C :  array, shape m x n+1
-        contains coefficients for the j'th derivative in column j (0 <= j <= n)
+    C :  array, shape n+1 x m
+        contains coefficients for the j'th derivative in row j (0 <= j <= n)
+
+    Notes
+    -----
+    The x values can be arbitrarily spaced but must be distinct and len(x) > n.
+
+    The Fornberg algorithm is much more stable numerically than regular
+    vandermonde systems for large values of n.
 
     See also:
     ---------
-    fornberg_weights
+    fd_weights
 
     Reference
     ---------
@@ -57,10 +65,17 @@ def fornberg_weights_all(x, x0=0, n=1):
     """
     m = len(x)
     if n >= m:
-        raise ValueError('length(x) must be larger than n')
+        raise ValueError('len(x) must be larger than n')
 
-    c1, c4 = 1, x[0] - x0
     C = np.zeros((m, n + 1))
+    _fd_weights_all(C, x, x0, n)
+    return C.T
+
+
+#@jit(void(float64[:,:], float64[:], float64, int64))
+def _fd_weights_all(C, x, x0, n):
+    m = len(x)
+    c1, c4 = 1, x[0] - x0
     C[0, 0] = 1
     for i in range(1, m):
         j = np.arange(0, min(i, n) + 1)
@@ -71,10 +86,9 @@ def fornberg_weights_all(x, x0=0, n=1):
             C[v, j] = (c4 * c7 - c6) / c3
         C[i, j] = c1 * (c6 - c5 * c7) / c2
         c1 = c2
-    return C
 
 
-def fornberg_weights(x, x0=0, n=1):
+def fd_weights(x, x0=0, n=1):
     """
     Return finite difference weights for the n'th derivative.
 
@@ -84,32 +98,84 @@ def fornberg_weights(x, x0=0, n=1):
         abscissas used for the evaluation for the derivative at x0.
     x0 : scalar
         location where approximations are to be accurate
-    n : integer
-        order of derivative. Note for m=0 this can be used to evaluate the
+    n : scalar integer
+        order of derivative. Note for n=0 this can be used to evaluate the
         interpolating polynomial itself.
-
-    Notes
-    -----
-    The x values can be arbitrarily spaced but must be distinct and len(x) > m.
-
-    The Fornberg algorithm is much more stable numerically than regular
-    vandermonde systems for large values of n.
 
     Example
     -------
     >>> import numpy as np
     >>> import numdifftools.fornberg as ndf
     >>> x = np.linspace(-1, 1, 5) * 1e-3
-    >>> w = ndf.fornberg_weights(x, x0=0, n=1)
+    >>> w = ndf.fd_weights(x, x0=0, n=1)
     >>> df = np.dot(w, np.exp(x))
     >>> np.allclose(df, 1)
     True
 
     See also
     --------
-    fornberg_weights_all
+    fd_weights_all
     """
-    return fornberg_weights_all(x, x0, n)[:, -1]
+    return fd_weights_all(x, x0, n)[-1]
+
+
+def fd_derivative(fx, x, n=1, m=2):
+    """
+    Return the n'th derivative for all points using Finite Difference method.
+
+    Parameters
+    ----------
+    fx : vector
+        function values which are evaluated on x i.e. fx[i] = f(x[i])
+    x : vector
+        abscissas on which fx is evaluated.  The x values can be arbitrarily
+        spaced but must be distinct and len(x) > n.
+    n : scalar integer
+        order of derivative.
+    m : scalar integer
+        defines the stencil size. The stencil size is of 2 * mm + 1
+        points in the interior, and 2 * mm + 2 points for each of the 2 * mm
+        boundary points where mm = n // 2 + m.
+
+    fd_derivative evaluates an approximation for the n'th derivative of the
+    vector function f(x) using the Fornberg finite difference method.
+    Restrictions: 0 < n < len(x) and 2*mm+2 <= len(x)
+
+    Example
+    -------
+    >>> import numpy as np
+    >>> import numdifftools.fornberg as ndf
+    >>> x = np.linspace(-1, 1, 25)
+    >>> fx = np.exp(x)
+    >>> df = ndf.fd_derivative(fx, x, n=1)
+    >>> np.allclose(df, fx)
+    True
+
+    See also
+    --------
+    fd_weights
+    """
+    num_x = len(x)
+    if n >= num_x:
+       raise ValueError('len(x) must be larger than n')
+
+    if num_x != len(fx):
+       raise ValueError('len(x) must be equal len(fx)')
+
+    du = np.zeros(np.shape(fx))
+
+    mm = n // 2 + m
+    size = 2 * mm + 2  # stencil size at boundary
+    # 2 * mm boundary points
+    for i in range(mm):
+        du[i] = np.dot(fd_weights(x[:size], x0=x[i], n=n), fx[:size] )
+        du[-i-1] = np.dot(fd_weights(x[-size:], x0=x[-i-1], n=n), fx[-size:])
+
+    # interior points
+    for i in range(mm, num_x-mm):
+       du[i] = np.dot(fd_weights(x[i-mm:i+mm+1], x0=x[i], n=n), fx[i-mm:i+mm+1])
+
+    return du
 
 
 def _circle(z, r, m):
@@ -203,6 +269,7 @@ def _extrapolate(bs, rs, m):
         extrap.append(richardson(extrap0, k=k,
                                  c=1.0 - (rs[k - 1] / rs[k + 1]) ** m))
     return extrap
+
 
 def taylor(fun, z0=0, n=1, r=0.0061, max_iter=30, min_iter=None, num_extrap=3,
            step_ratio=1.6, full_output=False):
@@ -510,7 +577,7 @@ def main():
     def fun14(z):
         return np.log1p(z)
 
-    der, info = derivative(fun, z0=0., r=0.06, n=51, max_iter=30, min_iter=15,
+    der, info = derivative(fun6, z0=0., r=0.06, n=51, max_iter=30, min_iter=15,
                            full_output=True, step_ratio=1.6)
     print(info)
     print('answer:')
@@ -521,6 +588,6 @@ def main():
 
 
 if __name__ == '__main__':
-    # from numdifftools.testing import test_docstrings
-    # test_docstrings()
-    main()
+    from numdifftools.testing import test_docstrings
+    test_docstrings()
+    # main()
