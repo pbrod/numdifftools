@@ -180,7 +180,6 @@ References
     Vol. 38, No. 3, Article 16, April 2012, 21 pages,
     http://doi.acm.org/10.1145/2168773.2168774
 
-
 ..[Luna-ElizarrarasEtal2012] M.E. Luna-Elizarraras, M. Shapiro, D.C. Struppa1,
     A. Vajiac (2012), CUBO A Mathematical Journal,
     Vol. 14, No 2, (61-80). June 2012.
