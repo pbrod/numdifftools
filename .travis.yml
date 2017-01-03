@@ -67,6 +67,7 @@ after_success:
   - codecov
 cache:
   - apt
+cache:
   directories:
     - '$HOME/.sonar/cache'
 
