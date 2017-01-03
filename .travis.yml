@@ -60,7 +60,7 @@ before_script:
   - git config --global user.name "pbrod"
 script:
   - coverage run --source=numdifftools setup.py test
-  - sonar-scanner
+  - sonar-scanner -X
 
 after_success:
   - coveralls
