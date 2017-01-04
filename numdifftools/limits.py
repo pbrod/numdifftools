@@ -108,9 +108,9 @@ class _Limit(object):
 
     info = namedtuple('info', ['error_estimate', 'final_step', 'index'])
 
-    def __init__(self, f, step=None, method='above', order=4,
+    def __init__(self, fun, step=None, method='above', order=4,
                  full_output=False, **options):
-        self.f = f
+        self.fun = fun
         self.method = method
         self.order = order
         self.full_output = full_output
@@ -194,9 +194,9 @@ class Limit(_Limit):
 
     Parameters
     ----------
-    f : callable
-        function f(z, `*args`, `**kwds`) to compute the limit for z->z0.
-        The function, f, is assumed to return a result of the same shape and
+    fun : callable
+        function fun(z, `*args`, `**kwds`) to compute the limit for z->z0.
+        The function, fun, is assumed to return a result of the same shape and
         size as its input, `z`.
     step: float, complex, array-like or StepGenerator object, optional
         Defines the spacing used in the approximation.
@@ -317,7 +317,7 @@ class Limit(_Limit):
     """
 
     def _fun(self, z, dz, *args, **kwds):
-        return self.f(z+dz, *args, **kwds)
+        return self.fun(z+dz, *args, **kwds)
 
     @staticmethod
     def _make_generator(step, options):
@@ -387,9 +387,9 @@ class Residue(Limit):
 
     Parameters
     ----------
-    f : callable
-        function f(z, `*args`, `**kwds`) to compute the Residue at z=z0.
-        The function, f, is assumed to return a result of the same shape and
+    fun : callable
+        function fun(z, `*args`, `**kwds`) to compute the Residue at z=z0.
+        The function, fun, is assumed to return a result of the same shape and
         size as its input, `z`.
     step: float, complex, array-like or StepGenerator object, optional
         Defines the spacing used in the approximation.
@@ -476,7 +476,7 @@ class Residue(Limit):
                                       full_output=full_output, **options)
 
     def _fun(self, z, dz, *args, **kwds):
-        return self.f(z + dz, *args, **kwds) * (dz ** self.pole_order)
+        return self.fun(z + dz, *args, **kwds) * (dz ** self.pole_order)
 
     def __call__(self, x, *args, **kwds):
         return self.limit(x, *args, **kwds)
