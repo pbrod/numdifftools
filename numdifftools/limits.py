@@ -16,6 +16,11 @@ from numdifftools.step_generators import MinStepGenerator
 from numdifftools.extrapolation import Richardson, dea3
 
 
+def _assert(cond, msg):
+    if not cond:
+        raise ValueError(msg)
+
+
 class CStepGenerator(MinStepGenerator):
 
     """
@@ -62,9 +67,8 @@ class CStepGenerator(MinStepGenerator):
         self._check_path()
 
     def _check_path(self):
-        if self.path not in ['spiral', 'radial']:
-            raise ValueError('Invalid Path: {}'.format(str(self.path)))
-
+        _assert(self.path in ['spiral', 'radial'],
+                'Invalid Path: {}'.format(str(self.path)))
 
     @property
     def step_ratio(self):
@@ -178,9 +182,8 @@ class _Limit(object):
         f_del = np.vstack(list(np.ravel(r)) for r in sequence)
         h = np.vstack(list(np.ravel(np.ones(original_shape)*step))
                       for step in steps)
-        if f_del.size != h.size:
-            raise ValueError('fun did not return data of correct size ' +
-                             '(it must be vectorized)')
+        _assert(f_del.size == h.size, 'fun did not return data of correct '
+                'size (it must be vectorized)')
         return f_del, h, original_shape
 
 
@@ -466,8 +469,7 @@ class Residue(Limit):
             # MethodOrder will always = pole_order + 2
             order = pole_order + 2
 
-        if order <= pole_order:
-            raise ValueError('order must be at least pole_order+1.')
+        _assert(pole_order < order, 'order must be at least pole_order+1.')
         self.pole_order = pole_order
 
         super(Residue, self).__init__(f, step=step, method=method, order=order,

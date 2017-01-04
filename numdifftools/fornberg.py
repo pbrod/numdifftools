@@ -4,7 +4,6 @@ from scipy.special import factorial
 from numdifftools.extrapolation import EPS, dea3
 from numdifftools.limits import _Limit
 from collections import namedtuple
-# from numba import jit, float64, int64, int32, int8, void
 
 _INFO = namedtuple('info', ['error_estimate',
                             'degenerate',
@@ -24,6 +23,11 @@ CENTRAL_WEIGHTS_AND_POINTS = {
     (2, 9): (np.array([-9, 128, -1008, 8064, -14350,
                        8064, -1008, 128, -9], dtype=float) / 5040.0,
              np.arange(-4, 5))}
+
+
+def _assert(cond, msg):
+    if not cond:
+        raise ValueError(msg)
 
 
 def fd_weights_all(x, x0=0, n=1):
@@ -64,14 +68,14 @@ def fd_weights_all(x, x0=0, n=1):
     http://www.scholarpedia.org/article/Finite_difference_method
     """
     m = len(x)
-    if n >= m:
-        raise ValueError('len(x) must be larger than n')
+    _assert(n < m, 'len(x) must be larger than n')
 
     weights = np.zeros((m, n + 1))
     _fd_weights_all(weights, x, x0, n)
     return weights.T
 
 
+# from numba import jit, float64, int64, int32, int8, void
 # @jit(void(float64[:,:], float64[:], float64, int64))
 def _fd_weights_all(weights, x, x0, n):
     m = len(x)
@@ -156,11 +160,8 @@ def fd_derivative(fx, x, n=1, m=2):
     fd_weights
     """
     num_x = len(x)
-    if n >= num_x:
-       raise ValueError('len(x) must be larger than n')
-
-    if num_x != len(fx):
-       raise ValueError('len(x) must be equal len(fx)')
+    _assert(n < num_x, 'len(x) must be larger than n')
+    _assert(num_x == len(fx), 'len(x) must be equal len(fx)')
 
     du = np.zeros(np.shape(fx))
 
@@ -231,9 +232,7 @@ def _num_taylor_coefficients(n):
          128 if  51 < n <= 103
          256 if 103 < n <= 192
     """
-    if n > 192:
-        msg = 'Number of derivatives too large.  Must be less than 193'
-        raise ValueError(msg)
+    _assert(n < 193, 'Number of derivatives too large.  Must be less than 193')
     correction = np.array([0, 0, 1, 3, 4, 7])[_get_logn(n)]
     log2n = _get_logn(n - correction)
     m = 2 ** (log2n + 3)
