@@ -170,7 +170,6 @@ class TestDerivative(unittest.TestCase):
     @given(st.floats(min_value=0, max_value=10))
     @example(7.6564547238847105)
     def test_derivative_of_cos_x(x):
-        # x = np.r_[0, np.pi / 6.0, np.pi / 2.0]
         note('x = {}'.format(x))
         msg = 'order = {}, error = {}, err_est = {}'
         true_vals = (-np.sin(x), -np.cos(x), np.sin(x), np.cos(x)) * 2
@@ -189,11 +188,8 @@ class TestDerivative(unittest.TestCase):
                     y, _info = d3cos(x)
                     _error = np.abs(y - true_val)
                     aerr = 100 * _info.error_estimate + 1e-14
-#                     if aerr > 1e-5 and np.abs(true_val) > 0.3:
-#                         aerr = min(aerr, np.abs(true_val)*1e-6)
-#                     el
-                    if aerr < 1e-14 and np.abs(true_val) < 1e-3:
-                        aerr = 1e-8
+#                     if aerr < 1e-14 and np.abs(true_val) < 1e-3:
+#                         aerr = 1e-8
                     note(msg.format(order, _error, _info.error_estimate))
                     assert_allclose(y, true_val, rtol=1e-6, atol=aerr)
                     # assert_allclose(y, true_val, rtol=4)
@@ -518,8 +514,6 @@ class TestHessdiag(unittest.TestCase):
     @example((1.2009289063e-314, 1.2009289063e-314, 1.2009289063e-314))
     @example((88.01663712016305, 88.01663712016305, 88.01663712016305))
     def test_fixed_step(self, vals):
-        # vals = [1, 2, 3]
-        # htrue = np.array([0., 2., 18.])
         htrue = self._hfun(vals)
         methods = ['central2', 'central', 'multicomplex', 'complex', 'forward',
                    'backward']

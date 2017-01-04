@@ -26,6 +26,12 @@ _EPS = np.finfo(float).eps
 EPS = np.MachAr().eps
 _SQRT_J = (1j + 1.0) / np.sqrt(2.0)  # = 1j**0.5
 
+
+def _assert(cond, msg):
+    if not cond:
+        raise ValueError(msg)
+
+
 _cmn_doc = """
     Calculate %(derivative)s with finite difference approximation
 
@@ -223,9 +229,8 @@ class Derivative(_Limit):
 
     def _multicomplex_middle_name_or_empty(self):
         if self.method == 'multicomplex' and self.n > 1:
-            if self.n > 2:
-                raise ValueError('Multicomplex method only support first '
-                                 'and second order derivatives.')
+            _assert(self.n <= 2, 'Multicomplex method only support first '
+                    'and second order derivatives.')
             return '2'
         return ''
 
@@ -316,11 +321,9 @@ class Derivative(_Limit):
         nterms : scalar, integer
             number of terms
         """
-        try:
-            step = [1, 2, 2, 4, 4, 4, 4][parity]
-        except Exception as e:
-            msg = '{0!s}. Parity must be 0, 1, 2, 3, 4, 5 or 6! ({1:d})'
-            raise ValueError(msg.format(str(e), parity))
+        _assert(0 <= parity <= 6,
+                'Parity must be 0, 1, 2, 3, 4, 5 or 6! ({0:d})'.format(parity))
+        step = [1, 2, 2, 4, 4, 4, 4][parity]
         inv_sr = 1.0 / step_ratio
         offset = [1, 1, 2, 2, 4, 1, 3][parity]
         c0 = [1.0, 1.0, 1.0, 2.0, 24.0, 1.0, 6.0][parity]
@@ -393,13 +396,11 @@ class Derivative(_Limit):
         f_del, h, original_shape = self._vstack(sequence, steps)
         fd_rule = self._get_finite_difference_rule(step_ratio)
         ne = h.shape[0]
-        if ne < fd_rule.size:
-            raise ValueError('num_steps ({0:d}) must  be larger than '
-                             '({1:d}) n + order - 1 = {2:d} + {3:d} -1'
-                             ' ({4:s})'.format(ne, fd_rule.size, self.n,
-                                               self.order, self.method)
-                             )
         nr = fd_rule.size - 1
+        _assert(nr < ne, 'num_steps ({0:d}) must  be larger than '
+                '({1:d}) n + order - 1 = {2:d} + {3:d} -1'
+                ' ({4:s})'.format(ne, nr+1, self.n, self.order, self.method)
+                             )
         f_diff = convolve(f_del, fd_rule[::-1], axis=0, origin=nr // 2)
 
         der_init = f_diff / (h ** self.n)
@@ -508,9 +509,7 @@ def directionaldiff(f, x0, vec, **options):
     """
     x0 = np.asarray(x0)
     vec = np.asarray(vec)
-    if x0.size != vec.size:
-        raise ValueError('vec and x0 must be the same shapes')
-
+    _assert(x0.size == vec.size, 'vec and x0 must be the same shapes')
     vec = np.reshape(vec / np.linalg.norm(vec.ravel()), x0.shape)
     return Derivative(lambda t: f(x0 + t * vec), **options)(0)
 
@@ -567,9 +566,8 @@ class Jacobian(Derivative):
 
     @staticmethod
     def _check_equal_size(f_del, h):
-        if f_del.size != h.size:
-            raise ValueError('fun did not return data of correct size ' +
-                             '(it must be vectorized)')
+        _assert(f_del.size == h.size, 'fun did not return data of correct '
+                'size (it must be vectorized)')
 
     @staticmethod
     def _atleast_2d(original_shape, ndim):
@@ -988,7 +986,6 @@ class Hessian(Hessdiag):
         """Eq. 7"""
         n = len(x)
         ee = np.diag(h)
-
         dtype = np.result_type(fx)
         g = np.empty(n, dtype=dtype)
         for i in range(n):
