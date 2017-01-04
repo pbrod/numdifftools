@@ -316,7 +316,7 @@ class Limit(_Limit):
 
     """
 
-    def _f(self, z, dz, *args, **kwds):
+    def _fun(self, z, dz, *args, **kwds):
         return self.f(z+dz, *args, **kwds)
 
     @staticmethod
@@ -346,7 +346,7 @@ class Limit(_Limit):
 
     def limit(self, x, *args, **kwds):
         z = np.asarray(x)
-        fz, info = self._lim(self._f, z, args, kwds)
+        fz, info = self._lim(self._fun, z, args, kwds)
         if self.full_output:
             return fz, info
         return fz
@@ -368,7 +368,7 @@ class Limit(_Limit):
 
     def __call__(self, x, *args, **kwds):
         z = np.asarray(x)
-        f = self._f
+        f = self._fun
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             fz = f(z, 0, *args, **kwds)
@@ -475,7 +475,7 @@ class Residue(Limit):
         super(Residue, self).__init__(f, step=step, method=method, order=order,
                                       full_output=full_output, **options)
 
-    def _f(self, z, dz, *args, **kwds):
+    def _fun(self, z, dz, *args, **kwds):
         return self.f(z + dz, *args, **kwds) * (dz ** self.pole_order)
 
     def __call__(self, x, *args, **kwds):
