@@ -4,7 +4,7 @@ from scipy.special import factorial
 from numdifftools.extrapolation import EPS, dea3
 from numdifftools.limits import _Limit
 from collections import namedtuple
-#from numba import jit, float64, int64, int32, int8, void
+# from numba import jit, float64, int64, int32, int8, void
 
 _INFO = namedtuple('info', ['error_estimate',
                             'degenerate',
@@ -41,7 +41,7 @@ def fd_weights_all(x, x0=0, n=1):
 
     Returns
     -------
-    C :  array, shape n+1 x m
+    weights :  array, shape n+1 x m
         contains coefficients for the j'th derivative in row j (0 <= j <= n)
 
     Notes
@@ -67,24 +67,24 @@ def fd_weights_all(x, x0=0, n=1):
     if n >= m:
         raise ValueError('len(x) must be larger than n')
 
-    C = np.zeros((m, n + 1))
-    _fd_weights_all(C, x, x0, n)
-    return C.T
+    weights = np.zeros((m, n + 1))
+    _fd_weights_all(weights, x, x0, n)
+    return weights.T
 
 
-#@jit(void(float64[:,:], float64[:], float64, int64))
-def _fd_weights_all(C, x, x0, n):
+# @jit(void(float64[:,:], float64[:], float64, int64))
+def _fd_weights_all(weights, x, x0, n):
     m = len(x)
     c1, c4 = 1, x[0] - x0
-    C[0, 0] = 1
+    weights[0, 0] = 1
     for i in range(1, m):
         j = np.arange(0, min(i, n) + 1)
         c2, c5, c4 = 1, c4, x[i] - x0
         for v in range(i):
             c3 = x[i] - x[v]
-            c2, c6, c7 = c2 * c3, j * C[v, j - 1], C[v, j]
-            C[v, j] = (c4 * c7 - c6) / c3
-        C[i, j] = c1 * (c6 - c5 * c7) / c2
+            c2, c6, c7 = c2 * c3, j * weights[v, j - 1], weights[v, j]
+            weights[v, j] = (c4 * c7 - c6) / c3
+        weights[i, j] = c1 * (c6 - c5 * c7) / c2
         c1 = c2
 
 
@@ -444,7 +444,7 @@ def taylor(fun, z0=0, n=1, r=0.0061, max_iter=30, min_iter=None, num_extrap=3,
     return coefs
 
 
-def derivative(f, z0, n=1, r=0.0061, max_iter=30, min_iter=None, num_extrap=3,
+def derivative(fun, z0, n=1, r=0.0061, max_iter=30, min_iter=None, num_extrap=3,
                step_ratio=1.6, full_output=False):
     """
     Calculate n-th derivative of complex analytic function using FFT
@@ -532,7 +532,7 @@ def derivative(f, z0, n=1, r=0.0061, max_iter=30, min_iter=None, num_extrap=3,
         ACM Transactions on Mathematical Software (TOMS),
         7(4), 512-526. http://doi.org/10.1145/355972.355979
     """
-    result = taylor(f, z0, n=n, r=r, max_iter=max_iter, min_iter=min_iter,
+    result = taylor(fun, z0, n=n, r=r, max_iter=max_iter, min_iter=min_iter,
                     num_extrap=num_extrap, step_ratio=step_ratio,
                     full_output=full_output)
     # convert taylor series --> actual derivatives.
