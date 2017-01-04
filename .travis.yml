@@ -8,6 +8,8 @@ addons:
   sonarqube:
     token:
       secure: "67bcbf1aefb992993fdd45b78fb4977a05be39b9"
+  code_climate:
+    repo_token: 9c5d44592ed63ccd3c2b4aabf54fd9aee50f02e21cd016f67f4287e68f708dba
 jdk:
   - oraclejdk8
 
@@ -48,6 +50,7 @@ install:
   - conda install --yes python=$TRAVIS_PYTHON_VERSION numpy scipy algopy pytest pyqt=4 matplotlib
   - pip install coveralls
   - pip install codecov
+  - pip install codeclimate-test-reporter
   - pip install hypothesis
   - python setup.py install
 #  - conda build conda_recipe
@@ -61,9 +64,9 @@ before_script:
 script:
   - coverage erase
   - coverage run --source=numdifftools setup.py test
-  - coverage xml -i
-#  - nosetests --with-coverage --cover-package=numdifftools --cover-branches --cover-xml
+  - coverage xml -o coverage.xml
 #  - sed -i 's/filename="/filename=".\//g' coverage.xml
+  - CODECLIMATE_REPO_TOKEN=9c5d44592ed63ccd3c2b4aabf54fd9aee50f02e21cd016f67f4287e68f708dba codeclimate-test-reporter
   - sonar-scanner -X
 
 after_success:
