@@ -59,7 +59,11 @@ before_script:
   - git config --global user.email "per.andreas.brodtkorb@gmail.com"
   - git config --global user.name "pbrod"
 script:
+  - coverage erase
   - coverage run --source=numdifftools setup.py test
+  - coverage xml -i
+#  - nosetests --with-coverage --cover-package=numdifftools --cover-branches --cover-xml
+#  - sed -i 's/filename="/filename=".\//g' coverage.xml
   - sonar-scanner -X
 
 after_success:
