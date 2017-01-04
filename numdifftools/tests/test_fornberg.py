@@ -21,7 +21,6 @@ class TestExampleFunctions(unittest.TestCase):
         y = x
         for name in function_names + ['arccosh', 'arctanh']:
             f, true_df = get_function(name, n=1)
-            #x = 0.5 if name != 'arccosh' else 1.5
             if name == 'arccosh':
                 y = y + 1
 

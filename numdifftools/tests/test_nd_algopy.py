@@ -127,8 +127,6 @@ class TestDerivative(unittest.TestCase):
     @staticmethod
     @given(st.floats(min_value=1e-5))
     def test_derivative_on_log(x):
-
-        # x = np.r_[0.01, 0.1]
         for method in ['forward', 'reverse']:
             dlog = nd.Derivative(np.log, method=method)
 

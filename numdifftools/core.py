@@ -11,11 +11,11 @@ Licence:     New BSD
 
 from __future__ import division, print_function
 import numpy as np
+from numpy import linalg
 from numdifftools.multicomplex import Bicomplex
 from numdifftools.extrapolation import Richardson, dea3, convolve
 from numdifftools.step_generators import MaxStepGenerator, MinStepGenerator
 from numdifftools.limits import _Limit
-from numpy import linalg
 from scipy import misc
 
 __all__ = ('dea3', 'Derivative', 'Jacobian', 'Gradient', 'Hessian', 'Hessdiag',
@@ -253,7 +253,6 @@ class Derivative(_Limit):
         first = '_{0!s}'.format(self.method)
         middle = self._get_middle_name()
         last = self._get_last_name()
-
         name = first + middle + last
         return name
 
@@ -334,9 +333,8 @@ class Derivative(_Limit):
 
     @property
     def _flip_fd_rule(self):
-        n = self.n
         return ((self._even_derivative and (self.method == 'backward')) or
-                (self.method == 'complex' and (n % 8 in [3, 4, 5, 6])))
+                (self.method == 'complex' and (self.n % 8 in [3, 4, 5, 6])))
 
     def _parity_complex(self, order, method_order):
         if self.n == 1 and method_order < 4:
@@ -375,7 +373,6 @@ class Derivative(_Limit):
 
         order, method_order = self.n - 1, self._method_order
         parity = self._parity(method, order, method_order)
-
         step = self._richardson_step()
         num_terms, ix = (order + method_order) // step, order // step
         fd_mat = self._fd_matrix(step_ratio, parity, num_terms)
@@ -584,8 +581,7 @@ class Jacobian(Derivative):
         if len(h_shape) < 3:
             h = np.vstack([(one * hi).ravel()] for hi in h)
         else:
-            h = np.vstack([(one * hi.transpose(axes)).ravel()]
-                          for hi in h)
+            h = np.vstack([(one * hi.transpose(axes)).ravel()] for hi in h)
         return h
 
     def _vstack(self, sequence, steps):
@@ -600,7 +596,6 @@ class Jacobian(Derivative):
                           for r in sequence)
 
         h = self._vstack_steps(steps, original_shape, axes, n)
-
         self._check_equal_size(f_del, h)
 
         return f_del, h, self._atleast_2d(original_shape, ndim)
@@ -913,7 +908,6 @@ class Hessian(Hessdiag):
         n = len(x)
         ee = np.diag(h)
         hess = 2. * np.outer(h, h)
-
         for i in range(n):
             for j in range(i, n):
                 hess[i, j] = (f(x + 1j * ee[i] + ee[j], *args, **kwargs) -
@@ -943,7 +937,6 @@ class Hessian(Hessdiag):
         n = len(x)
         ee = np.diag(h)
         hess = np.outer(h, h)
-
         for i in range(n):
             hess[i, i] = (f(x + 2 * ee[i, :], *args, **kwargs) - 2 * fx +
                           f(x - 2 * ee[i, :], *args, **kwargs)
