@@ -178,7 +178,7 @@ class Derivative(_Limit):
 
     def _derivative_zero_order(self, xi, args, kwds):
         steps = [np.zeros_like(xi)]
-        results = [self.f(xi, *args, **kwds)]
+        results = [self.fun(xi, *args, **kwds)]
         self.set_richardson_rule(2, 0)
         return self._vstack(results, steps)
 
@@ -258,7 +258,7 @@ class Derivative(_Limit):
 
     def _get_functions(self):
         name = self._get_function_name()
-        return getattr(self, name), self.f
+        return getattr(self, name), self.fun
 
     def _get_steps(self, xi):
         method, n, order = self.method, self.n, self._method_order
@@ -995,3 +995,14 @@ class Hessian(Hessdiag):
 
     def _backward(self, f, fx, x, h, *args, **kwargs):
         return self._forward(f, fx, x, -h, *args, **kwargs)
+
+if __name__ == '__main__':
+    from numpy import array
+    #from numdifftools import Jacobian
+    x = array([1,2])
+    G = lambda x: array([[x[0], x[1]], [x[0], x[1]]])
+    dGdx = Jacobian(lambda x: G(x))
+    D = dGdx(x)
+    print(G(x).shape)
+    print(D.shape)
+    pass
