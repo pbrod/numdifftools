@@ -220,7 +220,7 @@ class TestJacobian(unittest.TestCase):
 
     @staticmethod
     def test_issue_25():
-        def G(x):
+        def g_fun(x):
             out = algopy.zeros((2, 2), dtype=x)
             out[0, 0] = x[0]
             out[0, 1] = x[1]
@@ -228,10 +228,10 @@ class TestJacobian(unittest.TestCase):
             out[1, 1] = x[1]
             return out
 
-        dGdx = nd.Jacobian(G) # TODO:  method='reverse' fails
+        dg_dx = nd.Jacobian(g_fun) # TODO:  method='reverse' fails
         x = [1, 2]
-        D = dGdx(x)
-        assert_allclose(D, [[[1., 0.],
+        dg = dg_dx(x)
+        assert_allclose(dg, [[[1., 0.],
                              [0., 1.]],
                             [[1., 0.],
                              [0., 1.]]])

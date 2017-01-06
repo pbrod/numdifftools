@@ -376,7 +376,7 @@ class TestJacobian(unittest.TestCase):
             out[1] = x
             return out
 
-        dGdx = nd.Jacobian(g_fun)
+        dg_dx = nd.Jacobian(g_fun)
         x = np.array([1., 2.])
         v0 = nd.approx_fprime(x, g_fun)
         assert_allclose(v0, [[[1., 0.],
@@ -384,8 +384,8 @@ class TestJacobian(unittest.TestCase):
                             [[1., 0.],
                              [0., 1.]]])
 
-        D = dGdx(x)
-        assert_allclose(D, [[[1., 0.],
+        dg = dg_dx(x)
+        assert_allclose(dg, [[[1., 0.],
                              [0., 1.]],
                             [[1., 0.],
                              [0., 1.]]])
