@@ -543,8 +543,8 @@ class Jacobian(Derivative):
     >>> xdata = np.arange(0,1,0.1)
     >>> ydata = 1+2*np.exp(0.75*xdata)
     >>> fun = lambda c: (c[0]+c[1]*np.exp(c[2]*xdata) - ydata)**2
-    >>> fun([1, 2, 0.75]).shape
-    (10,)
+    >>> np.allclose(fun([1, 2, 0.75]).shape,  (10,))
+    True
 
     >>> Jfun = nd.Jacobian(fun)
     >>> val = Jfun([1, 2, 0.75])
@@ -1061,9 +1061,8 @@ def approx_fprime(x, f, epsilon=None, args=(), kwargs=None, centered=True):
     >>> xdata = np.arange(0,1,0.1)
     >>> ydata = 1+2*np.exp(0.75*xdata)
     >>> fun = lambda c: (c[0]+c[1]*np.exp(c[2]*xdata) - ydata)**2
-    >>> fun([1, 2, 0.75]).shape
-    (10,)
-
+    >>> np.allclose(fun([1, 2, 0.75]).shape, (10,))
+    True
     >>> np.allclose(approx_fprime([1, 2, 0.75], fun), np.zeros((10,3)))
     True
 
