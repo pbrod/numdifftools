@@ -158,12 +158,12 @@ class Derivative(_Limit):
     Hessian
     """)
 
-    def __init__(self, f, step=None, method='central', order=2, n=1,
+    def __init__(self, fun, step=None, method='central', order=2, n=1,
                  full_output=False, **step_options):
         self.n = n
         self.richardson_terms = 2
         super(Derivative,
-              self).__init__(f, step=step, method=method, order=order,
+              self).__init__(fun, step=step, method=method, order=order,
                              full_output=full_output, **step_options)
 
     n = property(fget=lambda cls: cls._n,
@@ -529,8 +529,8 @@ class Jacobian(Derivative):
     also suffer more from numerical problems. First order methods is usually
     not recommended.
 
-    If f returns a 1d array, it returns a Jacobian. If a 2d array is returned
-    by f (e.g., with a value for each observation), it returns a 3d array
+    If fun returns a 1d array, it returns a Jacobian. If a 2d array is returned
+    by fun (e.g., with a value for each observation), it returns a 3d array
     with the Jacobian of each observation with shape xk x nobs x xk. I.e.,
     the Jacobian of the first observation would be [:, 0, :]
     """, example="""
@@ -540,19 +540,32 @@ class Jacobian(Derivative):
 
     #(nonlinear least squares)
 
-    >>> xdata = np.reshape(np.arange(0,1,0.1),(-1,1))
+    >>> xdata = np.arange(0,1,0.1)
     >>> ydata = 1+2*np.exp(0.75*xdata)
     >>> fun = lambda c: (c[0]+c[1]*np.exp(c[2]*xdata) - ydata)**2
+    >>> fun([1, 2, 0.75]).shape
+    (10,)
 
     >>> Jfun = nd.Jacobian(fun)
-    >>> val = Jfun([1,2,0.75])
+    >>> val = Jfun([1, 2, 0.75])
     >>> np.allclose(val, np.zeros((10,3)))
     True
 
-    >>> fun2 = lambda x : x[0]*x[1]*x[2] + np.exp(x[0])*x[1]
-    >>> Jfun3 = nd.Jacobian(fun2)
-    >>> Jfun3([3.,5.,7.])
-    array([[ 135.42768462,   41.08553692,   15.        ]])
+    >>> fun2 = lambda x : x[0]*x[1]*x[2]**2
+    >>> Jfun2 = nd.Jacobian(fun2)
+    >>> np.allclose(Jfun2([1.,2.,3.]), [[18., 9., 12.]])
+    True
+
+    >>> fun3 = lambda x : np.vstack((x[0]*x[1]*x[2]**2, x[0]*x[1]*x[2]))
+    >>> Jfun3 = nd.Jacobian(fun3)
+    >>> np.allclose(Jfun3([1., 2., 3.]), [[18., 9., 12.], [6., 3., 2.]])
+    True
+    >>> np.allclose(Jfun3([4., 5., 6.]), [[180., 144., 240.], [30., 24., 20.]])
+    True
+    >>> np.allclose(Jfun3(np.array([[1.,2.,3.]]).T), [[ 18.,   9.,  12.],
+    ...                                               [ 6.,   3.,   2.]])
+    True
+
     """, see_also="""
     See also
     --------
@@ -572,17 +585,6 @@ class Jacobian(Derivative):
             original_shape = (1, ) + tuple(original_shape)
         return tuple(original_shape)
 
-    @staticmethod
-    def _vstack_steps(steps, original_shape, axes, n):
-        h_shape = (n, ) + steps[0].shape
-        h = [np.atleast_2d(step).repeat(n, axis=0).reshape(h_shape)
-             for step in steps]
-        one = np.ones(original_shape)
-        if len(h_shape) < 3:
-            h = np.vstack([(one * hi).ravel()] for hi in h)
-        else:
-            h = np.vstack([(one * hi.transpose(axes)).ravel()] for hi in h)
-        return h
 
     def _vstack(self, sequence, steps):
         original_shape = list(np.shape(np.atleast_1d(sequence[0].squeeze())))
@@ -590,14 +592,11 @@ class Jacobian(Derivative):
         axes = [0, 1, 2][:ndim]
         axes[:2] = axes[1::-1]
         original_shape[:2] = original_shape[1::-1]
-        n = 1 if ndim < 2 else original_shape[0]
 
-        f_del = np.vstack([np.atleast_1d(r.squeeze()).transpose(axes).ravel()]
-                          for r in sequence)
-
-        h = self._vstack_steps(steps, original_shape, axes, n)
-        self._check_equal_size(f_del, h)
-
+        f_del = np.vstack([np.atleast_1d(r.squeeze()).transpose(axes).ravel()
+                          for r in sequence])
+        h = np.vstack([np.atleast_1d(r.squeeze()).transpose(axes).ravel()
+                          for r in steps])
         return f_del, h, self._atleast_2d(original_shape, ndim)
 
     @staticmethod
@@ -630,13 +629,13 @@ class Jacobian(Derivative):
 
     def _complex(self, f, fx, x, h, *args, **kwds):
         n = len(x)
-        increments = self._increments(n, 1j * h)
+        increments = 1j * self._increments(n, h)
         partials = [f(x + ih, *args, **kwds).imag for ih in increments]
         return np.array(partials)
 
     def _complex_odd(self, f, fx, x, h, *args, **kwds):
         n = len(x)
-        increments = self._increments(n, _SQRT_J * h)
+        increments = _SQRT_J * self._increments(n, h)
         partials = [((_SQRT_J / 2.) * (f(x + ih, *args, **kwds) -
                                        f(x - ih, *args, **kwds))).imag
                     for ih in increments]
@@ -644,22 +643,27 @@ class Jacobian(Derivative):
 
     def _multicomplex(self, f, fx, x, h, *args, **kwds):
         n = len(x)
-        increments = self._increments(n, 1j * h)
+        increments = 1j * self._increments(n, h)
         cmplx_wrap = Bicomplex.__array_wrap__
         partials = [cmplx_wrap(f(Bicomplex(x + hi, 0), *args, **kwds)).imag
                     for hi in increments]
         return np.array(partials)
 
+    def _derivative_nonzero_order(self, xi, args, kwds):
+        diff, f = self._get_functions()
+        steps, step_ratio = self._get_steps(xi)
+        fxi = f(xi, *args, **kwds)
+        results = [diff(f, fxi, xi, h, *args, **kwds) for h in steps]
+
+        n = len(xi)
+        one = np.ones_like(fxi)
+        steps2 = [np.array([one * h[i] for i in range(n)]) for h in steps]
+
+        self.set_richardson_rule(step_ratio, self.richardson_terms)
+        return self._apply_fd_rule(step_ratio, results, steps2)
+
     def __call__(self, x, *args, **kwds):
-        vals = super(Jacobian, self).__call__(np.atleast_1d(x), *args, **kwds)
-        if self.full_output:
-            vals, info = vals
-        if vals.ndim == 3:
-            vals =  np.array([np.hstack([np.diag(hj) for hj in hi])
-                              for hi in vals])
-        if self.full_output:
-            return vals, info
-        return vals
+        return super(Jacobian, self).__call__(np.atleast_1d(x), *args, **kwds)
 
 
 class Gradient(Jacobian):
@@ -680,7 +684,7 @@ class Gradient(Jacobian):
     also suffer more from numerical problems. First order methods is usually
     not recommended.
 
-    If x0 is an nxm array, then f is assumed to be a function of n*m variables.
+    If x0 is an nxm array, then fun is assumed to be a function of n*m variables.
     """, example="""
     Example
     -------
@@ -996,13 +1000,119 @@ class Hessian(Hessdiag):
     def _backward(self, f, fx, x, h, *args, **kwargs):
         return self._forward(f, fx, x, -h, *args, **kwargs)
 
+
+EPS = np.MachAr().eps
+
+
+def _get_epsilon(x, s, epsilon, n):
+    if epsilon is None:
+        h = EPS**(1. / s) * np.maximum(np.abs(x), 0.1)
+    else:
+        if np.isscalar(epsilon):
+            h = np.empty(n)
+            h.fill(epsilon)
+        else:  # pragma : no cover
+            h = np.asarray(epsilon)
+            if h.shape != x.shape:
+                raise ValueError("If h is not a scalar it must have the same"
+                                 " shape as x.")
+    return h
+
+
+def approx_fprime(x, f, epsilon=None, args=(), kwargs=None, centered=True):
+    '''
+    Gradient of function, or Jacobian if function fun returns 1d array
+
+    Parameters
+    ----------
+    x : array
+        parameters at which the derivative is evaluated
+    fun : function
+        `fun(*((x,)+args), **kwargs)` returning either one value or 1d array
+    epsilon : float, optional
+        Stepsize, if None, optimal stepsize is used. This is EPS**(1/2)*x for
+        `centered` == False and EPS**(1/3)*x for `centered` == True.
+    args : tuple
+        Tuple of additional arguments for function `fun`.
+    kwargs : dict
+        Dictionary of additional keyword arguments for function `fun`.
+    centered : bool
+        Whether central difference should be returned. If not, does forward
+        differencing.
+
+    Returns
+    -------
+    grad : array
+        gradient or Jacobian
+
+    Notes
+    -----
+    If fun returns a 1d array, it returns a Jacobian. If a 2d array is returned
+    by fun (e.g., with a value for each observation), it returns a 3d array
+    with the Jacobian of each observation with shape xk x nobs x xk. I.e.,
+    the Jacobian of the first observation would be [:, 0, :]
+
+     Example
+    -------
+    >>> import numdifftools as nd
+
+    #(nonlinear least squares)
+
+    >>> xdata = np.arange(0,1,0.1)
+    >>> ydata = 1+2*np.exp(0.75*xdata)
+    >>> fun = lambda c: (c[0]+c[1]*np.exp(c[2]*xdata) - ydata)**2
+    >>> fun([1, 2, 0.75]).shape
+    (10,)
+
+    >>> np.allclose(approx_fprime([1, 2, 0.75], fun), np.zeros((10,3)))
+    True
+
+    >>> fun2 = lambda x : x[0]*x[1]*x[2]**2
+    >>> np.allclose(approx_fprime([1.,2.,3.], fun2), [[18., 9., 12.]])
+    True
+
+    >>> fun3 = lambda x : np.vstack((x[0]*x[1]*x[2]**2, x[0]*x[1]*x[2]))
+    >>> np.allclose(approx_fprime([1., 2., 3.], fun3),
+    ...            [[18., 9., 12.], [6., 3., 2.]])
+    True
+    >>> np.allclose(approx_fprime([4., 5., 6.], fun3),
+    ...            [[180., 144., 240.], [30., 24., 20.]])
+    True
+
+    >>> np.allclose(approx_fprime(np.array([[1.,2.,3.], [4., 5., 6.]]).T, fun3),
+    ...            [[[  18.,  180.],
+    ...              [   9.,  144.],
+    ...              [  12.,  240.]],
+    ...             [[   6.,   30.],
+    ...              [   3.,   24.],
+    ...              [   2.,   20.]]])
+    True
+    '''
+    kwargs = {} if kwargs is None else kwargs
+    n = len(x)
+    # TODO:  add scaled stepsize
+    f0 = f(*(x,) + args, **kwargs)
+    dim = np.atleast_1d(f0).shape  # it could be a scalar
+    grad = np.zeros((n,) + dim, float)
+    ei = np.zeros(np.shape(x), float)
+    if not centered:
+        epsilon = _get_epsilon(x, 2, epsilon, n)
+        for k in range(n):
+            ei[k] = epsilon[k]
+            grad[k, :] = (f(*(x + ei,) + args, **kwargs) - f0) / epsilon[k]
+            ei[k] = 0.0
+    else:
+        epsilon = _get_epsilon(x, 3, epsilon, n) / 2.
+        for k in range(n):
+            ei[k] = epsilon[k]
+            grad[k, :] = (f(*(x + ei,) + args, **kwargs) -
+                          f(*(x - ei,) + args, **kwargs)) / (2 * epsilon[k])
+            ei[k] = 0.0
+    grad = grad.squeeze()
+    axes = [0, 1, 2][:grad.ndim]
+    axes[:2] = axes[1::-1]
+    return np.transpose(grad, axes=axes).squeeze()
+
 if __name__ == '__main__':
-    from numpy import array
-    #from numdifftools import Jacobian
-    x = array([1,2])
-    G = lambda x: array([[x[0], x[1]], [x[0], x[1]]])
-    dGdx = Jacobian(lambda x: G(x))
-    D = dGdx(x)
-    print(G(x).shape)
-    print(D.shape)
-    pass
+    from numdifftools.testing import test_docstrings
+    test_docstrings()

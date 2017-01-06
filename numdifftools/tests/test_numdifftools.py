@@ -138,10 +138,6 @@ class TestDerivative(unittest.TestCase):
         df.n = 0
         self.assertEqual(df(0), np.inf)
 
-#     def _example_fd_mat(self):
-#         fdmat = nd.Derivative._fd_matrix(step_ratio=2.0, parity=1, nterms=3)
-#         _fd_rules = np.linalg.pinv(fdmat)
-#         self.assert_(False)
     @staticmethod
     def test_high_order_derivative_cos():
         true_vals = (0.0, -1.0, 0.0, 1.0, 0.0, -1.0, 0.0)
@@ -276,82 +272,6 @@ class TestDerivative(unittest.TestCase):
         dlog = nd.Derivative(np.log, method='forward', step=epsilon)
         self.assertAlmostEqual(dlog(x), 1 / x)
 
-EPS = np.MachAr().eps
-
-
-def _get_epsilon(x, s, epsilon, n):
-    if epsilon is None:
-        h = EPS**(1. / s) * np.maximum(np.abs(x), 0.1)
-    else:
-        if np.isscalar(epsilon):
-            h = np.empty(n)
-            h.fill(epsilon)
-        else:  # pragma : no cover
-            h = np.asarray(epsilon)
-            if h.shape != x.shape:
-                raise ValueError("If h is not a scalar it must have the same"
-                                 " shape as x.")
-    return h
-
-
-def approx_fprime(x, f, epsilon=None, args=(), kwargs=None, centered=True):
-    '''
-    Gradient of function, or Jacobian if function fun returns 1d array
-
-    Parameters
-    ----------
-    x : array
-        parameters at which the derivative is evaluated
-    fun : function
-        `fun(*((x,)+args), **kwargs)` returning either one value or 1d array
-    epsilon : float, optional
-        Stepsize, if None, optimal stepsize is used. This is EPS**(1/2)*x for
-        `centered` == False and EPS**(1/3)*x for `centered` == True.
-    args : tuple
-        Tuple of additional arguments for function `fun`.
-    kwargs : dict
-        Dictionary of additional keyword arguments for function `fun`.
-    centered : bool
-        Whether central difference should be returned. If not, does forward
-        differencing.
-
-    Returns
-    -------
-    grad : array
-        gradient or Jacobian
-
-    Notes
-    -----
-    If fun returns a 1d array, it returns a Jacobian. If a 2d array is returned
-    by fun (e.g., with a value for each observation), it returns a 3d array
-    with the Jacobian of each observation with shape xk x nobs x xk. I.e.,
-    the Jacobian of the first observation would be [:, 0, :]
-    '''
-    kwargs = {} if kwargs is None else kwargs
-    n = len(x)
-    # TODO:  add scaled stepsize
-    f0 = f(*(x,) + args, **kwargs)
-    dim = np.atleast_1d(f0).shape  # it could be a scalar
-    grad = np.zeros((n,) + dim, float)
-    ei = np.zeros(np.shape(x), float)
-    if not centered:
-        epsilon = _get_epsilon(x, 2, epsilon, n)
-        for k in range(n):
-            ei[k] = epsilon[k]
-            grad[k, :] = (f(*(x + ei,) + args, **kwargs) - f0) / epsilon[k]
-            ei[k] = 0.0
-    else:
-        epsilon = _get_epsilon(x, 3, epsilon, n) / 2.
-        for k in range(n):
-            ei[k] = epsilon[k]
-            grad[k, :] = (f(*(x + ei,) + args, **kwargs) -
-                          f(*(x - ei,) + args, **kwargs)) / (2 * epsilon[k])
-            ei[k] = 0.0
-    grad = grad.squeeze()
-    axes = [0, 1, 2][:grad.ndim]
-    axes[:2] = axes[1::-1]
-    return np.transpose(grad, axes=axes).squeeze()
-
 
 class TestJacobian(unittest.TestCase):
 
@@ -381,13 +301,13 @@ class TestJacobian(unittest.TestCase):
 
     @staticmethod
     def test_on_vector_valued_function():
-        xdata = np.reshape(np.arange(0, 1, 0.1), (-1, 1))
+        xdata = np.arange(0, 1, 0.1) #.reshape((-1, 1))
         ydata = 1 + 2 * np.exp(0.75 * xdata)
 
         def fun(c):
             return (c[0] + c[1] * np.exp(c[2] * xdata) - ydata) ** 2
 
-        _j_0 = approx_fprime([1, 2, 0.75], fun)
+        _j_0 = nd.approx_fprime([1, 2, 0.75], fun)
 
         for method in ['complex', 'central', 'forward', 'backward']:
             for order in [2, 4]:
@@ -409,16 +329,15 @@ class TestJacobian(unittest.TestCase):
             f0_d1 = np.atleast_1d(x[1] * 2)
             f1_d0 = np.atleast_1d(3 * x[0] ** 2)
             f1_d1 = np.atleast_1d(3 * x[1] ** 2)
-            df0 = np.hstack([np.diag(f0_d0), np.diag(f0_d1)])
-            df1 = np.hstack([np.diag(f1_d0), np.diag(f1_d1)])
+            # algopy way:
+            # df0 = np.hstack([np.diag(f0_d0), np.diag(f0_d1)])
+            # df1 = np.hstack([np.diag(f1_d0), np.diag(f1_d1)])
+            # numdifftools way:
+            df0 = np.vstack([f0_d0, f0_d1])
+            df1 = np.vstack([f1_d0, f1_d1])
+
             return np.array([df0, df1]).squeeze()
 
-        x = np.array([(1, 2, 3, 4),
-                      (5, 6, 7, 8)], dtype=float)
-
-        y = fun(x)
-        assert_allclose(y, [[26., 40., 58., 80.],
-                            [126., 224., 370., 576.]])
         jaca = nd.Jacobian(fun)
         assert_allclose(jaca([1, 2]), [[2., 4.],
                                        [3., 12.]])
@@ -428,32 +347,59 @@ class TestJacobian(unittest.TestCase):
         assert_allclose(jaca([3, 4]), dfun([3, 4]))
 
         v0 = jaca([[1, 2], [3, 4]])
+        print(v0)
         assert_allclose(v0,
                         dfun([[1, 2],
                               [3, 4]]))
-        assert_allclose(v0,
-                        [[[2., 0., 6., 0.],
-                          [0., 4., 0., 8.]],
-                         [[3., 0., 27., 0.],
-                          [0., 12., 0., 48.]]])
 
-        v0 = approx_fprime(x, fun)
-        assert_allclose(v0,
-                        [[[2., 4., 6., 8.],
-                          [10., 12., 14., 16.]],
-                         [[3., 12., 27., 48.],
-                          [75., 108., 147., 192.]]])
+        x = np.array([(1, 2, 3, 4),
+                      (5, 6, 7, 8)], dtype=float)
 
+        y = fun(x)
+        assert_allclose(y, [[26., 40., 58., 80.],
+                            [126., 224., 370., 576.]])
+        tval = dfun(x)
+        assert_allclose(tval, [[[2., 4., 6., 8.],
+                                [10., 12., 14., 16.]],
+                               [[3., 12., 27., 48.],
+                                [75., 108., 147., 192.]]])
+        v0 = nd.approx_fprime(x, fun)
         val = jaca(x)
-        assert_allclose(val,
-                        [[[2., 0., 0., 0., 10., 0., 0., 0.],
-                          [0., 4., 0., 0., 0., 12., 0., 0.],
-                          [0., 0., 6., 0., 0., 0., 14., 0.],
-                          [0., 0., 0., 8., 0., 0., 0., 16.]],
-                         [[3., 0., 0., 0., 75., 0., 0., 0.],
-                          [0., 12., 0., 0., 0., 108., 0., 0.],
-                          [0., 0., 27., 0., 0., 0., 147., 0.],
-                          [0., 0., 0., 48., 0., 0., 0., 192.]]])
+        assert_allclose(v0, tval)
+        assert_allclose(val, tval)
+
+    @staticmethod
+    def test_issue_25():
+        def g_fun(x):
+            out = np.zeros((2, 2))
+            out[0] = x
+            out[1] = x
+            return out
+
+        dGdx = nd.Jacobian(g_fun)
+        x = np.array([1., 2.])
+        v0 = nd.approx_fprime(x, g_fun)
+        assert_allclose(v0, [[[1., 0.],
+                             [0., 1.]],
+                            [[1., 0.],
+                             [0., 1.]]])
+
+        D = dGdx(x)
+        assert_allclose(D, [[[1., 0.],
+                             [0., 1.]],
+                            [[1., 0.],
+                             [0., 1.]]])
+        fun3 = lambda x : np.vstack((x[0]*x[1]*x[2]**2, x[0]*x[1]*x[2]))
+        Jfun3 = nd.Jacobian(fun3)
+        x = np.array([[1.,2.,3.], [4., 5., 6.]]).T
+        tv = [[[18., 180.],
+               [9., 144.],
+               [12., 240.]],
+              [[6., 30.],
+               [3., 24.],
+               [2., 20.]]]
+        assert_allclose(Jfun3(x), tv)
+        assert_allclose(nd.approx_fprime(x, fun3), tv)
 
 
 class TestGradient(unittest.TestCase):

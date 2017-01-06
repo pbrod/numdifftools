@@ -289,7 +289,7 @@ class Jacobian(Gradient):
 
     #(nonlinear least squares)
 
-    >>> xdata = np.reshape(np.arange(0,1,0.1),(-1,1))
+    >>> xdata = np.arange(0,1,0.1)
     >>> ydata = 1+2*np.exp(0.75*xdata)
     >>> fun = lambda c: (c[0]+c[1]*np.exp(c[2]*xdata) - ydata)**2
 
@@ -305,14 +305,34 @@ class Jacobian(Gradient):
            [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
            [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]])
 
-    >>> f2 = lambda x : x[0]*x[1]*x[2] + np.exp(x[0])*x[1]
-    >>> Jfun3 = nda.Jacobian(f2)
-    >>> Jfun3([3.,5.,7.])
-    array([[ 135.42768462,   41.08553692,   15.        ]])
+    >>> f2 = lambda x : x[0]*x[1]*x[2]**2
+    >>> Jfun2 = nda.Jacobian(f2)
+    >>> Jfun2([1., 2., 3.])
+    array([[ 18., 9., 12.]])
 
-    >>> Jfun4 = nda.Jacobian(f2, method='reverse')
-    >>> Jfun4([3,5,7])
-    array([[ 135.42768462,   41.08553692,   15.        ]])
+    >>> Jfun21 = nda.Jacobian(f2, method='reverse')
+    >>> Jfun21([1., 2., 3.])
+    array([[ 18., 9., 12.]])
+
+    >>> def fun3(x):
+    ...     n = np.prod(np.shape(x[0]))
+    ...     out = nda.algopy.zeros((2, n), dtype=x)
+    ...     out[0] = x[0]*x[1]*x[2]**2
+    ...     out[1] = x[0]*x[1]*x[2]
+    ...     return out
+    >>> Jfun3 = nda.Jacobian(fun3)
+
+    >>> np.allclose(Jfun3([1., 2., 3.]), [[[18., 9., 12.]], [[6., 3., 2.]]])
+    True
+    >>> np.allclose(Jfun3([4., 5., 6.]), [[[180., 144., 240.]],
+    ...                                   [[30., 24., 20.]]])
+    True
+    >>> np.allclose(Jfun3(np.array([[1.,2.,3.], [4., 5., 6.]]).T),
+    ...             [[[18.,    0.,    9.,    0.,   12.,    0.],
+    ...               [0.,  180.,    0.,  144.,    0.,  240.]],
+    ...              [[6.,    0.,    3.,    0.,    2.,    0.],
+    ...               [0.,   30.,    0.,   24.,    0.,   20.]]])
+    True
     """, see_also="""
     See also
     --------
@@ -511,4 +531,3 @@ def directionaldiff(f, x0, vec, **options):
 if __name__ == '__main__':
     from numdifftools.testing import test_docstrings
     test_docstrings()
-
