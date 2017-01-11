@@ -4,6 +4,14 @@ Changelog
 
 Created with gitcommand: git shortlog v0.9.17..v0.9.18
 
+
+Version 0.9.20, Jan 11, 2017
+---------------------------------
+
+Per A Brodtkorb (1):
+     * Updated the author email address in order for twine to be able to upload to pypi.
+
+
 Version 0.9.19, Jan 11, 2017
 ---------------------------------
 
