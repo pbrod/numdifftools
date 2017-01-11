@@ -390,7 +390,7 @@ class TestJacobian(unittest.TestCase):
                             [[1., 0.],
                              [0., 1.]]])
         fun3 = lambda x : np.vstack((x[0]*x[1]*x[2]**2, x[0]*x[1]*x[2]))
-        Jfun3 = nd.Jacobian(fun3)
+        jfun3 = nd.Jacobian(fun3)
         x = np.array([[1.,2.,3.], [4., 5., 6.]]).T
         tv = [[[18., 180.],
                [9., 144.],
@@ -398,7 +398,7 @@ class TestJacobian(unittest.TestCase):
               [[6., 30.],
                [3., 24.],
                [2., 20.]]]
-        assert_allclose(Jfun3(x), tv)
+        assert_allclose(jfun3(x), tv)
         assert_allclose(nd.approx_fprime(x, fun3), tv)
 
 
