@@ -199,8 +199,8 @@ References
     :target: https://ci.appveyor.com/project/pbrod/numdifftools
 
 
-.. |docs_img| image:: https://readthedocs.org/projects/pip/badge/?version=latest
-    :target: http://numdifftools.readthedocs.org/en/latest/
+.. |docs_img| image:: https://readthedocs.org/projects/pip/badge/?version=stable
+    :target: http://numdifftools.readthedocs.org/en/stable/
 
 .. |health_img| image:: https://landscape.io/github/pbrod/numdifftools/master/landscape.svg?style=flat
    :target: https://landscape.io/github/pbrod/numdifftools/master
