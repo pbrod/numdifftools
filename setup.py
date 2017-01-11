@@ -35,10 +35,11 @@ PyPi upload:
   git shortlog v0.9.15..v0.9.16 > log.txt  # update Changes.rst
   git commit
   git tag v0.9.17 master
-  python setup.py bdist_wheel --universal
   python setup.py sdist
+  python setup.py bdist_wheel --universal
+  python setup.py egg_info
   git push --tags
-  twine upload dist/*
+  twine -p PASSWORD upload dist/*
 """
 
 import sys

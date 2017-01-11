@@ -4,6 +4,12 @@ Changelog
 
 Created with gitcommand: git shortlog v0.9.17..v0.9.18
 
+Version 0.9.19, Jan 11, 2017
+---------------------------------
+
+Per A Brodtkorb (1):
+      * Updated setup.py in a attempt to get upload to pypi working again.
+
 
 Version 0.9.18, Jan 11, 2017
 ---------------------------------
