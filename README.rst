@@ -10,8 +10,8 @@ to solve automatic numerical differentiation problems in one or more variables.
 Finite differences are used in an adaptive manner, coupled with a Richardson
 extrapolation methodology to provide a maximally accurate result.
 The user can configure many options like; changing the order of the method or
-the extrapolation, even allowing the user to specify whether complex-step, central,
-forward or backward differences are used.
+the extrapolation, even allowing the user to specify whether complex-step,
+central, forward or backward differences are used.
 
 The methods provided are:
 
@@ -152,32 +152,35 @@ Acknowledgement
 ===============
 The `numdifftools package <http://pypi.python.org/pypi/numdifftools/>`_ for
 `Python <https://www.python.org/>`_ was written by Per A. Brodtkorb
-based on the adaptive numerical differentiation toolbox written in `Matlab <http://www.mathworks.com>`_  by John D'Errico [DErrico2006]_.
+based on the adaptive numerical differentiation toolbox written in
+`Matlab <http://www.mathworks.com>`_  by John D'Errico [DErrico2006]_.
 
 Numdifftools has as of version 0.9 been extended with some of the functionality
-found in the statsmodels.tools.numdiff module written by Josef Perktold [Perktold2014]_.
+found in the statsmodels.tools.numdiff module written by Josef Perktold
+[Perktold2014]_.
 
 
 References
 ===========
 
-.. [DErrico2006] D'Errico, J. R.  (2006), Adaptive Robust Numerical Differentiation
+.. [DErrico2006] D'Errico, J. R.  (2006),
+    Adaptive Robust Numerical Differentiation
     http://www.mathworks.com/matlabcentral/fileexchange/13490-adaptive-robust-numerical-differentiation
 
 .. [Perktold2014] Perktold, J (2014), numdiff package
     http://statsmodels.sourceforge.net/0.6.0/_modules/statsmodels/tools/numdiff.html
 
-..[Lantoine2010] Gregory Lantoine (2010),
+.. [Lantoine2010] Gregory Lantoine (2010),
     A methodology for robust optimization of low-thrust trajectories in
     multi-body environments, Phd thesis, Georgia Institute of Technology
 
-..[LantoineEtal2012] Gregory Lantoine, R.P. Russell, and T. Dargent (2012)
+.. [LantoineEtal2012] Gregory Lantoine, R.P. Russell, and T. Dargent (2012)
     Using multicomplex variables for automatic computation of high-order
     derivatives, ACM Transactions on Mathematical Software,
     Vol. 38, No. 3, Article 16, April 2012, 21 pages,
     http://doi.acm.org/10.1145/2168773.2168774
 
-..[Luna-ElizarrarasEtal2012] M.E. Luna-Elizarraras, M. Shapiro, D.C. Struppa1,
+.. [Luna-ElizarrarasEtal2012] M.E. Luna-Elizarraras, M. Shapiro, D.C. Struppa1,
     A. Vajiac (2012), CUBO A Mathematical Journal,
     Vol. 14, No 2, (61-80). June 2012.
 
