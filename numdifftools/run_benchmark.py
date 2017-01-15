@@ -95,7 +95,7 @@ def _compute_benchmark(functions, problem_sizes):
         f = BenchmarkFunction(n)
         for i, (_key, function) in enumerate(functions.items()):
             t = timeit.default_timer()
-            function.f = f
+            function.fun = f
             preproc_time = timeit.default_timer() - t
             t = timeit.default_timer()
             x = 3 * np.ones(n)

@@ -77,7 +77,7 @@ def run_hamiltonian(hessian, verbose=True):
 
     xopt = optimize.fmin(c.potential, c.initialposition(), xtol=1e-10)
 
-    hessian.f = c.potential
+    hessian.fun = c.potential
     hessian.full_output = True
 
     h, info = hessian(xopt)

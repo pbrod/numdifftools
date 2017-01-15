@@ -16,6 +16,11 @@ from numdifftools.step_generators import MinStepGenerator
 from numdifftools.extrapolation import Richardson, dea3
 
 
+def _assert(cond, msg):
+    if not cond:
+        raise ValueError(msg)
+
+
 class CStepGenerator(MinStepGenerator):
 
     """
@@ -62,9 +67,8 @@ class CStepGenerator(MinStepGenerator):
         self._check_path()
 
     def _check_path(self):
-        if self.path not in ['spiral', 'radial']:
-            raise ValueError('Invalid Path: {}'.format(str(self.path)))
-
+        _assert(self.path in ['spiral', 'radial'],
+                'Invalid Path: {}'.format(str(self.path)))
 
     @property
     def step_ratio(self):
@@ -104,9 +108,9 @@ class _Limit(object):
 
     info = namedtuple('info', ['error_estimate', 'final_step', 'index'])
 
-    def __init__(self, f, step=None, method='above', order=4,
+    def __init__(self, fun, step=None, method='above', order=4,
                  full_output=False, **options):
-        self.f = f
+        self.fun = fun
         self.method = method
         self.order = order
         self.full_output = full_output
@@ -178,9 +182,8 @@ class _Limit(object):
         f_del = np.vstack(list(np.ravel(r)) for r in sequence)
         h = np.vstack(list(np.ravel(np.ones(original_shape)*step))
                       for step in steps)
-        if f_del.size != h.size:
-            raise ValueError('fun did not return data of correct size ' +
-                             '(it must be vectorized)')
+        _assert(f_del.size == h.size, 'fun did not return data of correct '
+                'size (it must be vectorized)')
         return f_del, h, original_shape
 
 
@@ -191,9 +194,9 @@ class Limit(_Limit):
 
     Parameters
     ----------
-    f : callable
-        function f(z, `*args`, `**kwds`) to compute the limit for z->z0.
-        The function, f, is assumed to return a result of the same shape and
+    fun : callable
+        function fun(z, `*args`, `**kwds`) to compute the limit for z->z0.
+        The function, fun, is assumed to return a result of the same shape and
         size as its input, `z`.
     step: float, complex, array-like or StepGenerator object, optional
         Defines the spacing used in the approximation.
@@ -313,8 +316,8 @@ class Limit(_Limit):
 
     """
 
-    def _f(self, z, dz, *args, **kwds):
-        return self.f(z+dz, *args, **kwds)
+    def _fun(self, z, dz, *args, **kwds):
+        return self.fun(z+dz, *args, **kwds)
 
     @staticmethod
     def _make_generator(step, options):
@@ -343,7 +346,7 @@ class Limit(_Limit):
 
     def limit(self, x, *args, **kwds):
         z = np.asarray(x)
-        fz, info = self._lim(self._f, z, args, kwds)
+        fz, info = self._lim(self._fun, z, args, kwds)
         if self.full_output:
             return fz, info
         return fz
@@ -365,7 +368,7 @@ class Limit(_Limit):
 
     def __call__(self, x, *args, **kwds):
         z = np.asarray(x)
-        f = self._f
+        f = self._fun
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             fz = f(z, 0, *args, **kwds)
@@ -384,9 +387,9 @@ class Residue(Limit):
 
     Parameters
     ----------
-    f : callable
-        function f(z, `*args`, `**kwds`) to compute the Residue at z=z0.
-        The function, f, is assumed to return a result of the same shape and
+    fun : callable
+        function fun(z, `*args`, `**kwds`) to compute the Residue at z=z0.
+        The function, fun, is assumed to return a result of the same shape and
         size as its input, `z`.
     step: float, complex, array-like or StepGenerator object, optional
         Defines the spacing used in the approximation.
@@ -466,15 +469,14 @@ class Residue(Limit):
             # MethodOrder will always = pole_order + 2
             order = pole_order + 2
 
-        if order <= pole_order:
-            raise ValueError('order must be at least pole_order+1.')
+        _assert(pole_order < order, 'order must be at least pole_order+1.')
         self.pole_order = pole_order
 
         super(Residue, self).__init__(f, step=step, method=method, order=order,
                                       full_output=full_output, **options)
 
-    def _f(self, z, dz, *args, **kwds):
-        return self.f(z + dz, *args, **kwds) * (dz ** self.pole_order)
+    def _fun(self, z, dz, *args, **kwds):
+        return self.fun(z + dz, *args, **kwds) * (dz ** self.pole_order)
 
     def __call__(self, x, *args, **kwds):
         return self.limit(x, *args, **kwds)

@@ -170,6 +170,23 @@ References
 .. [Perktold2014] Perktold, J (2014), numdiff package
     http://statsmodels.sourceforge.net/0.6.0/_modules/statsmodels/tools/numdiff.html
 
+.. [Lantoine2010] Gregory Lantoine (2010),
+    A methodology for robust optimization of low-thrust trajectories in
+    multi-body environments, Phd thesis, Georgia Institute of Technology
+
+.. [LantoineEtal2012] Gregory Lantoine, R.P. Russell, and T. Dargent (2012)
+    Using multicomplex variables for automatic computation of high-order
+    derivatives, ACM Transactions on Mathematical Software,
+    Vol. 38, No. 3, Article 16, April 2012, 21 pages,
+    http://doi.acm.org/10.1145/2168773.2168774
+
+.. [Luna-ElizarrarasEtal2012] M.E. Luna-Elizarraras, M. Shapiro, D.C. Struppa1,
+    A. Vajiac (2012), CUBO A Mathematical Journal,
+    Vol. 14, No 2, (61-80). June 2012.
+
+.. [Verheyleweghen2014] Adriaen Verheyleweghen, (2014)
+    Computation of higher-order derivatives using the multi-complex step method,
+    Project report, NTNU
 
 
 .. |pkg_img| image:: https://badge.fury.io/py/numdifftools.png
@@ -182,8 +199,8 @@ References
     :target: https://ci.appveyor.com/project/pbrod/numdifftools
 
 
-.. |docs_img| image:: https://readthedocs.org/projects/pip/badge/?version=latest
-    :target: http://numdifftools.readthedocs.org/en/latest/
+.. |docs_img| image:: https://readthedocs.org/projects/pip/badge/?version=stable
+    :target: http://numdifftools.readthedocs.org/en/stable/
 
 .. |health_img| image:: https://landscape.io/github/pbrod/numdifftools/master/landscape.svg?style=flat
    :target: https://landscape.io/github/pbrod/numdifftools/master

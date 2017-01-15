@@ -2,7 +2,40 @@
 Changelog
 =========
 
-Created with gitcommand: git shortlog v0.9.16..v0.9.17
+Created with gitcommand: git shortlog v0.9.17..v0.9.18
+
+
+Version 0.9.20, Jan 11, 2017
+---------------------------------
+
+Per A Brodtkorb (1):
+     * Updated the author email address in order for twine to be able to upload to pypi.
+
+
+Version 0.9.19, Jan 11, 2017
+---------------------------------
+
+Per A Brodtkorb (1):
+      * Updated setup.py in a attempt to get upload to pypi working again.
+
+
+Version 0.9.18, Jan 11, 2017
+---------------------------------
+
+Per A Brodtkorb (38):
+      * Updated setup
+      * Added import statements in help header examples.
+      * Added more rigorous tests using hypothesis.
+      * Forced to use wxagg backend
+      * Moved import of matplotlib.pyplot to main in order to avoid import error on travis.
+      * Added fd_derivative function
+      * Updated references.
+      * Attempt to automate sonarcube analysis
+      * Added testcoverage to sonarqube and codeclimate
+      * Simplified code
+      * Added .pylintrc + pep8
+      * Major change in api: class member variable self.f changed to self.fun
+      * Fixes issue #25 (Jacobian broken since 0.9.15)
 
 
 Version 0.9.17, Sep 8, 2016

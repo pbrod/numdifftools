@@ -69,8 +69,8 @@ _cmn_doc = """
 
     Parameters
     ----------
-    f : function
-        function of one array f(x, `*args`, `**kwds`)%(extra_parameter)s
+    fun : function
+        function of one array fun(x, `*args`, `**kwds`)%(extra_parameter)s
     method : string, optional {'forward', 'reverse'}
         defines method used in the approximation
     %(returns)s
@@ -106,19 +106,19 @@ class _Derivative(object):
 
     info = namedtuple('info', ['error_estimate', 'final_step', 'index'])
 
-    def __init__(self, f, n=1, method='forward', full_output=False):
-        self.f = f
+    def __init__(self, fun, n=1, method='forward', full_output=False):
+        self.fun = fun
         self.method = method
         self.n = n
         self.full_output = full_output
 
     @property
-    def f(self):
-        return self._f
+    def fun(self):
+        return self._fun
 
-    @f.setter
-    def f(self, f):
-        self._f = f
+    @fun.setter
+    def fun(self, fun):
+        self._fun = fun
         self._computational_graph = None
 
     def computational_graph(self, x, *args, **kwds):
@@ -127,7 +127,7 @@ class _Derivative(object):
             cg = algopy.CGraph()
             tmp = algopy.Function(x)
 
-            y = self.f(tmp, *args, **kwds)
+            y = self.fun(tmp, *args, **kwds)
 
             cg.trace_off()
             cg.independentFunctionList = [tmp]
@@ -137,7 +137,7 @@ class _Derivative(object):
 
     def _get_function(self):
         if self.n == 0:
-            return self.f
+            return self.fun
         name = '_' + dict(backward='reverse').get(self.method, self.method)
         return getattr(self, name)
 
@@ -177,8 +177,8 @@ class Derivative(_Derivative):
 
     # 1'st derivative of x^3+x^4, at x = [0,1]
 
-    >>> f = lambda x: x**3 + x**4
-    >>> fd3 = nda.Derivative(f)
+    >>> fun = lambda x: x**3 + x**4
+    >>> fd3 = nda.Derivative(fun)
     >>> np.allclose(fd3([0,1]), [ 0.,  7.])
     True
     """, see_also="""
@@ -197,7 +197,7 @@ class Derivative(_Derivative):
         x = UTPM(np.zeros((self.n + 1, P) + shape))
         x.data[0, 0] = x0
         x.data[1, 0] = 1
-        z = self.f(x, *args, **kwds)
+        z = self.fun(x, *args, **kwds)
         y = UTPM.as_utpm(z)
 
         return y.data[self.n, 0] * misc.factorial(self.n)
@@ -227,8 +227,8 @@ class Gradient(_Derivative):
     Example
     -------
     >>> import numdifftools.nd_algopy as nda
-    >>> f = lambda x: np.sum(x**2)
-    >>> df = nda.Gradient(f, method='reverse')
+    >>> fun = lambda x: np.sum(x**2)
+    >>> df = nda.Gradient(fun, method='reverse')
     >>> df([1,2,3])
     array([ 2.,  4.,  6.])
 
@@ -263,7 +263,7 @@ class Gradient(_Derivative):
         # forward mode without building the computational graph
 
         tmp = algopy.UTPM.init_jacobian(x)
-        y = self.f(tmp, *args, **kwds)
+        y = self.fun(tmp, *args, **kwds)
         return algopy.UTPM.extract_jacobian(y)
 
     def _reverse(self, x, *args, **kwds):
@@ -289,30 +289,50 @@ class Jacobian(Gradient):
 
     #(nonlinear least squares)
 
-    >>> xdata = np.reshape(np.arange(0,1,0.1),(-1,1))
+    >>> xdata = np.arange(0,1,0.1)
     >>> ydata = 1+2*np.exp(0.75*xdata)
-    >>> f = lambda c: (c[0]+c[1]*np.exp(c[2]*xdata) - ydata)**2
+    >>> fun = lambda c: (c[0]+c[1]*np.exp(c[2]*xdata) - ydata)**2
 
-    Jfun = nda.Jacobian(f) # Todo: This does not work
+    Jfun = nda.Jacobian(fun) # Todo: This does not work
     Jfun([1,2,0.75]).T # should be numerically zero
     array([[ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
            [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
            [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]])
 
-    >>> Jfun2 = nda.Jacobian(f, method='reverse')
+    >>> Jfun2 = nda.Jacobian(fun, method='reverse')
     >>> Jfun2([1,2,0.75]).T # should be numerically zero
     array([[ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
            [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
            [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]])
 
-    >>> f2 = lambda x : x[0]*x[1]*x[2] + np.exp(x[0])*x[1]
-    >>> Jfun3 = nda.Jacobian(f2)
-    >>> Jfun3([3.,5.,7.])
-    array([[ 135.42768462,   41.08553692,   15.        ]])
+    >>> f2 = lambda x : x[0]*x[1]*x[2]**2
+    >>> Jfun2 = nda.Jacobian(f2)
+    >>> Jfun2([1., 2., 3.])
+    array([[ 18., 9., 12.]])
 
-    >>> Jfun4 = nda.Jacobian(f2, method='reverse')
-    >>> Jfun4([3,5,7])
-    array([[ 135.42768462,   41.08553692,   15.        ]])
+    >>> Jfun21 = nda.Jacobian(f2, method='reverse')
+    >>> Jfun21([1., 2., 3.])
+    array([[ 18., 9., 12.]])
+
+    >>> def fun3(x):
+    ...     n = np.prod(np.shape(x[0]))
+    ...     out = nda.algopy.zeros((2, n), dtype=x)
+    ...     out[0] = x[0]*x[1]*x[2]**2
+    ...     out[1] = x[0]*x[1]*x[2]
+    ...     return out
+    >>> Jfun3 = nda.Jacobian(fun3)
+
+    >>> np.allclose(Jfun3([1., 2., 3.]), [[[18., 9., 12.]], [[6., 3., 2.]]])
+    True
+    >>> np.allclose(Jfun3([4., 5., 6.]), [[[180., 144., 240.]],
+    ...                                   [[30., 24., 20.]]])
+    True
+    >>> np.allclose(Jfun3(np.array([[1.,2.,3.], [4., 5., 6.]]).T),
+    ...             [[[18.,    0.,    9.,    0.,   12.,    0.],
+    ...               [0.,  180.,    0.,  144.,    0.,  240.]],
+    ...              [[6.,    0.,    3.,    0.,    2.,    0.],
+    ...               [0.,   30.,    0.,   24.,    0.,   20.]]])
+    True
     """, see_also="""
     See also
     --------
@@ -358,14 +378,14 @@ class Hessian(_Derivative):
     # cos(x-y), at (0,0)
 
     >>> cos = np.cos
-    >>> f = lambda xy : cos(xy[0]-xy[1])
-    >>> Hfun2 = nda.Hessian(f)
+    >>> fun = lambda xy : cos(xy[0]-xy[1])
+    >>> Hfun2 = nda.Hessian(fun)
     >>> h2 = Hfun2([0, 0]) # h2 = [-1 1; 1 -1]
     >>> h2
     array([[-1.,  1.],
            [ 1., -1.]])
 
-    >>> Hfun3 = nda.Hessian(f, method='reverse')
+    >>> Hfun3 = nda.Hessian(fun, method='reverse')
     >>> h3 = Hfun3([0, 0]) # h2 = [-1, 1; 1, -1];
     >>> h3
     array([[-1.,  1.],
@@ -386,7 +406,7 @@ class Hessian(_Derivative):
     def _forward(self, x, *args, **kwds):
         x = np.atleast_1d(x)
         tmp = algopy.UTPM.init_hessian(x)
-        y = self.f(tmp, *args, **kwds)
+        y = self.fun(tmp, *args, **kwds)
         return algopy.UTPM.extract_hessian(len(x), y)
 
     def _reverse(self, x, *args, **kwds):
@@ -421,13 +441,13 @@ class Hessdiag(Hessian):
     # cos(x-y), at (0,0)
 
     >>> cos = np.cos
-    >>> f = lambda xy : cos(xy[0]-xy[1])
-    >>> Hfun2 = nda.Hessdiag(f)
+    >>> fun = lambda xy : cos(xy[0]-xy[1])
+    >>> Hfun2 = nda.Hessdiag(fun)
     >>> h2 = Hfun2([0, 0]) # h2 = [-1, -1]
     >>> h2
     array([-1., -1.])
 
-    >>> Hfun3 = nda.Hessdiag(f, method='reverse')
+    >>> Hfun3 = nda.Hessdiag(fun, method='reverse')
     >>> h3 = Hfun3([0, 0]) # h2 = [-1, -1];
     >>> h3
     array([-1., -1.])
@@ -448,7 +468,7 @@ class Hessdiag(Hessian):
 
         y.data[0, :] = x.ravel()
         y.data[1, :] = np.eye(n)
-        z0 = self.f(y, *args, **kwds)
+        z0 = self.fun(y, *args, **kwds)
         z = UTPM.as_utpm(z0)
         H = z.data[2, ...] * 2
         return H
@@ -463,10 +483,10 @@ def directionaldiff(f, x0, vec, **options):
 
     Parameters
     ----------
-    f: function
+    fun: callable
         analytical function to differentiate.
     x0: array
-        vector location at which to differentiate f. If x0 is an nxm array,
+        vector location at which to differentiate fun. If x0 is an nxm array,
         then fun is assumed to be a function of n*m variables.
     vec: array
         vector defining the line along which to take the derivative. It should
@@ -477,7 +497,7 @@ def directionaldiff(f, x0, vec, **options):
     Returns
     -------
     dder:  scalar
-        estimate of the first derivative of f in the specified direction.
+        estimate of the first derivative of fun in the specified direction.
 
     Example
     -------
@@ -511,4 +531,3 @@ def directionaldiff(f, x0, vec, **options):
 if __name__ == '__main__':
     from numdifftools.testing import test_docstrings
     test_docstrings()
-

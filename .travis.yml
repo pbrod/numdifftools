@@ -1,7 +1,19 @@
 # Travis configuration file using the build matrix feature
 # Read more under http://docs.travis-ci.com/user/build-configuration/
 # THIS SCRIPT IS SUPPOSED TO BE AN EXAMPLE. MODIFY IT ACCORDING TO YOUR NEEDS!
-sudo: false
+dist: trusty
+sudo: required
+
+addons:
+  sonarqube:
+    token:
+      secure: "67bcbf1aefb992993fdd45b78fb4977a05be39b9"
+  code_climate:
+    repo_token: 9c5d44592ed63ccd3c2b4aabf54fd9aee50f02e21cd016f67f4287e68f708dba
+jdk:
+  - oraclejdk8
+
+#sudo: false
 language: python
 python:
   - 2.7
@@ -38,6 +50,7 @@ install:
   - conda install --yes python=$TRAVIS_PYTHON_VERSION numpy scipy algopy pytest pyqt=4 matplotlib
   - pip install coveralls
   - pip install codecov
+  - pip install codeclimate-test-reporter
   - pip install hypothesis
   - python setup.py install
 #  - conda build conda_recipe
@@ -49,9 +62,20 @@ before_script:
   - git config --global user.email "per.andreas.brodtkorb@gmail.com"
   - git config --global user.name "pbrod"
 script:
+  - coverage erase
   - coverage run --source=numdifftools setup.py test
+  - coverage xml -o coverage.xml
+#  - sed -i 's/filename="/filename=".\//g' coverage.xml
+  - CODECLIMATE_REPO_TOKEN=9c5d44592ed63ccd3c2b4aabf54fd9aee50f02e21cd016f67f4287e68f708dba codeclimate-test-reporter
+#  - pylint numdifftools -r n --msg-template="{path}:{line}: [{msg_id}({symbol}), {obj}] {msg}" > pylint-report.txt
+  - sonar-scanner -X
+
 after_success:
   - coveralls
   - codecov
 cache:
   - apt
+cache:
+  directories:
+    - '$HOME/.sonar/cache'
+

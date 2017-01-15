@@ -127,8 +127,6 @@ class TestDerivative(unittest.TestCase):
     @staticmethod
     @given(st.floats(min_value=1e-5))
     def test_derivative_on_log(x):
-
-        # x = np.r_[0.01, 0.1]
         for method in ['forward', 'reverse']:
             dlog = nd.Derivative(np.log, method=method)
 
@@ -159,19 +157,22 @@ class TestJacobian(unittest.TestCase):
             x = j_fun([3., 5., 7.])
             assert_allclose(x, [[135.42768462, 41.08553692, 15.]])
 
-    @staticmethod
-    def test_on_vector_valued_function():
-        xdata = np.reshape(np.arange(0, 1, 0.1), (-1, 1))
+    def test_on_vector_valued_function(self):
+        xdata = np.arange(0, 1, 0.1)
         ydata = 1 + 2 * np.exp(0.75 * xdata)
 
         def fun(c):
             return (c[0] + c[1] * np.exp(c[2] * xdata) - ydata) ** 2
 
-        for method in ['reverse', ]:  # TODO: 'forward' fails
+        for method in ['reverse', ]:
 
             j_fun = nd.Jacobian(fun, method=method)
             J = j_fun([1, 2, 0.75])  # should be numerically zero
             assert_allclose(J, np.zeros((ydata.size, 3)))
+
+        # TODO: 'forward' not implemented
+        j_fun = nd.Jacobian(fun, method='forward')
+        self.assertRaises(NotImplementedError, j_fun, [1, 2, 0.75])
 
     @staticmethod
     def test_on_matrix_valued_function():
@@ -216,6 +217,24 @@ class TestJacobian(unittest.TestCase):
                                    [0., 12., 0., 0., 0., 108., 0., 0.],
                                    [0., 0., 27., 0., 0., 0., 147., 0.],
                                    [0., 0., 0., 48., 0., 0., 0., 192.]]])
+
+    @staticmethod
+    def test_issue_25():
+        def g_fun(x):
+            out = algopy.zeros((2, 2), dtype=x)
+            out[0, 0] = x[0]
+            out[0, 1] = x[1]
+            out[1, 0] = x[0]
+            out[1, 1] = x[1]
+            return out
+
+        dg_dx = nd.Jacobian(g_fun) # TODO:  method='reverse' fails
+        x = [1, 2]
+        dg = dg_dx(x)
+        assert_allclose(dg, [[[1., 0.],
+                             [0., 1.]],
+                            [[1., 0.],
+                             [0., 1.]]])
 
 
 class TestGradient(unittest.TestCase):

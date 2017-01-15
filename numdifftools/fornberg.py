@@ -26,6 +26,11 @@ CENTRAL_WEIGHTS_AND_POINTS = {
              np.arange(-4, 5))}
 
 
+def _assert(cond, msg):
+    if not cond:
+        raise ValueError(msg)
+
+
 def fd_weights_all(x, x0=0, n=1):
     """
     Return finite difference weights for derivatives of all orders up to n.
@@ -41,7 +46,7 @@ def fd_weights_all(x, x0=0, n=1):
 
     Returns
     -------
-    C :  array, shape n+1 x m
+    weights :  array, shape n+1 x m
         contains coefficients for the j'th derivative in row j (0 <= j <= n)
 
     Notes
@@ -64,27 +69,27 @@ def fd_weights_all(x, x0=0, n=1):
     http://www.scholarpedia.org/article/Finite_difference_method
     """
     m = len(x)
-    if n >= m:
-        raise ValueError('len(x) must be larger than n')
+    _assert(n < m, 'len(x) must be larger than n')
 
-    C = np.zeros((m, n + 1))
-    _fd_weights_all(C, x, x0, n)
-    return C.T
+    weights = np.zeros((m, n + 1))
+    _fd_weights_all(weights, x, x0, n)
+    return weights.T
 
 
-#@jit(void(float64[:,:], float64[:], float64, int64))
-def _fd_weights_all(C, x, x0, n):
+# from numba import jit, float64, int64, int32, int8, void
+# @jit(void(float64[:,:], float64[:], float64, int64))
+def _fd_weights_all(weights, x, x0, n):
     m = len(x)
     c1, c4 = 1, x[0] - x0
-    C[0, 0] = 1
+    weights[0, 0] = 1
     for i in range(1, m):
         j = np.arange(0, min(i, n) + 1)
         c2, c5, c4 = 1, c4, x[i] - x0
         for v in range(i):
             c3 = x[i] - x[v]
-            c2, c6, c7 = c2 * c3, j * C[v, j - 1], C[v, j]
-            C[v, j] = (c4 * c7 - c6) / c3
-        C[i, j] = c1 * (c6 - c5 * c7) / c2
+            c2, c6, c7 = c2 * c3, j * weights[v, j - 1], weights[v, j]
+            weights[v, j] = (c4 * c7 - c6) / c3
+        weights[i, j] = c1 * (c6 - c5 * c7) / c2
         c1 = c2
 
 
@@ -156,11 +161,8 @@ def fd_derivative(fx, x, n=1, m=2):
     fd_weights
     """
     num_x = len(x)
-    if n >= num_x:
-       raise ValueError('len(x) must be larger than n')
-
-    if num_x != len(fx):
-       raise ValueError('len(x) must be equal len(fx)')
+    _assert(n < num_x, 'len(x) must be larger than n')
+    _assert(num_x == len(fx), 'len(x) must be equal len(fx)')
 
     du = np.zeros(np.shape(fx))
 
@@ -168,12 +170,13 @@ def fd_derivative(fx, x, n=1, m=2):
     size = 2 * mm + 2  # stencil size at boundary
     # 2 * mm boundary points
     for i in range(mm):
-        du[i] = np.dot(fd_weights(x[:size], x0=x[i], n=n), fx[:size] )
+        du[i] = np.dot(fd_weights(x[:size], x0=x[i], n=n), fx[:size])
         du[-i-1] = np.dot(fd_weights(x[-size:], x0=x[-i-1], n=n), fx[-size:])
 
     # interior points
     for i in range(mm, num_x-mm):
-       du[i] = np.dot(fd_weights(x[i-mm:i+mm+1], x0=x[i], n=n), fx[i-mm:i+mm+1])
+        du[i] = np.dot(fd_weights(x[i-mm:i+mm+1], x0=x[i], n=n),
+                       fx[i-mm:i+mm+1])
 
     return du
 
@@ -231,9 +234,7 @@ def _num_taylor_coefficients(n):
          128 if  51 < n <= 103
          256 if 103 < n <= 192
     """
-    if n > 192:
-        msg = 'Number of derivatives too large.  Must be less than 193'
-        raise ValueError(msg)
+    _assert(n < 193, 'Number of derivatives too large.  Must be less than 193')
     correction = np.array([0, 0, 1, 3, 4, 7])[_get_logn(n)]
     log2n = _get_logn(n - correction)
     m = 2 ** (log2n + 3)
@@ -305,7 +306,7 @@ def taylor(fun, z0=0, n=1, r=0.0061, max_iter=30, min_iter=None, num_extrap=3,
     -------
     coefs : ndarray
        array of taylor coefficents
-    status: Optional object into which output information is written. Fields are:
+    status: Optional object into which output information is written:
         degenerate: True if the algorithm was unable to bound the error
         iterations: Number of iterations executed
         function_count: Number of function calls
@@ -444,7 +445,7 @@ def taylor(fun, z0=0, n=1, r=0.0061, max_iter=30, min_iter=None, num_extrap=3,
     return coefs
 
 
-def derivative(f, z0, n=1, r=0.0061, max_iter=30, min_iter=None, num_extrap=3,
+def derivative(fun, z0, n=1, r=0.0061, max_iter=30, min_iter=None, num_extrap=3,
                step_ratio=1.6, full_output=False):
     """
     Calculate n-th derivative of complex analytic function using FFT
@@ -532,7 +533,7 @@ def derivative(f, z0, n=1, r=0.0061, max_iter=30, min_iter=None, num_extrap=3,
         ACM Transactions on Mathematical Software (TOMS),
         7(4), 512-526. http://doi.org/10.1145/355972.355979
     """
-    result = taylor(f, z0, n=n, r=r, max_iter=max_iter, min_iter=min_iter,
+    result = taylor(fun, z0, n=n, r=r, max_iter=max_iter, min_iter=min_iter,
                     num_extrap=num_extrap, step_ratio=step_ratio,
                     full_output=full_output)
     # convert taylor series --> actual derivatives.
@@ -548,32 +549,46 @@ def derivative(f, z0, n=1, r=0.0061, max_iter=30, min_iter=None, num_extrap=3,
 def main():
     def fun(z):
         return np.exp(z)
+
     def fun1(z):
-        return np.exp(z) / (np.sin(z)**3+ np.cos(z)**3)
+        return np.exp(z) / (np.sin(z)**3 + np.cos(z)**3)
+
     def fun2(z):
         return np.exp(1.0j * z)
+
     def fun3(z):
         return z**6
+
     def fun4(z):
         return z * (0.5 + 1./np.expm1(z))
+
     def fun5(z):
         return np.tan(z)
+
     def fun6(z):
         return 1.0j + z + 1.0j * z**2
+
     def fun7(z):
         return 1.0 / (1.0 - z)
+
     def fun8(z):
         return (1+z)**10*np.log1p(z)
+
     def fun9(z):
         return 10*5 + 1./(1-z)
+
     def fun10(z):
         return 1./(1-z)
+
     def fun11(z):
         return np.sqrt(z)
+
     def fun12(z):
         return np.arcsinh(z)
+
     def fun13(z):
         return np.cos(z)
+
     def fun14(z):
         return np.log1p(z)
 
