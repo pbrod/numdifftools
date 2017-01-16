@@ -272,8 +272,7 @@ def _extrapolate(bs, rs, m):
     return extrap
 
 
-def taylor(fun, z0=0, n=1, r=0.0061, max_iter=30, min_iter=None, num_extrap=3,
-           step_ratio=1.6, full_output=False):
+def taylor(fun, z0=0, n=1, r=0.0061, num_extrap=3, step_ratio=1.6, **kwds):
     """
     Return Taylor coefficients of complex analytic function using FFT
 
@@ -288,18 +287,18 @@ def taylor(fun, z0=0, n=1, r=0.0061, max_iter=30, min_iter=None, num_extrap=3,
         Initial radius at which to evaluate. For well-behaved functions,
         the computation should be insensitive to the initial radius to within
         about four orders of magnitude.
+    num_extrap : scalar integer, default 3
+        number of extrapolation steps used in the calculation
+    step_ratio : real scalar, default 1.6
+        Initial grow/shrinking factor for finding the best radius.
     max_iter : scalar integer, default 30
         Maximum number of iterations
     min_iter : scalar integer, default max_iter // 2
         Minimum number of iterations before the solution may be deemed
         degenerate.  A larger number allows the algorithm to correct a bad
         initial radius.
-    step_ratio : real scalar, default 1.6
-        Initial grow/shrinking factor for finding the best radius.
-    num_extrap : scalar integer, default 3
-        number of extrapolation steps used in the calculation
     full_output : bool, optional
-        If `full_output` is False, only the coefficents is returned.
+        If `full_output` is False, only the coefficents is returned (default).
         If `full_output` is True, then (coefs, status) is returned
 
     Returns
@@ -353,8 +352,9 @@ def taylor(fun, z0=0, n=1, r=0.0061, max_iter=30, min_iter=None, num_extrap=3,
         ACM Transactions on Mathematical Software (TOMS),
         7(4), 512-526. http://doi.org/10.1145/355972.355979
     """
-    if min_iter is None:
-        min_iter = max_iter // 2
+    max_iter = kwds.get('max_iter', 30)
+    min_iter = kwds.get('min_iter', max_iter // 2)
+    full_output = kwds.get('full_output', False)
     direction_changes = 0
     rs = []
     bs = []
@@ -445,8 +445,7 @@ def taylor(fun, z0=0, n=1, r=0.0061, max_iter=30, min_iter=None, num_extrap=3,
     return coefs
 
 
-def derivative(fun, z0, n=1, r=0.0061, max_iter=30, min_iter=None, num_extrap=3,
-               step_ratio=1.6, full_output=False):
+def derivative(fun, z0, n=1, **kwds):
     """
     Calculate n-th derivative of complex analytic function using FFT
 
@@ -474,7 +473,7 @@ def derivative(fun, z0, n=1, r=0.0061, max_iter=30, min_iter=None, num_extrap=3,
     num_extrap : scalar integer, default 3
         number of extrapolation steps used in the calculation
     full_output : bool, optional
-        If `full_output` is False, only the derivative is returned.
+        If `full_output` is False, only the derivative is returned (default).
         If `full_output` is True, then (der, status) is returned `der` is the
         derivative, and `status` is a Results object.
 
@@ -533,13 +532,11 @@ def derivative(fun, z0, n=1, r=0.0061, max_iter=30, min_iter=None, num_extrap=3,
         ACM Transactions on Mathematical Software (TOMS),
         7(4), 512-526. http://doi.org/10.1145/355972.355979
     """
-    result = taylor(fun, z0, n=n, r=r, max_iter=max_iter, min_iter=min_iter,
-                    num_extrap=num_extrap, step_ratio=step_ratio,
-                    full_output=full_output)
+    result = taylor(fun, z0, n=n, **kwds)
     # convert taylor series --> actual derivatives.
     m = _num_taylor_coefficients(n)
     fact = factorial(np.arange(m))
-    if full_output:
+    if kwds.get('full_output'):
         coefs, info_ = result
         info = _INFO(info_.error_estimate * fact, *info_[1:])
         return coefs * fact, info
