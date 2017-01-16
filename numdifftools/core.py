@@ -915,8 +915,8 @@ class Hessian(Hessdiag):
         for i in range(n):
             for j in range(i, n):
                 hess[i, j] = (f(x + 1j * ee[i] + ee[j], *args, **kwargs) -
-                             f(x + 1j * ee[i] - ee[j], *args, **kwargs)
-                             ).imag / hess[j, i]
+                              f(x + 1j * ee[i] - ee[j], *args, **kwargs)
+                              ).imag / hess[j, i]
                 hess[j, i] = hess[i, j]
         return hess
 

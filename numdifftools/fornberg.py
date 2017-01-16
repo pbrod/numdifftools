@@ -4,6 +4,7 @@ from scipy.special import factorial
 from numdifftools.extrapolation import EPS, dea3
 from numdifftools.limits import _Limit
 from collections import namedtuple
+# from numba import jit, float64, int64, int32, int8, void
 
 _INFO = namedtuple('info', ['error_estimate',
                             'degenerate',
@@ -169,12 +170,13 @@ def fd_derivative(fx, x, n=1, m=2):
     size = 2 * mm + 2  # stencil size at boundary
     # 2 * mm boundary points
     for i in range(mm):
-        du[i] = np.dot(fd_weights(x[:size], x0=x[i], n=n), fx[:size] )
+        du[i] = np.dot(fd_weights(x[:size], x0=x[i], n=n), fx[:size])
         du[-i-1] = np.dot(fd_weights(x[-size:], x0=x[-i-1], n=n), fx[-size:])
 
     # interior points
     for i in range(mm, num_x-mm):
-       du[i] = np.dot(fd_weights(x[i-mm:i+mm+1], x0=x[i], n=n), fx[i-mm:i+mm+1])
+        du[i] = np.dot(fd_weights(x[i-mm:i+mm+1], x0=x[i], n=n),
+                       fx[i-mm:i+mm+1])
 
     return du
 
@@ -304,7 +306,7 @@ def taylor(fun, z0=0, n=1, r=0.0061, max_iter=30, min_iter=None, num_extrap=3,
     -------
     coefs : ndarray
        array of taylor coefficents
-    status: Optional object into which output information is written. Fields are:
+    status: Optional object into which output information is written:
         degenerate: True if the algorithm was unable to bound the error
         iterations: Number of iterations executed
         function_count: Number of function calls
@@ -547,32 +549,46 @@ def derivative(fun, z0, n=1, r=0.0061, max_iter=30, min_iter=None, num_extrap=3,
 def main():
     def fun(z):
         return np.exp(z)
+
     def fun1(z):
-        return np.exp(z) / (np.sin(z)**3+ np.cos(z)**3)
+        return np.exp(z) / (np.sin(z)**3 + np.cos(z)**3)
+
     def fun2(z):
         return np.exp(1.0j * z)
+
     def fun3(z):
         return z**6
+
     def fun4(z):
         return z * (0.5 + 1./np.expm1(z))
+
     def fun5(z):
         return np.tan(z)
+
     def fun6(z):
         return 1.0j + z + 1.0j * z**2
+
     def fun7(z):
         return 1.0 / (1.0 - z)
+
     def fun8(z):
         return (1+z)**10*np.log1p(z)
+
     def fun9(z):
         return 10*5 + 1./(1-z)
+
     def fun10(z):
         return 1./(1-z)
+
     def fun11(z):
         return np.sqrt(z)
+
     def fun12(z):
         return np.arcsinh(z)
+
     def fun13(z):
         return np.cos(z)
+
     def fun14(z):
         return np.log1p(z)
 
