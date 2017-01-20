@@ -22,8 +22,7 @@ __all__ = ('dea3', 'Derivative', 'Jacobian', 'Gradient', 'Hessian', 'Hessdiag',
            'MinStepGenerator', 'MaxStepGenerator', 'Richardson',
            'directionaldiff')
 _TINY = np.finfo(float).tiny
-_EPS = np.finfo(float).eps
-EPS = np.MachAr().eps
+EPS = np.finfo(float).eps
 _SQRT_J = (1j + 1.0) / np.sqrt(2.0)  # = 1j**0.5
 
 
@@ -37,8 +36,8 @@ _cmn_doc = """
 
     Parameters
     ----------
-    f : function
-       function of one array f(x, `*args`, `**kwds`)
+    fun : function
+       function of one array fun(x, `*args`, `**kwds`)
     step : float, array-like or StepGenerator object, optional
        Defines the spacing used in the approximation.
        Default is MinStepGenerator(base_step=step, step_ratio=None,
@@ -502,7 +501,6 @@ def directionaldiff(f, x0, vec, **options):
     --------
     Derivative,
     Gradient
-
     """
     x0 = np.asarray(x0)
     vec = np.asarray(vec)
@@ -546,23 +544,23 @@ class Jacobian(Derivative):
     >>> np.allclose(fun([1, 2, 0.75]).shape,  (10,))
     True
 
-    >>> Jfun = nd.Jacobian(fun)
-    >>> val = Jfun([1, 2, 0.75])
+    >>> jfun = nd.Jacobian(fun)
+    >>> val = jfun([1, 2, 0.75])
     >>> np.allclose(val, np.zeros((10,3)))
     True
 
     >>> fun2 = lambda x : x[0]*x[1]*x[2]**2
-    >>> Jfun2 = nd.Jacobian(fun2)
-    >>> np.allclose(Jfun2([1.,2.,3.]), [[18., 9., 12.]])
+    >>> jfun2 = nd.Jacobian(fun2)
+    >>> np.allclose(jfun2([1.,2.,3.]), [[18., 9., 12.]])
     True
 
     >>> fun3 = lambda x : np.vstack((x[0]*x[1]*x[2]**2, x[0]*x[1]*x[2]))
-    >>> Jfun3 = nd.Jacobian(fun3)
-    >>> np.allclose(Jfun3([1., 2., 3.]), [[18., 9., 12.], [6., 3., 2.]])
+    >>> jfun3 = nd.Jacobian(fun3)
+    >>> np.allclose(jfun3([1., 2., 3.]), [[18., 9., 12.], [6., 3., 2.]])
     True
-    >>> np.allclose(Jfun3([4., 5., 6.]), [[180., 144., 240.], [30., 24., 20.]])
+    >>> np.allclose(jfun3([4., 5., 6.]), [[180., 144., 240.], [30., 24., 20.]])
     True
-    >>> np.allclose(Jfun3(np.array([[1.,2.,3.]]).T), [[ 18.,   9.,  12.],
+    >>> np.allclose(jfun3(np.array([[1.,2.,3.]]).T), [[ 18.,   9.,  12.],
     ...                                               [ 6.,   3.,   2.]])
     True
 
@@ -573,11 +571,6 @@ class Jacobian(Derivative):
     """)
     n = property(fget=lambda cls: 1,
                  fset=lambda cls, val: cls._set_derivative())
-
-    @staticmethod
-    def _check_equal_size(f_del, h):
-        _assert(f_del.size == h.size, 'fun did not return data of correct '
-                'size (it must be vectorized)')
 
     @staticmethod
     def _atleast_2d(original_shape, ndim):
@@ -597,6 +590,8 @@ class Jacobian(Derivative):
                           for r in sequence])
         h = np.vstack([np.atleast_1d(r.squeeze()).transpose(axes).ravel()
                           for r in steps])
+        _assert(f_del.size == h.size, 'fun did not return data of correct '
+                'size (it must be vectorized)')
         return f_del, h, self._atleast_2d(original_shape, ndim)
 
     @staticmethod
@@ -611,15 +606,15 @@ class Jacobian(Derivative):
     def _central(self, f, fx, x, h, *args, **kwds):
         n = len(x)
         increments = self._increments(n, h)
-        partials = [(f(x + hi, *args, **kwds) - f(x - hi, *args, **kwds)) / 2.0
-                    for hi in increments]
-        return np.array(partials)
+        return np.array([(f(x + hi, *args, **kwds) -
+                         f(x - hi, *args, **kwds)) / 2.0 for hi in increments])
+        # return np.array(partials)
 
     def _backward(self, f, fx, x, h, *args, **kwds):
         n = len(x)
         increments = self._increments(n, h)
-        partials = [fx - f(x - hi, *args, **kwds) for hi in increments]
-        return np.array(partials)
+        return np.array([fx - f(x - hi, *args, **kwds) for hi in increments])
+        #return np.array(partials)
 
     def _forward(self, f, fx, x, h, *args, **kwds):
         n = len(x)
@@ -975,7 +970,6 @@ class Hessian(Hessdiag):
                               f(x - ee[i, :] - ee[j, :], *args, **kwargs) -
                               gg[i] - gg[j] + fx) / (2 * hess[j, i])
                 hess[j, i] = hess[i, j]
-
         return hess
 
     @staticmethod
@@ -1000,117 +994,6 @@ class Hessian(Hessdiag):
     def _backward(self, f, fx, x, h, *args, **kwargs):
         return self._forward(f, fx, x, -h, *args, **kwargs)
 
-
-EPS = np.MachAr().eps
-
-
-def _get_epsilon(x, s, epsilon, n):
-    if epsilon is None:
-        h = EPS**(1. / s) * np.maximum(np.abs(x), 0.1)
-    else:
-        if np.isscalar(epsilon):
-            h = np.empty(n)
-            h.fill(epsilon)
-        else:  # pragma : no cover
-            h = np.asarray(epsilon)
-            if h.shape != x.shape:
-                raise ValueError("If h is not a scalar it must have the same"
-                                 " shape as x.")
-    return h
-
-
-def approx_fprime(x, f, epsilon=None, args=(), kwargs=None, centered=True):
-    '''
-    Gradient of function, or Jacobian if function fun returns 1d array
-
-    Parameters
-    ----------
-    x : array
-        parameters at which the derivative is evaluated
-    fun : function
-        `fun(*((x,)+args), **kwargs)` returning either one value or 1d array
-    epsilon : float, optional
-        Stepsize, if None, optimal stepsize is used. This is EPS**(1/2)*x for
-        `centered` == False and EPS**(1/3)*x for `centered` == True.
-    args : tuple
-        Tuple of additional arguments for function `fun`.
-    kwargs : dict
-        Dictionary of additional keyword arguments for function `fun`.
-    centered : bool
-        Whether central difference should be returned. If not, does forward
-        differencing.
-
-    Returns
-    -------
-    grad : array
-        gradient or Jacobian
-
-    Notes
-    -----
-    If fun returns a 1d array, it returns a Jacobian. If a 2d array is returned
-    by fun (e.g., with a value for each observation), it returns a 3d array
-    with the Jacobian of each observation with shape xk x nobs x xk. I.e.,
-    the Jacobian of the first observation would be [:, 0, :]
-
-     Example
-    -------
-    >>> import numdifftools as nd
-
-    #(nonlinear least squares)
-
-    >>> xdata = np.arange(0,1,0.1)
-    >>> ydata = 1+2*np.exp(0.75*xdata)
-    >>> fun = lambda c: (c[0]+c[1]*np.exp(c[2]*xdata) - ydata)**2
-    >>> np.allclose(fun([1, 2, 0.75]).shape, (10,))
-    True
-    >>> np.allclose(approx_fprime([1, 2, 0.75], fun), np.zeros((10,3)))
-    True
-
-    >>> fun2 = lambda x : x[0]*x[1]*x[2]**2
-    >>> np.allclose(approx_fprime([1.,2.,3.], fun2), [[18., 9., 12.]])
-    True
-
-    >>> fun3 = lambda x : np.vstack((x[0]*x[1]*x[2]**2, x[0]*x[1]*x[2]))
-    >>> np.allclose(approx_fprime([1., 2., 3.], fun3),
-    ...            [[18., 9., 12.], [6., 3., 2.]])
-    True
-    >>> np.allclose(approx_fprime([4., 5., 6.], fun3),
-    ...            [[180., 144., 240.], [30., 24., 20.]])
-    True
-
-    >>> np.allclose(approx_fprime(np.array([[1.,2.,3.], [4., 5., 6.]]).T, fun3),
-    ...            [[[  18.,  180.],
-    ...              [   9.,  144.],
-    ...              [  12.,  240.]],
-    ...             [[   6.,   30.],
-    ...              [   3.,   24.],
-    ...              [   2.,   20.]]])
-    True
-    '''
-    kwargs = {} if kwargs is None else kwargs
-    n = len(x)
-    # TODO:  add scaled stepsize
-    f0 = f(*(x,) + args, **kwargs)
-    dim = np.atleast_1d(f0).shape  # it could be a scalar
-    grad = np.zeros((n,) + dim, float)
-    ei = np.zeros(np.shape(x), float)
-    if not centered:
-        epsilon = _get_epsilon(x, 2, epsilon, n)
-        for k in range(n):
-            ei[k] = epsilon[k]
-            grad[k, :] = (f(*(x + ei,) + args, **kwargs) - f0) / epsilon[k]
-            ei[k] = 0.0
-    else:
-        epsilon = _get_epsilon(x, 3, epsilon, n) / 2.
-        for k in range(n):
-            ei[k] = epsilon[k]
-            grad[k, :] = (f(*(x + ei,) + args, **kwargs) -
-                          f(*(x - ei,) + args, **kwargs)) / (2 * epsilon[k])
-            ei[k] = 0.0
-    grad = grad.squeeze()
-    axes = [0, 1, 2][:grad.ndim]
-    axes[:2] = axes[1::-1]
-    return np.transpose(grad, axes=axes).squeeze()
 
 if __name__ == '__main__':
     from numdifftools.testing import test_docstrings

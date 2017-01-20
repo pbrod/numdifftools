@@ -4,6 +4,7 @@ import timeit
 
 import numdifftools as nd
 import numdifftools.nd_algopy as nda
+import numdifftools.nd_statsmodels as nds
 from algopy import dot
 
 from collections import OrderedDict
@@ -83,6 +84,8 @@ for method in ['forward', 'central', 'complex']:
     gradient_funs[method2] = nd.Jacobian(1, step=epsilon, **options)
     hessian_funs[method] = ndc_hessian(1, step=fixed_step, **options)
     hessian_funs[method2] = ndc_hessian(1, step=epsilon, **options)
+gradient_funs['forward_simple'] = nds.Jacobian(1, method='forward')
+gradient_funs['central_simple'] = nds.Jacobian(1, method='central')
 
 
 def _compute_benchmark(functions, problem_sizes):

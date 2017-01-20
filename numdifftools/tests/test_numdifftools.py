@@ -2,6 +2,7 @@
 from __future__ import print_function
 import unittest
 import numdifftools.core as nd
+import numdifftools.nd_statsmodels as nds
 from numdifftools.step_generators import default_scale
 import numpy as np
 from numpy.testing import assert_allclose
@@ -307,7 +308,7 @@ class TestJacobian(unittest.TestCase):
         def fun(c):
             return (c[0] + c[1] * np.exp(c[2] * xdata) - ydata) ** 2
 
-        _j_0 = nd.approx_fprime([1, 2, 0.75], fun)
+        _j_0 = nds.approx_fprime([1, 2, 0.75], fun)
 
         for method in ['complex', 'central', 'forward', 'backward']:
             for order in [2, 4]:
@@ -363,7 +364,7 @@ class TestJacobian(unittest.TestCase):
                                 [10., 12., 14., 16.]],
                                [[3., 12., 27., 48.],
                                 [75., 108., 147., 192.]]])
-        v0 = nd.approx_fprime(x, fun)
+        v0 = nds.approx_fprime(x, fun)
         val = jaca(x)
         assert_allclose(v0, tval)
         assert_allclose(val, tval)
@@ -378,7 +379,7 @@ class TestJacobian(unittest.TestCase):
 
         dg_dx = nd.Jacobian(g_fun)
         x = np.array([1., 2.])
-        v0 = nd.approx_fprime(x, g_fun)
+        v0 = nds.approx_fprime(x, g_fun)
         assert_allclose(v0, [[[1., 0.],
                              [0., 1.]],
                             [[1., 0.],
@@ -399,7 +400,7 @@ class TestJacobian(unittest.TestCase):
                [3., 24.],
                [2., 20.]]]
         assert_allclose(jfun3(x), tv)
-        assert_allclose(nd.approx_fprime(x, fun3), tv)
+        assert_allclose(nds.approx_fprime(x, fun3), tv)
 
 
 class TestGradient(unittest.TestCase):
