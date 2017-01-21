@@ -3,3 +3,4 @@ numpy>=1.9
 scipy>=0.8
 algopy>=0.4
 setuptools>=9.0
+statsmodels>=0.6
