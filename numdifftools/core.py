@@ -594,7 +594,8 @@ class Jacobian(Derivative):
                 'size (it must be vectorized)')
         return f_del, h, self._atleast_2d(original_shape, ndim)
 
-    def _increments(self, n, h):
+    @staticmethod
+    def _increments(n, h):
         ei = np.zeros(np.shape(h), float)
         for k in range(n):
             ei[k] = h[k]
