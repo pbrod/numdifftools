@@ -402,6 +402,21 @@ class TestJacobian(unittest.TestCase):
         assert_allclose(jfun3(x), tv)
         assert_allclose(nds.approx_fprime(x, fun3), tv)
 
+    @staticmethod
+    def test_issue_27():
+        """Test for memory-error"""
+        def g_fun(x):
+            return x**2
+
+        n = 700
+        x = np.ones(n)
+        for method in ['complex', 'central', 'forward', 'backward']:
+            assert_allclose(nd.Jacobian(g_fun, method=method)(x),
+                            2 * np.diag(np.ones(n)))
+        n = 2000
+        x = np.ones(n)
+        assert_allclose(nd.Jacobian(g_fun, method='complex')(x),
+                            2 * np.diag(np.ones(n)))
 
 class TestGradient(unittest.TestCase):
 

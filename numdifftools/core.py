@@ -594,54 +594,46 @@ class Jacobian(Derivative):
                 'size (it must be vectorized)')
         return f_del, h, self._atleast_2d(original_shape, ndim)
 
-    @staticmethod
-    def _identity(n):
-        m = np.zeros((n, n, n))
-        np.put(m, np.arange(0, n ** 3, n * (n + 1) + 1), 1)
-        return m
-
     def _increments(self, n, h):
-        return np.dot(self._identity(n), h)
+        ei = np.zeros(np.shape(h), float)
+        for k in range(n):
+            ei[k] = h[k]
+            yield ei
+            ei[k] = 0
 
     def _central(self, f, fx, x, h, *args, **kwds):
         n = len(x)
-        increments = self._increments(n, h)
         return np.array([(f(x + hi, *args, **kwds) -
-                         f(x - hi, *args, **kwds)) / 2.0 for hi in increments])
-        # return np.array(partials)
+                          f(x - hi, *args, **kwds)) / 2.0
+                         for hi in self._increments(n, h)])
 
     def _backward(self, f, fx, x, h, *args, **kwds):
         n = len(x)
-        increments = self._increments(n, h)
-        return np.array([fx - f(x - hi, *args, **kwds) for hi in increments])
-        #return np.array(partials)
+        return np.array([fx - f(x - hi, *args, **kwds)
+                         for hi in self._increments(n, h)])
 
     def _forward(self, f, fx, x, h, *args, **kwds):
         n = len(x)
-        increments = self._increments(n, h)
-        partials = [f(x + hi, *args, **kwds) - fx for hi in increments]
-        return np.array(partials)
+        return np.array([f(x + hi, *args, **kwds) - fx
+                         for hi in self._increments(n, h)])
 
     def _complex(self, f, fx, x, h, *args, **kwds):
         n = len(x)
-        increments = 1j * self._increments(n, h)
-        partials = [f(x + ih, *args, **kwds).imag for ih in increments]
-        return np.array(partials)
+        return np.array([f(x + 1j * ih, *args, **kwds).imag
+                         for ih in self._increments(n, h)])
 
     def _complex_odd(self, f, fx, x, h, *args, **kwds):
         n = len(x)
-        increments = _SQRT_J * self._increments(n, h)
-        partials = [((_SQRT_J / 2.) * (f(x + ih, *args, **kwds) -
-                                       f(x - ih, *args, **kwds))).imag
-                    for ih in increments]
-        return np.array(partials)
+        j1 = _SQRT_J
+        return np.array([((j1 / 2.) * (f(x + j1 * ih, *args, **kwds) -
+                                       f(x - j1* ih, *args, **kwds))).imag
+                         for ih in self._increments(n, h)])
 
     def _multicomplex(self, f, fx, x, h, *args, **kwds):
         n = len(x)
-        increments = 1j * self._increments(n, h)
         cmplx_wrap = Bicomplex.__array_wrap__
-        partials = [cmplx_wrap(f(Bicomplex(x + hi, 0), *args, **kwds)).imag
-                    for hi in increments]
+        partials = [cmplx_wrap(f(Bicomplex(x + 1j*hi, 0), *args, **kwds)).imag
+                    for hi in self._increments(n, h)]
         return np.array(partials)
 
     def _derivative_nonzero_order(self, xi, args, kwds):
