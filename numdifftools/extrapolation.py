@@ -14,6 +14,11 @@ _EPS = EPS
 _TINY = np.finfo(float).tiny
 
 
+def _assert(cond, msg):
+    if not cond:
+        raise ValueError(msg)
+
+
 def convolve(sequence, rule, **kwds):
     """Wrapper around scipy.ndimage.convolve1d that allows complex input."""
     dtype = np.result_type(float, np.ravel(sequence)[0])
@@ -75,8 +80,7 @@ class Dea(object):
     @limexp.setter
     def limexp(self, limexp):
         n = 2 * (limexp // 2) + 1
-        if n < 3:
-            raise ValueError('LIMEXP IS LESS THAN 3')
+        _assert(n >= 3, 'LIMEXP IS LESS THAN 3')
         self.epstab = np.zeros(n + 5)
         self._limexp = n
 
@@ -216,13 +220,12 @@ class EpsAlg(object):
     """
 
     def __init__(self, limexp=3):
+        _assert(limexp >=3, 'LIMEXP IS LESS THAN 3')
         self.limexp = 2 * (limexp // 2) + 1
         self.epstab = np.zeros(limexp + 5)
         self.abserr = 10.
         self._n = 0
         self._nres = 0
-        if limexp < 3:
-            raise ValueError('LIMEXP IS LESS THAN 3')
 
     def __call__(self, s_n):
         n = self._n
@@ -241,8 +244,7 @@ class EpsAlg(object):
                 else:
                     epstab[i - 1] = aux1 + 1.0 / delta
             estlim = epstab[n % 2]
-            if n > self.limexp - 1:
-                raise ValueError("Eps table to small!")
+            _assert(n <= self.limexp - 1, "Eps table to small!")
 
         n += 1
         self._n = n
@@ -250,6 +252,20 @@ class EpsAlg(object):
 
 
 def epsalg_demo():
+    """
+    >>> epsalg_demo()
+    NO. PANELS      TRAP. APPROX          APPROX W/EA           abserr
+        1           0.78539816            0.78539816            0.21460184
+        2           0.94805945            0.94805945            0.05194055
+        4           0.98711580            0.99945672            0.00054328
+        8           0.99678517            0.99996674            0.00003326
+       16           0.99919668            0.99999988            0.00000012
+       32           0.99979919            1.00000000            0.00000000
+       64           0.99994980            1.00000000            0.00000000
+      128           0.99998745            1.00000000            0.00000000
+      256           0.99999686            1.00000000            0.00000000
+      512           0.99999922            1.00000000            0.00000000
+    """
     def linfun(i):
         return np.linspace(0, np.pi / 2., 2**i + 1)
     dea = EpsAlg(limexp=15)
@@ -264,6 +280,22 @@ def epsalg_demo():
 
 
 def dea_demo():
+    """
+    >>> dea_demo()
+        NO. PANELS      TRAP. APPROX          APPROX W/EA           abserr
+        1           0.78539816            0.78539816            0.78539816
+        2           0.94805945            0.94805945            0.97596771
+        4           0.98711580            0.99945672            0.21405856
+        8           0.99678517            0.99996674            0.00306012
+       16           0.99919668            0.99999988            0.00115259
+       32           0.99979919            1.00000000            0.00057665
+       64           0.99994980            1.00000000            0.00003338
+      128           0.99998745            1.00000000            0.00000012
+      256           0.99999686            1.00000000            0.00000000
+      512           0.99999922            1.00000000            0.00000000
+     1024           0.99999980            1.00000000            0.00000000
+     2048           0.99999995            1.00000000            0.00000000
+    """
     def linfun(i):
         return np.linspace(0, np.pi / 2., 2**i + 1)
     dea = Dea(limexp=6)
@@ -461,5 +493,7 @@ class Richardson(object):
 
 
 if __name__ == '__main__':
-    dea_demo()
+    from numdifftools.testing import test_docstrings
+    test_docstrings(__file__)
+    # dea_demo()
     # epsalg_demo()
