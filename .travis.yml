@@ -21,7 +21,6 @@ python:
   - 3.4
   - 3.5
   - 3.6
-  - 3.7-dev
 notifications:
   email: false
  
@@ -50,10 +49,10 @@ before_install:
 # Install packages
 install:
   - conda install --yes python=$TRAVIS_PYTHON_VERSION numpy scipy algopy pytest statsmodels
-  - if [[ "$TRAVIS_PYTHON_VERSION" >= "3.6" ]]; then
-      conda install --yes python=$TRAVIS_PYTHON_VERSION pyqt=5 matplotlib
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then
+      conda install --yes pyqt=5 matplotlib
     else
-      conda install --yes python=$TRAVIS_PYTHON_VERSION pyqt=4.11 matplotlib
+      conda install --yes pyqt=4.11 matplotlib
     fi
   - pip install coveralls
   - pip install codecov
