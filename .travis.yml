@@ -49,7 +49,12 @@ before_install:
   - source activate condaenv
 # Install packages
 install:
-  - conda install --yes python=$TRAVIS_PYTHON_VERSION numpy scipy algopy pytest pyqt=4.11 matplotlib statsmodels
+  - conda install --yes python=$TRAVIS_PYTHON_VERSION numpy scipy algopy pytest statsmodels
+  - if [[ "$TRAVIS_PYTHON_VERSION" >= "3.6" ]]; then
+      conda install --yes python=$TRAVIS_PYTHON_VERSION pyqt=5 matplotlib
+    else
+      conda install --yes python=$TRAVIS_PYTHON_VERSION pyqt=4.11 matplotlib
+    fi
   - pip install coveralls
   - pip install codecov
   - pip install codeclimate-test-reporter
