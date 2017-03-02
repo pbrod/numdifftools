@@ -50,9 +50,9 @@ before_install:
 install:
   - conda install --yes python=$TRAVIS_PYTHON_VERSION numpy scipy algopy pytest statsmodels
   - if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then
-      conda install --yes pyqt=5 matplotlib
+      conda install --yes pyqt=5 matplotlib;
     else
-      conda install --yes pyqt=4.11 matplotlib
+      conda install --yes pyqt=4.11 matplotlib;
     fi
   - pip install coveralls
   - pip install codecov
