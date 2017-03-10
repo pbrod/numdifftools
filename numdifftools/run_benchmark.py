@@ -10,7 +10,7 @@ from algopy import dot
 from collections import OrderedDict
 from numdifftools.core import MinStepGenerator, MaxStepGenerator
 import matplotlib
-matplotlib.use('Qt4Agg')
+# matplotlib.use('Qt4Agg')
 import matplotlib.pyplot as plt
 
 class BenchmarkFunction(object):
@@ -74,6 +74,7 @@ nda_txt = 'algopy_' + nda_method
 gradient_funs[nda_txt] = nda.Jacobian(1, method=nda_method)
 
 hessian_fun = 'Hessdiag'
+hessian_fun = 'Hessian'
 ndc_hessian = getattr(nd, hessian_fun)
 hessian_funs = OrderedDict()
 hessian_funs[nda_txt] = getattr(nda, hessian_fun)(1, method=nda_method)
@@ -86,6 +87,10 @@ for method in ['forward', 'central', 'complex']:
     gradient_funs[method2] = nd.Jacobian(1, step=epsilon, **options)
     hessian_funs[method] = ndc_hessian(1, step=fixed_step, **options)
     hessian_funs[method2] = ndc_hessian(1, step=epsilon, **options)
+
+hessian_funs['forward_simple'] = nds.Hessian(1, method='forward')
+hessian_funs['central_simple'] = nds.Hessian(1, method='central')
+
 gradient_funs['forward_simple'] = nds.Jacobian(1, method='forward')
 gradient_funs['central_simple'] = nds.Jacobian(1, method='central')
 
