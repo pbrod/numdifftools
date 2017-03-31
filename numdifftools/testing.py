@@ -4,8 +4,11 @@ Created on Apr 4, 2016
 @author: pab
 """
 from __future__ import print_function
-import numpy as np
+import sys
+import contextlib
 import inspect
+from cStringIO import StringIO
+import numpy as np
 
 
 def rosen(x):
@@ -25,3 +28,28 @@ def test_docstrings(name=''):
         name = inspect.stack()[1][1]
     print('Testing docstrings in {}'.format(name))
     doctest.testmod(optionflags=doctest.NORMALIZE_WHITESPACE|doctest.ELLIPSIS)
+
+
+@contextlib.contextmanager
+def capture_stdout_and_stderr():
+    """
+    Capture sys.stdout and sys.stderr
+
+    Example:
+    --------
+    >>> with capture_stdout_and_stderr as out:
+    ...    print('This is a test')
+    >>> out[0].startswith('This is a test')
+    True
+    >>> out[1] == ''
+    True
+    """
+    old_out = sys.stdout, sys.stderr
+    out = [StringIO(), StringIO()]
+    try:
+        sys.stdout, sys.stderr = out
+        yield out
+    finally:
+        sys.stdout, sys.stderr = old_out
+        out[0] = out[0].getvalue()
+        out[1] = out[1].getvalue()
