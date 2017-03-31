@@ -53,7 +53,7 @@ class ExpensiveClass4(object):
 
     def expensive_method4(self):
         for x in self._get_number4():
-            i = x ^ x ^ x
+            i = x **3
         return i
 
     def _get_number4(self):
@@ -89,7 +89,7 @@ class TestDoProfile(unittest.TestCase):
             @do_profile(follow=[_get_number])
             def expensive_method1(self):
                 for x in _get_number():
-                    i = x ^ x ^ x ^ x
+                    i = x ^ 6
                 return i
 
         with capture_stdout_and_stderr() as out:
@@ -142,7 +142,7 @@ class TestDoProfile(unittest.TestCase):
             def expensive_method3(self):
                 for x in self._get_number3():
                     for y in self._get_number32():
-                        i = x ^ x ^ x ^ y
+                        i = x ^ 9
                 return i
 
             def _get_number3(self):
@@ -206,8 +206,8 @@ class TestDoCProfile(unittest.TestCase):
             self.assertGreater(results[2][i], 0)
         self.assertEqual(
             results[2][5],
-            'test_profiletools.py:184(expensive_function)')
-        self.assertEqual(results[3][5], 'test_profiletools.py:46(_get_number)')
+            'test_profiletools.py:192(expensive_function)')
+        self.assertEqual(results[3][5], 'test_profiletools.py:47(_get_number)')
 
 
 class TestTimeFun(unittest.TestCase):
