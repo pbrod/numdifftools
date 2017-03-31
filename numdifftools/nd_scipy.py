@@ -67,6 +67,7 @@ class Jacobian(_Common):
     ...              [   2.,   20.]]])
     True
     """
+
     def __call__(self, x, *args, **kwds):
         x = np.atleast_1d(x)
         method = dict(complex='cs', central='3-point', forward='2-point',

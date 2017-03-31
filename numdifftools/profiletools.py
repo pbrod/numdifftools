@@ -58,7 +58,7 @@ try:
         return inner
 
 except ImportError:
-    def do_profile(follow=[]):
+    def do_profile(follow=()):
         "Helpful if you accidentally leave in production!"
         def inner(func):
             def nothing(*args, **kwargs):
@@ -67,13 +67,13 @@ except ImportError:
         return inner
 
 
-def timefn(fn):
-    @wraps(fn)
+def timefun(fun):
+    @wraps(fun)
     def measure_time(*args, **kwargs):
         t1 = time.time()
-        result = fn(*args, **kwargs)
+        result = fun(*args, **kwargs)
         t2 = time.time()
-        print("@timefn:" + fn.func_name + " took " + str(t2 - t1) + " seconds")
+        print("@timefun:" + fun.func_name + " took " + str(t2 - t1) + " seconds")
         return result
     return measure_time
 

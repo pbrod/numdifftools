@@ -3,21 +3,9 @@ import numpy as np
 import numdifftools as nd
 from numdifftools.profiletools import do_profile
 from numdifftools.example_functions import function_names, get_function
-
+from numdifftools.run_benchmark import BenchmarkFunction
 
 def main0():
-    class BenchmarkFunction(object):
-
-        """Return 0.5 * np.dot(x**2, np.dot(A,x))"""
-
-        def __init__(self, n):
-            A = np.arange(n * n, dtype=float).reshape((n, n))
-            self.A = np.dot(A.T, A)
-
-        def __call__(self, xi):
-            x = np.array(xi)
-            return 0.5 * np.dot(x * x, np.dot(self.A, x))
-
     for n in (4, 8, 16, 32, 64, 96):
         f = BenchmarkFunction(n)
 
@@ -31,7 +19,7 @@ def main0():
 def main():
     x = 0.5
     min_dm = dict(complex=2, forward=2, backward=2, central=4)
-    methods = [ 'complex', 'central',  'backward', 'forward']
+    methods = ['complex', 'central',  'backward', 'forward']
 
     # for i, Derivative in enumerate([nd.Derivative, nds.Gradient, nda.Derivative]):
     i = 0

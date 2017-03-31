@@ -642,10 +642,11 @@ class Jacobian(Derivative):
                     for hi in self._increments(n, h)]
         return np.array(partials)
 
-    def _expand_steps(self, steps, xi, fxi):
-        if np.size(fxi)==1:
+    @staticmethod
+    def _expand_steps(steps, x_i, fxi):
+        if np.size(fxi) == 1:
             return steps
-        n = len(xi)
+        n = len(x_i)
         one = np.ones_like(fxi)
         return [np.array([one * h[i] for i in range(n)]) for h in steps]
 
@@ -996,8 +997,3 @@ class Hessian(Hessdiag):
 
     def _backward(self, f, fx, x, h, *args, **kwargs):
         return self._forward(f, fx, x, -h, *args, **kwargs)
-
-
-if __name__ == '__main__':
-    from numdifftools.testing import test_docstrings
-    test_docstrings()
