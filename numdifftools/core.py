@@ -24,6 +24,7 @@ __all__ = ('dea3', 'Derivative', 'Jacobian', 'Gradient', 'Hessian', 'Hessdiag',
 _TINY = np.finfo(float).tiny
 EPS = np.finfo(float).eps
 _SQRT_J = (1j + 1.0) / np.sqrt(2.0)  # = 1j**0.5
+FD_RULES = {}
 
 
 def _assert(cond, msg):
@@ -374,12 +375,16 @@ class Derivative(_Limit):
         parity = self._parity(method, order, method_order)
         step = self._richardson_step()
         num_terms, ix = (order + method_order) // step, order // step
-        fd_mat = self._fd_matrix(step_ratio, parity, num_terms)
-        fd_rule = linalg.pinv(fd_mat)[ix]
+        fd_rules = FD_RULES.get((step_ratio, parity, num_terms))
+        if fd_rules is None:
+            fd_mat = self._fd_matrix(step_ratio, parity, num_terms)
+            fd_rules = linalg.pinv(fd_mat)
+            FD_RULES[((step_ratio, parity, num_terms))] = fd_rules
 
         if self._flip_fd_rule:
-            fd_rule *= -1
-        return fd_rule
+            return -fd_rules[ix]
+        return fd_rules[ix]
+
 
     def _apply_fd_rule(self, step_ratio, sequence, steps):
         """
@@ -637,15 +642,20 @@ class Jacobian(Derivative):
                     for hi in self._increments(n, h)]
         return np.array(partials)
 
+    def _expand_steps(self, steps, xi, fxi):
+        if np.size(fxi)==1:
+            return steps
+        n = len(xi)
+        one = np.ones_like(fxi)
+        return [np.array([one * h[i] for i in range(n)]) for h in steps]
+
     def _derivative_nonzero_order(self, xi, args, kwds):
         diff, f = self._get_functions()
         steps, step_ratio = self._get_steps(xi)
         fxi = f(xi, *args, **kwds)
         results = [diff(f, fxi, xi, h, *args, **kwds) for h in steps]
 
-        n = len(xi)
-        one = np.ones_like(fxi)
-        steps2 = [np.array([one * h[i] for i in range(n)]) for h in steps]
+        steps2 = self._expand_steps(steps, xi, fxi)
 
         self.set_richardson_rule(step_ratio, self.richardson_terms)
         return self._apply_fd_rule(step_ratio, results, steps2)

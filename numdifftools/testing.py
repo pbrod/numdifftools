@@ -3,8 +3,9 @@ Created on Apr 4, 2016
 
 @author: pab
 """
-import inspect
+from __future__ import print_function
 import numpy as np
+import inspect
 
 
 def rosen(x):

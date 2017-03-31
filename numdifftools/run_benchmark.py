@@ -5,6 +5,7 @@ import timeit
 import numdifftools as nd
 import numdifftools.nd_algopy as nda
 import numdifftools.nd_statsmodels as nds
+import numdifftools.nd_scipy as nsc
 from algopy import dot
 
 from collections import OrderedDict
@@ -12,6 +13,7 @@ from numdifftools.core import MinStepGenerator, MaxStepGenerator
 import matplotlib
 # matplotlib.use('Qt4Agg')
 import matplotlib.pyplot as plt
+
 
 class BenchmarkFunction(object):
 
@@ -88,11 +90,16 @@ for method in ['forward', 'central', 'complex']:
     hessian_funs[method] = ndc_hessian(1, step=fixed_step, **options)
     hessian_funs[method2] = ndc_hessian(1, step=epsilon, **options)
 
-hessian_funs['forward_simple'] = nds.Hessian(1, method='forward')
-hessian_funs['central_simple'] = nds.Hessian(1, method='central')
+hessian_funs['forward_statsmodels'] = nds.Hessian(1, method='forward')
+hessian_funs['central_statsmodels'] = nds.Hessian(1, method='central')
+hessian_funs['complex_statsmodels'] = nds.Hessian(1, method='complex')
 
-gradient_funs['forward_simple'] = nds.Jacobian(1, method='forward')
-gradient_funs['central_simple'] = nds.Jacobian(1, method='central')
+gradient_funs['forward_statsmodels'] = nds.Jacobian(1, method='forward')
+gradient_funs['central_statsmodels'] = nds.Jacobian(1, method='central')
+gradient_funs['complex_statsmodels'] = nds.Jacobian(1, method='complex')
+gradient_funs['forward_scipy'] = nsc.Jacobian(1, method='forward')
+gradient_funs['central_scipy'] = nsc.Jacobian(1, method='central')
+gradient_funs['complex_scipy'] = nsc.Jacobian(1, method='complex')
 
 
 def _compute_benchmark(functions, problem_sizes):
@@ -141,7 +148,7 @@ def compute_hessians(hessian_funs, problem_sizes):
 def main():
     problem_sizes = (4, 8, 16, 32, 64, 96)
     symbols = ('-kx', ':k>', ':k<', '--k^', '--kv', '-kp', '-ks',
-               'b', '--b', '-k+')
+               'b', '--b', '-b+', 'r', '--r', '-r+')
 
     results_gradients = compute_gradients(gradient_funs, problem_sizes)
     results_hessians = compute_hessians(hessian_funs, problem_sizes)
