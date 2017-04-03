@@ -7,9 +7,11 @@ from __future__ import print_function
 import sys
 import contextlib
 import inspect
-from cStringIO import StringIO
 import numpy as np
-
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 def rosen(x):
     """Rosenbrock function
