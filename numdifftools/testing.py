@@ -13,6 +13,7 @@ try:
 except ImportError:
     from io import StringIO
 
+
 def rosen(x):
     """Rosenbrock function
 
