@@ -40,7 +40,7 @@ def capture_stdout_and_stderr():
 
     Example:
     --------
-    >>> with capture_stdout_and_stderr as out:
+    >>> with capture_stdout_and_stderr() as out:
     ...    print('This is a test')
     >>> out[0].startswith('This is a test')
     True
@@ -56,3 +56,7 @@ def capture_stdout_and_stderr():
         sys.stdout, sys.stderr = old_out
         out[0] = out[0].getvalue()
         out[1] = out[1].getvalue()
+
+
+if __name__ == '__main__':
+    test_docstrings(__file__)

@@ -58,7 +58,7 @@ try:
         return inner
 
 except ImportError:
-    def do_profile(follow=()):
+    def do_profile(follow=(), follow_all_methods=False):
         "Helpful if you accidentally leave in production!"
         def inner(func):
             def nothing(*args, **kwargs):
