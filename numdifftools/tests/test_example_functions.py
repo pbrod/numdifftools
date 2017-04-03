@@ -54,7 +54,7 @@ class TestExampleFunctions(unittest.TestCase):
                     dm = 7
                     print(i, name, method, dm, np.abs(val-tval))
                     assert_array_almost_equal(val, tval, decimal=dm)
-        self.assertTrue(False)
+        # self.assertTrue(False)
 
 
 if __name__ == '__main__':
