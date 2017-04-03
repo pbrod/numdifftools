@@ -209,7 +209,7 @@ class TestDoCProfile(unittest.TestCase):
             self.assertGreater(results[2][i], 0)
         self.assertEqual(
             results[2][5],
-            'test_profiletools.py:192(expensive_function)')
+            'test_profiletools.py:195(expensive_function)')
         self.assertEqual(results[3][5], 'test_profiletools.py:47(_get_number)')
 
 

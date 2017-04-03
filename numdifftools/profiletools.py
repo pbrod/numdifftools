@@ -7,12 +7,10 @@ from functools import wraps
 try:
     from line_profiler import LineProfiler
 
-
-    def _add_all_class_methods(profiler, cls):
+    def _add_all_class_methods(profiler, cls, except_=''):
         for k, v in inspect.getmembers(cls, inspect.ismethod):
-            if k != func.__name__:
+            if k != except_:
                 profiler.add_function(v)
-
 
     def _add_function_or_classmethod(profiler, f, args):
         if isinstance(f, str): # f is a method of the
@@ -46,13 +44,15 @@ try:
         do_cprofile, test_do_profile
         """
         def inner(func):
+
             def profiled_func(*args, **kwargs):
                 try:
                     profiler = LineProfiler()
                     profiler.add_function(func)
                     if follow_all_methods:
                         cls = args[0]  # class instance
-                        _add_all_class_methods(profiler, cls)
+                        _add_all_class_methods(profiler, cls,
+                                               except_=func.__name__)
                     for f in follow:
                         _add_function_or_classmethod(profiler, f, args)
                     profiler.enable_by_count()
