@@ -78,7 +78,7 @@ class TestDoProfile(unittest.TestCase):
         self.assertEqual(results[1][5].strip(), 'def _get_number():')
         self.assertEqual(results[2][5].strip(), 'for x in range(50000):')
         self.assertEqual(results[2][1], 50001)
-        self.assertTrue(results[2][2] > 40000)
+        self.assertTrue(results[2][2] > 4000)
         self.assertEqual(results[4], FIRST_LINE)
         self.assertEqual(results[5][5].strip(),
                          '@do_profile(follow=[_get_number])')
@@ -102,7 +102,7 @@ class TestDoProfile(unittest.TestCase):
         self.assertEqual(results[2][5].strip(),
                          "for x in range(50000):")
         self.assertEqual(results[2][1], 50001)
-        self.assertTrue(results[2][2] > 29000)
+        self.assertTrue(results[2][2] > 2900)
         self.assertEqual(results[4], FIRST_LINE)
         self.assertEqual(results[5][5].strip(),
                          '@do_profile(follow=[_get_number])')
