@@ -7,6 +7,21 @@ from functools import wraps
 try:
     from line_profiler import LineProfiler
 
+
+    def _add_all_class_methods(profiler, cls):
+        for k, v in inspect.getmembers(cls, inspect.ismethod):
+            if k != func.__name__:
+                profiler.add_function(v)
+
+
+    def _add_function_or_classmethod(profiler, f, args):
+        if isinstance(f, str): # f is a method of the
+            cls = args[0] # class instance
+            profiler.add_function(getattr(cls, f))
+        else:
+            profiler.add_function(f)
+
+
     def do_profile(follow=(), follow_all_methods=False):
         """
         Decorator to profile a function or class method
@@ -31,25 +46,15 @@ try:
         do_cprofile, test_do_profile
         """
         def inner(func):
-
-            def add_all_class_methods(profiler, cls):
-                for k, v in inspect.getmembers(cls, inspect.ismethod):
-                    if k != func.__name__:
-                        profiler.add_function(v)
-
             def profiled_func(*args, **kwargs):
                 try:
                     profiler = LineProfiler()
                     profiler.add_function(func)
                     if follow_all_methods:
                         cls = args[0]  # class instance
-                        add_all_class_methods(profiler, cls)
+                        _add_all_class_methods(profiler, cls)
                     for f in follow:
-                        if isinstance(f, str):  # f is a method of the
-                            cls = args[0]  # class instance
-                            profiler.add_function(getattr(cls, f))
-                        else:
-                            profiler.add_function(f)
+                        _add_function_or_classmethod(profiler, f, args)
                     profiler.enable_by_count()
                     return func(*args, **kwargs)
                 finally:

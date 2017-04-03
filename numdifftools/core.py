@@ -379,7 +379,7 @@ class Derivative(_Limit):
         if fd_rules is None:
             fd_mat = self._fd_matrix(step_ratio, parity, num_terms)
             fd_rules = linalg.pinv(fd_mat)
-            FD_RULES[((step_ratio, parity, num_terms))] = fd_rules
+            FD_RULES[(step_ratio, parity, num_terms)] = fd_rules
 
         if self._flip_fd_rule:
             return -fd_rules[ix]

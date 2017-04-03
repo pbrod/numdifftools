@@ -50,14 +50,14 @@ def _get_number():
 
 
 class ExpensiveClass4(object):
-
+    n = 5000
     def expensive_method4(self):
         for x in self._get_number4():
             i = x **3
         return i
 
     def _get_number4(self):
-        for x in range(5000):
+        for x in range(self.n):
             yield x
 
 FIRST_LINE = 'Line #      Hits         Time  Per Hit   % Time  Line Contents'
@@ -109,17 +109,18 @@ class TestDoProfile(unittest.TestCase):
 
     def test_on_class_method_and_follow_class_method(self):
         class ExpensiveClass2(object):
+            n = 5000
             """You can not put class method _get_number2 directly into follow
             instead you must pass its name as a string:
             """
             @do_profile(follow=['_get_number2'])
             def expensive_method2(self):
                 for x in self._get_number2():
-                    i = x ^ x ^ x ^ x
+                    i = x ** 4
                 return i
 
             def _get_number2(self):
-                for x in range(5000):
+                for x in range(self.n):
                     yield x
         with capture_stdout_and_stderr() as out:
             _test2 = ExpensiveClass2().expensive_method2()
@@ -137,6 +138,8 @@ class TestDoProfile(unittest.TestCase):
 
     def test_on_all_class_methods(self):
         class ExpensiveClass3(object):
+            n = 5000
+            n2 = 50
             """Profile all methods of ExpensiveClass3"""
             @do_profile(follow_all_methods=True)
             def expensive_method3(self):
@@ -146,11 +149,11 @@ class TestDoProfile(unittest.TestCase):
                 return i
 
             def _get_number3(self):
-                for x in range(5000):
+                for x in range(self.n):
                     yield x
 
             def _get_number32(self):
-                for x in range(50):
+                for x in range(self.n2):
                     yield x
         with capture_stdout_and_stderr() as out:
             _test3 = ExpensiveClass3().expensive_method3()
