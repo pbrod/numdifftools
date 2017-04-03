@@ -119,7 +119,7 @@ class TestDoProfile(unittest.TestCase):
                 return i
 
             def _get_number2(self):
-                for x in xrange(5000):
+                for x in range(5000):
                     yield x
         with capture_stdout_and_stderr() as out:
             _test2 = ExpensiveClass2().expensive_method2()
