@@ -696,19 +696,21 @@ class Gradient(Jacobian):
     # of the function sin(x-y) + y*exp(x)
 
     >>> sin = np.sin; exp = np.exp
+    >>> x, y = 1, 1
     >>> z = lambda xy: sin(xy[0]-xy[1]) + xy[1]*exp(xy[0])
     >>> dz = nd.Gradient(z)
-    >>> grad2 = dz([1, 1])
-    >>> grad2
-    array([ 3.71828183,  1.71828183])
+    >>> dz_dx, dz_dy = dz([x, y])
+    >>> np.allclose([dz_dx, dz_dy],
+    ...             [ 3.7182818284590686, 1.7182818284590162])
+    True
 
     # At the global minimizer (1,1) of the Rosenbrock function,
     # compute the gradient. It should be essentially zero.
 
     >>> rosen = lambda x : (1-x[0])**2 + 105.*(x[1]-x[0]**2)**2
-    >>> rd = nd.Gradient(rosen)
-    >>> grad3 = rd([1,1])
-    >>> np.allclose(grad3,[0, 0])
+    >>> grad_rosen = nd.Gradient(rosen)
+    >>> df_dx, df_dy = grad_rosen([x, y])
+    >>> np.allclose([df_dx, df_dy], [0, 0])
     True""", see_also="""
     See also
     --------
