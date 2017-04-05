@@ -19,7 +19,7 @@ def main0():
 def main():
     x = 0.5
     min_dm = dict(complex=2, forward=2, backward=2, central=4)
-    methods = ['complex', 'central',  'backward', 'forward']
+    methods = ['complex', 'central', 'backward', 'forward']
 
     # for i, Derivative in enumerate([nd.Derivative, nds.Gradient, nda.Derivative]):
     i = 0

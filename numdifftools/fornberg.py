@@ -272,6 +272,36 @@ def _extrapolate(bs, rs, m):
     return extrap
 
 
+def _get_best_taylor_coefficients(bs, rs, m):
+    extrap = _extrapolate(bs, rs, m)
+    mvec = np.arange(m)
+    if len(extrap) > 2:
+        all_coefs, all_errors = dea3(extrap[:-2], extrap[1:-1], extrap[2:])
+        coefs, info = _Limit._get_best_estimate(all_coefs, all_errors,
+                                                np.atleast_1d(rs[4:])[:, None]*mvec, (m,))
+        errors = info.error_estimate
+    else:
+        errors = EPS / np.power(rs[2], mvec) * np.maximum(m1, m2)
+        coefs = extrap[-1]
+    return coefs, errors
+
+
+def _check_fft(bnc, m):
+    # If not degenerate, check for geometric progression in the FFT:
+    m1 = np.max(np.abs(bnc[:m // 2]))
+    m2 = np.max(np.abs(bnc[m // 2:]))
+    # If there's an extreme mismatch, then we can consider the
+    # geometric progression degenerate, whether one way or the other,
+    # and just alternate directions instead of trying to target a
+    # specific error bound (not ideal, but not a good reason to fail
+    # catastrophically):
+    #
+    # Note: only consider it degenerate if we've had a chance to steer
+    # the radius in the direction at least `min_iter` times:
+    degenerate = m1 < m2 * 1e-8 or m2 < m1 * 1e-8
+    return degenerate, m1, m2
+
+
 def taylor(fun, z0=0, n=1, r=0.0061, num_extrap=3, step_ratio=1.6, **kwds):
     """
     Return Taylor coefficients of complex analytic function using FFT
@@ -383,30 +413,17 @@ def taylor(fun, z0=0, n=1, r=0.0061, num_extrap=3, step_ratio=1.6, **kwds):
         rs.append(r)
         if direction_changes > 1 or degenerate:
             num_changes += 1
-            # if len(rs) >= 3:
             if num_changes >= 1 + num_extrap:
                 break
 
         if not degenerate:
-            # If not degenerate, check for geometric progression in the fourier
-            # transform:
-            bnc = bn / crat
-            m1 = np.max(np.abs(bnc[:m // 2]))
-            m2 = np.max(np.abs(bnc[m // 2:]))
-            # If there's an extreme mismatch, then we can consider the
-            # geometric progression degenerate, whether one way or the other,
-            # and just alternate directions instead of trying to target a
-            # specific error bound (not ideal, but not a good reason to fail
-            # catastrophically):
-            #
-            # Note: only consider it degenerate if we've had a chance to steer
-            # the radius in the direction at least `min_iter` times:
-            degenerate = i > min_iter and (m1 / m2 < 1e-8 or m2 / m1 < 1e-8)
+            degenerate, m1, m2 = _check_fft(bn/crat, m)
+            degenerate = degenerate and i > min_iter
 
         if degenerate:
             needs_smaller = i % 2 == 0
         else:
-            needs_smaller = (m1 != m1 or m2 != m2 or m1 < m2 or
+            needs_smaller = (degenerate or np.isnan(m1) or np.isnan(m2) or m1 < m2 or
                              _poor_convergence(z0, r, fun, bn, mvec))
 
         if (previous_direction is not None and
@@ -428,16 +445,7 @@ def taylor(fun, z0=0, n=1, r=0.0061, num_extrap=3, step_ratio=1.6, **kwds):
     else:
         failed = True
 
-    extrap = _extrapolate(bs, rs, m)
-    if len(extrap) > 2:
-        all_coefs, all_errors = dea3(extrap[:-2], extrap[1:-1], extrap[2:])
-        coefs, info = _Limit._get_best_estimate(all_coefs, all_errors,
-                                                np.atleast_1d(rs[4:])[:, None]*mvec, (m,))
-        errors = info.error_estimate
-    else:
-        errors = EPS / np.power(rs[2], mvec) * np.maximum(m1, m2)
-        coefs = extrap[-1]
-
+    coefs, errors = _get_best_taylor_coefficients(bs, rs, m)
     if full_output:
         info = _INFO(errors, degenerate, final_radius=r,
                      function_count=i * m, iterations=i, failed=failed)
