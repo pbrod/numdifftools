@@ -77,14 +77,15 @@ _cmn_doc = """
     Notes
     -----
     Algorithmic differentiation is a set of techniques to numerically
-    evaluate the derivative of a function specified by a computer program. AD
-    exploits the fact that every computer program, no matter how complicated,
-    executes a sequence of elementary arithmetic operations (addition,
-    subtraction, multiplication, division, etc.) and elementary functions
-    (exp, log, sin, cos, etc.). By applying the chain rule repeatedly to these
-    operations, derivatives of arbitrary order can be computed automatically,
-    accurately to working precision, and using at most a small constant factor
-    more arithmetic operations than the original program.
+    evaluate the derivative of a function specified by a computer program.
+    AD exploits the fact that every computer program, no matter how
+    complicated, executes a sequence of elementary arithmetic operations
+    (addition, subtraction, multiplication, division, etc.) and elementary
+    functions (exp, log, sin, cos, etc.). By applying the chain rule
+    repeatedly to these operations, derivatives of arbitrary order can be
+    computed automatically, accurately to working precision, and using at
+    most a small constant factor more arithmetic operations than the original
+    program.
     %(extra_note)s
     Reference
     ---------
@@ -148,6 +149,7 @@ class _Derivative(object):
         if self.full_output:
             return df, self.info(np.maximum(10*EPS * np.abs(df), EPS), EPS, 0)
         return df
+
 
 class Derivative(_Derivative):
 

@@ -130,6 +130,7 @@ def _compute_benchmark(functions, problem_sizes):
 
     return np.array(result_list) + 1e-16
 
+
 def compute_gradients(gradient_funs, problem_sizes):
     print('starting gradient computation ')
     results_gradients = _compute_benchmark(gradient_funs, problem_sizes)

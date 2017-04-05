@@ -27,7 +27,8 @@ class CStepGenerator(MinStepGenerator):
     Generates a sequence of steps
 
     where
-        steps = base_step * step_nom * (exp(1j*dtheta) * step_ratio) ** (i + offset)
+        steps = base_step * step_nom *
+                (exp(1j*dtheta) * step_ratio) ** (i + offset)
     for i = 0, 1, ..., num_steps-1
 
     Parameters
@@ -40,7 +41,8 @@ class CStepGenerator(MinStepGenerator):
         defines number of steps generated.
         If None the value is 2 * int(round(16.0/log(abs(step_ratio)))) + 1
     step_nom :  default maximum(log(1+|x|), 1)
-        Nominal step where x is supplied at runtime through the __call__ method.
+        Nominal step where x is supplied at runtime through the __call__
+        method.
     offset : real scalar, optional, default 0
         offset to the base step
     use_exact_steps : boolean
@@ -167,9 +169,9 @@ class _Limit(object):
         return der, errors, steps[2:]
 
     def _extrapolate(self, results, steps, shape):
-        #if len(results)>2:
-        #    der1, errors1, steps = self._wynn_extrapolate(results, steps)
-        #else:
+        # if len(results)>2:
+        #     der1, errors1, steps = self._wynn_extrapolate(results, steps)
+        # else:
         der1, errors1, steps = self.richardson(results, steps)
         if len(der1) > 2:
             der1, errors1, steps = self._wynn_extrapolate(der1, steps)

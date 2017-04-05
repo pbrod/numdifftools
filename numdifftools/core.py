@@ -385,7 +385,6 @@ class Derivative(_Limit):
             return -fd_rules[ix]
         return fd_rules[ix]
 
-
     def _apply_fd_rule(self, step_ratio, sequence, steps):
         """
         Return derivative estimates of f at x0 for a sequence of stepsizes h
@@ -400,8 +399,7 @@ class Derivative(_Limit):
         nr = fd_rule.size - 1
         _assert(nr < ne, 'num_steps ({0:d}) must  be larger than '
                 '({1:d}) n + order - 1 = {2:d} + {3:d} -1'
-                ' ({4:s})'.format(ne, nr+1, self.n, self.order, self.method)
-                             )
+                ' ({4:s})'.format(ne, nr+1, self.n, self.order, self.method))
         f_diff = convolve(f_del, fd_rule[::-1], axis=0, origin=nr // 2)
 
         der_init = f_diff / (h ** self.n)
@@ -583,7 +581,6 @@ class Jacobian(Derivative):
             original_shape = (1, ) + tuple(original_shape)
         return tuple(original_shape)
 
-
     def _vstack(self, sequence, steps):
         original_shape = list(np.shape(np.atleast_1d(sequence[0].squeeze())))
         ndim = len(original_shape)
@@ -592,9 +589,9 @@ class Jacobian(Derivative):
         original_shape[:2] = original_shape[1::-1]
 
         f_del = np.vstack([np.atleast_1d(r.squeeze()).transpose(axes).ravel()
-                          for r in sequence])
+                           for r in sequence])
         h = np.vstack([np.atleast_1d(r.squeeze()).transpose(axes).ravel()
-                          for r in steps])
+                       for r in steps])
         _assert(f_del.size == h.size, 'fun did not return data of correct '
                 'size (it must be vectorized)')
         return f_del, h, self._atleast_2d(original_shape, ndim)
@@ -632,7 +629,7 @@ class Jacobian(Derivative):
         n = len(x)
         j1 = _SQRT_J
         return np.array([((j1 / 2.) * (f(x + j1 * ih, *args, **kwds) -
-                                       f(x - j1* ih, *args, **kwds))).imag
+                                       f(x - j1 * ih, *args, **kwds))).imag
                          for ih in self._increments(n, h)])
 
     def _multicomplex(self, f, fx, x, h, *args, **kwds):
@@ -683,7 +680,8 @@ class Gradient(Jacobian):
     also suffer more from numerical problems. First order methods is usually
     not recommended.
 
-    If x0 is an nxm array, then fun is assumed to be a function of n*m variables.
+    If x0 is an n x m array, then fun is assumed to be a function of n * m
+    variables.
     """, example="""
     Example
     -------

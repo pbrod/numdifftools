@@ -220,7 +220,7 @@ class EpsAlg(object):
     """
 
     def __init__(self, limexp=3):
-        _assert(limexp >=3, 'LIMEXP IS LESS THAN 3')
+        _assert(limexp >= 3, 'LIMEXP IS LESS THAN 3')
         self.limexp = 2 * (limexp // 2) + 1
         self.epstab = np.zeros(limexp + 5)
         self.abserr = 10.
@@ -463,8 +463,9 @@ class Richardson(object):
             tol = max_abs(old_sequence[:-1], old_sequence[1:]) * fact
             err = np.abs(delta)
             converged = err <= tol
-            abserr = err[-m:] + np.where(converged[-m:], tol[-m:] * 10,
-                                abs(new_sequence - old_sequence[-m:]) * fact)
+            abserr = (err[-m:] +
+                      np.where(converged[-m:], tol[-m:] * 10,
+                               abs(new_sequence - old_sequence[-m:]) * fact))
             return abserr
 #         if mo>2:
 #             res, abserr = dea3(old_sequence[:-2], old_sequence[1:-1],

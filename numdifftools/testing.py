@@ -30,7 +30,8 @@ def test_docstrings(name=''):
     if not name:
         name = inspect.stack()[1][1]
     print('Testing docstrings in {}'.format(name))
-    doctest.testmod(optionflags=doctest.NORMALIZE_WHITESPACE|doctest.ELLIPSIS)
+    doctest.testmod(optionflags=doctest.NORMALIZE_WHITESPACE |
+                    doctest.ELLIPSIS)
 
 
 @contextlib.contextmanager

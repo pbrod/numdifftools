@@ -1,4 +1,4 @@
-
+from __future__ import division
 import numpy as np
 from scipy.special import factorial
 from numdifftools.extrapolation import EPS, dea3
@@ -12,17 +12,17 @@ _INFO = namedtuple('info', ['error_estimate',
                             'function_count',
                             'iterations', 'failed'])
 CENTRAL_WEIGHTS_AND_POINTS = {
-    (1, 3): (np.array([-1, 0, 1]) / 2.0, np.arange(-1, 2)),
-    (1, 5): (np.array([1, -8, 0, 8, -1]) / 12.0, np.arange(-2, 3)),
-    (1, 7): (np.array([-1, 9, -45, 0, 45, -9, 1]) / 60.0, np.arange(-3, 4)),
-    (1, 9): (np.array([3, -32, 168, -672, 0, 672, -168, 32, -3], dtype=float) / 840.0,
+    (1, 3): (np.array([-1., 0, 1]) / 2.0, np.arange(-1, 2)),
+    (1, 5): (np.array([1., -8, 0, 8, -1]) / 12.0, np.arange(-2, 3)),
+    (1, 7): (np.array([-1., 9, -45, 0, 45, -9, 1]) / 60.0, np.arange(-3, 4)),
+    (1, 9): (np.array([3., -32, 168, -672, 0, 672, -168, 32, -3]) / 840.0,
              np.arange(-4, 5)),
-    (2, 3): (np.array([1, -2.0, 1]), np.arange(-1, 2)),
-    (2, 5): (np.array([-1, 16, -30, 16, -1], dtype=float) / 12.0, np.arange(-2, 3)),
-    (2, 7): (np.array([2, -27, 270, -490, 270, -27, 2], dtype=float) / 180.0,
+    (2, 3): (np.array([1., -2.0, 1]), np.arange(-1, 2)),
+    (2, 5): (np.array([-1., 16, -30, 16, -1]) / 12.0, np.arange(-2, 3)),
+    (2, 7): (np.array([2., -27, 270, -490, 270, -27, 2]) / 180.0,
              np.arange(-3, 4)),
-    (2, 9): (np.array([-9, 128, -1008, 8064, -14350,
-                       8064, -1008, 128, -9], dtype=float) / 5040.0,
+    (2, 9): (np.array([-9., 128, -1008, 8064, -14350,
+                       8064, -1008, 128, -9]) / 5040.0,
              np.arange(-4, 5))}
 
 
@@ -277,8 +277,9 @@ def _get_best_taylor_coefficients(bs, rs, m):
     mvec = np.arange(m)
     if len(extrap) > 2:
         all_coefs, all_errors = dea3(extrap[:-2], extrap[1:-1], extrap[2:])
-        coefs, info = _Limit._get_best_estimate(all_coefs, all_errors,
-                                                np.atleast_1d(rs[4:])[:, None]*mvec, (m,))
+        steps = np.atleast_1d(rs[4:])[:, None]*mvec
+        coefs, info = _Limit._get_best_estimate(all_coefs, all_errors, steps,
+                                                (m,))
         errors = info.error_estimate
     else:
         errors = EPS / np.power(rs[2], mvec) * np.maximum(m1, m2)
@@ -348,17 +349,19 @@ def taylor(fun, z0=0, n=1, r=0.0061, num_extrap=3, step_ratio=1.6, **kwds):
     method uses a Fast Fourier Transform to invert function evaluations around
     a circle into Taylor series coefficients and uses Richardson Extrapolation
     to improve and bound the estimate. Unlike real-valued finite differences,
-    the method searches for a desirable radius and so is reasonably insensitive
-    to the initial radius-to within a number of orders of magnitude at least.
-    For most cases, the default configuration is likely to succeed.
+    the method searches for a desirable radius and so is reasonably
+    insensitive to the initial radius-to within a number of orders of
+    magnitude at least. For most cases, the default configuration is likely to
+    succeed.
 
     Restrictions
 
-    The method uses the coefficients themselves to control the truncation error,
-    so the error will not be properly bounded for functions like low-order
-    polynomials whose Taylor series coefficients are nearly zero. If the error
-    cannot be bounded, degenerate flag will be set to true, and an answer will
-    still be computed and returned but should be used with caution.
+    The method uses the coefficients themselves to control the truncation
+    error, so the error will not be properly bounded for functions like
+    low-order polynomials whose Taylor series coefficients are nearly zero.
+    If the error cannot be bounded, degenerate flag will be set to true, and
+    an answer will still be computed and returned but should be used with
+    caution.
 
     Example
     -------
@@ -423,7 +426,7 @@ def taylor(fun, z0=0, n=1, r=0.0061, num_extrap=3, step_ratio=1.6, **kwds):
         if degenerate:
             needs_smaller = i % 2 == 0
         else:
-            needs_smaller = (degenerate or np.isnan(m1) or np.isnan(m2) or m1 < m2 or
+            needs_smaller = (np.isnan(m1) or np.isnan(m2) or m1 < m2 or
                              _poor_convergence(z0, r, fun, bn, mvec))
 
         if (previous_direction is not None and
@@ -489,7 +492,7 @@ def derivative(fun, z0, n=1, **kwds):
     -------
     der : ndarray
        array of derivatives
-    status: Optional object into which output information is written. Fields are:
+    status: Optional object into which output information is written. Fields:
         degenerate: True if the algorithm was unable to bound the error
         iterations: Number of iterations executed
         function_count: Number of function calls
@@ -509,11 +512,12 @@ def derivative(fun, z0, n=1, **kwds):
 
     Restrictions
 
-    The method uses the coefficients themselves to control the truncation error,
-    so the error will not be properly bounded for functions like low-order
-    polynomials whose Taylor series coefficients are nearly zero. If the error
-    cannot be bounded, degenerate flag will be set to true, and an answer will
-    still be computed and returned but should be used with caution.
+    The method uses the coefficients themselves to control the truncation
+    error, so the error will not be properly bounded for functions like
+    low-order polynomials whose Taylor series coefficients are nearly zero.
+    If the error cannot be bounded, degenerate flag will be set to true, and
+    an answer will still be computed and returned but should be used with
+    caution.
 
     Example
     -------

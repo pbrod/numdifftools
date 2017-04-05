@@ -13,8 +13,8 @@ try:
                 profiler.add_function(v)
 
     def _add_function_or_classmethod(profiler, f, args):
-        if isinstance(f, str): # f is a method of the
-            cls = args[0] # class instance
+        if isinstance(f, str):  # f is a method of the
+            cls = args[0]  # class instance
             profiler.add_function(getattr(cls, f))
         else:
             profiler.add_function(f)
@@ -35,9 +35,10 @@ try:
         so don't use it for benchmarking.
 
         Handy tip:
-        Just decorate your test function or class method and pass any additional problem
-        function(s) in the follow argument! If any follow argument is a string, it is
-        assumed that the string refers to bound a method of the class
+        Just decorate your test function or class method and pass any
+        additional problem function(s) in the follow argument!
+        If any follow argument is a string, it is assumed that the string
+        refers to bound a method of the class
 
         See also
         --------
@@ -78,7 +79,8 @@ def timefun(fun):
         t1 = time.time()
         result = fun(*args, **kwargs)
         t2 = time.time()
-        print("@timefun:" + fun.__name__ + " took " + str(t2 - t1) + " seconds")
+        print("@timefun:" + fun.__name__ + " took " + str(t2 - t1) +
+              " seconds")
         return result
     return measure_time
 
@@ -96,7 +98,8 @@ def do_cprofile(func):
     specific functions that are either slow are called way too often.
 
     Pros:
-    No external dependencies and quite fast. Useful for quick high-level checks.
+    No external dependencies and quite fast. Useful for quick high-level
+    checks.
 
     Cons:
     Rather limited information that usually requires deeper debugging; reports

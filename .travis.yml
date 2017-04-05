@@ -68,7 +68,7 @@ before_script:
   - git config --global user.name "pbrod"
 script:
   - coverage erase
-  - coverage run --source=numdifftools setup.py test
+  - coverage run --timid --source=numdifftools setup.py test
   - coverage xml -o coverage.xml
 #  - sed -i 's/filename="/filename=".\//g' coverage.xml
   - CODECLIMATE_REPO_TOKEN=9c5d44592ed63ccd3c2b4aabf54fd9aee50f02e21cd016f67f4287e68f708dba codeclimate-test-reporter
