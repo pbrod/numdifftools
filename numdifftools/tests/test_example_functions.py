@@ -14,7 +14,7 @@ class TestExampleFunctions(unittest.TestCase):
         min_dm = dict(complex=2, forward=2, backward=2, central=4)
         methods = [ 'complex', 'central',  'backward', 'forward']
 
-        for i, Derivative in enumerate([nd.Derivative, nda.Derivative]):
+        for i, derivative in enumerate([nd.Derivative, nda.Derivative]):
             for name in function_names:
                 if i>0 and name in ['arcsinh', 'exp2']:
                     continue
@@ -25,7 +25,7 @@ class TestExampleFunctions(unittest.TestCase):
                     for method in methods[3*i:]:
                         if i==0 and n > 7 and method not in ['complex']:
                             continue
-                        df = Derivative(f, method=method, n=n, full_output=True)
+                        df = derivative(f, method=method, n=n, full_output=True)
                         val, info = df(x)
                         dm = max(int(-np.log10(info.error_estimate + 1e-16))-1,
                                  min_dm.get(method, 4))
@@ -38,7 +38,7 @@ class TestExampleFunctions(unittest.TestCase):
         min_dm = dict(complex=2, forward=2, backward=2, central=4)
         methods = [ 'complex', 'central',  'backward', 'forward']
 
-        for i, Derivative in enumerate([nd.Derivative, nds.Gradient, nda.Derivative]):
+        for i, derivative in enumerate([nd.Derivative, nds.Gradient, nda.Derivative]):
             for name in function_names:
                 if i>1 and name in ['arcsinh', 'exp2']:
                     continue
@@ -48,7 +48,7 @@ class TestExampleFunctions(unittest.TestCase):
                     continue
                 for method in methods[3*(i>1):]:
 
-                    df = Derivative(f, method=method)
+                    df = derivative(f, method=method)
                     val = df(x)
                     tval = true_df(x)
                     dm = 7

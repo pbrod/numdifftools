@@ -7,7 +7,7 @@ from numdifftools.run_benchmark import BenchmarkFunction
 
 
 def main0():
-    for n in (4, 8, 16, 32, 64, 96):
+    for n in 4, 8, 16, 32, 64, 96:
         f = BenchmarkFunction(n)
 
         cls = nd.Jacobian(f, method='central')
@@ -37,8 +37,8 @@ def main():
             continue
         for method in methods[3 * (i > 1):]:
 
-            DF = Derivative(f, method=method)
-            val = DF(x)
+            df = Derivative(f, method=method)
+            val = df(x)
             tval = true_df(x)
             dm = 7
             print(i, name, method, dm, np.abs(val - tval))
