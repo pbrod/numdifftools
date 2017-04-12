@@ -1,78 +1,50 @@
 package:
   name: numdifftools
-  version: "0.9.13.post0.dev47+gbce4a58.dirty"
+  version: "0.0.0"
 
 source:
   path: ..
-#  patches:
-   # List any patch files here
-   # - fix.patch
 
-# build:
-  # noarch_python: True
-  # preserve_egg_dir: True
-  # entry_points:
-    # Put any entry points (scripts to be generated automatically) here. The
-    # syntax is module:function.  For example
-    #
-    # - numdifftools = numdifftools:main
-    #
-    # Would create an entry point called numdifftools that calls numdifftools.main()
-
-
-  # If this is a new build for the same version, increment the build
-  # number. If you do not include this key, it defaults to 0.
-  # number: 1
 
 requirements:
   build:
     - python
     - setuptools
+    - setuptools_scm
+    - pyscaffold
+    - six
     - numpy >=1.9
     - scipy >=0.8
-    - algopy >=0.4
-    - six
-    - pyscaffold
-    - setuptools_scm
+    - algopy >=0.4    [not py36]
+    - statsmodels
 
   run:
     - python
     - setuptools
+    - setuptools_scm
+    - pyscaffold
+    - six
     - numpy >=1.9
     - scipy >=0.8
-    - algopy >=0.4
-    - six
-    - pyscaffold
-    - setuptools_scm
+    - algopy >=0.4    [not py36]
+    - statsmodels
 
 test:
-  # Python imports
-  # imports:
   imports:
     - numdifftools
     - numdifftools.tests
 
 
-  #commands:
-    # You can put test commands to be run here.  Use this to test that the
-    # entry points work.
-    #- python setup.py test
-    #- numdifftools.test()
-
-  # You can also put a file called run_test.py in the recipe that will be run
-  # at test time.
-
   requires:
+    - nose
     - pytest
     - pytest-cov
-    # Put any additional test requirements here.  For example
-    - nose
+    - line_profiler
+    - hypothesis
+    - matplotlib
+
 
 about:
   home: "https://github.com/pbrod/numdifftools/"
   license: new BSD
   summary: "'Solves automatic numerical differentiation problems in one or more variables.'"
-
-# See
-# http://docs.continuum.io/conda/build.html for
-# more information about meta.yaml
