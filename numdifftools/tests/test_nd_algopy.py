@@ -3,13 +3,25 @@
 
 from __future__ import division
 import unittest
-import numdifftools.nd_algopy as nd
+
 import numpy as np
 from numpy.testing import assert_allclose
-import algopy
 from numdifftools.testing import rosen
 from numdifftools.tests.hamiltonian import run_hamiltonian
 from hypothesis import given, example, note, strategies as st
+import pytest
+
+
+try:
+    import algopy
+except ImportError:
+    algopy = None
+else:
+    import numdifftools.nd_algopy as nd
+
+
+pytestmark = pytest.mark.skipif(algopy is None, reason="algopy is not installed!")
+
 
 class TestHessian(unittest.TestCase):
 

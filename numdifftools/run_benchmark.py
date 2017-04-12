@@ -3,10 +3,16 @@ import numpy as np
 import timeit
 
 import numdifftools as nd
-import numdifftools.nd_algopy as nda
 import numdifftools.nd_statsmodels as nds
 import numdifftools.nd_scipy as nsc
-from algopy import dot
+
+try:
+    import algopy
+except ImportError:
+    nda = None
+else:
+    import numdifftools.nd_algopy as nda
+
 
 from collections import OrderedDict
 from numdifftools.core import MinStepGenerator, MaxStepGenerator
@@ -24,6 +30,7 @@ class BenchmarkFunction(object):
         self.A = np.dot(A.T, A)
 
     def __call__(self, xi):
+        from algopy import dot
         x = np.array(xi)
         return 0.5 * dot(x * x, dot(self.A, x))
 
@@ -71,15 +78,14 @@ adaptiv_txt = '_adaptive_{0:d}_{1!s}_{2:d}'.format(epsilon.num_steps,
                                                    str(epsilon.step_ratio),
                                                    epsilon.offset)
 gradient_funs = OrderedDict()
-nda_method = 'forward'
-nda_txt = 'algopy_' + nda_method
-gradient_funs[nda_txt] = nda.Jacobian(1, method=nda_method)
-
-hessian_fun = 'Hessdiag'
-hessian_fun = 'Hessian'
-ndc_hessian = getattr(nd, hessian_fun)
 hessian_funs = OrderedDict()
-hessian_funs[nda_txt] = getattr(nda, hessian_fun)(1, method=nda_method)
+
+if nda is not None:
+    gradient_funs['algopy_forward'] = nda.Jacobian(1, method='forward')
+    hessian_funs['algopy_forward'] = nda.Hessian(1, method='forward')
+
+ndc_hessian = nd.Hessian
+
 
 order = 2
 for method in ['forward', 'central', 'complex']:

@@ -1,10 +1,16 @@
 import unittest
 import numpy as np
 import numdifftools.core as nd
-import numdifftools.nd_algopy as nda
 import numdifftools.nd_statsmodels as nds
 from numpy.testing import assert_array_almost_equal
 from numdifftools.example_functions import function_names, get_function
+
+try:
+    import algopy
+except ImportError:
+    nda = None
+else:
+    import numdifftools.nd_algopy as nda
 
 
 class TestExampleFunctions(unittest.TestCase):
@@ -14,7 +20,11 @@ class TestExampleFunctions(unittest.TestCase):
         min_dm = dict(complex=2, forward=2, backward=2, central=4)
         methods = [ 'complex', 'central',  'backward', 'forward']
 
-        for i, derivative in enumerate([nd.Derivative, nda.Derivative]):
+        derivatives = [nd.Derivative]
+        if nda is not None:
+            derivatives.append(nda.Derivative)
+
+        for i, derivative in enumerate(derivatives):
             for name in function_names:
                 if i>0 and name in ['arcsinh', 'exp2']:
                     continue
@@ -37,8 +47,11 @@ class TestExampleFunctions(unittest.TestCase):
         x = 0.5
         min_dm = dict(complex=2, forward=2, backward=2, central=4)
         methods = [ 'complex', 'central',  'backward', 'forward']
+        derivatives = [nd.Derivative, nds.Gradient]
+        if nda is not None:
+            derivatives.append(nda.Derivative)
 
-        for i, derivative in enumerate([nd.Derivative, nds.Gradient, nda.Derivative]):
+        for i, derivative in enumerate(derivatives):
             for name in function_names:
                 if i>1 and name in ['arcsinh', 'exp2']:
                     continue
@@ -54,7 +67,6 @@ class TestExampleFunctions(unittest.TestCase):
                     dm = 7
                     print(i, name, method, dm, np.abs(val-tval))
                     assert_array_almost_equal(val, tval, decimal=dm)
-        # self.assertTrue(False)
 
 
 if __name__ == '__main__':
