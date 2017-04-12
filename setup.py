@@ -45,6 +45,7 @@ PyPi upload:
 import sys
 from setuptools import setup
 
+
 def print_version():
     import pkg_resources
     try:
