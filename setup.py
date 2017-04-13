@@ -46,24 +46,40 @@ import sys
 from setuptools import setup
 
 
-def print_version():
-    import pkg_resources
+def get_version():
+    import subprocess
     try:
-        __version__ = pkg_resources.get_distribution("numdifftools").version
-        with open("__conda_version__.txt","w") as fid:
-            fid.write(__version__)
-    except pkg_resources.DistributionNotFound:
-        __version__ = 'unknown'
-    print("Version: {}".format(__version__))
+        version = subprocess.check_output("git describe --tags").decode('utf-8')
+        version = version.lstrip('v').strip()
+    except subprocess.CalledProcessError:
+        version = 'unknown'
+    parts = version.split('-')
+    if len(parts) == 1:
+        version = parts[0]
+    elif len(parts) == 3:
+        tag, revision, sha = parts
+        version = '{}.post{:03d}+{}'.format(tag, int(revision), sha)
+    else:
+        version = 'unknown'
+    return version
 
 
 def setup_package():
+    version = get_version()
+    if version != 'unknown':
+        with open("__conda_version__.txt", "w") as fid:
+            fid.write(version)
+    with open("./numdifftools/__init__.py", "a") as fid:
+        fid.write("__version__ = '{}'".format(version))
+
     needs_sphinx = {'build_sphinx', 'upload_docs'}.intersection(sys.argv)
     sphinx = ['sphinx', 'numpydoc', 'sphinx_rtd_theme>=0.1.7'] if needs_sphinx else []
-    setup(setup_requires=['six', 'pyscaffold>=2.4rc1,<2.5a0'] + sphinx,
-          tests_require=['pytest_cov', 'pytest', 'hypothesis', 'matplotlib'],
-          use_pyscaffold=True)
-    print_version()
+    setup(
+        version=version,
+        install_requires=['six', 'pyscaffold>=2.4rc1,<2.5a0'] + sphinx,
+        tests_require=['pytest_cov', 'pytest', 'hypothesis', 'matplotlib'],
+        use_pyscaffold=True
+    )
 
 
 if __name__ == "__main__":
