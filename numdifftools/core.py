@@ -11,6 +11,7 @@ Licence:     New BSD
 
 from __future__ import division, print_function
 import numpy as np
+import warnings
 from numpy import linalg
 from numdifftools.multicomplex import Bicomplex
 from numdifftools.extrapolation import Richardson, dea3, convolve
@@ -885,9 +886,16 @@ class Hessian(Hessdiag):
     Derivative, Hessian
     """)
 
-    order = property(fget=lambda cls: dict(backward=1, forward=1,
-                                           complex=2).get(cls.method, 2),
-                     fset=lambda cls, order: None)
+    @property
+    def order(self):
+        return dict(backward=1, forward=1).get(self.method, 2)
+
+    @order.setter
+    def order(self, order):
+        valid_order = dict(backward=1, forward=1).get(self.method, 2)
+        if order != valid_order:
+            msg = 'Can not change order to {}! The only valid order is {} for method={}.'
+            warnings.warn(msg.format(order, valid_order, self.method))
 
     def _apply_fd_rule(self, step_ratio, sequence, steps):
         """
