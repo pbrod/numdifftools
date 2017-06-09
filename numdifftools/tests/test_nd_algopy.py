@@ -183,7 +183,7 @@ class TestJacobian(unittest.TestCase):
 
             s0 = f0.size
             s1 = f1.size
-            out = algopy.zeros((2, (s0 + s1) / 2), dtype=x)
+            out = algopy.zeros((2, (s0 + s1) // 2), dtype=x)
             out[0, :] = f0
             out[1, :] = f1
             return out
