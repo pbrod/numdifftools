@@ -59,13 +59,13 @@ class CStepGenerator(MinStepGenerator):
 
     def __init__(self, base_step=None, step_ratio=4.0, num_steps=None,
                  step_nom=None, offset=0, scale=1.2, use_exact_steps=True,
-                 path='radial', dtheta=np.pi/8):
+                 path='radial', dtheta=np.pi/8, **kwds):
         self.path = path
         self.dtheta = dtheta
         super(CStepGenerator,
               self).__init__(base_step=base_step, step_ratio=step_ratio,
                              num_steps=num_steps, offset=offset, scale=scale,
-                             use_exact_steps=use_exact_steps)
+                             use_exact_steps=use_exact_steps, **kwds)
         self._check_path()
 
     def _check_path(self):
@@ -116,7 +116,22 @@ class _Limit(object):
         self.method = method
         self.order = order
         self.full_output = full_output
-        self.step = self._make_generator(step, options)
+        self.step = step, options
+
+    @property
+    def step(self):
+        return self._step
+
+    @step.setter
+    def step(self, step):
+        options = {}
+        if isinstance(step, tuple) and isinstance(step[-1], dict):
+            step, options = step
+        if hasattr(step, '__call__'):
+            self._step = step
+        else:
+            step_nom = None if step is None else 1
+            self._step = CStepGenerator(base_step=step, step_nom=step_nom, **options)
 
     @staticmethod
     def _get_arg_min(errors):
@@ -320,12 +335,6 @@ class Limit(_Limit):
 
     def _fun(self, z, dz, *args, **kwds):
         return self.fun(z+dz, *args, **kwds)
-
-    @staticmethod
-    def _make_generator(step, options):
-        if hasattr(step, '__call__'):
-            return step
-        return CStepGenerator(base_step=step, **options)
 
     def _get_steps(self, xi):
         return [step for step in self.step(xi)]

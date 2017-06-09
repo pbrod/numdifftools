@@ -170,6 +170,27 @@ class Derivative(_Limit):
     n = property(fget=lambda cls: cls._n,
                  fset=lambda cls, n: (setattr(cls, '_n', n),
                                       cls._set_derivative()))
+    @property
+    def step(self):
+        return self._step
+
+    @step.setter
+    def step(self, step):
+        step_options = {}
+        if isinstance(step, tuple) and isinstance(step[-1], dict):
+            step, step_options = step
+        if hasattr(step, '__call__'):
+            self._step = step
+        else:
+            options = dict(step_ratio=None, num_extrap=14)
+            if step is None and self.method not in ['complex', 'multicomplex']:
+                options.update(**step_options)
+                self._step = MaxStepGenerator(**options)
+            else:
+                options['num_extrap'] = 0
+                options['step_nom'] = None if step is None else 1.0
+                options.update(**step_options)
+                self._step = MinStepGenerator(base_step=step, **options)
 
     def _set_derivative(self):
         if self.n == 0:
@@ -192,17 +213,6 @@ class Derivative(_Limit):
         self.set_richardson_rule(step_ratio, self.richardson_terms)
 
         return self._apply_fd_rule(step_ratio, results, steps)
-
-    def _make_generator(self, step, step_options):
-        if hasattr(step, '__call__'):
-            return step
-        options = dict(step_ratio=None, num_extrap=14)
-        if step is None and self.method not in ['complex', 'multicomplex']:
-            options.update(**step_options)
-            return MaxStepGenerator(**options)
-        options['num_extrap'] = 0
-        options.update(**step_options)
-        return MinStepGenerator(base_step=step, **options)
 
     @property
     def _method_order(self):
