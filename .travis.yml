@@ -5,7 +5,7 @@ dist: trusty
 sudo: required
 
 addons:
-  sonarqube:
+  sonarcloud:
     token:
       secure: "67bcbf1aefb992993fdd45b78fb4977a05be39b9"
   code_climate:
