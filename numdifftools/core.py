@@ -17,7 +17,7 @@ from numdifftools.multicomplex import Bicomplex
 from numdifftools.extrapolation import Richardson, dea3, convolve
 from numdifftools.step_generators import MaxStepGenerator, MinStepGenerator
 from numdifftools.limits import _Limit
-from scipy import misc
+from scipy import special
 
 __all__ = ('dea3', 'Derivative', 'Jacobian', 'Gradient', 'Hessian', 'Hessdiag',
            'MinStepGenerator', 'MaxStepGenerator', 'Richardson',
@@ -338,7 +338,7 @@ class Derivative(_Limit):
         offset = [1, 1, 2, 2, 4, 1, 3][parity]
         c0 = [1.0, 1.0, 1.0, 2.0, 24.0, 1.0, 6.0][parity]
         c = c0 / \
-            misc.factorial(np.arange(offset, step * nterms + offset, step))
+            special.factorial(np.arange(offset, step * nterms + offset, step))
         [i, j] = np.ogrid[0:nterms, 0:nterms]
         return np.atleast_2d(c[j] * inv_sr ** (i * (step * j + offset)))
 
