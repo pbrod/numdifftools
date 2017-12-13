@@ -513,6 +513,15 @@ Ok, its a trivial test case, but it easy to compute the directional derivative a
     >>> allclose(directionaldiff, 743.87633380824832)
     True
 
+There is a convenience function :math:`nd.directionaldiff` that also takes care of the direction normalization:
+
+    >>> v = [1, -1]
+    >>> x0 = [2, 3]
+    >>> directional_diff = nd.directionaldiff(rosen, x0, v)
+    >>> np.allclose(directional_diff, 743.87633380824832)
+    True
+
+
 Jacobian matrix
 ---------------
 Jacobian matrix of a scalar function is just the gradient
