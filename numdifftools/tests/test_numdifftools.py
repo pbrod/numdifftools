@@ -206,11 +206,16 @@ class TestDerivative(unittest.TestCase):
         methods = ['forward', 'backward', 'central', 'complex', 'multicomplex']
         dfuns = [nd.Gradient, nd.Derivative, nd.Jacobian, nd.Hessdiag,
                  nd.Hessian]
+        truths = {nd.Hessdiag: 12, nd.Hessian: 12}
         for dfun in dfuns:
             for method in methods:
                 df = dfun(func, method=method)
                 val = df(0.0, 1.0, b=2)
                 assert_allclose(val, 0, atol=1e-14)
+
+                val = df(1.0, 1.0, b=2)
+                truth = truths.get(dfun, 6)
+                assert_allclose(val, truth)
 
     @staticmethod
     def test_derivative_with_step_options():

@@ -119,9 +119,6 @@ class _Limit(object):
         self.full_output = full_output
         self.step = step, options
 
-    @property
-    def step(self):
-        return self._step
 
     def _parse_step_options(self, step):
         options = {}
@@ -129,14 +126,20 @@ class _Limit(object):
             step, options = step
         return step, options
 
+    def _step_generator(self, step, options):
+        if hasattr(step, '__call__'):
+            return step
+        step_nom = None if step is None else 1
+        return CStepGenerator(base_step=step, step_nom=step_nom, **options)
+
+    @property
+    def step(self):
+        return self._step
+
     @step.setter
     def step(self, step_options):
         step, options = self._parse_step_options(step_options)
-        if hasattr(step, '__call__'):
-            self._step = step
-        else:
-            step_nom = None if step is None else 1
-            self._step = CStepGenerator(base_step=step, step_nom=step_nom, **options)
+        self._step = self._step_generator(step, options)
 
     @staticmethod
     def _get_arg_min(errors):

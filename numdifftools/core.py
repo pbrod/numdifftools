@@ -170,27 +170,19 @@ class Derivative(_Limit):
     n = property(fget=lambda cls: cls._n,
                  fset=lambda cls, n: (setattr(cls, '_n', n),
                                       cls._set_derivative()))
-    @property
-    def step(self):
-        return self._step
 
-    @step.setter
-    def step(self, step):
-        step_options = {}
-        if isinstance(step, tuple) and isinstance(step[-1], dict):
-            step, step_options = step
+    def _step_generator(self, step, options):
         if hasattr(step, '__call__'):
-            self._step = step
-        else:
-            options = dict(step_ratio=None, num_extrap=14)
-            if step is None and self.method not in ['complex', 'multicomplex']:
-                options.update(**step_options)
-                self._step = MaxStepGenerator(**options)
-            else:
-                options['num_extrap'] = 0
-                options['step_nom'] = None if step is None else 1.0
-                options.update(**step_options)
-                self._step = MinStepGenerator(base_step=step, **options)
+            return step
+        step_options = dict(step_ratio=None, num_extrap=14)
+        if step is None and self.method not in ['complex', 'multicomplex']:
+            step_options.update(**options)
+            return MaxStepGenerator(**step_options)
+
+        step_options['num_extrap'] = 0
+        step_options['step_nom'] = None if step is None else 1.0
+        step_options.update(**options)
+        return MinStepGenerator(base_step=step, **step_options)
 
     def _set_derivative(self):
         if self.n == 0:
@@ -205,10 +197,10 @@ class Derivative(_Limit):
         return self._vstack(results, steps)
 
     def _derivative_nonzero_order(self, xi, args, kwds):
-        diff, f = self._get_functions()
+        diff, f = self._get_functions(args, kwds)
         steps, step_ratio = self._get_steps(xi)
-        fxi = self._eval_first(f, xi, *args, **kwds)
-        results = [diff(f, fxi, xi, h, *args, **kwds) for h in steps]
+        fxi = self._eval_first(f, xi)
+        results = [diff(f, fxi, xi, h) for h in steps]
 
         self.set_richardson_rule(step_ratio, self.richardson_terms)
 
@@ -267,9 +259,12 @@ class Derivative(_Limit):
         name = first + middle + last
         return name
 
-    def _get_functions(self):
+    def _get_functions(self, args, kwds):
         name = self._get_function_name()
-        return getattr(self, name), self.fun
+        fun = self.fun
+        def f(x):
+            return fun(x, *args, **kwds)
+        return getattr(self, name), f
 
     def _get_steps(self, xi):
         method, n, order = self.method, self.n, self._method_order
@@ -298,9 +293,9 @@ class Derivative(_Limit):
                 self.method in ['forward', 'backward'] or
                 self.method == 'complex' and self._derivative_mod_four_is_zero)
 
-    def _eval_first(self, f, x, *args, **kwds):
+    def _eval_first(self, f, x):
         if self._eval_first_condition():
-            return f(x, *args, **kwds)
+            return f(x)
         return 0.0
 
     def __call__(self, x, *args, **kwds):
@@ -418,60 +413,54 @@ class Derivative(_Limit):
         return der_init[:ne], h[:ne], original_shape
 
     @staticmethod
-    def _central_even(f, f_x0i, x0i, h, *args, **kwds):
-        return (f(x0i + h, *args, **kwds) +
-                f(x0i - h, *args, **kwds)) / 2.0 - f_x0i
+    def _central_even(f, f_x0i, x0i, h):
+        return (f(x0i + h) + f(x0i - h)) / 2.0 - f_x0i
 
     @staticmethod
-    def _central(f, f_x0i, x0i, h, *args, **kwds):
-        return (f(x0i + h, *args, **kwds) -
-                f(x0i - h, *args, **kwds)) / 2.0
+    def _central(f, f_x0i, x0i, h):
+        return (f(x0i + h) - f(x0i - h)) / 2.0
 
     @staticmethod
-    def _forward(f, f_x0i, x0i, h, *args, **kwds):
-        return f(x0i + h, *args, **kwds) - f_x0i
+    def _forward(f, f_x0i, x0i, h):
+        return f(x0i + h) - f_x0i
 
     @staticmethod
-    def _backward(f, f_x0i, x0i, h, *args, **kwds):
-        return f_x0i - f(x0i - h, *args, **kwds)
+    def _backward(f, f_x0i, x0i, h):
+        return f_x0i - f(x0i - h)
 
     @staticmethod
-    def _complex(f, fx, x, h, *args, **kwds):
-        return f(x + 1j * h, *args, **kwds).imag
+    def _complex(f, fx, x, h):
+        return f(x + 1j * h).imag
 
     @staticmethod
-    def _complex_odd(f, fx, x, h, *args, **kwds):
+    def _complex_odd(f, fx, x, h):
         ih = h * _SQRT_J
-        return ((_SQRT_J / 2.) * (f(x + ih, *args, **kwds) -
-                                  f(x - ih, *args, **kwds))).imag
+        return ((_SQRT_J / 2.) * (f(x + ih) - f(x - ih))).imag
 
     @staticmethod
-    def _complex_odd_higher(f, fx, x, h, *args, **kwds):
+    def _complex_odd_higher(f, fx, x, h):
         ih = h * _SQRT_J
-        return ((3 * _SQRT_J) * (f(x + ih, *args, **kwds) -
-                                 f(x - ih, *args, **kwds))).real
+        return ((3 * _SQRT_J) * (f(x + ih) - f(x - ih))).real
 
     @staticmethod
-    def _complex_even(f, fx, x, h, *args, **kwds):
+    def _complex_even(f, fx, x, h):
         ih = h * _SQRT_J
-        return (f(x + ih, *args, **kwds) +
-                f(x - ih, *args, **kwds)).imag
+        return (f(x + ih) + f(x - ih)).imag
 
     @staticmethod
-    def _complex_even_higher(f, fx, x, h, *args, **kwds):
+    def _complex_even_higher(f, fx, x, h):
         ih = h * _SQRT_J
-        return 12.0 * (f(x + ih, *args, **kwds) +
-                       f(x - ih, *args, **kwds) - 2 * fx).real
+        return 12.0 * (f(x + ih) + f(x - ih) - 2 * fx).real
 
     @staticmethod
-    def _multicomplex(f, fx, x, h, *args, **kwds):
+    def _multicomplex(f, fx, x, h):
         z = Bicomplex(x + 1j * h, 0)
-        return Bicomplex.__array_wrap__(f(z, *args, **kwds)).imag
+        return Bicomplex.__array_wrap__(f(z)).imag
 
     @staticmethod
-    def _multicomplex2(f, fx, x, h, *args, **kwds):
+    def _multicomplex2(f, fx, x, h):
         z = Bicomplex(x + 1j * h, h)
-        return Bicomplex.__array_wrap__(f(z, *args, **kwds)).imag12
+        return Bicomplex.__array_wrap__(f(z)).imag12
 
 
 def directionaldiff(f, x0, vec, **options):
@@ -615,38 +604,32 @@ class Jacobian(Derivative):
             yield ei
             ei[k] = 0
 
-    def _central(self, f, fx, x, h, *args, **kwds):
+    def _central(self, f, fx, x, h):
         n = len(x)
-        return np.array([(f(x + hi, *args, **kwds) -
-                          f(x - hi, *args, **kwds)) / 2.0
-                         for hi in self._increments(n, h)])
+        return np.array([(f(x + hi) - f(x - hi)) / 2.0 for hi in self._increments(n, h)])
 
-    def _backward(self, f, fx, x, h, *args, **kwds):
+    def _backward(self, f, fx, x, h):
         n = len(x)
-        return np.array([fx - f(x - hi, *args, **kwds)
-                         for hi in self._increments(n, h)])
+        return np.array([fx - f(x - hi) for hi in self._increments(n, h)])
 
-    def _forward(self, f, fx, x, h, *args, **kwds):
+    def _forward(self, f, fx, x, h):
         n = len(x)
-        return np.array([f(x + hi, *args, **kwds) - fx
-                         for hi in self._increments(n, h)])
+        return np.array([f(x + hi) - fx for hi in self._increments(n, h)])
 
-    def _complex(self, f, fx, x, h, *args, **kwds):
+    def _complex(self, f, fx, x, h):
         n = len(x)
-        return np.array([f(x + 1j * ih, *args, **kwds).imag
-                         for ih in self._increments(n, h)])
+        return np.array([f(x + 1j * ih).imag for ih in self._increments(n, h)])
 
-    def _complex_odd(self, f, fx, x, h, *args, **kwds):
+    def _complex_odd(self, f, fx, x, h):
         n = len(x)
         j1 = _SQRT_J
-        return np.array([((j1 / 2.) * (f(x + j1 * ih, *args, **kwds) -
-                                       f(x - j1 * ih, *args, **kwds))).imag
+        return np.array([((j1 / 2.) * (f(x + j1 * ih) - f(x - j1 * ih))).imag
                          for ih in self._increments(n, h)])
 
-    def _multicomplex(self, f, fx, x, h, *args, **kwds):
+    def _multicomplex(self, f, fx, x, h):
         n = len(x)
         cmplx_wrap = Bicomplex.__array_wrap__
-        partials = [cmplx_wrap(f(Bicomplex(x + 1j*hi, 0), *args, **kwds)).imag
+        partials = [cmplx_wrap(f(Bicomplex(x + 1j*hi, 0))).imag
                     for hi in self._increments(n, h)]
         return np.array(partials)
 
@@ -659,10 +642,10 @@ class Jacobian(Derivative):
         return [np.array([one * h[i] for i in range(n)]) for h in steps]
 
     def _derivative_nonzero_order(self, xi, args, kwds):
-        diff, f = self._get_functions()
+        diff, f = self._get_functions(args, kwds)
         steps, step_ratio = self._get_steps(xi)
-        fxi = f(xi, *args, **kwds)
-        results = [diff(f, fxi, xi, h, *args, **kwds) for h in steps]
+        fxi = f(xi)
+        results = [diff(f, fxi, xi, h) for h in steps]
 
         steps2 = self._expand_steps(steps, xi, fxi)
 
@@ -778,58 +761,51 @@ class Hessdiag(Derivative):
                  fset=lambda cls, n: cls._set_derivative())
 
     @staticmethod
-    def _central2(f, fx, x, h, *args, **kwds):
+    def _central2(f, fx, x, h):
         """Eq. 8"""
         n = len(x)
         increments = np.identity(n) * h
-        partials = [(f(x + 2 * hi, *args, **kwds) +
-                     f(x - 2 * hi, *args, **kwds) + 2 * fx -
-                     2 * f(x + hi, *args, **kwds) -
-                     2 * f(x - hi, *args, **kwds)) / 4.0
+        partials = [(f(x + 2 * hi) + f(x - 2 * hi)
+                     + 2 * fx - 2 * f(x + hi) - 2 * f(x - hi)) / 4.0
                     for hi in increments]
         return np.array(partials)
 
     @staticmethod
-    def _central_even(f, fx, x, h, *args, **kwds):
+    def _central_even(f, fx, x, h):
         """Eq. 9"""
         n = len(x)
         increments = np.identity(n) * h
-        partials = [(f(x + hi, *args, **kwds) +
-                     f(x - hi, *args, **kwds)) / 2.0 - fx
-                    for hi in increments]
+        partials = [(f(x + hi) + f(x - hi)) / 2.0 - fx for hi in increments]
         return np.array(partials)
 
     @staticmethod
-    def _backward(f, fx, x, h, *args, **kwds):
+    def _backward(f, fx, x, h):
         n = len(x)
         increments = np.identity(n) * h
-        partials = [fx - f(x - hi, *args, **kwds) for hi in increments]
+        partials = [fx - f(x - hi) for hi in increments]
         return np.array(partials)
 
     @staticmethod
-    def _forward(f, fx, x, h, *args, **kwds):
+    def _forward(f, fx, x, h):
         n = len(x)
         increments = np.identity(n) * h
-        partials = [f(x + hi, *args, **kwds) - fx for hi in increments]
+        partials = [f(x + hi) - fx for hi in increments]
         return np.array(partials)
 
     @staticmethod
-    def _multicomplex2(f, fx, x, h, *args, **kwds):
+    def _multicomplex2(f, fx, x, h):
         n = len(x)
         increments = np.identity(n) * h
         cmplx_wrap = Bicomplex.__array_wrap__
-        partials = [cmplx_wrap(f(Bicomplex(x + 1j * hi, hi), *args,
-                                 **kwds)).imag12
+        partials = [cmplx_wrap(f(Bicomplex(x + 1j * hi, hi))).imag12
                     for hi in increments]
         return np.array(partials)
 
     @staticmethod
-    def _complex_even(f, fx, x, h, *args, **kwargs):
+    def _complex_even(f, fx, x, h):
         n = len(x)
         increments = np.identity(n) * h * (1j + 1) / np.sqrt(2)
-        partials = [(f(x + hi, *args, **kwargs) +
-                     f(x - hi, *args, **kwargs)).imag
-                    for hi in increments]
+        partials = [(f(x + hi) + f(x - hi)).imag for hi in increments]
         return np.array(partials)
 
     def __call__(self, x, *args, **kwds):
@@ -920,7 +896,7 @@ class Hessian(Hessdiag):
         return False
 
     @staticmethod
-    def _complex_even(f, fx, x, h, *args, **kwargs):
+    def _complex_even(f, fx, x, h):
         """
         Calculate Hessian with complex-step derivative approximation
 
@@ -931,14 +907,13 @@ class Hessian(Hessdiag):
         hess = 2. * np.outer(h, h)
         for i in range(n):
             for j in range(i, n):
-                hess[i, j] = (f(x + 1j * ee[i] + ee[j], *args, **kwargs) -
-                              f(x + 1j * ee[i] - ee[j], *args, **kwargs)
-                              ).imag / hess[j, i]
+                hess[i, j] = (f(x + 1j * ee[i] + ee[j])
+                              - f(x + 1j * ee[i] - ee[j])).imag / hess[j, i]
                 hess[j, i] = hess[i, j]
         return hess
 
     @staticmethod
-    def _multicomplex2(f, fx, x, h, *args, **kwargs):
+    def _multicomplex2(f, fx, x, h):
         """Calculate Hessian with Bicomplex-step derivative approximation"""
         n = len(x)
         ee = np.diag(h)
@@ -947,32 +922,28 @@ class Hessian(Hessdiag):
         for i in range(n):
             for j in range(i, n):
                 zph = Bicomplex(x + 1j * ee[i, :], ee[j, :])
-                hess[i, j] = cmplx_wrap(f(zph, *args,
-                                          **kwargs)).imag12 / hess[j, i]
+                hess[i, j] = cmplx_wrap(f(zph)).imag12 / hess[j, i]
                 hess[j, i] = hess[i, j]
         return hess
 
     @staticmethod
-    def _central_even(f, fx, x, h, *args, **kwargs):
+    def _central_even(f, fx, x, h):
         """Eq 9."""
         n = len(x)
         ee = np.diag(h)
         hess = np.outer(h, h)
         for i in range(n):
-            hess[i, i] = (f(x + 2 * ee[i, :], *args, **kwargs) - 2 * fx +
-                          f(x - 2 * ee[i, :], *args, **kwargs)
-                          ) / (4. * hess[i, i])
+            hess[i, i] = (f(x + 2 * ee[i, :]) - 2 * fx + f(x - 2 * ee[i, :])) / (4. * hess[i, i])
             for j in range(i + 1, n):
-                hess[i, j] = (f(x + ee[i, :] + ee[j, :], *args, **kwargs) -
-                              f(x + ee[i, :] - ee[j, :], *args, **kwargs) -
-                              f(x - ee[i, :] + ee[j, :], *args, **kwargs) +
-                              f(x - ee[i, :] - ee[j, :], *args, **kwargs)
-                              ) / (4. * hess[j, i])
+                hess[i, j] = (f(x + ee[i, :] + ee[j, :])
+                              - f(x + ee[i, :] - ee[j, :])
+                              - f(x - ee[i, :] + ee[j, :])
+                              + f(x - ee[i, :] - ee[j, :])) / (4. * hess[j, i])
                 hess[j, i] = hess[i, j]
         return hess
 
     @staticmethod
-    def _central2(f, fx, x, h, *args, **kwargs):
+    def _central2(f, fx, x, h):
         """Eq. 8"""
         n = len(x)
         ee = np.diag(h)
@@ -980,38 +951,37 @@ class Hessian(Hessdiag):
         g = np.empty(n, dtype=dtype)
         gg = np.empty(n, dtype=dtype)
         for i in range(n):
-            g[i] = f(x + ee[i], *args, **kwargs)
-            gg[i] = f(x - ee[i], *args, **kwargs)
+            g[i] = f(x + ee[i])
+            gg[i] = f(x - ee[i])
 
         hess = np.empty((n, n), dtype=dtype)
         np.outer(h, h, out=hess)
         for i in range(n):
             for j in range(i, n):
-                hess[i, j] = (f(x + ee[i, :] + ee[j, :], *args, **kwargs) -
-                              g[i] - g[j] + fx +
-                              f(x - ee[i, :] - ee[j, :], *args, **kwargs) -
-                              gg[i] - gg[j] + fx) / (2 * hess[j, i])
+                hess[i, j] = (f(x + ee[i, :] + ee[j, :])
+                              + f(x - ee[i, :] - ee[j, :])
+                              - g[i] - g[j] + fx
+                              - gg[i] - gg[j] + fx) / (2 * hess[j, i])
                 hess[j, i] = hess[i, j]
         return hess
 
     @staticmethod
-    def _forward(f, fx, x, h, *args, **kwargs):
+    def _forward(f, fx, x, h):
         """Eq. 7"""
         n = len(x)
         ee = np.diag(h)
         dtype = np.result_type(fx)
         g = np.empty(n, dtype=dtype)
         for i in range(n):
-            g[i] = f(x + ee[i, :], *args, **kwargs)
+            g[i] = f(x + ee[i, :])
 
         hess = np.empty((n, n), dtype=dtype)
         np.outer(h, h, out=hess)
         for i in range(n):
             for j in range(i, n):
-                hess[i, j] = (f(x + ee[i, :] + ee[j, :], *args, **kwargs) -
-                              g[i] - g[j] + fx) / hess[j, i]
+                hess[i, j] = (f(x + ee[i, :] + ee[j, :]) - g[i] - g[j] + fx) / hess[j, i]
                 hess[j, i] = hess[i, j]
         return hess
 
-    def _backward(self, f, fx, x, h, *args, **kwargs):
-        return self._forward(f, fx, x, -h, *args, **kwargs)
+    def _backward(self, f, fx, x, h):
+        return self._forward(f, fx, x, -h)
