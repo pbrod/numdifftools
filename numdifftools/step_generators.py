@@ -225,9 +225,11 @@ class MinStepGenerator(object):
         self._base_step = base_step
 
     def _num_step_divisor(self, method, n, order):
-        if method in ['central', 'central2', 'complex', 'multicomplex']:
-            return 4 if method == 'complex' and (n > 1 or order >= 4) else 2
-        return 1
+        complex_divisior = 4 if (n > 1 or order >= 4) else 2
+        return dict(central=2,
+                    central2=2,
+                    complex=complex_divisior,
+                    multicomplex=2).get(method, 1)
 
     @property
     def min_num_steps(self):
