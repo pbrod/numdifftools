@@ -224,14 +224,17 @@ class MinStepGenerator(object):
     def base_step(self, base_step):
         self._base_step = base_step
 
+    def _num_step_divisor(self, method, n, order):
+        if method in ['central', 'central2', 'complex', 'multicomplex']:
+            return 4 if method == 'complex' and (n > 1 or order >= 4) else 2
+        return 1
+
     @property
     def min_num_steps(self):
         _x, method, n, order = self._state
         num_steps = int(n + order - 1)
-        if method in ['central', 'central2', 'complex', 'multicomplex']:
-            step = 4 if method == 'complex' and (n > 1 or order >= 4) else 2
-            num_steps = num_steps // step
-        return max(num_steps, 1)
+        divisor = self._num_step_divisor(method, n, order)
+        return max(num_steps // divisor, 1)
 
     @property
     def num_steps(self):
