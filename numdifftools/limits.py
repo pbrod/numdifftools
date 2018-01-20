@@ -8,9 +8,10 @@ Release: 1.0
 Release date: 5/23/2008
 
 """
-from __future__ import division, print_function
+from __future__ import absolute_import, division, print_function
 import numpy as np
 from collections import namedtuple
+from functools import partial
 import warnings
 from numdifftools.step_generators import MinStepGenerator
 from numdifftools.extrapolation import Richardson, dea3
@@ -122,11 +123,15 @@ class _Limit(object):
     def step(self):
         return self._step
 
-    @step.setter
-    def step(self, step):
+    def _parse_step_options(self, step):
         options = {}
         if isinstance(step, tuple) and isinstance(step[-1], dict):
             step, options = step
+        return step, options
+
+    @step.setter
+    def step(self, step_options):
+        step, options = self._parse_step_options(step_options)
         if hasattr(step, '__call__'):
             self._step = step
         else:
@@ -333,8 +338,8 @@ class Limit(_Limit):
 
     """
 
-    def _fun(self, z, dz, *args, **kwds):
-        return self.fun(z+dz, *args, **kwds)
+    def _fun(self, z, dz, args, kwds):
+        return self.fun(z + dz, *args, **kwds)
 
     def _get_steps(self, xi):
         return [step for step in self.step(xi)]
@@ -343,33 +348,34 @@ class Limit(_Limit):
         self.richardson = Richardson(step_ratio=step_ratio, step=1, order=1,
                                      num_terms=num_terms)
 
-    def _lim(self, f, z, args, kwds):
+    def _lim(self, f, z):
         sign = dict(forward=1, above=1, backward=-1, below=-1)[self.method]
         steps = [sign * step for step in self.step(z)]
 
         self._set_richardson_rule(self.step.step_ratio, self.order + 1)
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            sequence = [f(z, h, *args, **kwds) for h in steps]
+            sequence = [f(z, h) for h in steps]
         results = self._vstack(sequence, steps)
         lim_fz, info = self._extrapolate(*results)
         return lim_fz, info
 
     def limit(self, x, *args, **kwds):
         z = np.asarray(x)
-        fz, info = self._lim(self._fun, z, args, kwds)
+        f = partial(self._fun, args=args, kwds=kwds)
+        fz, info = self._lim(f, z)
         if self.full_output:
             return fz, info
         return fz
 
-    def _call_lim(self, fz, z, f, args, kwds):
+    def _call_lim(self, fz, z, f):
         err = np.zeros_like(fz)
         final_step = np.zeros_like(fz)
         index = np.zeros_like(fz, dtype=int)
         k = np.flatnonzero(np.isnan(fz))
         if k.size > 0:
             fz = np.where(np.isnan(fz), 0, fz)
-            lim_fz, info1 = self._lim(f, z.flat[k], args, kwds)
+            lim_fz, info1 = self._lim(f, z.flat[k])
             np.put(fz, k, lim_fz)
             if self.full_output:
                 np.put(final_step, k, info1.final_step)
@@ -379,12 +385,12 @@ class Limit(_Limit):
 
     def __call__(self, x, *args, **kwds):
         z = np.asarray(x)
-        f = self._fun
+        f = partial(self._fun, args=args, kwds=kwds)
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            fz = f(z, 0, *args, **kwds)
+            fz = f(z, 0)
 
-        fz, info = self._call_lim(fz, z, f, args, kwds)
+        fz, info = self._call_lim(fz, z, f)
 
         if self.full_output:
             return fz, info
@@ -486,7 +492,7 @@ class Residue(Limit):
         super(Residue, self).__init__(f, step=step, method=method, order=order,
                                       full_output=full_output, **options)
 
-    def _fun(self, z, dz, *args, **kwds):
+    def _fun(self, z, dz, args, kwds):
         return self.fun(z + dz, *args, **kwds) * (dz ** self.pole_order)
 
     def __call__(self, x, *args, **kwds):
