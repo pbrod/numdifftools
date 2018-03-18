@@ -10,6 +10,7 @@
 __pycache__/*
 .cache/*
 .*.swp
+*/.ipynb_checkpoints/*
 
 # Project files
 .ropeproject
@@ -35,7 +36,7 @@ coverage.xml
 build/*
 dist/*
 sdist/*
-docs/_rst/*
+docs/api/*
 docs/_build/*
 cover/*
 MANIFEST
