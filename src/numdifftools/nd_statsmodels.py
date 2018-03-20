@@ -33,8 +33,8 @@ class Hessian(_Common):
     method : {'central', 'complex', 'forward'}
         defines the method used in the approximation.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import numpy as np
     >>> import numdifftools.nd_statsmodels as nd
 
@@ -149,8 +149,9 @@ class Gradient(Jacobian):
         x * _EPS**(1/3) for method==`central`.
     method : {'central', 'complex', 'forward'}
         defines the method used in the approximation.
-    Example
-    -------
+
+    Examples
+    --------
     >>> import numpy as np
     >>> import numdifftools.nd_statsmodels as nd
     >>> fun = lambda x: np.sum(x**2)
@@ -234,9 +235,6 @@ def approx_fprime(x, f, epsilon=None, args=(), kwargs=None, centered=True):
     by fun (e.g., with a value for each observation), it returns a 3d array
     with the Jacobian of each observation with shape xk x nobs x xk. I.e.,
     the Jacobian of the first observation would be [:, 0, :]
-
-     Example
-    -------
 
     """
     kwargs = {} if kwargs is None else kwargs

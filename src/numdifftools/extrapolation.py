@@ -210,8 +210,8 @@ class EpsAlg(object):
 
     This implementaion is from [1]_
 
-    Reference
-    ---------
+    References
+    ----------
     ..  [1] E. J. Weniger (1989)
             "Nonlinear sequence transformations for the acceleration of
             convergence and the summation of divergent series"
@@ -335,8 +335,8 @@ def dea3(v0, v1, v2, symmetric=False):
     convergence. The routine is based on the epsilon algorithm of
     P. Wynn, see [1]_.
 
-     Example
-     -------
+     Examples
+     --------
      # integrate sin(x) from 0 to pi/2
 
      >>> import numpy as np
@@ -356,8 +356,8 @@ def dea3(v0, v1, v2, symmetric=False):
      --------
      dea
 
-     Reference
-     ---------
+     References
+     ----------
      .. [1] C. Brezinski and M. Redivo Zaglia (1991)
             "Extrapolation Methods. Theory and Practice", North-Holland.
 
@@ -407,8 +407,8 @@ class Richardson(object):
     we can fit a polynomial to that sequence of approximations.
     This is exactly what this class does.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import numpy as np
     >>> import numdifftools as nd
     >>> n = 3

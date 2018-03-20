@@ -272,8 +272,8 @@ class Limit(_Limit):
     accurate. The `step_ratio` MUST be a scalar larger than 1. A value in the
     range [2,100] is recommended. 4 seems a good compromise.
 
-    Example
-    -------
+    Examples
+    --------
      Compute the limit of sin(x)./x, at x == 0. The limit is 1.
 
     >>> import numpy as np

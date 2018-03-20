@@ -60,8 +60,8 @@ def fd_weights_all(x, x0=0, n=1):
     ---------
     fd_weights
 
-    Reference
-    ---------
+    References
+    ----------
     B. Fornberg (1998)
     "Calculation of weights_and_points in finite difference formulas",
     SIAM Review 40, pp. 685-691.
@@ -107,8 +107,8 @@ def fd_weights(x, x0=0, n=1):
         order of derivative. Note for n=0 this can be used to evaluate the
         interpolating polynomial itself.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import numpy as np
     >>> import numdifftools.fornberg as ndf
     >>> x = np.linspace(-1, 1, 5) * 1e-3
@@ -146,8 +146,8 @@ def fd_derivative(fx, x, n=1, m=2):
     vector function f(x) using the Fornberg finite difference method.
     Restrictions: 0 < n < len(x) and 2*mm+2 <= len(x)
 
-    Example
-    -------
+    Examples
+    --------
     >>> import numpy as np
     >>> import numdifftools.fornberg as ndf
     >>> x = np.linspace(-1, 1, 25)
@@ -363,8 +363,8 @@ def taylor(fun, z0=0, n=1, r=0.0061, num_extrap=3, step_ratio=1.6, **kwds):
     an answer will still be computed and returned but should be used with
     caution.
 
-    Example
-    -------
+    Examples
+    --------
 
     Compute the first 6 taylor coefficients 1 / (1 - z) expanded round  z0 = 0:
     >>> import numdifftools.fornberg as ndf
@@ -519,8 +519,8 @@ def derivative(fun, z0, n=1, **kwds):
     an answer will still be computed and returned but should be used with
     caution.
 
-    Example
-    -------
+    Examples
+    --------
 
     To compute the first five derivatives of 1 / (1 - z) at z = 0:
     Compute the first 6 taylor derivatives of 1 / (1 - z) at z0 = 0:

@@ -157,7 +157,7 @@ based on the adaptive numerical differentiation toolbox written in
 
 Numdifftools has as of version 0.9 been extended with some of the functionality
 found in the statsmodels.tools.numdiff module written by Josef Perktold
-[Perktold2014]_.
+[Perktold2014]_ and in the project report of [Verheyleweghen2014]_.
 
 
 References

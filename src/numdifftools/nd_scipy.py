@@ -98,8 +98,9 @@ class Gradient(Jacobian):
         x * _EPS**(1/3) for method==`central`.
     method : {'central', 'complex', 'forward'}
         defines the method used in the approximation.
-    Example
-    -------
+
+    Examples
+    --------
     >>> import numpy as np
     >>> import numdifftools.nd_scipy as nd
     >>> fun = lambda x: np.sum(x**2)

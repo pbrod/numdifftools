@@ -88,8 +88,8 @@ _cmn_doc = """
     For all methods one should be careful in decreasing the step size too much
     due to round-off errors.
     %(extra_note)s
-    Reference
-    ---------
+    References
+    ----------
     Ridout, M.S. (2009) Statistical applications of the complex-step method
         of numerical differentiation. The American Statistician, 63, 66-74
 
@@ -128,8 +128,8 @@ class Derivative(_Limit):
     der : ndarray
        array of derivatives
     """, example="""
-    Example
-    -------
+    Examples
+    --------
     >>> import numpy as np
     >>> import numdifftools as nd
 
@@ -485,8 +485,8 @@ def directionaldiff(f, x0, vec, **options):
     dder:  scalar
         estimate of the first derivative of f in the specified direction.
 
-    Example
-    -------
+    Examples
+    --------
     At the global minimizer (1,1) of the Rosenbrock function,
     compute the directional derivative in the direction [1 2]
 
@@ -535,8 +535,8 @@ class Jacobian(Derivative):
     with the Jacobian of each observation with shape xk x nobs x xk. I.e.,
     the Jacobian of the first observation would be [:, 0, :]
     """, example="""
-    Example
-    -------
+    Examples
+    --------
     >>> import numdifftools as nd
 
     #(nonlinear least squares)
@@ -683,8 +683,8 @@ class Gradient(Jacobian):
     If x0 is an n x m array, then fun is assumed to be a function of n * m
     variables.
     """, example="""
-    Example
-    -------
+    Examples
+    --------
     >>> import numpy as np
     >>> import numdifftools as nd
     >>> fun = lambda x: np.sum(x**2)
@@ -739,8 +739,8 @@ class Hessdiag(Derivative):
     also suffer more from numerical problems. First order methods is usually
     not recommended.
     """, example="""
-    Example
-    -------
+    Examples
+    --------
     >>> import numpy as np
     >>> import numdifftools as nd
     >>> fun = lambda x : x[0] + x[1]**2 + x[2]**3
@@ -850,8 +850,8 @@ class Hessian(Hessdiag):
     where :math:`e_j` is a vector with element :math:`j` is one and the rest
     are zero and :math:`d_j` is a scalar spacing :math:`steps_j`.
     """, example="""
-    Example
-    -------
+    Examples
+    --------
     >>> import numpy as np
     >>> import numdifftools as nd
 

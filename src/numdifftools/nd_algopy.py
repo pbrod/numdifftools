@@ -41,8 +41,8 @@ partial derivatives of a function with respect to many inputs, as is needed
 for gradient-based optimization algorithms. Algoritmic differentiation
 solves all of these problems.
 
-Reference
----------
+References
+----------
 Sebastian F. Walter and Lutz Lehmann 2013,
 "Algorithmic differentiation in Python with AlgoPy",
 in Journal of Computational Science, vol 4, no 5, pp 334 - 344,
@@ -164,8 +164,8 @@ class Derivative(_Derivative):
     der : ndarray
        array of derivatives
     """, example="""
-    Example
-    -------
+    Examples
+    --------
     # 1'st and 2'nd derivative of exp(x), at x == 1
 
     >>> import numpy as np
@@ -226,8 +226,8 @@ class Gradient(_Derivative):
     grad : array
         gradient
     """, example="""
-    Example
-    -------
+    Examples
+    --------
     >>> import numdifftools.nd_algopy as nda
     >>> fun = lambda x: np.sum(x**2)
     >>> df = nda.Gradient(fun, method='reverse')
@@ -285,8 +285,8 @@ class Jacobian(Gradient):
     jacob : array
         Jacobian
     """, example="""
-    Example
-    -------
+    Examples
+    --------
     >>> import numdifftools.nd_algopy as nda
 
     #(nonlinear least squares)
@@ -364,8 +364,8 @@ class Hessian(_Derivative):
     hess : ndarray
        array of partial second derivatives, Hessian
     """, extra_note='', example="""
-    Example
-    -------
+    Examples
+    --------
     >>> import numdifftools.nd_algopy as nda
 
     # Rosenbrock function, minimized at [1,1]
@@ -428,8 +428,8 @@ class Hessdiag(Hessian):
     hessdiag : ndarray
        Hessian diagonal array of partial second order derivatives.
     """, extra_note='', example="""
-    Example
-    -------
+    Examples
+    --------
     >>> import numdifftools.nd_algopy as nda
 
     # Rosenbrock function, minimized at [1,1]
@@ -501,8 +501,8 @@ def directionaldiff(f, x0, vec, **options):
     dder:  scalar
         estimate of the first derivative of fun in the specified direction.
 
-    Example
-    -------
+    Examples
+    --------
     At the global minimizer (1,1) of the Rosenbrock function,
     compute the directional derivative in the direction [1 2]
 

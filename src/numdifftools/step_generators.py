@@ -75,9 +75,8 @@ class BasicMaxStepGenerator(object):
     offset : real scalar, optional, default 0
         offset to the base step
 
-
-    Example
-    -------
+    Examples
+    --------
     >>> from numdifftools.step_generators import BasicMaxStepGenerator
     >>> step_gen = BasicMaxStepGenerator(base_step=2.0, step_ratio=2,
     ...                                  num_steps=4)
@@ -126,9 +125,8 @@ class BasicMinStepGenerator(BasicMaxStepGenerator):
     offset : real scalar, optional, default 0
         offset to the base step
 
-
-    Example
-    -------
+    Examples
+    --------
     >>> from numdifftools.step_generators import BasicMinStepGenerator
     >>> step_gen = BasicMinStepGenerator(base_step=0.25, step_ratio=2,
     ...                                  num_steps=4)
