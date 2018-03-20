@@ -39,8 +39,10 @@ class Dea(object):
     is stored in the first (LIMEXP+2) entries of EPSTAB.
 
 
-    LIST OF MAJOR VARIABLES
-    -----------------------
+    Notes
+    -----
+    List of major variables:
+
     E0,E1,E2,E3 - DOUBLE PRECISION
                   The 4 elements on which the computation of
                   a new element in the epsilon table is based.
@@ -328,8 +330,8 @@ def dea3(v0, v1, v2, symmetric=False):
     abserr : array-like
         absolute error estimate
 
-    Description
-    -----------
+    Notes
+    -----
     DEA3 attempts to extrapolate nonlinearly to a better estimate
     of the sequence's limiting value, thus improving the rate of
     convergence. The routine is based on the epsilon algorithm of

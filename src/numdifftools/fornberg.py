@@ -56,8 +56,8 @@ def fd_weights_all(x, x0=0, n=1):
     The Fornberg algorithm is much more stable numerically than regular
     vandermonde systems for large values of n.
 
-    See also:
-    ---------
+    See also
+    --------
     fd_weights
 
     References

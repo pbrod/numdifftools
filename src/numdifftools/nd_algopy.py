@@ -87,8 +87,8 @@ _cmn_doc = """
     most a small constant factor more arithmetic operations than the original
     program.
     %(extra_note)s
-    Reference
-    ---------
+    References
+    ----------
     Sebastian F. Walter and Lutz Lehmann 2013,
     "Algorithmic differentiation in Python with AlgoPy",
     in Journal of Computational Science, vol 4, no 5, pp 334 - 344,

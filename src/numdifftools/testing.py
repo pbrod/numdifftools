@@ -39,7 +39,7 @@ def capture_stdout_and_stderr():
     """
     Capture sys.stdout and sys.stderr
 
-    Example:
+    Examples
     --------
     >>> with capture_stdout_and_stderr() as out:
     ...    print('This is a test')

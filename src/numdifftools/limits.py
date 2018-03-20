@@ -248,8 +248,8 @@ class Limit(_Limit):
         final_step: ndarray
             final step used in approximation
 
-    Description
-    -----------
+    Notes
+    -----
     `Limit` computes the limit of a given function at a specified
     point, z0. When the function is evaluable at the point in question,
     this is a simple task. But when the function cannot be evaluated
