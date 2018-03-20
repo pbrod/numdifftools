@@ -990,5 +990,5 @@ class Hessian(Hessdiag):
         return hess
 
     @staticmethod
-    def _backward(self, f, fx, x, h):
+    def _backward(f, fx, x, h):
         return Hessian._forward(f, fx, x, -h)
