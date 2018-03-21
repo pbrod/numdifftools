@@ -349,10 +349,13 @@ def dea3(v0, v1, v2, symmetric=False):
      ...    x = linfun(k)
      ...    Ei[k] = np.trapz(np.sin(x),x)
      >>> [En, err] = nd.dea3(Ei[0], Ei[1], Ei[2])
-     >>> truErr = Ei-1.
-     >>> (truErr, err, En)
-     (array([ -2.00805680e-04,  -5.01999079e-05,  -1.25498825e-05]),
-     array([ 0.00020081]), array([ 1.]))
+     >>> truErr = np.abs(En-1.)
+     >>> np.all(truErr < err)
+     True
+     >>> np.allclose(En, 1)
+     True
+     >>> np.all(np.abs(Ei-1)<1e-3)
+     True
 
      See also
      --------
@@ -422,12 +425,13 @@ class Richardson(object):
     ...    h[k] = x[1]
     ...    Ei[k] = np.trapz(np.sin(x),x)
     >>> En, err, step = nd.Richardson(step=1, order=1)(Ei, h)
-    >>> truErr = Ei-1.
-    >>> (truErr, err, En)
-    (array([[ -2.00805680e-04],
-           [ -5.01999079e-05],
-           [ -1.25498825e-05]]), array([[ 0.00160242]]), array([[ 1.]]))
-
+    >>> truErr = np.abs(En-1.)
+    >>> np.all(truErr < err)
+    True
+    >>> np.all(np.abs(Ei-1)<1e-3)
+    True
+    >>> np.allclose(En, 1)
+    True
     """
 
     def __init__(self, step_ratio=2.0, step=1, order=1, num_terms=2):

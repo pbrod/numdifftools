@@ -746,11 +746,11 @@ class Hessdiag(Derivative):
     >>> fun = lambda x : x[0] + x[1]**2 + x[2]**3
     >>> Hfun = nd.Hessdiag(fun, full_output=True)
     >>> hd, info = Hfun([1,2,3])
-    >>> np.allclose(hd, [  0.,   2.,  18.])
+    >>> np.allclose(hd, [0.,   2.,  18.])
     True
 
-    >>> info.error_estimate < 1e-11
-    array([ True,  True,  True], dtype=bool)
+    >>> np.all(info.error_estimate < 1e-11)
+    True
     """, see_also="""
     See also
     --------

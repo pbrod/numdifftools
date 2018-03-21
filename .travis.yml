@@ -53,8 +53,10 @@ install:
     else
       conda install --yes pyqt=4.11 matplotlib;
     fi
+  - pip install setuptools
   - pip install coveralls
   - pip install algopy
+  - pip install pyscaffold
   - pip install codecov
   - pip install codeclimate-test-reporter
   - pip install hypothesis

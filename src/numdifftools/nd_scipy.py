@@ -105,8 +105,8 @@ class Gradient(Jacobian):
     >>> import numdifftools.nd_scipy as nd
     >>> fun = lambda x: np.sum(x**2)
     >>> dfun = nd.Gradient(fun)
-    >>> dfun([1,2,3])
-    array([ 2.,  4.,  6.])
+    >>> np.allclose(dfun([1,2,3]), [ 2.,  4.,  6.])
+    True
 
     # At [x,y] = [1,1], compute the numerical gradient
     # of the function sin(x-y) + y*exp(x)
@@ -115,8 +115,8 @@ class Gradient(Jacobian):
     >>> z = lambda xy: sin(xy[0]-xy[1]) + xy[1]*exp(xy[0])
     >>> dz = nd.Gradient(z)
     >>> grad2 = dz([1, 1])
-    >>> grad2
-    array([ 3.71828183,  1.71828183])
+    >>> np.allclose(grad2, [ 3.71828183,  1.71828183])
+    True
 
     # At the global minimizer (1,1) of the Rosenbrock function,
     # compute the gradient. It should be essentially zero.
