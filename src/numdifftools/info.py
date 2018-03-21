@@ -80,8 +80,8 @@ Compute gradient of sum(x**2)::
 
     >>> fun = lambda x: np.sum(x**2)
     >>> dfun = nd.Gradient(fun)
-    >>> dfun([1,2,3])
-    array([ 2.,  4.,  6.])
+    >>> np.allclose(dfun([1,2,3]), [ 2.,  4.,  6.])
+    True
 
 Compute the same with the easy to use interface to AlgoPy::
 
@@ -107,8 +107,8 @@ Compute gradient of sum(x**2)::
 
     >>> fun = lambda x: np.sum(x**2)
     >>> dfun = nda.Gradient(fun)
-    >>> dfun([1,2,3])
-    array([ 2.,  4.,  6.])
+    >>> np.allclose(dfun([1,2,3]), [ 2.,  4.,  6.])
+    True
 
 
 See also

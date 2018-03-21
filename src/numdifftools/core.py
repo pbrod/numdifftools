@@ -689,8 +689,8 @@ class Gradient(Jacobian):
     >>> import numdifftools as nd
     >>> fun = lambda x: np.sum(x**2)
     >>> dfun = nd.Gradient(fun)
-    >>> dfun([1,2,3])
-    array([ 2.,  4.,  6.])
+    >>> np.allclose(dfun([1,2,3]), [ 2.,  4.,  6.])
+    True
 
     # At [x,y] = [1,1], compute the numerical gradient
     # of the function sin(x-y) + y*exp(x)
