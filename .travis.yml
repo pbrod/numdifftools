@@ -19,7 +19,7 @@ python:
   - 2.7
   - 3.4
   - 3.5
-#  - 3.6
+  - 3.6
 notifications:
   email: false
  
@@ -47,13 +47,14 @@ before_install:
   - source activate condaenv
 # Install packages
 install:
-  - conda install --yes python=$TRAVIS_PYTHON_VERSION numpy scipy algopy pytest statsmodels coverage=4.3.4 line_profiler 
+  - conda install --yes python=$TRAVIS_PYTHON_VERSION numpy scipy pytest statsmodels coverage=4.3.4 line_profiler 
   - if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then
       conda install --yes pyqt=5 matplotlib;
     else
       conda install --yes pyqt=4.11 matplotlib;
     fi
   - pip install coveralls
+  - pip install algopy
   - pip install codecov
   - pip install codeclimate-test-reporter
   - pip install hypothesis
