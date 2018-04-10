@@ -1,4 +1,4 @@
-
+from __future__ import division
 import numpy as np
 from scipy.special import factorial
 from numdifftools.extrapolation import EPS, dea3
@@ -12,17 +12,17 @@ _INFO = namedtuple('info', ['error_estimate',
                             'function_count',
                             'iterations', 'failed'])
 CENTRAL_WEIGHTS_AND_POINTS = {
-    (1, 3): (np.array([-1, 0, 1]) / 2.0, np.arange(-1, 2)),
-    (1, 5): (np.array([1, -8, 0, 8, -1]) / 12.0, np.arange(-2, 3)),
-    (1, 7): (np.array([-1, 9, -45, 0, 45, -9, 1]) / 60.0, np.arange(-3, 4)),
-    (1, 9): (np.array([3, -32, 168, -672, 0, 672, -168, 32, -3], dtype=float) / 840.0,
+    (1, 3): (np.array([-1., 0, 1]) / 2.0, np.arange(-1, 2)),
+    (1, 5): (np.array([1., -8, 0, 8, -1]) / 12.0, np.arange(-2, 3)),
+    (1, 7): (np.array([-1., 9, -45, 0, 45, -9, 1]) / 60.0, np.arange(-3, 4)),
+    (1, 9): (np.array([3., -32, 168, -672, 0, 672, -168, 32, -3]) / 840.0,
              np.arange(-4, 5)),
-    (2, 3): (np.array([1, -2.0, 1]), np.arange(-1, 2)),
-    (2, 5): (np.array([-1, 16, -30, 16, -1], dtype=float) / 12.0, np.arange(-2, 3)),
-    (2, 7): (np.array([2, -27, 270, -490, 270, -27, 2], dtype=float) / 180.0,
+    (2, 3): (np.array([1., -2.0, 1]), np.arange(-1, 2)),
+    (2, 5): (np.array([-1., 16, -30, 16, -1]) / 12.0, np.arange(-2, 3)),
+    (2, 7): (np.array([2., -27, 270, -490, 270, -27, 2]) / 180.0,
              np.arange(-3, 4)),
-    (2, 9): (np.array([-9, 128, -1008, 8064, -14350,
-                       8064, -1008, 128, -9], dtype=float) / 5040.0,
+    (2, 9): (np.array([-9., 128, -1008, 8064, -14350,
+                       8064, -1008, 128, -9]) / 5040.0,
              np.arange(-4, 5))}
 
 
@@ -56,12 +56,12 @@ def fd_weights_all(x, x0=0, n=1):
     The Fornberg algorithm is much more stable numerically than regular
     vandermonde systems for large values of n.
 
-    See also:
-    ---------
+    See also
+    --------
     fd_weights
 
-    Reference
-    ---------
+    References
+    ----------
     B. Fornberg (1998)
     "Calculation of weights_and_points in finite difference formulas",
     SIAM Review 40, pp. 685-691.
@@ -107,8 +107,8 @@ def fd_weights(x, x0=0, n=1):
         order of derivative. Note for n=0 this can be used to evaluate the
         interpolating polynomial itself.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import numpy as np
     >>> import numdifftools.fornberg as ndf
     >>> x = np.linspace(-1, 1, 5) * 1e-3
@@ -146,8 +146,8 @@ def fd_derivative(fx, x, n=1, m=2):
     vector function f(x) using the Fornberg finite difference method.
     Restrictions: 0 < n < len(x) and 2*mm+2 <= len(x)
 
-    Example
-    -------
+    Examples
+    --------
     >>> import numpy as np
     >>> import numdifftools.fornberg as ndf
     >>> x = np.linspace(-1, 1, 25)
@@ -164,7 +164,7 @@ def fd_derivative(fx, x, n=1, m=2):
     _assert(n < num_x, 'len(x) must be larger than n')
     _assert(num_x == len(fx), 'len(x) must be equal len(fx)')
 
-    du = np.zeros(np.shape(fx))
+    du = np.zeros_like(fx)
 
     mm = n // 2 + m
     size = 2 * mm + 2  # stencil size at boundary
@@ -272,6 +272,37 @@ def _extrapolate(bs, rs, m):
     return extrap
 
 
+def _get_best_taylor_coefficients(bs, rs, m):
+    extrap = _extrapolate(bs, rs, m)
+    mvec = np.arange(m)
+    if len(extrap) > 2:
+        all_coefs, all_errors = dea3(extrap[:-2], extrap[1:-1], extrap[2:])
+        steps = np.atleast_1d(rs[4:])[:, None]*mvec
+        coefs, info = _Limit._get_best_estimate(all_coefs, all_errors, steps,
+                                                (m,))
+        errors = info.error_estimate
+    else:
+        errors = EPS / np.power(rs[2], mvec) * np.maximum(m1, m2)
+        coefs = extrap[-1]
+    return coefs, errors
+
+
+def _check_fft(bnc, m):
+    # If not degenerate, check for geometric progression in the FFT:
+    m1 = np.max(np.abs(bnc[:m // 2]))
+    m2 = np.max(np.abs(bnc[m // 2:]))
+    # If there's an extreme mismatch, then we can consider the
+    # geometric progression degenerate, whether one way or the other,
+    # and just alternate directions instead of trying to target a
+    # specific error bound (not ideal, but not a good reason to fail
+    # catastrophically):
+    #
+    # Note: only consider it degenerate if we've had a chance to steer
+    # the radius in the direction at least `min_iter` times:
+    degenerate = m1 < m2 * 1e-8 or m2 < m1 * 1e-8
+    return degenerate, m1, m2
+
+
 def taylor(fun, z0=0, n=1, r=0.0061, num_extrap=3, step_ratio=1.6, **kwds):
     """
     Return Taylor coefficients of complex analytic function using FFT
@@ -318,20 +349,22 @@ def taylor(fun, z0=0, n=1, r=0.0061, num_extrap=3, step_ratio=1.6, **kwds):
     method uses a Fast Fourier Transform to invert function evaluations around
     a circle into Taylor series coefficients and uses Richardson Extrapolation
     to improve and bound the estimate. Unlike real-valued finite differences,
-    the method searches for a desirable radius and so is reasonably insensitive
-    to the initial radius-to within a number of orders of magnitude at least.
-    For most cases, the default configuration is likely to succeed.
+    the method searches for a desirable radius and so is reasonably
+    insensitive to the initial radius-to within a number of orders of
+    magnitude at least. For most cases, the default configuration is likely to
+    succeed.
 
     Restrictions
 
-    The method uses the coefficients themselves to control the truncation error,
-    so the error will not be properly bounded for functions like low-order
-    polynomials whose Taylor series coefficients are nearly zero. If the error
-    cannot be bounded, degenerate flag will be set to true, and an answer will
-    still be computed and returned but should be used with caution.
+    The method uses the coefficients themselves to control the truncation
+    error, so the error will not be properly bounded for functions like
+    low-order polynomials whose Taylor series coefficients are nearly zero.
+    If the error cannot be bounded, degenerate flag will be set to true, and
+    an answer will still be computed and returned but should be used with
+    caution.
 
-    Example
-    -------
+    Examples
+    --------
 
     Compute the first 6 taylor coefficients 1 / (1 - z) expanded round  z0 = 0:
     >>> import numdifftools.fornberg as ndf
@@ -383,30 +416,17 @@ def taylor(fun, z0=0, n=1, r=0.0061, num_extrap=3, step_ratio=1.6, **kwds):
         rs.append(r)
         if direction_changes > 1 or degenerate:
             num_changes += 1
-            # if len(rs) >= 3:
             if num_changes >= 1 + num_extrap:
                 break
 
         if not degenerate:
-            # If not degenerate, check for geometric progression in the fourier
-            # transform:
-            bnc = bn / crat
-            m1 = np.max(np.abs(bnc[:m // 2]))
-            m2 = np.max(np.abs(bnc[m // 2:]))
-            # If there's an extreme mismatch, then we can consider the
-            # geometric progression degenerate, whether one way or the other,
-            # and just alternate directions instead of trying to target a
-            # specific error bound (not ideal, but not a good reason to fail
-            # catastrophically):
-            #
-            # Note: only consider it degenerate if we've had a chance to steer
-            # the radius in the direction at least `min_iter` times:
-            degenerate = i > min_iter and (m1 / m2 < 1e-8 or m2 / m1 < 1e-8)
+            degenerate, m1, m2 = _check_fft(bn/crat, m)
+            degenerate = degenerate and i > min_iter
 
         if degenerate:
             needs_smaller = i % 2 == 0
         else:
-            needs_smaller = (m1 != m1 or m2 != m2 or m1 < m2 or
+            needs_smaller = (np.isnan(m1) or np.isnan(m2) or m1 < m2 or
                              _poor_convergence(z0, r, fun, bn, mvec))
 
         if (previous_direction is not None and
@@ -428,16 +448,7 @@ def taylor(fun, z0=0, n=1, r=0.0061, num_extrap=3, step_ratio=1.6, **kwds):
     else:
         failed = True
 
-    extrap = _extrapolate(bs, rs, m)
-    if len(extrap) > 2:
-        all_coefs, all_errors = dea3(extrap[:-2], extrap[1:-1], extrap[2:])
-        coefs, info = _Limit._get_best_estimate(all_coefs, all_errors,
-                                                np.atleast_1d(rs[4:])[:, None]*mvec, (m,))
-        errors = info.error_estimate
-    else:
-        errors = EPS / np.power(rs[2], mvec) * np.maximum(m1, m2)
-        coefs = extrap[-1]
-
+    coefs, errors = _get_best_taylor_coefficients(bs, rs, m)
     if full_output:
         info = _INFO(errors, degenerate, final_radius=r,
                      function_count=i * m, iterations=i, failed=failed)
@@ -481,7 +492,7 @@ def derivative(fun, z0, n=1, **kwds):
     -------
     der : ndarray
        array of derivatives
-    status: Optional object into which output information is written. Fields are:
+    status: Optional object into which output information is written. Fields:
         degenerate: True if the algorithm was unable to bound the error
         iterations: Number of iterations executed
         function_count: Number of function calls
@@ -501,14 +512,15 @@ def derivative(fun, z0, n=1, **kwds):
 
     Restrictions
 
-    The method uses the coefficients themselves to control the truncation error,
-    so the error will not be properly bounded for functions like low-order
-    polynomials whose Taylor series coefficients are nearly zero. If the error
-    cannot be bounded, degenerate flag will be set to true, and an answer will
-    still be computed and returned but should be used with caution.
+    The method uses the coefficients themselves to control the truncation
+    error, so the error will not be properly bounded for functions like
+    low-order polynomials whose Taylor series coefficients are nearly zero.
+    If the error cannot be bounded, degenerate flag will be set to true, and
+    an answer will still be computed and returned but should be used with
+    caution.
 
-    Example
-    -------
+    Examples
+    --------
 
     To compute the first five derivatives of 1 / (1 - z) at z = 0:
     Compute the first 6 taylor derivatives of 1 / (1 - z) at z0 = 0:

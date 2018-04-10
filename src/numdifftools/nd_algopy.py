@@ -41,8 +41,8 @@ partial derivatives of a function with respect to many inputs, as is needed
 for gradient-based optimization algorithms. Algoritmic differentiation
 solves all of these problems.
 
-Reference
----------
+References
+----------
 Sebastian F. Walter and Lutz Lehmann 2013,
 "Algorithmic differentiation in Python with AlgoPy",
 in Journal of Computational Science, vol 4, no 5, pp 334 - 344,
@@ -77,17 +77,18 @@ _cmn_doc = """
     Notes
     -----
     Algorithmic differentiation is a set of techniques to numerically
-    evaluate the derivative of a function specified by a computer program. AD
-    exploits the fact that every computer program, no matter how complicated,
-    executes a sequence of elementary arithmetic operations (addition,
-    subtraction, multiplication, division, etc.) and elementary functions
-    (exp, log, sin, cos, etc.). By applying the chain rule repeatedly to these
-    operations, derivatives of arbitrary order can be computed automatically,
-    accurately to working precision, and using at most a small constant factor
-    more arithmetic operations than the original program.
+    evaluate the derivative of a function specified by a computer program.
+    AD exploits the fact that every computer program, no matter how
+    complicated, executes a sequence of elementary arithmetic operations
+    (addition, subtraction, multiplication, division, etc.) and elementary
+    functions (exp, log, sin, cos, etc.). By applying the chain rule
+    repeatedly to these operations, derivatives of arbitrary order can be
+    computed automatically, accurately to working precision, and using at
+    most a small constant factor more arithmetic operations than the original
+    program.
     %(extra_note)s
-    Reference
-    ---------
+    References
+    ----------
     Sebastian F. Walter and Lutz Lehmann 2013,
     "Algorithmic differentiation in Python with AlgoPy",
     in Journal of Computational Science, vol 4, no 5, pp 334 - 344,
@@ -149,6 +150,7 @@ class _Derivative(object):
             return df, self.info(np.maximum(10*EPS * np.abs(df), EPS), EPS, 0)
         return df
 
+
 class Derivative(_Derivative):
 
     __doc__ = _cmn_doc % dict(
@@ -162,8 +164,8 @@ class Derivative(_Derivative):
     der : ndarray
        array of derivatives
     """, example="""
-    Example
-    -------
+    Examples
+    --------
     # 1'st and 2'nd derivative of exp(x), at x == 1
 
     >>> import numpy as np
@@ -224,13 +226,13 @@ class Gradient(_Derivative):
     grad : array
         gradient
     """, example="""
-    Example
-    -------
+    Examples
+    --------
     >>> import numdifftools.nd_algopy as nda
     >>> fun = lambda x: np.sum(x**2)
     >>> df = nda.Gradient(fun, method='reverse')
-    >>> df([1,2,3])
-    array([ 2.,  4.,  6.])
+    >>> np.allclose(df([1,2,3]), [ 2.,  4.,  6.])
+    True
 
     #At [x,y] = [1,1], compute the numerical gradient
     #of the function sin(x-y) + y*exp(x)
@@ -239,8 +241,8 @@ class Gradient(_Derivative):
     >>> z = lambda xy: sin(xy[0]-xy[1]) + xy[1]*exp(xy[0])
     >>> dz = nda.Gradient(z)
     >>> grad2 = dz([1, 1])
-    >>> grad2
-    array([ 3.71828183,  1.71828183])
+    >>> np.allclose(grad2, [ 3.71828183,  1.71828183])
+    True
 
     #At the global minimizer (1,1) of the Rosenbrock function,
     #compute the gradient. It should be essentially zero.
@@ -248,8 +250,9 @@ class Gradient(_Derivative):
     >>> rosen = lambda x : (1-x[0])**2 + 105.*(x[1]-x[0]**2)**2
     >>> rd = nda.Gradient(rosen)
     >>> grad3 = rd([1,1])
-    >>> grad3==np.array([ 0.,  0.])
-    array([ True,  True], dtype=bool)
+    >>> np.allclose(grad3, [ 0.,  0.])
+    True
+
     """, see_also="""
     See also
     --------
@@ -283,8 +286,8 @@ class Jacobian(Gradient):
     jacob : array
         Jacobian
     """, example="""
-    Example
-    -------
+    Examples
+    --------
     >>> import numdifftools.nd_algopy as nda
 
     #(nonlinear least squares)
@@ -300,19 +303,21 @@ class Jacobian(Gradient):
            [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]])
 
     >>> Jfun2 = nda.Jacobian(fun, method='reverse')
-    >>> Jfun2([1,2,0.75]).T # should be numerically zero
-    array([[ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
-           [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
-           [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]])
+    >>> res = Jfun2([1,2,0.75]).T # should be numerically zero
+    >>> np.allclose(res,
+    ...                [[ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
+    ...                 [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.],
+    ...                 [ 0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.,  0.]])
+    True
 
     >>> f2 = lambda x : x[0]*x[1]*x[2]**2
     >>> Jfun2 = nda.Jacobian(f2)
-    >>> Jfun2([1., 2., 3.])
-    array([[ 18., 9., 12.]])
+    >>> np.allclose(Jfun2([1., 2., 3.]), [[ 18., 9., 12.]])
+    True
 
     >>> Jfun21 = nda.Jacobian(f2, method='reverse')
-    >>> Jfun21([1., 2., 3.])
-    array([[ 18., 9., 12.]])
+    >>> np.allclose(Jfun21([1., 2., 3.]), [[ 18., 9., 12.]])
+    True
 
     >>> def fun3(x):
     ...     n = np.prod(np.shape(x[0]))
@@ -362,8 +367,8 @@ class Hessian(_Derivative):
     hess : ndarray
        array of partial second derivatives, Hessian
     """, extra_note='', example="""
-    Example
-    -------
+    Examples
+    --------
     >>> import numdifftools.nd_algopy as nda
 
     # Rosenbrock function, minimized at [1,1]
@@ -371,9 +376,9 @@ class Hessian(_Derivative):
     >>> rosen = lambda x : (1.-x[0])**2 + 105*(x[1]-x[0]**2)**2
     >>> Hf = nda.Hessian(rosen)
     >>> h = Hf([1, 1]) #  h =[ 842 -420; -420, 210];
-    >>> h
-    array([[ 842., -420.],
-           [-420.,  210.]])
+    >>> np.allclose(h, [[ 842., -420.],
+    ...                 [-420.,  210.]])
+    True
 
     # cos(x-y), at (0,0)
 
@@ -381,15 +386,15 @@ class Hessian(_Derivative):
     >>> fun = lambda xy : cos(xy[0]-xy[1])
     >>> Hfun2 = nda.Hessian(fun)
     >>> h2 = Hfun2([0, 0]) # h2 = [-1 1; 1 -1]
-    >>> h2
-    array([[-1.,  1.],
-           [ 1., -1.]])
+    >>> np.allclose(h2, [[-1.,  1.],
+    ...                  [ 1., -1.]])
+    True
 
     >>> Hfun3 = nda.Hessian(fun, method='reverse')
     >>> h3 = Hfun3([0, 0]) # h2 = [-1, 1; 1, -1];
-    >>> h3
-    array([[-1.,  1.],
-           [ 1., -1.]])
+    >>> np.allclose(h3, [[-1.,  1.],
+    ...                  [ 1., -1.]])
+    True
     """, see_also="""
     See also
     --------
@@ -426,8 +431,8 @@ class Hessdiag(Hessian):
     hessdiag : ndarray
        Hessian diagonal array of partial second order derivatives.
     """, extra_note='', example="""
-    Example
-    -------
+    Examples
+    --------
     >>> import numdifftools.nd_algopy as nda
 
     # Rosenbrock function, minimized at [1,1]
@@ -435,8 +440,8 @@ class Hessdiag(Hessian):
     >>> rosen = lambda x : (1.-x[0])**2 + 105*(x[1]-x[0]**2)**2
     >>> Hfun = nda.Hessdiag(rosen)
     >>> h = Hfun([1, 1]) #  h =[ 842, 210]
-    >>> h
-    array([ 842.,  210.])
+    >>> np.allclose(h, [ 842.,  210.])
+    True
 
     # cos(x-y), at (0,0)
 
@@ -444,13 +449,13 @@ class Hessdiag(Hessian):
     >>> fun = lambda xy : cos(xy[0]-xy[1])
     >>> Hfun2 = nda.Hessdiag(fun)
     >>> h2 = Hfun2([0, 0]) # h2 = [-1, -1]
-    >>> h2
-    array([-1., -1.])
+    >>> np.allclose(h2, [-1., -1.])
+    True
 
     >>> Hfun3 = nda.Hessdiag(fun, method='reverse')
     >>> h3 = Hfun3([0, 0]) # h2 = [-1, -1];
-    >>> h3
-    array([-1., -1.])
+    >>> np.allclose(h3, [-1., -1.])
+    True
 
     """, see_also="""
     See also
@@ -499,8 +504,8 @@ def directionaldiff(f, x0, vec, **options):
     dder:  scalar
         estimate of the first derivative of fun in the specified direction.
 
-    Example
-    -------
+    Examples
+    --------
     At the global minimizer (1,1) of the Rosenbrock function,
     compute the directional derivative in the direction [1 2]
 

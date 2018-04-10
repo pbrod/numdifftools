@@ -14,6 +14,11 @@ _EPS = EPS
 _TINY = np.finfo(float).tiny
 
 
+def _assert(cond, msg):
+    if not cond:
+        raise ValueError(msg)
+
+
 def convolve(sequence, rule, **kwds):
     """Wrapper around scipy.ndimage.convolve1d that allows complex input."""
     dtype = np.result_type(float, np.ravel(sequence)[0])
@@ -34,8 +39,10 @@ class Dea(object):
     is stored in the first (LIMEXP+2) entries of EPSTAB.
 
 
-    LIST OF MAJOR VARIABLES
-    -----------------------
+    Notes
+    -----
+    List of major variables:
+
     E0,E1,E2,E3 - DOUBLE PRECISION
                   The 4 elements on which the computation of
                   a new element in the epsilon table is based.
@@ -75,8 +82,7 @@ class Dea(object):
     @limexp.setter
     def limexp(self, limexp):
         n = 2 * (limexp // 2) + 1
-        if n < 3:
-            raise ValueError('LIMEXP IS LESS THAN 3')
+        _assert(n >= 3, 'LIMEXP IS LESS THAN 3')
         self.epstab = np.zeros(n + 5)
         self._limexp = n
 
@@ -206,8 +212,8 @@ class EpsAlg(object):
 
     This implementaion is from [1]_
 
-    Reference
-    ---------
+    References
+    ----------
     ..  [1] E. J. Weniger (1989)
             "Nonlinear sequence transformations for the acceleration of
             convergence and the summation of divergent series"
@@ -216,13 +222,12 @@ class EpsAlg(object):
     """
 
     def __init__(self, limexp=3):
+        _assert(limexp >= 3, 'LIMEXP IS LESS THAN 3')
         self.limexp = 2 * (limexp // 2) + 1
         self.epstab = np.zeros(limexp + 5)
         self.abserr = 10.
         self._n = 0
         self._nres = 0
-        if limexp < 3:
-            raise ValueError('LIMEXP IS LESS THAN 3')
 
     def __call__(self, s_n):
         n = self._n
@@ -241,8 +246,7 @@ class EpsAlg(object):
                 else:
                     epstab[i - 1] = aux1 + 1.0 / delta
             estlim = epstab[n % 2]
-            if n > self.limexp - 1:
-                raise ValueError("Eps table to small!")
+            _assert(n <= self.limexp - 1, "Eps table to small!")
 
         n += 1
         self._n = n
@@ -250,6 +254,20 @@ class EpsAlg(object):
 
 
 def epsalg_demo():
+    """
+    >>> epsalg_demo()
+    NO. PANELS      TRAP. APPROX          APPROX W/EA           abserr
+        1           0.78539816            0.78539816            0.21460184
+        2           0.94805945            0.94805945            0.05194055
+        4           0.98711580            0.99945672            0.00054328
+        8           0.99678517            0.99996674            0.00003326
+       16           0.99919668            0.99999988            0.00000012
+       32           0.99979919            1.00000000            0.00000000
+       64           0.99994980            1.00000000            0.00000000
+      128           0.99998745            1.00000000            0.00000000
+      256           0.99999686            1.00000000            0.00000000
+      512           0.99999922            1.00000000            0.00000000
+    """
     def linfun(i):
         return np.linspace(0, np.pi / 2., 2**i + 1)
     dea = EpsAlg(limexp=15)
@@ -264,6 +282,22 @@ def epsalg_demo():
 
 
 def dea_demo():
+    """
+    >>> dea_demo()
+        NO. PANELS      TRAP. APPROX          APPROX W/EA           abserr
+        1           0.78539816            0.78539816            0.78539816
+        2           0.94805945            0.94805945            0.97596771
+        4           0.98711580            0.99945672            0.21405856
+        8           0.99678517            0.99996674            0.00306012
+       16           0.99919668            0.99999988            0.00115259
+       32           0.99979919            1.00000000            0.00057665
+       64           0.99994980            1.00000000            0.00003338
+      128           0.99998745            1.00000000            0.00000012
+      256           0.99999686            1.00000000            0.00000000
+      512           0.99999922            1.00000000            0.00000000
+     1024           0.99999980            1.00000000            0.00000000
+     2048           0.99999995            1.00000000            0.00000000
+    """
     def linfun(i):
         return np.linspace(0, np.pi / 2., 2**i + 1)
     dea = Dea(limexp=6)
@@ -296,15 +330,15 @@ def dea3(v0, v1, v2, symmetric=False):
     abserr : array-like
         absolute error estimate
 
-    Description
-    -----------
+    Notes
+    -----
     DEA3 attempts to extrapolate nonlinearly to a better estimate
     of the sequence's limiting value, thus improving the rate of
     convergence. The routine is based on the epsilon algorithm of
     P. Wynn, see [1]_.
 
-     Example
-     -------
+     Examples
+     --------
      # integrate sin(x) from 0 to pi/2
 
      >>> import numpy as np
@@ -315,17 +349,20 @@ def dea3(v0, v1, v2, symmetric=False):
      ...    x = linfun(k)
      ...    Ei[k] = np.trapz(np.sin(x),x)
      >>> [En, err] = nd.dea3(Ei[0], Ei[1], Ei[2])
-     >>> truErr = Ei-1.
-     >>> (truErr, err, En)
-     (array([ -2.00805680e-04,  -5.01999079e-05,  -1.25498825e-05]),
-     array([ 0.00020081]), array([ 1.]))
+     >>> truErr = np.abs(En-1.)
+     >>> np.all(truErr < err)
+     True
+     >>> np.allclose(En, 1)
+     True
+     >>> np.all(np.abs(Ei-1)<1e-3)
+     True
 
      See also
      --------
      dea
 
-     Reference
-     ---------
+     References
+     ----------
      .. [1] C. Brezinski and M. Redivo Zaglia (1991)
             "Extrapolation Methods. Theory and Practice", North-Holland.
 
@@ -375,8 +412,8 @@ class Richardson(object):
     we can fit a polynomial to that sequence of approximations.
     This is exactly what this class does.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import numpy as np
     >>> import numdifftools as nd
     >>> n = 3
@@ -388,12 +425,13 @@ class Richardson(object):
     ...    h[k] = x[1]
     ...    Ei[k] = np.trapz(np.sin(x),x)
     >>> En, err, step = nd.Richardson(step=1, order=1)(Ei, h)
-    >>> truErr = Ei-1.
-    >>> (truErr, err, En)
-    (array([[ -2.00805680e-04],
-           [ -5.01999079e-05],
-           [ -1.25498825e-05]]), array([[ 0.00160242]]), array([[ 1.]]))
-
+    >>> truErr = np.abs(En-1.)
+    >>> np.all(truErr < err)
+    True
+    >>> np.all(np.abs(Ei-1)<1e-3)
+    True
+    >>> np.allclose(En, 1)
+    True
     """
 
     def __init__(self, step_ratio=2.0, step=1, order=1, num_terms=2):
@@ -431,8 +469,9 @@ class Richardson(object):
             tol = max_abs(old_sequence[:-1], old_sequence[1:]) * fact
             err = np.abs(delta)
             converged = err <= tol
-            abserr = err[-m:] + np.where(converged[-m:], tol[-m:] * 10,
-                                abs(new_sequence - old_sequence[-m:]) * fact)
+            abserr = (err[-m:] +
+                      np.where(converged[-m:], tol[-m:] * 10,
+                               abs(new_sequence - old_sequence[-m:]) * fact))
             return abserr
 #         if mo>2:
 #             res, abserr = dea3(old_sequence[:-2], old_sequence[1:-1],
@@ -461,5 +500,7 @@ class Richardson(object):
 
 
 if __name__ == '__main__':
-    dea_demo()
+    from numdifftools.testing import test_docstrings
+    test_docstrings(__file__)
+    # dea_demo()
     # epsalg_demo()

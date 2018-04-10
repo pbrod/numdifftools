@@ -214,3 +214,10 @@ References
 
 .. |depsy_img| image:: http://depsy.org/api/package/pypi/Numdifftools/badge.svg
    :target: http://depsy.org/package/python/Numdifftools
+
+
+Note
+====
+
+This project has been set up using PyScaffold 3.0. For details and usage
+information on PyScaffold see http://pyscaffold.readthedocs.org/.

@@ -59,7 +59,9 @@ class BasicMaxStepGenerator(object):
     Generates a sequence of steps of decreasing magnitude
 
     where
-        steps = base_step * step_ratio ** (-i + offset), i=0, 1,.., num_steps-1.
+        steps = base_step * step_ratio ** (-i + offset)
+
+    for i=0, 1,.., num_steps-1.
 
 
     Parameters
@@ -73,11 +75,11 @@ class BasicMaxStepGenerator(object):
     offset : real scalar, optional, default 0
         offset to the base step
 
-
-    Example
-    -------
+    Examples
+    --------
     >>> from numdifftools.step_generators import BasicMaxStepGenerator
-    >>> step_gen = BasicMaxStepGenerator(base_step=2.0, step_ratio=2, num_steps=4)
+    >>> step_gen = BasicMaxStepGenerator(base_step=2.0, step_ratio=2,
+    ...                                  num_steps=4)
     >>> [s for s in step_gen()]
     [2.0, 1.0, 0.5, 0.25]
 
@@ -123,11 +125,11 @@ class BasicMinStepGenerator(BasicMaxStepGenerator):
     offset : real scalar, optional, default 0
         offset to the base step
 
-
-    Example
-    -------
+    Examples
+    --------
     >>> from numdifftools.step_generators import BasicMinStepGenerator
-    >>> step_gen = BasicMinStepGenerator(base_step=0.25, step_ratio=2, num_steps=4)
+    >>> step_gen = BasicMinStepGenerator(base_step=0.25, step_ratio=2,
+    ...                                  num_steps=4)
     >>> [s for s in step_gen()]
     [2.0, 1.0, 0.5, 0.25]
 
@@ -158,10 +160,11 @@ class MinStepGenerator(object):
         If None then step_ratio is 2 for n=1 otherwise step_ratio is 1.6
     num_steps : scalar integer, optional, default  min_num_steps + num_extrap
         defines number of steps generated. It should be larger than
-        min_num_steps = (n + order - 1) / fact where fact is 1, 2 or 4 depending
-        on differentiation method used.
+        min_num_steps = (n + order - 1) / fact where fact is 1, 2 or 4
+        depending on differentiation method used.
     step_nom :  default maximum(log(1+|x|), 1)
-        Nominal step where x is supplied at runtime through the __call__ method.
+        Nominal step where x is supplied at runtime through the __call__
+        method.
     offset : real scalar, optional, default 0
         offset to the base step
     num_extrap : scalar integer
@@ -219,14 +222,19 @@ class MinStepGenerator(object):
     def base_step(self, base_step):
         self._base_step = base_step
 
+    def _num_step_divisor(self, method, n, order):
+        complex_divisior = 4 if (n > 1 or order >= 4) else 2
+        return dict(central=2,
+                    central2=2,
+                    complex=complex_divisior,
+                    multicomplex=2).get(method, 1)
+
     @property
     def min_num_steps(self):
         _x, method, n, order = self._state
         num_steps = int(n + order - 1)
-        if method in ['central', 'central2', 'complex', 'multicomplex']:
-            step = 4 if method == 'complex' and (n > 1 or order >= 4) else 2
-            num_steps = num_steps // step
-        return max(num_steps, 1)
+        divisor = self._num_step_divisor(method, n, order)
+        return max(num_steps // divisor, 1)
 
     @property
     def num_steps(self):
@@ -299,10 +307,11 @@ class MaxStepGenerator(MinStepGenerator):
         If None then step_ratio is 2 for n=1 otherwise step_ratio is 1.6
     num_steps : scalar integer, optional, default  min_num_steps + num_extrap
         defines number of steps generated. It should be larger than
-        min_num_steps = (n + order - 1) / fact where fact is 1, 2 or 4 depending
-        on differentiation method used.
+        min_num_steps = (n + order - 1) / fact where fact is 1, 2 or 4
+        depending on differentiation method used.
     step_nom :  default maximum(log(1+|x|), 1)
-        Nominal step where x is supplied at runtime through the __call__ method.
+        Nominal step where x is supplied at runtime through the __call__
+        method.
     offset : real scalar, optional, default 0
         offset to the base step
     num_extrap : scalar integer

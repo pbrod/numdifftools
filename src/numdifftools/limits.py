@@ -8,9 +8,10 @@ Release: 1.0
 Release date: 5/23/2008
 
 """
-from __future__ import division, print_function
+from __future__ import absolute_import, division, print_function
 import numpy as np
 from collections import namedtuple
+from functools import partial
 import warnings
 from numdifftools.step_generators import MinStepGenerator
 from numdifftools.extrapolation import Richardson, dea3
@@ -27,7 +28,8 @@ class CStepGenerator(MinStepGenerator):
     Generates a sequence of steps
 
     where
-        steps = base_step * step_nom * (exp(1j*dtheta) * step_ratio) ** (i + offset)
+        steps = base_step * step_nom *
+                (exp(1j*dtheta) * step_ratio) ** (i + offset)
     for i = 0, 1, ..., num_steps-1
 
     Parameters
@@ -40,7 +42,8 @@ class CStepGenerator(MinStepGenerator):
         defines number of steps generated.
         If None the value is 2 * int(round(16.0/log(abs(step_ratio)))) + 1
     step_nom :  default maximum(log(1+|x|), 1)
-        Nominal step where x is supplied at runtime through the __call__ method.
+        Nominal step where x is supplied at runtime through the __call__
+        method.
     offset : real scalar, optional, default 0
         offset to the base step
     use_exact_steps : boolean
@@ -57,13 +60,13 @@ class CStepGenerator(MinStepGenerator):
 
     def __init__(self, base_step=None, step_ratio=4.0, num_steps=None,
                  step_nom=None, offset=0, scale=1.2, use_exact_steps=True,
-                 path='radial', dtheta=np.pi/8):
+                 path='radial', dtheta=np.pi/8, **kwds):
         self.path = path
         self.dtheta = dtheta
         super(CStepGenerator,
               self).__init__(base_step=base_step, step_ratio=step_ratio,
                              num_steps=num_steps, offset=offset, scale=scale,
-                             use_exact_steps=use_exact_steps)
+                             use_exact_steps=use_exact_steps, **kwds)
         self._check_path()
 
     def _check_path(self):
@@ -114,7 +117,29 @@ class _Limit(object):
         self.method = method
         self.order = order
         self.full_output = full_output
-        self.step = self._make_generator(step, options)
+        self.step = step, options
+
+
+    def _parse_step_options(self, step):
+        options = {}
+        if isinstance(step, tuple) and isinstance(step[-1], dict):
+            step, options = step
+        return step, options
+
+    def _step_generator(self, step, options):
+        if hasattr(step, '__call__'):
+            return step
+        step_nom = None if step is None else 1
+        return CStepGenerator(base_step=step, step_nom=step_nom, **options)
+
+    @property
+    def step(self):
+        return self._step
+
+    @step.setter
+    def step(self, step_options):
+        step, options = self._parse_step_options(step_options)
+        self._step = self._step_generator(step, options)
 
     @staticmethod
     def _get_arg_min(errors):
@@ -167,9 +192,9 @@ class _Limit(object):
         return der, errors, steps[2:]
 
     def _extrapolate(self, results, steps, shape):
-        #if len(results)>2:
-        #    der1, errors1, steps = self._wynn_extrapolate(results, steps)
-        #else:
+        # if len(results)>2:
+        #     der1, errors1, steps = self._wynn_extrapolate(results, steps)
+        # else:
         der1, errors1, steps = self.richardson(results, steps)
         if len(der1) > 2:
             der1, errors1, steps = self._wynn_extrapolate(der1, steps)
@@ -223,8 +248,8 @@ class Limit(_Limit):
         final_step: ndarray
             final step used in approximation
 
-    Description
-    -----------
+    Notes
+    -----
     `Limit` computes the limit of a given function at a specified
     point, z0. When the function is evaluable at the point in question,
     this is a simple task. But when the function cannot be evaluated
@@ -247,8 +272,8 @@ class Limit(_Limit):
     accurate. The `step_ratio` MUST be a scalar larger than 1. A value in the
     range [2,100] is recommended. 4 seems a good compromise.
 
-    Example
-    -------
+    Examples
+    --------
      Compute the limit of sin(x)./x, at x == 0. The limit is 1.
 
     >>> import numpy as np
@@ -316,14 +341,8 @@ class Limit(_Limit):
 
     """
 
-    def _fun(self, z, dz, *args, **kwds):
-        return self.fun(z+dz, *args, **kwds)
-
-    @staticmethod
-    def _make_generator(step, options):
-        if hasattr(step, '__call__'):
-            return step
-        return CStepGenerator(base_step=step, **options)
+    def _fun(self, z, dz, args, kwds):
+        return self.fun(z + dz, *args, **kwds)
 
     def _get_steps(self, xi):
         return [step for step in self.step(xi)]
@@ -332,33 +351,34 @@ class Limit(_Limit):
         self.richardson = Richardson(step_ratio=step_ratio, step=1, order=1,
                                      num_terms=num_terms)
 
-    def _lim(self, f, z, args, kwds):
+    def _lim(self, f, z):
         sign = dict(forward=1, above=1, backward=-1, below=-1)[self.method]
         steps = [sign * step for step in self.step(z)]
 
         self._set_richardson_rule(self.step.step_ratio, self.order + 1)
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            sequence = [f(z, h, *args, **kwds) for h in steps]
+            sequence = [f(z, h) for h in steps]
         results = self._vstack(sequence, steps)
         lim_fz, info = self._extrapolate(*results)
         return lim_fz, info
 
     def limit(self, x, *args, **kwds):
         z = np.asarray(x)
-        fz, info = self._lim(self._fun, z, args, kwds)
+        f = partial(self._fun, args=args, kwds=kwds)
+        fz, info = self._lim(f, z)
         if self.full_output:
             return fz, info
         return fz
 
-    def _call_lim(self, fz, z, f, args, kwds):
+    def _call_lim(self, fz, z, f):
         err = np.zeros_like(fz)
         final_step = np.zeros_like(fz)
         index = np.zeros_like(fz, dtype=int)
         k = np.flatnonzero(np.isnan(fz))
         if k.size > 0:
             fz = np.where(np.isnan(fz), 0, fz)
-            lim_fz, info1 = self._lim(f, z.flat[k], args, kwds)
+            lim_fz, info1 = self._lim(f, z.flat[k])
             np.put(fz, k, lim_fz)
             if self.full_output:
                 np.put(final_step, k, info1.final_step)
@@ -368,12 +388,12 @@ class Limit(_Limit):
 
     def __call__(self, x, *args, **kwds):
         z = np.asarray(x)
-        f = self._fun
+        f = partial(self._fun, args=args, kwds=kwds)
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            fz = f(z, 0, *args, **kwds)
+            fz = f(z, 0)
 
-        fz, info = self._call_lim(fz, z, f, args, kwds)
+        fz, info = self._call_lim(fz, z, f)
 
         if self.full_output:
             return fz, info
@@ -475,7 +495,7 @@ class Residue(Limit):
         super(Residue, self).__init__(f, step=step, method=method, order=order,
                                       full_output=full_output, **options)
 
-    def _fun(self, z, dz, *args, **kwds):
+    def _fun(self, z, dz, args, kwds):
         return self.fun(z + dz, *args, **kwds) * (dz ** self.pole_order)
 
     def __call__(self, x, *args, **kwds):

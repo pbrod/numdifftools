@@ -1,16 +1,17 @@
 from __future__ import division, print_function
 from statsmodels.tools.numdiff import (  # approx_fprime,
-                                       approx_fprime_cs,
-                                       approx_hess,
-                                       approx_hess1,
-                                       approx_hess2,
-                                       approx_hess3,
-                                       approx_hess_cs)
+    approx_fprime_cs,
+    approx_hess,
+    approx_hess1,
+    approx_hess2,
+    approx_hess3,
+    approx_hess_cs)
 import numpy as np
 _EPS = np.finfo(float).eps
 
 
 class _Common(object):
+
     def __init__(self, fun, step=None, method='central', order=2):
         self.fun = fun
         self.step = step
@@ -32,8 +33,8 @@ class Hessian(_Common):
     method : {'central', 'complex', 'forward'}
         defines the method used in the approximation.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import numpy as np
     >>> import numdifftools.nd_statsmodels as nd
 
@@ -58,13 +59,15 @@ class Hessian(_Common):
     --------
     Jacobian, Gradient
     """
+
     def __call__(self, x, *args, **kwds):
         approx_hess_fun = dict(complex=approx_hess_cs,
                                forward=approx_hess1,
                                central2=approx_hess2).get(self.method,
                                                           approx_hess3)
 
-        return approx_hess_fun(np.atleast_1d(x), self.fun, self.step, args, kwds)
+        return approx_hess_fun(np.atleast_1d(x), self.fun, self.step, args,
+                               kwds)
 
 
 class Jacobian(_Common):
@@ -120,12 +123,13 @@ class Jacobian(_Common):
     ...              [   2.,   20.]]])
     True
     """
+
     def __call__(self, x, *args, **kwds):
         x = np.atleast_1d(x)
         if self.method.startswith('complex'):
             grad = approx_fprime_cs(x, self.fun, self.step, args, kwds)
         else:
-            grad =  approx_fprime(x, self.fun, self.step, args, kwds,
+            grad = approx_fprime(x, self.fun, self.step, args, kwds,
                                  centered=self.method.startswith('central'))
         return grad
 
@@ -145,14 +149,15 @@ class Gradient(Jacobian):
         x * _EPS**(1/3) for method==`central`.
     method : {'central', 'complex', 'forward'}
         defines the method used in the approximation.
-    Example
-    -------
+
+    Examples
+    --------
     >>> import numpy as np
     >>> import numdifftools.nd_statsmodels as nd
     >>> fun = lambda x: np.sum(x**2)
     >>> dfun = nd.Gradient(fun)
-    >>> dfun([1,2,3])
-    array([ 2.,  4.,  6.])
+    >>> np.allclose(dfun([1,2,3]), [ 2.,  4.,  6.])
+    True
 
     # At [x,y] = [1,1], compute the numerical gradient
     # of the function sin(x-y) + y*exp(x)
@@ -161,8 +166,8 @@ class Gradient(Jacobian):
     >>> z = lambda xy: sin(xy[0]-xy[1]) + xy[1]*exp(xy[0])
     >>> dz = nd.Gradient(z)
     >>> grad2 = dz([1, 1])
-    >>> grad2
-    array([ 3.71828183,  1.71828183])
+    >>> np.allclose(grad2, [ 3.71828183,  1.71828183])
+    True
 
     # At the global minimizer (1,1) of the Rosenbrock function,
     # compute the gradient. It should be essentially zero.
@@ -197,6 +202,7 @@ def _get_epsilon(x, s, epsilon, n):
                                  " shape as x.")
     return h
 
+
 def approx_fprime(x, f, epsilon=None, args=(), kwargs=None, centered=True):
     """
     Gradient of function, or Jacobian if function fun returns 1d array
@@ -229,9 +235,6 @@ def approx_fprime(x, f, epsilon=None, args=(), kwargs=None, centered=True):
     by fun (e.g., with a value for each observation), it returns a 3d array
     with the Jacobian of each observation with shape xk x nobs x xk. I.e.,
     the Jacobian of the first observation would be [:, 0, :]
-
-     Example
-    -------
 
     """
     kwargs = {} if kwargs is None else kwargs

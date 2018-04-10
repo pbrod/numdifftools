@@ -117,13 +117,13 @@ with a complex step :math:`i h`:
 Taking only the imaginary parts of both sides gives
 
 .. math::
-    \, \Im \,(f(x_0+ i h)) &= h f'(x_0)  - \frac{h^3}{6} f^{(3)}(x_0) + \frac{h^5}{120} f^{(5)}(x_0) -...
+    \Im (f(x_0 + i h)) = h f'(x_0)  - \frac{h^3}{6} f^{(3)}(x_0) + \frac{h^5}{120} f^{(5)}(x_0) - ...
     :label: 12b
 
 Dividing with :math:`h` and rearranging yields:
 
 .. math::
-    f'(x_0) = \Im(f(x_0+ i h))/ h   + \frac{h^2}{6} f^{(3)}(x_0) - \frac{h^4}{120} f^{(5)}(x_0) +...
+    f'(x_0) = \Im(f(x_0+ i h))/ h   + \frac{h^2}{6} f^{(3)}(x_0) - \frac{h^4}{120} f^{(5)}(x_0) + ...
     :label: 12c
 
 Terms with order :math:`h^2` or higher can safely be ignored since the interval :math:`h` can be chosen up to machine precision
@@ -140,7 +140,7 @@ Next, consider replacing the step :math:`\delta` in :Eq:`8` with the complex ste
     \quad f_{even}(i^\frac{1}{2} h) &= \frac{i h^2}{2} f^{(2)}(x_0) - \frac{h^4}{24} f^{(4)}(x_0) - \frac{i h^6}{720} f^{(6)}(x_0) + \\
     :label: 12e
 
-		& \frac{h^8}{40320} f^{(8)}(x_0) + \frac{i h^{10}}{3628800} f^{(10)}(x_0) -...\\
+        & \frac{h^8}{40320} f^{(8)}(x_0) + \frac{i h^{10}}{3628800} f^{(10)}(x_0) -...\\
 
 Similarly dividing with :math:`h^2/2` and taking only the imaginary components yields:
 
@@ -513,6 +513,15 @@ Ok, its a trivial test case, but it easy to compute the directional derivative a
     >>> allclose(directionaldiff, 743.87633380824832)
     True
 
+There is a convenience function :math:`nd.directionaldiff` that also takes care of the direction normalization:
+
+    >>> v = [1, -1]
+    >>> x0 = [2, 3]
+    >>> directional_diff = nd.directionaldiff(rosen, x0, v)
+    >>> np.allclose(directional_diff, 743.87633380824832)
+    True
+
+
 Jacobian matrix
 ---------------
 Jacobian matrix of a scalar function is just the gradient
@@ -569,14 +578,14 @@ References
                      Integrals of Derivatives. *Numerische Mathematik*.
 
 .. [DErrico2006] D'Errico, J. R.  (2006), Adaptive Robust Numerical Differentiation
-	http://www.mathworks.com/matlabcentral/fileexchange/13490-adaptive-robust-numerical-differentiation
+        http://www.mathworks.com/matlabcentral/fileexchange/13490-adaptive-robust-numerical-differentiation
 
 .. [Perktold2014] Perktold, J (2014), numdiff package   
-	http://statsmodels.sourceforge.net/0.6.0/_modules/statsmodels/tools/numdiff.html
+        http://statsmodels.sourceforge.net/0.6.0/_modules/statsmodels/tools/numdiff.html
 
 .. [LaiCrassidisCheng2005] K.-L. Lai, J.L. Crassidis, Y. Cheng, J. Kim (2005), New complex step derivative approximations with 										application to second-order kalman filtering, 
-									AIAA Guidance, *Navigation and Control Conference*,
-									San Francisco, California, August 2005, AIAA-2005-5944.
+        AIAA Guidance, *Navigation and Control Conference*,
+        San Francisco, California, August 2005, AIAA-2005-5944.
 
 .. [Ridout2009] Ridout, M.S. (2009) Statistical applications of the complex-step method
         of numerical differentiation. *The American Statistician*, 63, 66-74

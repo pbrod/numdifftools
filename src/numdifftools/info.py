@@ -80,8 +80,8 @@ Compute gradient of sum(x**2)::
 
     >>> fun = lambda x: np.sum(x**2)
     >>> dfun = nd.Gradient(fun)
-    >>> dfun([1,2,3])
-    array([ 2.,  4.,  6.])
+    >>> np.allclose(dfun([1,2,3]), [ 2.,  4.,  6.])
+    True
 
 Compute the same with the easy to use interface to AlgoPy::
 
@@ -107,8 +107,8 @@ Compute gradient of sum(x**2)::
 
     >>> fun = lambda x: np.sum(x**2)
     >>> dfun = nda.Gradient(fun)
-    >>> dfun([1,2,3])
-    array([ 2.,  4.,  6.])
+    >>> np.allclose(dfun([1,2,3]), [ 2.,  4.,  6.])
+    True
 
 
 See also
@@ -157,7 +157,7 @@ based on the adaptive numerical differentiation toolbox written in
 
 Numdifftools has as of version 0.9 been extended with some of the functionality
 found in the statsmodels.tools.numdiff module written by Josef Perktold
-[Perktold2014]_.
+[Perktold2014]_ and in the project report of [Verheyleweghen2014]_.
 
 
 References

@@ -32,15 +32,15 @@ Contents
 ========
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 2
 
    src/overview.rst
    src/numerical/main.rst
    src/algorithmic/main.rst
-   license.rst
-   authors.rst
-   changes.rst
-   Module reference <api/modules.rst>
+   License <license>
+   Authors <authors>
+   Changelog <changelog>
+   Module Reference <api/modules>
 
 
 Indices and tables

@@ -1,10 +1,10 @@
 # .coveragerc to control coverage.py
 [run]
 branch = True
-source = numdifftools
+source = */numdifftools/*
 omit = 
   */run_benchmark.py
-  tests/*
+  */tests/*
 [report]
 # Regexes for lines to exclude from consideration
 exclude_lines =

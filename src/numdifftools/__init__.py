@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import pkg_resources
 from .info import __doc__
 from .core import *
