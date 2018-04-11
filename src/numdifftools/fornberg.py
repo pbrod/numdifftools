@@ -287,7 +287,7 @@ def _get_best_taylor_coefficients(bs, rs, m):
     return coefs, errors
 
 
-def _check_fft(bnc, m):
+def _check_fft(bnc, m, check_degenerate=True):
     # If not degenerate, check for geometric progression in the FFT:
     m1 = np.max(np.abs(bnc[:m // 2]))
     m2 = np.max(np.abs(bnc[m // 2:]))
@@ -299,8 +299,9 @@ def _check_fft(bnc, m):
     #
     # Note: only consider it degenerate if we've had a chance to steer
     # the radius in the direction at least `min_iter` times:
-    degenerate = m1 < m2 * 1e-8 or m2 < m1 * 1e-8
-    return degenerate, m1, m2
+    degenerate = check_degenerate and (m1 < m2 * 1e-8 or m2 < m1 * 1e-8)
+    needs_smaller = np.isnan(m1) or np.isnan(m2) or m1 < m2
+    return degenerate, needs_smaller
 
 
 def taylor(fun, z0=0, n=1, r=0.0061, num_extrap=3, step_ratio=1.6, **kwds):
@@ -344,6 +345,8 @@ def taylor(fun, z0=0, n=1, r=0.0061, num_extrap=3, step_ratio=1.6, **kwds):
         failed: True if the maximum number of iterations was reached
         error_estimate: approximate bounds of the rounding error.
 
+    Notes
+    -----
     This module uses the method of Fornberg to compute the Taylor series
     coefficents of a complex analytic function along with error bounds. The
     method uses a Fast Fourier Transform to invert function evaluations around
@@ -414,23 +417,20 @@ def taylor(fun, z0=0, n=1, r=0.0061, num_extrap=3, step_ratio=1.6, **kwds):
         bn = np.fft.fft(fun(_circle(z0, r, m))) / m
         bs.append(bn * np.power(r, -mvec))
         rs.append(r)
+
         if direction_changes > 1 or degenerate:
             num_changes += 1
             if num_changes >= 1 + num_extrap:
                 break
 
         if not degenerate:
-            degenerate, m1, m2 = _check_fft(bn/crat, m)
-            degenerate = degenerate and i > min_iter
+            degenerate, needs_smaller = _check_fft(bn/crat, m, check_degenerate=i > min_iter)
+            needs_smaller = (needs_smaller or _poor_convergence(z0, r, fun, bn, mvec))
 
         if degenerate:
             needs_smaller = i % 2 == 0
-        else:
-            needs_smaller = (np.isnan(m1) or np.isnan(m2) or m1 < m2 or
-                             _poor_convergence(z0, r, fun, bn, mvec))
 
-        if (previous_direction is not None and
-                needs_smaller != previous_direction):
+        if previous_direction is not None and needs_smaller != previous_direction:
             direction_changes += 1
 
         if direction_changes > 0:
@@ -601,11 +601,12 @@ def main():
     def fun14(z):
         return np.log1p(z)
 
-    der, info = derivative(fun6, z0=0., r=0.06, n=51, max_iter=30, min_iter=15,
+    der, info = derivative(fun6, z0=0., r=0.06, n=51, max_iter=30, # min_iter=15,
                            full_output=True, step_ratio=1.6)
     print(info)
     print('answer:')
     msg = '{0:3d}: {1:24.18f} + {2:24.18f}j ({3:g})'
+    print(info.function_count)
     for i, der_i in enumerate(der):
         err = info.error_estimate[i]
         print(msg.format(i, der_i.real, der_i.imag, err))
