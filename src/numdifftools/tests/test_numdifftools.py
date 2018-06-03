@@ -525,6 +525,25 @@ class TestHessian(unittest.TestCase):
                                                          verbose=False)
             self.assertTrue((np.abs((h - true_h) / true_h) < 1e-4).all())
 
+    def test_complex_hessian_issue_35(self):
+        """ """
+        def foo(x):
+            return 1j * np.inner(x, x)
+
+        for method in ['multicomplex', 'complex', 'central', 'central2', 'forward', 'backward']:
+            for offset in [0, 1j]: # testing real and complex argument
+                print(method)
+                x = np.random.randn(3) + offset
+                hessn = nd.Hessian(foo, method=method)
+                if method.endswith('complex'):
+                    self.assertRaises(ValueError, hessn, x)
+                else:
+                    val = hessn(x)
+
+                    assert_allclose(val, [[2j, 0j, 0j],
+                                          [0j, 2j, 0j],
+                                          [0j, 0j, 2j]], atol=1e-13)
+
     @staticmethod
     def test_hessian_cos_x_y_at_0_0():
         # cos(x-y), at (0,0)
@@ -533,8 +552,7 @@ class TestHessian(unittest.TestCase):
             return np.cos(xy[0] - xy[1])
         htrue = [[-1., 1.],
                  [1., -1.]]
-        methods = ['multicomplex', 'complex', 'central', 'central2', 'forward',
-                   'backward']
+        methods = ['multicomplex', 'complex', 'central', 'central2', 'forward', 'backward']
         for num_steps in [10, 1]:
             step = nd.MinStepGenerator(num_steps=num_steps)
             for method in methods:

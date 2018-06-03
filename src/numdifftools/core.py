@@ -294,6 +294,18 @@ class Derivative(_Limit):
                 self.method == 'complex' and self._derivative_mod_four_is_zero)
 
     def _eval_first(self, f, x):
+        if self.method in ['complex', 'multicomplex']:
+            val0 = f(x)
+
+            msg = ('The {} step derivative method does only work on a real valued analytic '
+                   'function of a real variable!')
+            if  np.any(np.iscomplex(x)):
+                msg = msg + ' But a complex variable was given!'
+                raise ValueError(msg.format(self.method))
+            if np.any(np.iscomplex(val0)):
+                msg = msg + ' But the function given is complex valued!'
+                raise ValueError(msg.format(self.method))
+            return val0
         if self._eval_first_condition():
             return f(x)
         return 0.0
@@ -937,7 +949,9 @@ class Hessian(Hessdiag):
         """Eq 9."""
         n = len(x)
         ee = np.diag(h)
-        hess = np.outer(h, h)
+        dtype = np.result_type(fx)
+        hess = np.empty((n, n), dtype=dtype)
+        np.outer(h, h, out=hess)
         for i in range(n):
             hess[i, i] = (f(x + 2 * ee[i, :]) - 2 * fx + f(x - 2 * ee[i, :])) / (4. * hess[i, i])
             for j in range(i + 1, n):
