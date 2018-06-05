@@ -305,6 +305,7 @@ def _check_fft(bnc, m, check_degenerate=True):
 
 
 class Taylor(object):
+
     """
     Return Taylor coefficients of complex analytic function using FFT
 
@@ -388,6 +389,7 @@ class Taylor(object):
         ACM Transactions on Mathematical Software (TOMS),
         7(4), 512-526. http://doi.org/10.1145/355972.355979
     """
+
     def __init__(self, fun, n=1, r=0.0061, num_extrap=3, step_ratio=1.6, **kwds):
         self.fun = fun
         self.max_iter = kwds.get('max_iter', 30)
@@ -417,9 +419,7 @@ class Taylor(object):
             self._num_changes += 1
             if self._num_changes >= 1 + self.num_extrap:
                 return True, r
-                # break
-                # pass
-                t = 'asdf'
+
         if not self._degenerate:
             self._degenerate, needs_smaller = _check_fft(bn / self._crat, m, check_degenerate=i > self.min_iter)
             needs_smaller = needs_smaller or _poor_convergence(z0, r, self.fun, bn, self._mvec)
