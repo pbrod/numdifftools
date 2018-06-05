@@ -28,8 +28,7 @@ def _extract_do_profile_results(txt, header_start='Line #'):
             tail = ' '.join((item, tail))
             hits, time, perhit, percent_time = 0, 0, 0.0, 0.0
 
-        results.append((line_no, hits, time, perhit, percent_time,
-                        tail))
+        results.append((line_no, hits, time, perhit, percent_time, tail))
 
     return results
 

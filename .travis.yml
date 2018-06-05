@@ -56,7 +56,7 @@ install:
   - pip install setuptools
   - pip install coveralls
   - pip install algopy
-  - pip install pyscaffold=2.5
+  - pip install pyscaffold=2.5.11
   - pip install codecov
   - pip install codeclimate-test-reporter
   - pip install hypothesis
