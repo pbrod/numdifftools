@@ -60,7 +60,7 @@ def print_version():
 def setup_package():
     needs_sphinx = {'build_sphinx', 'upload_docs'}.intersection(sys.argv)
     sphinx = ['sphinx', 'numpydoc'] if needs_sphinx else []
-    setup(setup_requires=['pyscaffold>=3.0a0,<3.1a0'] + sphinx,
+    setup(setup_requires=['pyscaffold==2.5.10'] + sphinx,
           # tests_require=['pytest_cov', 'pytest', 'hypothesis', 'matplotlib'],
           use_pyscaffold=True)
     print_version()
