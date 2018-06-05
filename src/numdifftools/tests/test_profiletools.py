@@ -204,12 +204,16 @@ class TestDoCProfile(unittest.TestCase):
         self.assertTrue(results[0][0] > 50000)
         self.assertEqual(results[1],
                          'ncalls  tottime  percall  cumtime  percall filename:lineno(function)')
-        for i in range(5):
-            self.assertGreater(results[2][i], 0)
-        self.assertEqual(
-            results[2][5],
-            'test_profiletools.py:195(expensive_function)')
-        self.assertEqual(results[3][5], 'test_profiletools.py:47(_get_number)')
+        num_tests = 0
+        for result in results[2:]:
+            if result[5].endswith('(expensive_function)'):
+                num_tests += 1
+                for i in range(5):
+                    self.assertGreater(result[i], 0)
+            elif result[5].endswith('(_get_number)'):
+                num_tests += 1
+        if num_tests != 2:
+            raise ValueError('Did not find _get_number or expensive_function')
 
 
 class TestTimeFun(unittest.TestCase):
