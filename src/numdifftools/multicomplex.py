@@ -50,7 +50,9 @@ def c_min(x, y):
 
 
 def c_abs(z):
-    return np.where(np.real(z) >= 0, z, -z)
+    if np.all(np.iscomplex(z)):
+        return np.where(np.real(z) >= 0, z, -z)
+    return np.abs(z)
 
 
 class Bicomplex(object):
