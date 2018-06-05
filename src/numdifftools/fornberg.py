@@ -304,6 +304,176 @@ def _check_fft(bnc, m, check_degenerate=True):
     return degenerate, needs_smaller
 
 
+class Taylor(object):
+    """
+    Return Taylor coefficients of complex analytic function using FFT
+
+    Parameters
+    ----------
+    fun : callable
+        function to differentiate
+    z0 : real or complex scalar at which to evaluate the derivatives
+    n : scalar integer, default 1
+        Number of taylor coefficents to compute. Maximum number is 100.
+    r : real scalar, default 0.0061
+        Initial radius at which to evaluate. For well-behaved functions,
+        the computation should be insensitive to the initial radius to within
+        about four orders of magnitude.
+    num_extrap : scalar integer, default 3
+        number of extrapolation steps used in the calculation
+    step_ratio : real scalar, default 1.6
+        Initial grow/shrinking factor for finding the best radius.
+    max_iter : scalar integer, default 30
+        Maximum number of iterations
+    min_iter : scalar integer, default max_iter // 2
+        Minimum number of iterations before the solution may be deemed
+        degenerate.  A larger number allows the algorithm to correct a bad
+        initial radius.
+    full_output : bool, optional
+        If `full_output` is False, only the coefficents is returned (default).
+        If `full_output` is True, then (coefs, status) is returned
+
+    Returns
+    -------
+    coefs : ndarray
+       array of taylor coefficents
+    status: Optional object into which output information is written:
+        degenerate: True if the algorithm was unable to bound the error
+        iterations: Number of iterations executed
+        function_count: Number of function calls
+        final_radius: Ending radius of the algorithm
+        failed: True if the maximum number of iterations was reached
+        error_estimate: approximate bounds of the rounding error.
+
+    Notes
+    -----
+    This module uses the method of Fornberg to compute the Taylor series
+    coefficents of a complex analytic function along with error bounds. The
+    method uses a Fast Fourier Transform to invert function evaluations around
+    a circle into Taylor series coefficients and uses Richardson Extrapolation
+    to improve and bound the estimate. Unlike real-valued finite differences,
+    the method searches for a desirable radius and so is reasonably
+    insensitive to the initial radius-to within a number of orders of
+    magnitude at least. For most cases, the default configuration is likely to
+    succeed.
+
+    Restrictions
+
+    The method uses the coefficients themselves to control the truncation
+    error, so the error will not be properly bounded for functions like
+    low-order polynomials whose Taylor series coefficients are nearly zero.
+    If the error cannot be bounded, degenerate flag will be set to true, and
+    an answer will still be computed and returned but should be used with
+    caution.
+
+    Examples
+    --------
+
+    Compute the first 6 taylor coefficients 1 / (1 - z) expanded round  z0 = 0:
+    >>> import numdifftools.fornberg as ndf
+    >>> import numpy as np
+    >>> c, info = ndf.Taylor(lambda x: 1./(1-x), n=6, full_output=True)(z0=0)
+    >>> np.allclose(c, np.ones(8))
+    True
+    >>> np.all(info.error_estimate < 1e-9)
+    True
+    >>> (info.function_count, info.iterations, info.failed) == (144, 18, False)
+    True
+
+
+    References
+    ----------
+    [1] Fornberg, B. (1981).
+        Numerical Differentiation of Analytic Functions.
+        ACM Transactions on Mathematical Software (TOMS),
+        7(4), 512-526. http://doi.org/10.1145/355972.355979
+    """
+    def __init__(self, fun, n=1, r=0.0061, num_extrap=3, step_ratio=1.6, **kwds):
+        self.fun = fun
+        self.max_iter = kwds.get('max_iter', 30)
+        self.min_iter = kwds.get('min_iter', self.max_iter // 2)
+        self.full_output = kwds.get('full_output', False)
+        self.n = n
+        self.r = r
+        self.num_extrap = num_extrap
+        self.step_ratio = step_ratio
+
+    def _initialize(self):
+        m = _num_taylor_coefficients(self.n)
+        self._step_ratio = self.step_ratio
+        self._direction_changes = 0
+        self._previous_direction = None
+        self._degenerate = self._failed = False
+        self._m = m
+        self._mvec = np.arange(m)
+        # A factor for testing against the targeted geometric progression of
+        # FFT coefficients:
+        self._crat = m * (np.exp(np.log(1e-4) / (m - 1))) ** self._mvec
+        self._num_changes = 0
+        return m, self._mvec
+
+    def _check_convergence(self, i, z0, r,  m, bn):
+        if self._direction_changes > 1 or self._degenerate:
+            self._num_changes += 1
+            if self._num_changes >= 1 + self.num_extrap:
+                return True, r
+                # break
+                # pass
+                t = 'asdf'
+        if not self._degenerate:
+            self._degenerate, needs_smaller = _check_fft(bn / self._crat, m, check_degenerate=i > self.min_iter)
+            needs_smaller = needs_smaller or _poor_convergence(z0, r, self.fun, bn, self._mvec)
+        if self._degenerate:
+            needs_smaller = i % 2 == 0
+        if self._previous_direction is not None and needs_smaller != self._previous_direction:
+            self._direction_changes += 1
+        if self._direction_changes > 0:
+            # Once we've started changing directions, we've found our range so
+            # start taking the square root of the growth factor so that
+            # richardson extrapolation is well-behaved:
+            self._step_ratio = np.sqrt(self._step_ratio)
+        if needs_smaller:
+            r /= self._step_ratio
+        else:
+            r *= self._step_ratio
+        self._previous_direction = needs_smaller
+        return False, r
+
+    def __call__(self, z0=0):
+        m, mvec = self._initialize()
+
+        # Start iterating. The goal of this loops is to select a circle radius that
+        # yields a nice geometric progression of the coefficients (which controls
+        # the error), and then to accumulate *three* successive approximations as a
+        # function of the circle radius r so that we can perform Richardson
+        # Extrapolation and zero out error terms, *greatly* improving the quality
+        # of the approximation.
+
+        rs = []
+        bs = []
+        i = 0
+        r = self.r
+        fun = self.fun
+        for i in range(self.max_iter):
+            # print('r = %g' % (r))
+
+            bn = np.fft.fft(fun(_circle(z0, r, m))) / m
+            bs.append(bn * np.power(r, -mvec))
+            rs.append(r)
+
+            converged, r = self._check_convergence(i, z0, r,  m, bn)
+            if converged:
+                break
+
+        failed = not converged
+        coefs, errors = _get_best_taylor_coefficients(bs, rs, m)
+        if self.full_output:
+            info = _INFO(errors, self._degenerate, final_radius=r,
+                         function_count=i * m, iterations=i, failed=failed)
+            return coefs, info
+        return coefs
+
+
 def taylor(fun, z0=0, n=1, r=0.0061, num_extrap=3, step_ratio=1.6, **kwds):
     """
     Return Taylor coefficients of complex analytic function using FFT
@@ -388,72 +558,7 @@ def taylor(fun, z0=0, n=1, r=0.0061, num_extrap=3, step_ratio=1.6, **kwds):
         ACM Transactions on Mathematical Software (TOMS),
         7(4), 512-526. http://doi.org/10.1145/355972.355979
     """
-    max_iter = kwds.get('max_iter', 30)
-    min_iter = kwds.get('min_iter', max_iter // 2)
-    full_output = kwds.get('full_output', False)
-    direction_changes = 0
-    rs = []
-    bs = []
-    previous_direction = None
-    degenerate = failed = False
-    m = _num_taylor_coefficients(n)
-    mvec = np.arange(m)
-    # A factor for testing against the targeted geometric progression of
-    # FFT coefficients:
-    crat = m * (np.exp(np.log(1e-4) / (m - 1))) ** mvec
-
-    # Start iterating. The goal of this loops is to select a circle radius that
-    # yields a nice geometric progression of the coefficients (which controls
-    # the error), and then to accumulate *three* successive approximations as a
-    # function of the circle radius r so that we can perform Richardson
-    # Extrapolation and zero out error terms, *greatly* improving the quality
-    # of the approximation.
-
-    num_changes = 0
-    i = 0
-    for i in range(max_iter):
-        # print('r = %g' % (r))
-
-        bn = np.fft.fft(fun(_circle(z0, r, m))) / m
-        bs.append(bn * np.power(r, -mvec))
-        rs.append(r)
-
-        if direction_changes > 1 or degenerate:
-            num_changes += 1
-            if num_changes >= 1 + num_extrap:
-                break
-
-        if not degenerate:
-            degenerate, needs_smaller = _check_fft(bn/crat, m, check_degenerate=i > min_iter)
-            needs_smaller = (needs_smaller or _poor_convergence(z0, r, fun, bn, mvec))
-
-        if degenerate:
-            needs_smaller = i % 2 == 0
-
-        if previous_direction is not None and needs_smaller != previous_direction:
-            direction_changes += 1
-
-        if direction_changes > 0:
-            # Once we've started changing directions, we've found our range so
-            # start taking the square root of the growth factor so that
-            # richardson extrapolation is well-behaved:
-            step_ratio = np.sqrt(step_ratio)
-
-        if needs_smaller:
-            r /= step_ratio
-        else:
-            r *= step_ratio
-
-        previous_direction = needs_smaller
-    else:
-        failed = True
-
-    coefs, errors = _get_best_taylor_coefficients(bs, rs, m)
-    if full_output:
-        info = _INFO(errors, degenerate, final_radius=r,
-                     function_count=i * m, iterations=i, failed=failed)
-        return coefs, info
-    return coefs
+    return Taylor(fun, n=n, r=r, num_extrap=num_extrap, step_ratio=step_ratio, **kwds)(z0)
 
 
 def derivative(fun, z0, n=1, **kwds):
