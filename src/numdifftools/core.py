@@ -296,12 +296,12 @@ class Derivative(_Limit):
     def _raise_error_if_any_is_complex(self, x, f_x):
         msg = ('The {} step derivative method does only work on a real valued analytic '
                'function of a real variable!'.format(self.method))
-        if np.any(np.iscomplex(x)):
-            msg = msg + ' But a complex variable was given!'
-            raise ValueError(msg)
-        if np.any(np.iscomplex(f_x)):
-            msg = msg + ' But the function given is complex valued!'
-            raise ValueError(msg)
+        _assert(not np.any(np.iscomplex(x)),
+                msg + ' But a complex variable was given!')
+
+        _assert(not np.any(np.iscomplex(f_x)),
+                msg + ' But the function given is complex valued!')
+
 
     def _eval_first(self, f, x):
         if self.method in ['complex', 'multicomplex']:
