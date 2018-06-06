@@ -320,7 +320,7 @@ class Jacobian(Gradient):
     True
 
     >>> def fun3(x):
-    ...     n = np.prod(np.shape(x[0]))
+    ...     n = int(np.prod(np.shape(x[0])))
     ...     out = nda.algopy.zeros((2, n), dtype=x)
     ...     out[0] = x[0]*x[1]*x[2]**2
     ...     out[1] = x[0]*x[1]*x[2]
