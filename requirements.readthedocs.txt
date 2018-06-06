@@ -1,3 +1,6 @@
 sphinx<=1.6.3
 numpydoc>=0.5
 sphinx_rtd_theme>=0.1.7
+scipy>=0.8
+algopy>=0.4
+statsmodels>=0.6
