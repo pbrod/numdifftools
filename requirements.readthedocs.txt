@@ -1,4 +1,4 @@
-sphinx<=1.6.3
+sphinx<=1.6.7
 numpydoc>=0.5
 sphinx_rtd_theme>=0.1.7
 scipy>=0.8
