@@ -63,9 +63,9 @@ _cmn_doc = """
     x : array_like
        value at which function derivative is evaluated
     args : tuple
-        Arguments for function `f`.
+        Arguments for function `fun`.
     kwds : dict
-        Keyword arguments for function `f`.
+        Keyword arguments for function `fun`.
     %(returns)s
     Notes
     -----
@@ -78,7 +78,7 @@ _cmn_doc = """
     choosing steps to be very small.
     Especially the first order complex-step derivative avoids the problem of
     round-off error with small steps because there is no subtraction. However,
-    this method fails if f(x) does not support complex numbers or involves
+    this method fails if fun(x) does not support complex numbers or involves
     non-analytic functions such as e.g.: abs, max, min.
     Central difference methods are almost as accurate and has no restriction on
     type of function. For this reason the 'central' method is the default
@@ -262,9 +262,9 @@ class Derivative(_Limit):
     def _get_functions(self, args, kwds):
         name = self._get_function_name()
         fun = self.fun
-        def f(x):
+        def export_fun(x):
             return fun(x, *args, **kwds)
-        return getattr(self, name), f
+        return getattr(self, name), export_fun
 
     def _get_steps(self, xi):
         method, n, order = self.method, self.n, self._method_order
@@ -293,19 +293,21 @@ class Derivative(_Limit):
                 self.method in ['forward', 'backward'] or
                 self.method == 'complex' and self._derivative_mod_four_is_zero)
 
+    def _raise_error_if_any_is_complex(self, x, f_x):
+        msg = ('The {} step derivative method does only work on a real valued analytic '
+               'function of a real variable!'.format(self.method))
+        if np.any(np.iscomplex(x)):
+            msg = msg + ' But a complex variable was given!'
+            raise ValueError(msg)
+        if np.any(np.iscomplex(f_x)):
+            msg = msg + ' But the function given is complex valued!'
+            raise ValueError(msg)
+
     def _eval_first(self, f, x):
         if self.method in ['complex', 'multicomplex']:
-            val0 = f(x)
-
-            msg = ('The {} step derivative method does only work on a real valued analytic '
-                   'function of a real variable!')
-            if  np.any(np.iscomplex(x)):
-                msg = msg + ' But a complex variable was given!'
-                raise ValueError(msg.format(self.method))
-            if np.any(np.iscomplex(val0)):
-                msg = msg + ' But the function given is complex valued!'
-                raise ValueError(msg.format(self.method))
-            return val0
+            f_x = f(x)
+            self._raise_error_if_any_is_complex(x, f_x)
+            return f_x
         if self._eval_first_condition():
             return f(x)
         return 0.0
@@ -405,7 +407,7 @@ class Derivative(_Limit):
 
     def _apply_fd_rule(self, step_ratio, sequence, steps):
         """
-        Return derivative estimates of f at x0 for a sequence of stepsizes h
+        Return derivative estimates of fun at x0 for a sequence of stepsizes h
 
         Member variables used
         ---------------------
@@ -484,8 +486,8 @@ def directionaldiff(f, x0, vec, **options):
     f: function
         analytical function to differentiate.
     x0: array
-        vector location at which to differentiate f. If x0 is an nxm array,
-        then f is assumed to be a function of n*m variables.
+        vector location at which to differentiate 'f'. If x0 is an nXm array,
+        then 'f' is assumed to be a function of n*m variables.
     vec: array
         vector defining the line along which to take the derivative. It should
         be the same size as x0, but need not be a vector of unit length.
@@ -495,7 +497,7 @@ def directionaldiff(f, x0, vec, **options):
     Returns
     -------
     dder:  scalar
-        estimate of the first derivative of f in the specified direction.
+        estimate of the first derivative of 'f' in the specified direction.
 
     Examples
     --------
@@ -903,7 +905,7 @@ class Hessian(Hessdiag):
 
     def _apply_fd_rule(self, step_ratio, sequence, steps):
         """
-        Return derivative estimates of f at x0 for a sequence of stepsizes h
+        Return derivative estimates of fun at x0 for a sequence of stepsizes h
 
         Here the difference rule is already applied. Just return result.
         """
