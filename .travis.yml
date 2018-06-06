@@ -54,9 +54,9 @@ install:
       conda install --yes pyqt=4.11 matplotlib;
     fi
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
-       pip install setuptools==38.7
+      pip install setuptools==38.7;
     else
-       pip install setuptools
+      pip install setuptools;
     fi
   - pip install coveralls
   - pip install algopy
