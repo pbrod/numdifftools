@@ -16,8 +16,6 @@ def profile_hessian(n_values=(4, 8, 16, 32, 64, 96)):
         f = BenchmarkFunction(n)
 
         step = nd.step_generators.one_step
-        # step = None
-        # cls = nd.Jacobian(f, step=step, method='central')
         cls = nd.Hessian(f, step=step, method='central')
         follow = [cls._derivative_nonzero_order,
                   cls._apply_fd_rule,
@@ -29,7 +27,6 @@ def profile_hessian(n_values=(4, 8, 16, 32, 64, 96)):
 
         x = 3 * np.ones(n)
 
-#        _ = cls(x)
         do_profile(follow=follow)(cls)(x)
 
 
