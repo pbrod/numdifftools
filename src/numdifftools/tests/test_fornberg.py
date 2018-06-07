@@ -67,7 +67,6 @@ def test_weights():
 
 def test_fd_derivative():
     x = np.linspace(-1, 1, 25)
-    h = np.diff(x).mean()
     fx = np.exp(x)
     for n in range(1, 7):
         df = fd_derivative(fx, x, n=n)
@@ -142,7 +141,7 @@ class ExampleFunctions(object):
 def test_low_order_derivative_on_example_functions():
     for i in range(15):
         fun = getattr(ExampleFunctions, 'fun{}'.format(i))
-        der, info = derivative(fun, z0=0., r=0.06, n=10, max_iter=30,  # min_iter=15,
+        der, info = derivative(fun, z0=0., r=0.06, n=10, max_iter=30,
                                full_output=True, step_ratio=1.6)
         print(info)
         print('answer:')

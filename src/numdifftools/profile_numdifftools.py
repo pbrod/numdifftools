@@ -29,8 +29,8 @@ def profile_hessian(n_values=(4, 8, 16, 32, 64, 96)):
 
         x = 3 * np.ones(n)
 
-#        val = cls(x)
-        val = do_profile(follow=follow)(cls)(x)
+#        _ = cls(x)
+        do_profile(follow=follow)(cls)(x)
 
 
 def main():

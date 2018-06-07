@@ -179,9 +179,7 @@ def run_all_benchmarks(method='forward', order=4, x_values=(0.1, 0.5, 1.0, 5), n
 
 
 if __name__ == '__main__':
-    # run_all_benchmarks(method='complex', order=2, x_values=[0.01, 0.1, 1.0,])
-    # run_all_benchmarks(method='complex', order=2, x_values=[0.1, 0.5, 1.0, 5, 10, 50,])
-    # run_all_benchmarks(method="central", order=2,  x_values=[0.1, 0.5, 1.0, 5, 10, 50,])
-    run_all_benchmarks(method='forward', order=2, x_values=[0.01, 0.1, 1.0,], n_max=3)
+
+    run_all_benchmarks(method='complex', order=2, x_values=[0.1, 0.5, 1.0, 5, 10, 50,], n_max=11)
     plt.show('hold')
 

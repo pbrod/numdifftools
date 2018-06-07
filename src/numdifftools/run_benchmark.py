@@ -97,9 +97,9 @@ hessian_funs['complex_statsmodels'] = nds.Hessian(1, method='complex')
 gradient_funs['forward_statsmodels'] = nds.Jacobian(1, method='forward')
 gradient_funs['central_statsmodels'] = nds.Jacobian(1, method='central')
 gradient_funs['complex_statsmodels'] = nds.Jacobian(1, method='complex')
-# gradient_funs['forward_scipy'] = nsc.Jacobian(1, method='forward')
-# gradient_funs['central_scipy'] = nsc.Jacobian(1, method='central')
-# gradient_funs['complex_scipy'] = nsc.Jacobian(1, method='complex')
+gradient_funs['forward_scipy'] = nsc.Jacobian(1, method='forward')
+gradient_funs['central_scipy'] = nsc.Jacobian(1, method='central')
+gradient_funs['complex_scipy'] = nsc.Jacobian(1, method='complex')
 
 
 def _compute_benchmark(functions, problem_sizes):
@@ -151,7 +151,7 @@ def compute_hessians(hessian_funs, problem_sizes):
 
 
 def run_gradient_and_hessian_benchmarks(problem_sizes=(4, 8, 16, 32, 64, 96)):
-    
+
     symbols = ('-kx', ':k>', ':k<', '--k^', '--kv', '-kp', '-ks',
                'b', '--b', '-b+', 'r', '--r', '-r+')
 

@@ -9,7 +9,6 @@ from __future__ import print_function
 import inspect
 import cProfile
 from functools import wraps
-# from time import time as timer
 from timeit import default_timer as timer
 import warnings
 
