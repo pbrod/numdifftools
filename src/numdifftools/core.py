@@ -898,7 +898,7 @@ class Hessian(Hessdiag):
 
     @order.setter
     def order(self, order):
-        valid_order = dict(backward=1, forward=1).get(self.method, 2)
+        valid_order = self.order
         if order != valid_order:
             msg = 'Can not change order to {}! The only valid order is {} for method={}.'
             warnings.warn(msg.format(order, valid_order, self.method))

@@ -150,8 +150,8 @@ def compute_hessians(hessian_funs, problem_sizes):
     return results_hessians
 
 
-def main():
-    problem_sizes = (4, 8, 16, 32, 64, 96)
+def run_gradient_and_hessian_benchmarks(problem_sizes=(4, 8, 16, 32, 64, 96)):
+    
     symbols = ('-kx', ':k>', ':k<', '--k^', '--kv', '-kp', '-ks',
                'b', '--b', '-b+', 'r', '--r', '-r+')
 
@@ -172,4 +172,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    run_gradient_and_hessian_benchmarks()

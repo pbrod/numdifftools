@@ -660,63 +660,6 @@ def derivative(fun, z0, n=1, **kwds):
     return result * fact
 
 
-def main():
-    def fun(z):
-        return np.exp(z)
-
-    def fun1(z):
-        return np.exp(z) / (np.sin(z)**3 + np.cos(z)**3)
-
-    def fun2(z):
-        return np.exp(1.0j * z)
-
-    def fun3(z):
-        return z**6
-
-    def fun4(z):
-        return z * (0.5 + 1./np.expm1(z))
-
-    def fun5(z):
-        return np.tan(z)
-
-    def fun6(z):
-        return 1.0j + z + 1.0j * z**2
-
-    def fun7(z):
-        return 1.0 / (1.0 - z)
-
-    def fun8(z):
-        return (1+z)**10*np.log1p(z)
-
-    def fun9(z):
-        return 10*5 + 1./(1-z)
-
-    def fun10(z):
-        return 1./(1-z)
-
-    def fun11(z):
-        return np.sqrt(z)
-
-    def fun12(z):
-        return np.arcsinh(z)
-
-    def fun13(z):
-        return np.cos(z)
-
-    def fun14(z):
-        return np.log1p(z)
-
-    der, info = derivative(fun6, z0=0., r=0.06, n=51, max_iter=30, # min_iter=15,
-                           full_output=True, step_ratio=1.6)
-    print(info)
-    print('answer:')
-    msg = '{0:3d}: {1:24.18f} + {2:24.18f}j ({3:g})'
-    print(info.function_count)
-    for i, der_i in enumerate(der):
-        err = info.error_estimate[i]
-        print(msg.format(i, der_i.real, der_i.imag, err))
-
-
 if __name__ == '__main__':
     from numdifftools.testing import test_docstrings
     test_docstrings()
