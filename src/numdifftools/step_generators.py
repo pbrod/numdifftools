@@ -4,6 +4,9 @@ from numdifftools.extrapolation import EPS
 from collections import namedtuple
 
 _STATE = namedtuple('State', ['x', 'method', 'n', 'order'])
+__all__=('one_step', 'make_exact', 'valarray', 'nominal_step', 'base_step',
+         'default_scale', 'MinStepGenerator', 'MaxStepGenerator',
+         'BasicMaxStepGenerator', 'BasicMinStepGenerator')
 
 
 def make_exact(h):
@@ -167,11 +170,11 @@ class MinStepGenerator(object):
         method.
     offset : real scalar, optional, default 0
         offset to the base step
-    num_extrap : scalar integer
-        num_extrap
-    check_num_steps : boolean
-        If True make sure num_steps larger than the minimum required steps.
-    use_exact_steps : boolean
+    num_extrap : scalar integer, default 0
+        number of points used for extrapolation
+    check_num_steps : boolean, default True
+        If True make sure num_steps is larger than the minimum required steps.
+    use_exact_steps : boolean, default True
         If true make sure exact steps are generated
     scale : real scalar, optional
         scale used in base step. If not None it will override the default
@@ -314,11 +317,11 @@ class MaxStepGenerator(MinStepGenerator):
         method.
     offset : real scalar, optional, default 0
         offset to the base step
-    num_extrap : scalar integer
-        num_extrap
-    check_num_steps : boolean
-        If True make sure num_steps larger than the minimum required steps.
-    use_exact_steps : boolean
+    num_extrap : scalar integer, default 0
+        number of points used for extrapolation
+    check_num_steps : boolean, default True
+        If True make sure num_steps is larger than the minimum required steps.
+    use_exact_steps : boolean, default True
         If true make sure exact steps are generated
     scale : real scalar, default 500
         scale used in base step.
@@ -335,6 +338,9 @@ class MaxStepGenerator(MinStepGenerator):
                              offset=offset, num_extrap=num_extrap,
                              use_exact_steps=use_exact_steps,
                              check_num_steps=check_num_steps, scale=scale)
+
+
+one_step = MinStepGenerator(num_steps=1, scale=None, step_nom=None)
 
 
 if __name__ == '__main__':

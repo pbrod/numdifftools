@@ -1,5 +1,5 @@
 """
-This script can be run to find the empriical optimum scale for numdifftools.Derivative
+This script can be run to find the emprical optimum scale for numdifftools.Derivative
 given the method used.
 
 Below are some results from previous runs compared with what is implemented in default_scale
@@ -129,7 +129,7 @@ def benchmark(x=0.0001, dfun=None, fd=None, name='', scales=None, show_plot=True
     tt = dfun(x)
     relativ_error = np.abs(t - tt) / (np.maximum(np.abs(tt), 1)) + 1e-16
 
-    if np.isnan(relativ_error).all():
+    if not np.isfinite(relativ_error).any():
         return dict(n=n, order=order, method=method, fun=name,
                     error=np.nan, scale=np.nan)
     if show_plot:
@@ -140,15 +140,16 @@ def benchmark(x=0.0001, dfun=None, fd=None, name='', scales=None, show_plot=True
         plot_error(scales, relativ_error, scale0, title, label=name)
 
     i = np.nanargmin(relativ_error)
+    error = float('{:.3g}'.format(relativ_error[i]))
     return dict(n=n, order=order, method=method, fun=name,
-                error=relativ_error[i], scale=scales[i])
+                error=error, scale=scales[i])
 
 
-def run_all_benchmarks(method='forward', order=4, x_values=(0.1, 0.5, 1.0, 5)):
+def run_all_benchmarks(method='forward', order=4, x_values=(0.1, 0.5, 1.0, 5), n_max=11):
 
-    epsilon = MinStepGenerator(num_steps=1, scale=None)
+    epsilon = MinStepGenerator(num_steps=3, scale=None, step_nom=None)
     scales = {}
-    for n in range(1, 11):
+    for n in range(1, n_max):
         plt.figure(n)
         for x in x_values:
             for name in function_names:
@@ -168,19 +169,19 @@ def run_all_benchmarks(method='forward', order=4, x_values=(0.1, 0.5, 1.0, 5)):
     header = 'method="{}", order={}, x_values={}:'.format(method, order, str(x_values))
     print(header)
     for n in scales:
-        print('n={}, mean scale={}, median scale={}'.format(n,
+        print('n={}, mean scale={:.2f}, median scale={:.2f}'.format(n,
                                                             np.mean(scales[n]),
                                                             np.median(scales[n])))
 
     print('Default scale with ' + header)
     for n in scales:
-        print('n={}, scale={}'.format(n, default_scale(method, n, order)))
+        print('n={}, scale={:.2f}'.format(n, default_scale(method, n, order)))
 
 
 if __name__ == '__main__':
     # run_all_benchmarks(method='complex', order=2, x_values=[0.01, 0.1, 1.0,])
     # run_all_benchmarks(method='complex', order=2, x_values=[0.1, 0.5, 1.0, 5, 10, 50,])
     # run_all_benchmarks(method="central", order=2,  x_values=[0.1, 0.5, 1.0, 5, 10, 50,])
-    run_all_benchmarks(method='forward', order=2, x_values=[0.01, 0.1, 1.0,])
+    run_all_benchmarks(method='forward', order=2, x_values=[0.01, 0.1, 1.0,], n_max=3)
     plt.show('hold')
 

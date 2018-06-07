@@ -1,206 +1,22 @@
+"""
+Numdifftools.nd_statsmodels
+======================
+This module provides an easy to use interface to derivatives calculated with
+statsmodels.numdiff.
+"""
+
 from __future__ import division, print_function
+from functools import partial
 from statsmodels.tools.numdiff import (  # approx_fprime,
     approx_fprime_cs,
     approx_hess,
     approx_hess1,
     approx_hess2,
     approx_hess3,
-    approx_hess_cs)
+    approx_hess_cs,
+    _get_epsilon)
 import numpy as np
 _EPS = np.finfo(float).eps
-
-
-class _Common(object):
-
-    def __init__(self, fun, step=None, method='central', order=2):
-        self.fun = fun
-        self.step = step
-        self.method = method
-
-
-class Hessian(_Common):
-    """
-    Calculate Hessian with finite difference approximation
-
-    Parameters
-    ----------
-    fun : function
-       function of one array fun(x, `*args`, `**kwds`)
-    step : float, optional
-        Stepsize, if None, optimal stepsize is used, i.e.,
-        x * _EPS**(1/3) for method==`forward`, `complex`  or `central2`
-        x * _EPS**(1/4) for method==`central`.
-    method : {'central', 'complex', 'forward'}
-        defines the method used in the approximation.
-
-    Examples
-    --------
-    >>> import numpy as np
-    >>> import numdifftools.nd_statsmodels as nd
-
-    # Rosenbrock function, minimized at [1,1]
-
-    >>> rosen = lambda x : (1.-x[0])**2 + 105*(x[1]-x[0]**2)**2
-    >>> Hfun = nd.Hessian(rosen)
-    >>> h = Hfun([1, 1])
-    >>> np.allclose(h, [[ 842., -420.], [-420.,  210.]])
-    True
-
-    # cos(x-y), at (0,0)
-
-    >>> cos = np.cos
-    >>> fun = lambda xy : cos(xy[0]-xy[1])
-    >>> Hfun2 = nd.Hessian(fun)
-    >>> h2 = Hfun2([0, 0])
-    >>> np.allclose(h2, [[-1.,  1.], [ 1., -1.]])
-    True
-
-    See also
-    --------
-    Jacobian, Gradient
-    """
-
-    def __call__(self, x, *args, **kwds):
-        approx_hess_fun = dict(complex=approx_hess_cs,
-                               forward=approx_hess1,
-                               central2=approx_hess2).get(self.method,
-                                                          approx_hess3)
-
-        return approx_hess_fun(np.atleast_1d(x), self.fun, self.step, args,
-                               kwds)
-
-
-class Jacobian(_Common):
-    """
-    Calculate Jacobian with finite difference approximation
-
-    Parameters
-    ----------
-    fun : function
-       function of one array fun(x, `*args`, `**kwds`)
-    step : float, optional
-        Stepsize, if None, optimal stepsize is used, i.e.,
-        x * _EPS for method==`complex`
-        x * _EPS**(1/2) for method==`forward`
-        x * _EPS**(1/3) for method==`central`.
-    method : {'central', 'complex', 'forward'}
-        defines the method used in the approximation.
-
-    Examples
-    --------
-    >>> import numdifftools.nd_statsmodels as nd
-
-    #(nonlinear least squares)
-
-    >>> xdata = np.arange(0,1,0.1)
-    >>> ydata = 1+2*np.exp(0.75*xdata)
-    >>> fun = lambda c: (c[0]+c[1]*np.exp(c[2]*xdata) - ydata)**2
-    >>> np.allclose(fun([1, 2, 0.75]).shape, (10,))
-    True
-    >>> dfun = nd.Jacobian(fun)
-    >>> np.allclose(dfun([1, 2, 0.75]), np.zeros((10,3)))
-    True
-
-    >>> fun2 = lambda x : x[0]*x[1]*x[2]**2
-    >>> dfun2 = nd.Jacobian(fun2)
-    >>> np.allclose(dfun2([1.,2.,3.]), [[18., 9., 12.]])
-    True
-
-    >>> fun3 = lambda x : np.vstack((x[0]*x[1]*x[2]**2, x[0]*x[1]*x[2]))
-    >>> np.allclose(nd.Jacobian(fun3)([1., 2., 3.]),
-    ...            [[18., 9., 12.], [6., 3., 2.]])
-    True
-    >>> np.allclose(nd.Jacobian(fun3)([4., 5., 6.]),
-    ...            [[180., 144., 240.], [30., 24., 20.]])
-    True
-
-    >>> np.allclose(nd.Jacobian(fun3)(np.array([[1.,2.,3.], [4., 5., 6.]]).T),
-    ...            [[[  18.,  180.],
-    ...              [   9.,  144.],
-    ...              [  12.,  240.]],
-    ...             [[   6.,   30.],
-    ...              [   3.,   24.],
-    ...              [   2.,   20.]]])
-    True
-    """
-
-    def __call__(self, x, *args, **kwds):
-        x = np.atleast_1d(x)
-        if self.method.startswith('complex'):
-            grad = approx_fprime_cs(x, self.fun, self.step, args, kwds)
-        else:
-            grad = approx_fprime(x, self.fun, self.step, args, kwds,
-                                 centered=self.method.startswith('central'))
-        return grad
-
-
-class Gradient(Jacobian):
-    """
-    Calculate Gradient with finite difference approximation
-
-    Parameters
-    ----------
-    fun : function
-       function of one array fun(x, `*args`, `**kwds`)
-    step : float, optional
-        Stepsize, if None, optimal stepsize is used, i.e.,
-        x * _EPS for method==`complex`
-        x * _EPS**(1/2) for method==`forward`
-        x * _EPS**(1/3) for method==`central`.
-    method : {'central', 'complex', 'forward'}
-        defines the method used in the approximation.
-
-    Examples
-    --------
-    >>> import numpy as np
-    >>> import numdifftools.nd_statsmodels as nd
-    >>> fun = lambda x: np.sum(x**2)
-    >>> dfun = nd.Gradient(fun)
-    >>> np.allclose(dfun([1,2,3]), [ 2.,  4.,  6.])
-    True
-
-    # At [x,y] = [1,1], compute the numerical gradient
-    # of the function sin(x-y) + y*exp(x)
-
-    >>> sin = np.sin; exp = np.exp
-    >>> z = lambda xy: sin(xy[0]-xy[1]) + xy[1]*exp(xy[0])
-    >>> dz = nd.Gradient(z)
-    >>> grad2 = dz([1, 1])
-    >>> np.allclose(grad2, [ 3.71828183,  1.71828183])
-    True
-
-    # At the global minimizer (1,1) of the Rosenbrock function,
-    # compute the gradient. It should be essentially zero.
-
-    >>> rosen = lambda x : (1-x[0])**2 + 105.*(x[1]-x[0]**2)**2
-    >>> rd = nd.Gradient(rosen)
-    >>> grad3 = rd([1,1])
-    >>> np.allclose(grad3,[0, 0])
-    True
-
-    See also
-    --------
-    Hessian, Jacobian
-    """
-
-    def __call__(self, x, *args, **kwds):
-        return super(Gradient, self).__call__(np.atleast_1d(x).ravel(),
-                                              *args, **kwds).squeeze()
-
-
-def _get_epsilon(x, s, epsilon, n):
-    if epsilon is None:
-        h = _EPS**(1. / s) * np.maximum(np.abs(x), 0.1)
-    else:
-        if np.isscalar(epsilon):
-            h = np.empty(n)
-            h.fill(epsilon)
-        else:  # pragma : no cover
-            h = np.asarray(epsilon)
-            if h.shape != x.shape:
-                raise ValueError("If h is not a scalar it must have the same"
-                                 " shape as x.")
-    return h
 
 
 def approx_fprime(x, f, epsilon=None, args=(), kwargs=None, centered=True):
@@ -261,6 +77,210 @@ def approx_fprime(x, f, epsilon=None, args=(), kwargs=None, centered=True):
     axes = [0, 1, 2][:grad.ndim]
     axes[:2] = axes[1::-1]
     return np.transpose(grad, axes=axes).squeeze()
+
+
+class _Common(object):
+    def __init__(self, fun, step=None, method='central', order=None):
+        self.fun = fun
+        self.step = step
+        self.method = method
+        self.order = order
+
+    _callables = {}
+    n = property(fget=lambda cls: 1)
+
+    @property
+    def order(self):
+        return dict(forward=1).get(self.method, 2)  # complex=2, central=2
+
+    @order.setter
+    def order(self, order):
+        if order is None:
+            return
+        valid_order = self.order
+        if order != valid_order:
+            msg = 'Can not change order to {}! The only valid order is {} for method={}.'
+            warnings.warn(msg.format(order, valid_order, self.method))
+
+    @property
+    def method(self):
+        return self._method
+
+    @method.setter
+    def method(self, method):
+        self._metod = method
+        callable = self._callables.get(method)
+        if callable:
+            self._derivative_nonzero_order = callable
+        else:
+            warnings.warn('{} is an illegal method! Setting method="central"'.format(method))
+            self.method = 'central'
+
+    def __call__(self, x, *args, **kwds):
+        return self._derivative_nonzero_order(np.atleast_1d(x), self.fun, self.step, args, kwds)
+
+
+class Hessian(_Common):
+    """
+    Calculate Hessian with finite difference approximation
+
+    Parameters
+    ----------
+    fun : function
+       function of one array fun(x, `*args`, `**kwds`)
+    step : float, optional
+        Stepsize, if None, optimal stepsize is used, i.e.,
+        x * _EPS**(1/3) for method==`forward`, `complex`  or `central2`
+        x * _EPS**(1/4) for method==`central`.
+    method : {'central', 'complex', 'forward'}
+        defines the method used in the approximation.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> import numdifftools.nd_statsmodels as nd
+
+    # Rosenbrock function, minimized at [1,1]
+
+    >>> rosen = lambda x : (1.-x[0])**2 + 105*(x[1]-x[0]**2)**2
+    >>> Hfun = nd.Hessian(rosen)
+    >>> h = Hfun([1, 1])
+    >>> np.allclose(h, [[ 842., -420.], [-420.,  210.]])
+    True
+
+    # cos(x-y), at (0,0)
+
+    >>> cos = np.cos
+    >>> fun = lambda xy : cos(xy[0]-xy[1])
+    >>> Hfun2 = nd.Hessian(fun)
+    >>> h2 = Hfun2([0, 0])
+    >>> np.allclose(h2, [[-1.,  1.], [ 1., -1.]])
+    True
+
+    See also
+    --------
+    Jacobian, Gradient
+    """
+    n = property(fget=lambda cls: 2)
+
+    _callables = dict(complex=approx_hess_cs,
+                      forward=approx_hess1,
+                      central=approx_hess3,
+                      central2=approx_hess2)
+
+
+class Jacobian(_Common):
+    """
+    Calculate Jacobian with finite difference approximation
+
+    Parameters
+    ----------
+    fun : function
+       function of one array fun(x, `*args`, `**kwds`)
+    step : float, optional
+        Stepsize, if None, optimal stepsize is used, i.e.,
+        x * _EPS for method==`complex`
+        x * _EPS**(1/2) for method==`forward`
+        x * _EPS**(1/3) for method==`central`.
+    method : {'central', 'complex', 'forward'}
+        defines the method used in the approximation.
+
+    Examples
+    --------
+    >>> import numdifftools.nd_statsmodels as nd
+
+    #(nonlinear least squares)
+
+    >>> xdata = np.arange(0,1,0.1)
+    >>> ydata = 1+2*np.exp(0.75*xdata)
+    >>> fun = lambda c: (c[0]+c[1]*np.exp(c[2]*xdata) - ydata)**2
+    >>> np.allclose(fun([1, 2, 0.75]).shape, (10,))
+    True
+    >>> dfun = nd.Jacobian(fun)
+    >>> np.allclose(dfun([1, 2, 0.75]), np.zeros((10,3)))
+    True
+
+    >>> fun2 = lambda x : x[0]*x[1]*x[2]**2
+    >>> dfun2 = nd.Jacobian(fun2)
+    >>> np.allclose(dfun2([1.,2.,3.]), [[18., 9., 12.]])
+    True
+
+    >>> fun3 = lambda x : np.vstack((x[0]*x[1]*x[2]**2, x[0]*x[1]*x[2]))
+    >>> np.allclose(nd.Jacobian(fun3)([1., 2., 3.]),
+    ...            [[18., 9., 12.], [6., 3., 2.]])
+    True
+    >>> np.allclose(nd.Jacobian(fun3)([4., 5., 6.]),
+    ...            [[180., 144., 240.], [30., 24., 20.]])
+    True
+
+    >>> np.allclose(nd.Jacobian(fun3)(np.array([[1.,2.,3.], [4., 5., 6.]]).T),
+    ...            [[[  18.,  180.],
+    ...              [   9.,  144.],
+    ...              [  12.,  240.]],
+    ...             [[   6.,   30.],
+    ...              [   3.,   24.],
+    ...              [   2.,   20.]]])
+    True
+    """
+    _callables = dict(complex=approx_fprime_cs,
+                      central=partial(approx_fprime, centered=True),
+                      forward=partial(approx_fprime, centered=False))
+
+
+class Gradient(Jacobian):
+    """
+    Calculate Gradient with finite difference approximation
+
+    Parameters
+    ----------
+    fun : function
+       function of one array fun(x, `*args`, `**kwds`)
+    step : float, optional
+        Stepsize, if None, optimal stepsize is used, i.e.,
+        x * _EPS for method==`complex`
+        x * _EPS**(1/2) for method==`forward`
+        x * _EPS**(1/3) for method==`central`.
+    method : {'central', 'complex', 'forward'}
+        defines the method used in the approximation.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> import numdifftools.nd_statsmodels as nd
+    >>> fun = lambda x: np.sum(x**2)
+    >>> dfun = nd.Gradient(fun)
+    >>> np.allclose(dfun([1,2,3]), [ 2.,  4.,  6.])
+    True
+
+    # At [x,y] = [1,1], compute the numerical gradient
+    # of the function sin(x-y) + y*exp(x)
+
+    >>> sin = np.sin; exp = np.exp
+    >>> z = lambda xy: sin(xy[0]-xy[1]) + xy[1]*exp(xy[0])
+    >>> dz = nd.Gradient(z)
+    >>> grad2 = dz([1, 1])
+    >>> np.allclose(grad2, [ 3.71828183,  1.71828183])
+    True
+
+    # At the global minimizer (1,1) of the Rosenbrock function,
+    # compute the gradient. It should be essentially zero.
+
+    >>> rosen = lambda x : (1-x[0])**2 + 105.*(x[1]-x[0]**2)**2
+    >>> rd = nd.Gradient(rosen)
+    >>> grad3 = rd([1,1])
+    >>> np.allclose(grad3,[0, 0])
+    True
+
+    See also
+    --------
+    Hessian, Jacobian
+    """
+
+    def __call__(self, x, *args, **kwds):
+        return super(Gradient, self).__call__(np.atleast_1d(x).ravel(),
+                                              *args, **kwds).squeeze()
+
+
 
 
 if __name__ == '__main__':

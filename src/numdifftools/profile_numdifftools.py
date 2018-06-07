@@ -1,22 +1,35 @@
+"""
+This script profile different parts of numdifftools.
+
+"""
 from __future__ import print_function
 import numpy as np
 import numdifftools as nd
+import numdifftools.nd_statsmodels as nds
 from numdifftools.profiletools import do_profile
 from numdifftools.example_functions import function_names, get_function
 from numdifftools.run_benchmark import BenchmarkFunction
-
 
 def main0():
     for n in 4, 8, 16, 32, 64, 96:
         f = BenchmarkFunction(n)
 
-        cls = nd.Jacobian(f, method='central')
-        function = do_profile(follow=[cls._derivative_nonzero_order,
-                                      cls._apply_fd_rule,
-                                      cls._get_finite_difference_rule,
-                                      cls._vstack])(cls)
+        step = nd.step_generators.one_step
+        #step = None
+        # cls = nd.Jacobian(f, step=step, method='central')
+        cls = nd.Hessian(f, step=step, method='central')
+        follow = [cls._derivative_nonzero_order,
+                  cls._apply_fd_rule,
+                  cls._get_finite_difference_rule,
+                  cls._vstack,
+                  cls._central_even]
+#         cls = nds.Hessian(f, step=None, method='central')
+#         follow = [cls._derivative_nonzero_order, ]
+
         x = 3 * np.ones(n)
-        val = function(x)
+
+#        val = cls(x)
+        val = do_profile(follow=follow)(cls)(x)
 
 
 def main():

@@ -31,7 +31,7 @@ class BenchmarkFunction(object):
 def _plot(plot, problem_sizes, objects, symbols, ylabel='', loc=2, logx=False):
     for title, funcs, results in objects:
         plt.figure()
-        plt.title(title)
+        plt.title(title + ' 2018')
         for i, method in enumerate(funcs):
             plot(problem_sizes, results[i], symbols[i],
                  markerfacecolor='None', label=method)
@@ -97,9 +97,9 @@ hessian_funs['complex_statsmodels'] = nds.Hessian(1, method='complex')
 gradient_funs['forward_statsmodels'] = nds.Jacobian(1, method='forward')
 gradient_funs['central_statsmodels'] = nds.Jacobian(1, method='central')
 gradient_funs['complex_statsmodels'] = nds.Jacobian(1, method='complex')
-gradient_funs['forward_scipy'] = nsc.Jacobian(1, method='forward')
-gradient_funs['central_scipy'] = nsc.Jacobian(1, method='central')
-gradient_funs['complex_scipy'] = nsc.Jacobian(1, method='complex')
+# gradient_funs['forward_scipy'] = nsc.Jacobian(1, method='forward')
+# gradient_funs['central_scipy'] = nsc.Jacobian(1, method='central')
+# gradient_funs['complex_scipy'] = nsc.Jacobian(1, method='complex')
 
 
 def _compute_benchmark(functions, problem_sizes):
@@ -134,6 +134,8 @@ def _compute_benchmark(functions, problem_sizes):
 def compute_gradients(gradient_funs, problem_sizes):
     print('starting gradient computation ')
     results_gradients = _compute_benchmark(gradient_funs, problem_sizes)
+    print(list(hessian_funs))
+    print('run_time, err, preproc_time')
     print('results_gradients=\n', results_gradients)
     return results_gradients
 
@@ -142,6 +144,8 @@ def compute_hessians(hessian_funs, problem_sizes):
     print('starting hessian computation ')
     results_hessians = _compute_benchmark(hessian_funs, problem_sizes)
     print(problem_sizes)
+    print(list(hessian_funs))
+    print('run_time, err, preproc_time')
     print('results_hessians=\n', results_hessians)
     return results_hessians
 
