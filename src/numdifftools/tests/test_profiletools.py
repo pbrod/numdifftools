@@ -71,8 +71,103 @@ class ExpensiveClass4(object):
 
 FIRST_LINE = 'Line #      Hits         Time  Per Hit   % Time  Line Contents'
 
+# Tests
+class TestTimeFun(unittest.TestCase):
+
+    def test_decorate_function(self):
+        @timefun
+        def expensive_function():
+            for x in _get_number():
+                i = x ** 3
+            return i
+        with capture_stdout_and_stderr() as out:
+            _test0 = expensive_function()
+        msg = str(out)
+        # print(out)
+        self.assertTrue(len(out), msg)
+        self.assertTrue(out[0].startswith('@timefun:expensive_function took'), msg=msg)
+        time = float(out[0].split('took')[1].strip().split(' ')[0])
+        self.assertTrue(time > 0)
+
+    def test_direct_on_function(self):
+        with capture_stdout_and_stderr() as out:
+            _test0 = timefun(_expensive_function)()
+        msg = str(out)
+        # print(out)
+        self.assertTrue(len(out), msg)
+        self.assertTrue(out[0].startswith('@timefun:_expensive_function took'), msg=msg)
+        time = float(out[0].split('took')[1].strip().split(' ')[0])
+        self.assertTrue(time > 0)
+
+
+class TestTimeWith(unittest.TestCase):
+    def test_timing_with_context_manager(self):
+        # prints something like:
+        # fancy thing done with something took 0.582462072372 seconds
+        # fancy thing done with something else took 1.75355315208 seconds
+        # fancy thing finished took 1.7535982132 seconds
+        with capture_stdout_and_stderr() as out:
+            with TimeWith('fancy thing') as timer:
+                _expensive_function()
+                timer.checkpoint('done with something')
+                _expensive_function()
+                _expensive_function()
+                timer.checkpoint('done with something else')
+
+        msg = str(out)
+        # print(out)
+        self.assertTrue(len(out), msg)
+        out0 = out[0].split('\n')
+        self.assertTrue(out0[0].startswith('fancy thing done with something took'), msg)
+        self.assertTrue(out0[1].startswith('fancy thing done with something else took'), msg)
+        self.assertTrue(out0[2].startswith('fancy thing finished took'), msg)
+
+    def test_direct_timing(self):
+
+        # or directly
+        with capture_stdout_and_stderr() as out:
+            timer = TimeWith('fancy thing')
+            _expensive_function()
+            timer.checkpoint('done with something')
+
+        msg = str(out)
+        # print(out)
+        self.assertTrue(len(out), msg)
+        self.assertTrue(out[0].startswith('fancy thing done with something took'), msg)
+
+
+class TestDoCProfile(unittest.TestCase):
+
+    def test_on_function(self):
+        @do_cprofile
+        def expensive_function():
+            for x in _get_number():
+                i = x ** 3
+            return i
+        with capture_stdout_and_stderr() as out:
+            _test0 = expensive_function()
+        results = _extract_do_cprofile_results(out[0])
+        print(results)
+        msg = str(results)
+        self.assertTrue(len(results), msg)
+        self.assertTrue(results[0][5].startswith('function calls in'))
+        self.assertTrue(results[0][0] > 50000)
+        self.assertEqual(results[1],
+                         'ncalls  tottime  percall  cumtime  percall filename:lineno(function)')
+        num_tests = 0
+        for result in results[2:]:
+            if result[5].endswith('(expensive_function)'):
+                num_tests += 1
+                for i in range(5):
+                    self.assertGreater(result[i], 0)
+            elif result[5].endswith('(_get_number)'):
+                num_tests += 1
+        if num_tests != 2:
+            raise ValueError('Did not find _get_number or expensive_function')
+
+
 @unittest.skipIf(LineProfiler is None)
-class TestDoProfile(unittest.TestCase):
+class TestDoProfile(unittest.TestCase):  # TODO: Suspect this test fucks up coverage stats.
 
     def test_on_function_and_follow_function(self):
         @do_profile(follow=[_get_number])
@@ -202,97 +297,3 @@ class TestDoProfile(unittest.TestCase):
         self.assertTrue(results[2][2] > 10, msg=msg)
         self.assertEqual(results[5], FIRST_LINE, msg=msg)
         self.assertEqual(results[6][5].strip(), 'def _get_number4(self):', msg=msg)
-
-
-class TestDoCProfile(unittest.TestCase):
-
-    def test_on_function(self):
-        @do_cprofile
-        def expensive_function():
-            for x in _get_number():
-                i = x ** 3
-            return i
-        with capture_stdout_and_stderr() as out:
-            _test0 = expensive_function()
-        results = _extract_do_cprofile_results(out[0])
-        print(results)
-        msg = str(results)
-        self.assertTrue(len(results), msg)
-        self.assertTrue(results[0][5].startswith('function calls in'))
-        self.assertTrue(results[0][0] > 50000)
-        self.assertEqual(results[1],
-                         'ncalls  tottime  percall  cumtime  percall filename:lineno(function)')
-        num_tests = 0
-        for result in results[2:]:
-            if result[5].endswith('(expensive_function)'):
-                num_tests += 1
-                for i in range(5):
-                    self.assertGreater(result[i], 0)
-            elif result[5].endswith('(_get_number)'):
-                num_tests += 1
-        if num_tests != 2:
-            raise ValueError('Did not find _get_number or expensive_function')
-
-
-class TestTimeFun(unittest.TestCase):
-
-    def test_decorate_function(self):
-        @timefun
-        def expensive_function():
-            for x in _get_number():
-                i = x ** 3
-            return i
-        with capture_stdout_and_stderr() as out:
-            _test0 = expensive_function()
-        msg = str(out)
-        # print(out)
-        self.assertTrue(len(out), msg)
-        self.assertTrue(out[0].startswith('@timefun:expensive_function took'), msg=msg)
-        time = float(out[0].split('took')[1].strip().split(' ')[0])
-        self.assertTrue(time > 0)
-
-    def test_direct_on_function(self):
-        with capture_stdout_and_stderr() as out:
-            _test0 = timefun(_expensive_function)()
-        msg = str(out)
-        # print(out)
-        self.assertTrue(len(out), msg)
-        self.assertTrue(out[0].startswith('@timefun:_expensive_function took'), msg=msg)
-        time = float(out[0].split('took')[1].strip().split(' ')[0])
-        self.assertTrue(time > 0)
-
-
-class TestTimeWith(unittest.TestCase):
-    def test_timing_with_context_manager(self):
-        # prints something like:
-        # fancy thing done with something took 0.582462072372 seconds
-        # fancy thing done with something else took 1.75355315208 seconds
-        # fancy thing finished took 1.7535982132 seconds
-        with capture_stdout_and_stderr() as out:
-            with TimeWith('fancy thing') as timer:
-                _expensive_function()
-                timer.checkpoint('done with something')
-                _expensive_function()
-                _expensive_function()
-                timer.checkpoint('done with something else')
-
-        msg = str(out)
-        # print(out)
-        self.assertTrue(len(out), msg)
-        out0 = out[0].split('\n')
-        self.assertTrue(out0[0].startswith('fancy thing done with something took'), msg)
-        self.assertTrue(out0[1].startswith('fancy thing done with something else took'), msg)
-        self.assertTrue(out0[2].startswith('fancy thing finished took'), msg)
-
-    def test_direct_timing(self):
-
-        # or directly
-        with capture_stdout_and_stderr() as out:
-            timer = TimeWith('fancy thing')
-            _expensive_function()
-            timer.checkpoint('done with something')
-
-        msg = str(out)
-        # print(out)
-        self.assertTrue(len(out), msg)
-        self.assertTrue(out[0].startswith('fancy thing done with something took'), msg)
