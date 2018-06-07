@@ -7,10 +7,12 @@ https://www.pythoncentral.io/measure-time-in-python-time-time-vs-time-clock/
 
 from __future__ import print_function
 import inspect
-# from time import time as timer
-from timeit import default_timer as timer
 import cProfile
 from functools import wraps
+# from time import time as timer
+from timeit import default_timer as timer
+import warnings
+
 
 try:
     from line_profiler import LineProfiler
