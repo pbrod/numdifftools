@@ -95,6 +95,7 @@ from numdifftools import Derivative
 from numdifftools.step_generators import default_scale, MinStepGenerator
 import numpy as np
 import matplotlib.pyplot as plt
+import itertools
 
 
 def plot_error(scales, relativ_error, scale0, title='', label=''):
@@ -107,6 +108,23 @@ def plot_error(scales, relativ_error, scale0, title='', label=''):
     plt.axis([min(scales), max(scales), np.nanmin(relativ_error), 1])
 
 
+
+def _compute_relative_errors(x, dfun, fd, scales):
+    t = []
+    for scale in scales:
+        fd.step.scale = scale
+        try:
+            val = fd(x)
+        except Exception:
+            val = np.nan
+        t.append(val)
+
+    t = np.array(t)
+    tt = dfun(x)
+    relativ_errors = np.abs(t - tt) / (np.maximum(np.abs(tt), 1)) + 1e-16
+    return relativ_errors
+
+
 def benchmark(x=0.0001, dfun=None, fd=None, name='', scales=None, show_plot=True):
 
     if scales is None:
@@ -117,19 +135,9 @@ def benchmark(x=0.0001, dfun=None, fd=None, name='', scales=None, show_plot=True
     if dfun is None:
         return dict(n=n, order=order, method=method, fun=name, error=np.nan, scale=np.nan)
 
-    t = []
-    for scale in scales:
-        fd.step.scale = scale
-        try:
-            val = fd(x)
-        except Exception:
-            val = np.nan
-        t.append(val)
-    t = np.array(t)
-    tt = dfun(x)
-    relativ_error = np.abs(t - tt) / (np.maximum(np.abs(tt), 1)) + 1e-16
+    relativ_errors = _compute_relative_errors(x, dfun, fd, scales)
 
-    if not np.isfinite(relativ_error).any():
+    if not np.isfinite(relativ_errors).any():
         return dict(n=n, order=order, method=method, fun=name,
                     error=np.nan, scale=np.nan)
     if show_plot:
@@ -137,12 +145,26 @@ def benchmark(x=0.0001, dfun=None, fd=None, name='', scales=None, show_plot=True
                "7th"] + ["%d'th" % i for i in range(8, 25)]
         title = "The %s derivative using %s, order=%d" % (txt[n], method, order)
         scale0 = default_scale(method, n, order)
-        plot_error(scales, relativ_error, scale0, title, label=name)
+        plot_error(scales, relativ_errors, scale0, title, label=name)
 
-    i = np.nanargmin(relativ_error)
-    error = float('{:.3g}'.format(relativ_error[i]))
+    i = np.nanargmin(relativ_errors)
+    error = float('{:.3g}'.format(relativ_errors[i]))
     return dict(n=n, order=order, method=method, fun=name,
                 error=error, scale=scales[i])
+
+
+def _print_summary(method, order, x_values, scales):
+    print(scales)
+    header = 'method="{}", order={}, x_values={}:'.format(method, order, str(x_values))
+    print(header)
+    for n in scales:
+        print('n={}, mean scale={:.2f}, median scale={:.2f}'.format(n,
+                                                                    np.mean(scales[n]),
+                                                                    np.median(scales[n])))
+
+    print('Default scale with ' + header)
+    for n in scales:
+        print('n={}, scale={:.2f}'.format(n, default_scale(method, n, order)))
 
 
 def run_all_benchmarks(method='forward', order=4, x_values=(0.1, 0.5, 1.0, 5), n_max=11,
@@ -152,31 +174,20 @@ def run_all_benchmarks(method='forward', order=4, x_values=(0.1, 0.5, 1.0, 5), n
     scales = {}
     for n in range(1, n_max):
         plt.figure(n)
-        for x in x_values:
-            for name in function_names:
-                fun0, dfun = get_function(name, n)
-                fd = Derivative(fun0, step=epsilon, method=method, n=n, order=order)
-                r = benchmark(x=x, dfun=dfun, fd=fd, name=name, scales=None, show_plot=show_plot)
-                print(r)
-                scale_n = scales.setdefault(n, [])
-                scale = r['scale']
-                if np.isfinite(scale):
-                    scale_n.append(scale)
+        for (x, name) in itertools.product(x_values, function_names):
+            fun0, dfun = get_function(name, n)
+            fd = Derivative(fun0, step=epsilon, method=method, n=n, order=order)
+            r = benchmark(x=x, dfun=dfun, fd=fd, name=name, scales=None, show_plot=show_plot)
+            print(r)
+            scale_n = scales.setdefault(n, [])
+            scale = r['scale']
+            if np.isfinite(scale):
+                scale_n.append(scale)
 
         plt.vlines(np.mean(scale_n), 1e-12, 1, 'r', linewidth=3)
         plt.vlines(np.median(scale_n), 1e-12, 1, 'b', linewidth=3)
 
-    print(scales)
-    header = 'method="{}", order={}, x_values={}:'.format(method, order, str(x_values))
-    print(header)
-    for n in scales:
-        print('n={}, mean scale={:.2f}, median scale={:.2f}'.format(n,
-                                                            np.mean(scales[n]),
-                                                            np.median(scales[n])))
-
-    print('Default scale with ' + header)
-    for n in scales:
-        print('n={}, scale={:.2f}'.format(n, default_scale(method, n, order)))
+    _print_summary(method, order, x_values, scales)
 
 
 if __name__ == '__main__':
