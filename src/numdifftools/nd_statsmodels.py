@@ -16,6 +16,7 @@ from statsmodels.tools.numdiff import (  # approx_fprime,
     approx_hess_cs,
     _get_epsilon)
 import numpy as np
+import warnings
 _EPS = np.finfo(float).eps
 
 
