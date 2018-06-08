@@ -133,7 +133,8 @@ def benchmark(x=0.0001, dfun=None, fd=None, name='', scales=None, show_plot=True
     n, method, order = fd.n, fd.method, fd.order
 
     if dfun is None:
-        return dict(n=n, order=order, method=method, fun=name, error=np.nan, scale=np.nan)
+        return dict(n=n, order=order, method=method, fun=name,
+                    error=np.nan, scale=np.nan, x=np.nan)
 
     relativ_errors = _compute_relative_errors(x, dfun, fd, scales)
 
@@ -150,7 +151,7 @@ def benchmark(x=0.0001, dfun=None, fd=None, name='', scales=None, show_plot=True
     i = np.nanargmin(relativ_errors)
     error = float('{:.3g}'.format(relativ_errors[i]))
     return dict(n=n, order=order, method=method, fun=name,
-                error=error, scale=scales[i])
+                error=error, scale=scales[i], x=x)
 
 
 def _print_summary(method, order, x_values, scales):
@@ -174,15 +175,19 @@ def run_all_benchmarks(method='forward', order=4, x_values=(0.1, 0.5, 1.0, 5), n
     scales = {}
     for n in range(1, n_max):
         plt.figure(n)
-        for (x, name) in itertools.product(x_values, function_names):
+        scale_n = scales.setdefault(n, [])
+        # for (name, x) in itertools.product( function_names, x_values):
+        for name in function_names:
             fun0, dfun = get_function(name, n)
+            if dfun is None:
+                continue
             fd = Derivative(fun0, step=epsilon, method=method, n=n, order=order)
-            r = benchmark(x=x, dfun=dfun, fd=fd, name=name, scales=None, show_plot=show_plot)
-            print(r)
-            scale_n = scales.setdefault(n, [])
-            scale = r['scale']
-            if np.isfinite(scale):
-                scale_n.append(scale)
+            for x in x_values:
+                r = benchmark(x=x, dfun=dfun, fd=fd, name=name, scales=None, show_plot=show_plot)
+                print(r)
+                scale = r['scale']
+                if np.isfinite(scale):
+                    scale_n.append(scale)
 
         plt.vlines(np.mean(scale_n), 1e-12, 1, 'r', linewidth=3)
         plt.vlines(np.median(scale_n), 1e-12, 1, 'b', linewidth=3)
@@ -192,6 +197,7 @@ def run_all_benchmarks(method='forward', order=4, x_values=(0.1, 0.5, 1.0, 5), n
 
 if __name__ == '__main__':
 
-    run_all_benchmarks(method='complex', order=2, x_values=[0.1, 0.5, 1.0, 5, 10, 50,], n_max=11)
+    run_all_benchmarks(method='complex', order=2, x_values=[50.,], #0.1, 0.5, 1.0, 5, 10, 50,],
+                       n_max=11)
     plt.show('hold')
 
