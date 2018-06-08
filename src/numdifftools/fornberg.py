@@ -349,7 +349,7 @@ class Taylor(object):
     Notes
     -----
     This module uses the method of Fornberg to compute the Taylor series
-    coefficents of a complex analytic function along with error bounds. The
+    coefficients of a complex analytic function along with error bounds. The
     method uses a Fast Fourier Transform to invert function evaluations around
     a circle into Taylor series coefficients and uses Richardson Extrapolation
     to improve and bound the estimate. Unlike real-valued finite differences,

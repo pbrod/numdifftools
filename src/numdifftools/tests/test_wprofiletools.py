@@ -166,7 +166,7 @@ class TestDoCProfile(unittest.TestCase):
             raise ValueError('Did not find _get_number or expensive_function')
 
 
-@unittest.skipIf(LineProfiler is None)
+@unittest.skipIf(LineProfiler is None, 'LineProfiler is not installed.')
 class TestDoProfile(unittest.TestCase):  # TODO: Suspect this test fucks up coverage stats.
 
     def test_on_function_and_follow_function(self):
