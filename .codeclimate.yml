@@ -1,15 +1,77 @@
-
-engines:
-  duplication:
+version: "2"
+checks:
+  argument-count:
     enabled: true
     config:
-      languages:
-      - python
+      threshold: 8
+  complex-logic:
+    enabled: true
+    config:
+      threshold: 4
+  file-lines:
+    enabled: true
+    config:
+      threshold: 1000
+  method-complexity:
+    enabled: true
+    config:
+      threshold: 5
+  method-count:
+    enabled: true
+    config:
+      threshold: 20
+  method-lines:
+    enabled: true
+    config:
+      threshold: 25
+  nested-control-flow:
+    enabled: true
+    config:
+      threshold: 4
+  return-statements:
+    enabled: true
+    config:
+      threshold: 4
+  similar-code:
+    enabled: true
+    config:
+      threshold: #language-specific defaults. overrides affect all languages.
+  identical-code:
+    enabled: true
+    config:
+      threshold: #language-specific defaults. overrides affect all languages.
+
+
+plugins:
+
+  pylint:
+    enabled: true
+    channel: "beta"
+  sonar-python:
+    enabled: true
+    config:
+      minimum_severity: critical
+  radon: 
+    enabled: true
+    config: 
+      threshold: "C"
+  pep8:
+    enabled: true
   fixme:
     enabled: true
-  radon:
-    enabled: true
-ratings:
-  paths:
-  - "**.py"
-exclude_paths: [numdifftools/tests/]
+ 
+exclude_patterns:
+- "config/"
+- "db/"
+- "dist/"
+- "features/"
+- "**/node_modules/"
+- "script/"
+- "**/spec/"
+- "**/test/"
+- "**/tests/"
+- "**/vendor/"
+- "**/*.d.ts"
+
+
+
