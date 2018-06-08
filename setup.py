@@ -61,8 +61,10 @@ def setup_package():
     needs_sphinx = {'build_sphinx', 'upload_docs'}.intersection(sys.argv)
     sphinx = ['sphinx', 'numpydoc'] if needs_sphinx else []
     setup(setup_requires=['pyscaffold==2.5.11'] + sphinx,
-          # packages=find_packages(where='./src'),
-          # tests_require=['pytest_cov', 'pytest', 'hypothesis', 'matplotlib'],
+          package_dir='src',
+          include_package_data=True,
+          packages=find_packages(where=r'./src'),
+          tests_require=['pytest_cov', 'pytest', 'hypothesis', 'matplotlib', 'line_profiler'],
           use_pyscaffold=True)
     print_version()
 

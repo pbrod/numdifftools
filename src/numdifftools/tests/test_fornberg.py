@@ -37,8 +37,7 @@ def test_high_order_derivative(x):
             aerr = min(aerr0, max(np.abs(tval)*1e-6, 1e-8))
             print(n, name, y, vals[n], tval, info.iterations, aerr0, aerr)
             note("{}, {}, {}, {}, {}, {}, {}, {}".format(
-                n, name, y, vals[n], tval, info.iterations,
-                           aerr0, aerr))
+                n, name, y, vals[n], tval, info.iterations, aerr0, aerr))
             assert_allclose(np.real(vals[n]), tval, rtol=1e-6, atol=aerr)
 
 
