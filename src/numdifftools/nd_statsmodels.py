@@ -80,6 +80,18 @@ def approx_fprime(x, f, epsilon=None, args=(), kwargs=None, centered=True):
     return np.transpose(grad, axes=axes).squeeze()
 
 
+def _approx_fprime_backward(x, f, epsilon=None, args=(), kwargs=None):
+    n = len(x)
+    epsilon = - np.abs(_get_epsilon(x, 2, epsilon, n))
+    return approx_fprime(x, f, epsilon, args, kwargs, centered=False)
+
+
+def _approx_hess1_backward(x, f, epsilon=None, args=(), kwargs=None):
+    n = len(x)
+    epsilon = - np.abs(_get_epsilon(x, 3, epsilon, n))
+    return approx_hess1(x, f, epsilon, args, kwargs, centered=False)
+
+
 class _Common(object):
     def __init__(self, fun, step=None, method='central', order=None):
         self.fun = fun
@@ -92,7 +104,7 @@ class _Common(object):
 
     @property
     def order(self):
-        return dict(forward=1).get(self.method, 2)  # complex=2, central=2
+        return dict(forward=1, backward=1).get(self.method, 2)
 
     @order.setter
     def order(self, order):
@@ -133,7 +145,7 @@ class Hessian(_Common):
         Stepsize, if None, optimal stepsize is used, i.e.,
         x * _EPS**(1/3) for method==`forward`, `complex`  or `central2`
         x * _EPS**(1/4) for method==`central`.
-    method : {'central', 'complex', 'forward'}
+    method : {'central', 'complex', 'forward', 'backward'}
         defines the method used in the approximation.
 
     Examples
@@ -166,6 +178,7 @@ class Hessian(_Common):
 
     _callables = dict(complex=approx_hess_cs,
                       forward=approx_hess1,
+                      backward=_approx_hess1_backward,
                       central=approx_hess3,
                       central2=approx_hess2)
 
@@ -183,7 +196,7 @@ class Jacobian(_Common):
         x * _EPS for method==`complex`
         x * _EPS**(1/2) for method==`forward`
         x * _EPS**(1/3) for method==`central`.
-    method : {'central', 'complex', 'forward'}
+    method : {'central', 'complex', 'forward', 'backward'}
         defines the method used in the approximation.
 
     Examples
@@ -225,7 +238,8 @@ class Jacobian(_Common):
     """
     _callables = dict(complex=approx_fprime_cs,
                       central=partial(approx_fprime, centered=True),
-                      forward=partial(approx_fprime, centered=False))
+                      forward=partial(approx_fprime, centered=False),
+                      backward=_approx_fprime_backward)
 
 
 class Gradient(Jacobian):
@@ -241,7 +255,7 @@ class Gradient(Jacobian):
         x * _EPS for method==`complex`
         x * _EPS**(1/2) for method==`forward`
         x * _EPS**(1/3) for method==`central`.
-    method : {'central', 'complex', 'forward'}
+    method : {'central', 'complex', 'forward', 'backward'}
         defines the method used in the approximation.
 
     Examples

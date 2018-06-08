@@ -1,5 +1,5 @@
 """
-This script can be run to find the emprical optimum scale for numdifftools.Derivative
+This script can be run to find the empirical optimum scale for numdifftools.Derivative
 given the method used.
 
 Below are some results from previous runs compared with what is implemented in default_scale
@@ -145,7 +145,8 @@ def benchmark(x=0.0001, dfun=None, fd=None, name='', scales=None, show_plot=True
                 error=error, scale=scales[i])
 
 
-def run_all_benchmarks(method='forward', order=4, x_values=(0.1, 0.5, 1.0, 5), n_max=11):
+def run_all_benchmarks(method='forward', order=4, x_values=(0.1, 0.5, 1.0, 5), n_max=11,
+                       show_plot=True):
 
     epsilon = MinStepGenerator(num_steps=3, scale=None, step_nom=None)
     scales = {}
@@ -155,7 +156,7 @@ def run_all_benchmarks(method='forward', order=4, x_values=(0.1, 0.5, 1.0, 5), n
             for name in function_names:
                 fun0, dfun = get_function(name, n)
                 fd = Derivative(fun0, step=epsilon, method=method, n=n, order=order)
-                r = benchmark(x=x, dfun=dfun, fd=fd, name=name, scales=None)
+                r = benchmark(x=x, dfun=dfun, fd=fd, name=name, scales=None, show_plot=show_plot)
                 print(r)
                 scale_n = scales.setdefault(n, [])
                 scale = r['scale']
