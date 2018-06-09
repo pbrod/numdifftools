@@ -4,7 +4,6 @@ from scipy.special import factorial
 from numdifftools.extrapolation import EPS, dea3
 from numdifftools.limits import _Limit
 from collections import namedtuple
-# from numba import jit, float64, int64, int32, int8, void
 
 _INFO = namedtuple('info', ['error_estimate',
                             'degenerate',

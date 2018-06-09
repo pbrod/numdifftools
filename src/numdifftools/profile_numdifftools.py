@@ -32,7 +32,6 @@ def profile_hessian(n_values=(4, 8, 16, 32, 64, 96)):
 
 def main():
     x = 0.5
-    # min_dm = dict(complex=2, forward=2, backward=2, central=4)
     methods = ['complex', 'central', 'backward', 'forward']
 
     # for i, Derivative in enumerate([nd.Derivative, nds.Gradient,

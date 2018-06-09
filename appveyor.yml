@@ -41,7 +41,7 @@ install:
   - conda install --yes conda-build
   - conda config --add channels https://conda.anaconda.org/omnia
   - conda config --add channels https://conda.anaconda.org/qttesting
-  - "conda create -q -n test-environment python=%PYTHON_VERSION% numpy scipy algopy pytest pyqt=4 matplotlib pip statsmodels line_profiler IPython==5.0"
+  - "conda create -q -n test-environment python=%PYTHON_VERSION% numpy scipy algopy pytest pyqt=5 matplotlib pip statsmodels line_profiler IPython==5.0"
 
   - activate test-environment
   - pip install coverage

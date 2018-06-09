@@ -35,7 +35,6 @@ class TestExampleFunctions(unittest.TestCase):
 
     def test_first_order_derivative(self):
         x = 0.5
-        # min_dm = dict(complex=2, forward=2, backward=2, central=4)
         methods = [ 'complex', 'central',  'backward', 'forward']
 
         for i, derivative in enumerate([nd.Derivative, nds.Gradient, nda.Derivative]):
