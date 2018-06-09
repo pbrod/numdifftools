@@ -17,7 +17,7 @@ from numdifftools.multicomplex import Bicomplex
 from numdifftools.extrapolation import Richardson, dea3, convolve
 from numdifftools.step_generators import MaxStepGenerator, MinStepGenerator
 from numdifftools.limits import _Limit
-from numdifftools.finite_difference import LogRule
+# from numdifftools.finite_difference import LogRule
 from scipy import special
 
 
