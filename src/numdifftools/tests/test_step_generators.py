@@ -2,8 +2,7 @@ from __future__ import print_function
 import pytest
 import numdifftools.core as nd
 import numpy as np
-from numdifftools.step_generators import (MinStepGenerator, MaxStepGenerator,
-                                          EPS)
+from numdifftools.step_generators import MinStepGenerator, MaxStepGenerator, EPS
 from numpy.testing import assert_array_almost_equal, assert_equal
 
 
@@ -23,14 +22,14 @@ def test_min_step_generator_with_step_ratio4():
 def test_min_step_generator_default_base_step():
     step_gen = nd.MinStepGenerator(num_steps=1, offset=0)
     h = [h for h in step_gen(0)]
-    desired = nd.EPS ** (1. / 2.5)
+    desired = EPS ** (1. / 2.5)
     assert_array_almost_equal((h[-1] - desired) / desired, 0)
 
 
 def test__min_step_generator_with_step_nom1():
     step_gen = nd.MinStepGenerator(num_steps=1, step_nom=1.0, offset=0)
     h = [h for h in step_gen(0)]
-    desired = nd.EPS ** (1. / 2.5)
+    desired = EPS ** (1. / 2.5)
     assert_array_almost_equal((h[-1] - desired) / desired, 0)
 
 
