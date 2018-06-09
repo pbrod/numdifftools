@@ -20,10 +20,10 @@ from numdifftools.limits import _Limit
 # from numdifftools.finite_difference import LogRule
 from scipy import special
 
-
 __all__ = ('dea3', 'Derivative', 'Jacobian', 'Gradient', 'Hessian', 'Hessdiag',
            'MinStepGenerator', 'MaxStepGenerator', 'Richardson',
            'directionaldiff')
+FD_RULES = {}
 
 
 def _assert(cond, msg):
