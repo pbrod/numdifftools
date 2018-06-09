@@ -46,7 +46,7 @@ before_install:
   - source activate condaenv
 # Install packages
 install:
-  - conda install --yes python=$TRAVIS_PYTHON_VERSION numpy scipy pytest statsmodels coverage=4.3.4 algopy line_profiler cython
+  - conda install --yes python=$TRAVIS_PYTHON_VERSION numpy scipy pytest statsmodels coverage algopy line_profiler cython
   - if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then
       conda install --yes pyqt=5 matplotlib;
     else

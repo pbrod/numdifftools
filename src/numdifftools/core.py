@@ -17,15 +17,13 @@ from numdifftools.multicomplex import Bicomplex
 from numdifftools.extrapolation import Richardson, dea3, convolve
 from numdifftools.step_generators import MaxStepGenerator, MinStepGenerator
 from numdifftools.limits import _Limit
+from numdifftools.finite_difference import LogRule
 from scipy import special
+
 
 __all__ = ('dea3', 'Derivative', 'Jacobian', 'Gradient', 'Hessian', 'Hessdiag',
            'MinStepGenerator', 'MaxStepGenerator', 'Richardson',
            'directionaldiff')
-_TINY = np.finfo(float).tiny
-EPS = np.finfo(float).eps
-_SQRT_J = (1j + 1.0) / np.sqrt(2.0)  # = 1j**0.5
-FD_RULES = {}
 
 
 def _assert(cond, msg):
