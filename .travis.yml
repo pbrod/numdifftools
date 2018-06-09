@@ -41,13 +41,12 @@ before_install:
   - conda install --yes conda-build
   - conda create --yes -n condaenv python=$TRAVIS_PYTHON_VERSION
   - conda install --yes -n condaenv pip
-  - conda config --add channels https://conda.anaconda.org/omnia
+  - conda config --add channels conda-forge
   - conda config --add channels https://conda.anaconda.org/qttesting
-  - conda config --add channels https://conda.anaconda.org/pbrod
   - source activate condaenv
 # Install packages
 install:
-  - conda install --yes python=$TRAVIS_PYTHON_VERSION numpy scipy pytest statsmodels coverage=4.3.4 line_profiler cython
+  - conda install --yes python=$TRAVIS_PYTHON_VERSION numpy scipy pytest statsmodels coverage=4.3.4 algopy line_profiler cython
   - if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then
       conda install --yes pyqt=5 matplotlib;
     else
@@ -59,7 +58,6 @@ install:
       pip install setuptools;
     fi
   - pip install coveralls
-  - pip install algopy
   - pip install pyscaffold==2.5.11
   - pip install codecov
   - pip install codeclimate-test-reporter

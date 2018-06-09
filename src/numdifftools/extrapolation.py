@@ -24,8 +24,7 @@ def convolve(sequence, rule, **kwds):
     dtype = np.result_type(float, np.ravel(sequence)[0])
     seq = np.asarray(sequence, dtype=dtype)
     if np.iscomplexobj(seq):
-        return (convolve1d(seq.real, rule, **kwds) + 1j *
-                convolve1d(seq.imag, rule, **kwds))
+        return (convolve1d(seq.real, rule, **kwds) + 1j * convolve1d(seq.imag, rule, **kwds))
     return convolve1d(seq, rule, **kwds)
 
 
