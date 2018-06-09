@@ -56,7 +56,6 @@ def approx_fprime(x, f, epsilon=None, args=(), kwargs=None, centered=True):
     """
     kwargs = {} if kwargs is None else kwargs
     n = len(x)
-    # TODO:  add scaled stepsize
     f0 = f(*(x,) + args, **kwargs)
     dim = np.atleast_1d(f0).shape  # it could be a scalar
     grad = np.zeros((n,) + dim, float)

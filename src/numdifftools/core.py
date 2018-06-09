@@ -219,8 +219,9 @@ class Derivative(_Limit):
 
     def _richardson_step(self):
         complex_step = 4 if self._complex_high_order else 2
-
-        return dict(central=2, central2=2, complex=complex_step,
+        return dict(central=2,
+                    central2=2,
+                    complex=complex_step,
                     multicomplex=2).get(self.method, 1)
 
     def set_richardson_rule(self, step_ratio, num_terms=2):
@@ -359,9 +360,10 @@ class Derivative(_Limit):
     def _parity_complex(self, order, method_order):
         if self.n == 1 and method_order < 4:
             return (order % 2) + 1
-        return (3 + 2 * int(self._odd_derivative) +
-                int(self._derivative_mod_four_is_three) +
-                int(self._derivative_mod_four_is_zero))
+        return (3
+                + 2 * int(self._odd_derivative)
+                + int(self._derivative_mod_four_is_three)
+                + int(self._derivative_mod_four_is_zero))
 
     def _parity(self, method, order, method_order):
         if method.startswith('central'):

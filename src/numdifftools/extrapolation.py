@@ -440,11 +440,12 @@ class Richardson(object):
         self.step = step
         self.step_ratio = step_ratio
 
-    def _r_matrix(self, num_terms):
-        step = self.step
+    @staticmethod
+    def _r_matrix(step_ratio, step, num_terms, order):
+
         i, j = np.ogrid[0:num_terms + 1, 0:num_terms]
         r_mat = np.ones((num_terms + 1, num_terms + 1))
-        r_mat[:, 1:] = (1.0 / self.step_ratio) ** (i * (step * j + self.order))
+        r_mat[:, 1:] = (1.0 / step_ratio) ** (i * (step * j + order))
         return r_mat
 
     def rule(self, sequence_length=None):
@@ -452,7 +453,7 @@ class Richardson(object):
             sequence_length = self.num_terms + 1
         num_terms = min(self.num_terms, sequence_length - 1)
         if num_terms > 0:
-            r_mat = self._r_matrix(num_terms)
+            r_mat = self._r_matrix(self.step_ratio, self.step, num_terms, self.order)
             return linalg.pinv(r_mat)[0]
         return np.ones((1,))
 
