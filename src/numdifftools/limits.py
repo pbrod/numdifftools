@@ -118,7 +118,6 @@ class _Limit(object):
         self.full_output = full_output
         self.step = step, options
 
-
     def _parse_step_options(self, step):
         options = {}
         if isinstance(step, tuple) and isinstance(step[-1], dict):

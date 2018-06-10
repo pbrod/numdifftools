@@ -662,4 +662,3 @@ def derivative(fun, z0, n=1, **kwds):
 if __name__ == '__main__':
     from numdifftools.testing import test_docstrings
     test_docstrings()
-    # main()
