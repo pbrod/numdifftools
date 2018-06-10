@@ -46,7 +46,7 @@ before_install:
   - source activate condaenv
 # Install packages
 install:
-  - conda install --yes python=$TRAVIS_PYTHON_VERSION numpy scipy pytest statsmodels coverage=4.3,4 algopy pyqt matplotlib line_profiler cython
+  - conda install --yes python=$TRAVIS_PYTHON_VERSION numpy scipy pytest statsmodels coverage=4.3.4 algopy pyqt matplotlib line_profiler cython
   - pip install setuptools    
   - pip install coveralls
   - pip install pyscaffold==2.5.11
