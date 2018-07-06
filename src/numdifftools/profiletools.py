@@ -1,8 +1,17 @@
+"""
+This module is based on: https://zapier.com/engineering/profiling-python-boss/
+
+See also:
+https://www.pythoncentral.io/measure-time-in-python-time-time-vs-time-clock/
+"""
+
 from __future__ import print_function
 import inspect
-import time
 import cProfile
 from functools import wraps
+from timeit import default_timer as timer
+import warnings
+
 
 try:
     from line_profiler import LineProfiler
@@ -63,7 +72,9 @@ try:
             return profiled_func
         return inner
 
-except ImportError:
+except ImportError as error:
+    LineProfiler = None
+    warnings.warn(str(error))
     def do_profile(follow=(), follow_all_methods=False):
         "Helpful if you accidentally leave in production!"
         def inner(func):
@@ -74,15 +85,59 @@ except ImportError:
 
 
 def timefun(fun):
+    """ Timing decorator
+
+    Timers require you to do some digging. Start wrapping a few of the higher level
+    functions and confirm where the bottleneck is, then drill down into that function,
+    repeating as you go. When you find the disproportionately slow bit of code, fix it,
+    and work your way back out confirming that it is fixed.
+
+    Handy tip: Don't forget the handy timeit module! It tends to be more useful for
+    benchmarking small pieces of code than for doing the actual investigation.
+
+    Timer Pros:
+    Easy to understand and implement. Also very simple to compare before and after fixes.
+    Works across many languages.
+
+    Timer Cons:
+    Sometimes a little too simplistic for extremely complex codebases, you might spend
+    more time placing and replacing boilerplate code than you will fixing the problem!
+
+    """
     @wraps(fun)
     def measure_time(*args, **kwargs):
-        t1 = time.time()
+        t1 = timer()
         result = fun(*args, **kwargs)
-        t2 = time.time()
-        print("@timefun:" + fun.__name__ + " took " + str(t2 - t1) +
-              " seconds")
+        t2 = timer()
+        print("@timefun:" + fun.__name__ + " took " + str(t2 - t1) + " seconds")
         return result
     return measure_time
+
+
+class TimeWith():
+    """
+    Timing context manager
+
+    """
+    def __init__(self, name=''):
+        self.name = name
+        self.start = timer()
+
+    @property
+    def elapsed(self):
+        return timer() - self.start
+
+    def checkpoint(self, name=''):
+        print('{timer} {checkpoint} took {elapsed} seconds'.format(timer=self.name,
+                                                                   checkpoint=name,
+                                                                   elapsed=self.elapsed,
+                                                                   ).strip())
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.checkpoint('finished')
 
 
 def do_cprofile(func):

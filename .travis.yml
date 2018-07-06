@@ -41,22 +41,16 @@ before_install:
   - conda install --yes conda-build
   - conda create --yes -n condaenv python=$TRAVIS_PYTHON_VERSION
   - conda install --yes -n condaenv pip
-  - conda config --add channels https://conda.anaconda.org/omnia
+  - conda config --add channels conda-forge
   - conda config --add channels https://conda.anaconda.org/qttesting
-  - conda config --add channels https://conda.anaconda.org/pbrod
   - source activate condaenv
 # Install packages
 install:
-  - conda install --yes python=$TRAVIS_PYTHON_VERSION numpy scipy pytest statsmodels coverage=4.3.4 line_profiler 
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then
-      conda install --yes pyqt=5 matplotlib;
-    else
-      conda install --yes pyqt=4.11 matplotlib;
-    fi
-  - pip install setuptools
+  - conda install --yes python=$TRAVIS_PYTHON_VERSION numpy scipy pytest statsmodels algopy pyqt matplotlib line_profiler cython
+  - pip install setuptools    
+  - pip install coverage==4.3.4 
   - pip install coveralls
-  - pip install algopy
-  - pip install pyscaffold=2.5
+  - pip install pyscaffold==2.5.11
   - pip install codecov
   - pip install codeclimate-test-reporter
   - pip install hypothesis
@@ -76,7 +70,9 @@ script:
 #  - sed -i 's/filename="/filename=".\//g' coverage.xml
   - CODECLIMATE_REPO_TOKEN=9c5d44592ed63ccd3c2b4aabf54fd9aee50f02e21cd016f67f4287e68f708dba codeclimate-test-reporter
 #  - pylint numdifftools -r n --msg-template="{path}:{line}: [{msg_id}({symbol}), {obj}] {msg}" > pylint-report.txt
-  - sonar-scanner -X
+  - if [[ "$TRAVIS_PYTHON_VERSION" != "3.5" ]]; then
+        sonar-scanner -X;
+    fi
 
 after_success:
   - coveralls

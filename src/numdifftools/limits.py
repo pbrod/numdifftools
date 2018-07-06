@@ -111,14 +111,12 @@ class _Limit(object):
 
     info = namedtuple('info', ['error_estimate', 'final_step', 'index'])
 
-    def __init__(self, fun, step=None, method='above', order=4,
-                 full_output=False, **options):
+    def __init__(self, fun, step=None, method='above', order=4, full_output=False, **options):
         self.fun = fun
         self.method = method
         self.order = order
         self.full_output = full_output
         self.step = step, options
-
 
     def _parse_step_options(self, step):
         options = {}

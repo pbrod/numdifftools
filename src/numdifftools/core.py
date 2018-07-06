@@ -17,15 +17,14 @@ from numdifftools.multicomplex import Bicomplex
 from numdifftools.extrapolation import Richardson, dea3, convolve
 from numdifftools.step_generators import MaxStepGenerator, MinStepGenerator
 from numdifftools.limits import _Limit
+# from numdifftools.finite_difference import LogRule
 from scipy import special
 
 __all__ = ('dea3', 'Derivative', 'Jacobian', 'Gradient', 'Hessian', 'Hessdiag',
            'MinStepGenerator', 'MaxStepGenerator', 'Richardson',
            'directionaldiff')
-_TINY = np.finfo(float).tiny
-EPS = np.finfo(float).eps
-_SQRT_J = (1j + 1.0) / np.sqrt(2.0)  # = 1j**0.5
 FD_RULES = {}
+_SQRT_J = (1j + 1.0) / np.sqrt(2.0)  # = 1j**0.5
 
 
 def _assert(cond, msg):
@@ -63,9 +62,9 @@ _cmn_doc = """
     x : array_like
        value at which function derivative is evaluated
     args : tuple
-        Arguments for function `f`.
+        Arguments for function `fun`.
     kwds : dict
-        Keyword arguments for function `f`.
+        Keyword arguments for function `fun`.
     %(returns)s
     Notes
     -----
@@ -78,7 +77,7 @@ _cmn_doc = """
     choosing steps to be very small.
     Especially the first order complex-step derivative avoids the problem of
     round-off error with small steps because there is no subtraction. However,
-    this method fails if f(x) does not support complex numbers or involves
+    this method fails if fun(x) does not support complex numbers or involves
     non-analytic functions such as e.g.: abs, max, min.
     Central difference methods are almost as accurate and has no restriction on
     type of function. For this reason the 'central' method is the default
@@ -219,8 +218,9 @@ class Derivative(_Limit):
 
     def _richardson_step(self):
         complex_step = 4 if self._complex_high_order else 2
-
-        return dict(central=2, central2=2, complex=complex_step,
+        return dict(central=2,
+                    central2=2,
+                    complex=complex_step,
                     multicomplex=2).get(self.method, 1)
 
     def set_richardson_rule(self, step_ratio, num_terms=2):
@@ -262,9 +262,9 @@ class Derivative(_Limit):
     def _get_functions(self, args, kwds):
         name = self._get_function_name()
         fun = self.fun
-        def f(x):
+        def export_fun(x):
             return fun(x, *args, **kwds)
-        return getattr(self, name), f
+        return getattr(self, name), export_fun
 
     def _get_steps(self, xi):
         method, n, order = self.method, self.n, self._method_order
@@ -293,7 +293,21 @@ class Derivative(_Limit):
                 self.method in ['forward', 'backward'] or
                 self.method == 'complex' and self._derivative_mod_four_is_zero)
 
+    def _raise_error_if_any_is_complex(self, x, f_x):
+        msg = ('The {} step derivative method does only work on a real valued analytic '
+               'function of a real variable!'.format(self.method))
+        _assert(not np.any(np.iscomplex(x)),
+                msg + ' But a complex variable was given!')
+
+        _assert(not np.any(np.iscomplex(f_x)),
+                msg + ' But the function given is complex valued!')
+
+
     def _eval_first(self, f, x):
+        if self.method in ['complex', 'multicomplex']:
+            f_x = f(x)
+            self._raise_error_if_any_is_complex(x, f_x)
+            return f_x
         if self._eval_first_condition():
             return f(x)
         return 0.0
@@ -345,9 +359,10 @@ class Derivative(_Limit):
     def _parity_complex(self, order, method_order):
         if self.n == 1 and method_order < 4:
             return (order % 2) + 1
-        return (3 + 2 * int(self._odd_derivative) +
-                int(self._derivative_mod_four_is_three) +
-                int(self._derivative_mod_four_is_zero))
+        return (3
+                + 2 * int(self._odd_derivative)
+                + int(self._derivative_mod_four_is_three)
+                + int(self._derivative_mod_four_is_zero))
 
     def _parity(self, method, order, method_order):
         if method.startswith('central'):
@@ -393,7 +408,7 @@ class Derivative(_Limit):
 
     def _apply_fd_rule(self, step_ratio, sequence, steps):
         """
-        Return derivative estimates of f at x0 for a sequence of stepsizes h
+        Return derivative estimates of fun at x0 for a sequence of stepsizes h
 
         Member variables used
         ---------------------
@@ -472,8 +487,8 @@ def directionaldiff(f, x0, vec, **options):
     f: function
         analytical function to differentiate.
     x0: array
-        vector location at which to differentiate f. If x0 is an nxm array,
-        then f is assumed to be a function of n*m variables.
+        vector location at which to differentiate 'f'. If x0 is an nXm array,
+        then 'f' is assumed to be a function of n*m variables.
     vec: array
         vector defining the line along which to take the derivative. It should
         be the same size as x0, but need not be a vector of unit length.
@@ -483,7 +498,7 @@ def directionaldiff(f, x0, vec, **options):
     Returns
     -------
     dder:  scalar
-        estimate of the first derivative of f in the specified direction.
+        estimate of the first derivative of 'f' in the specified direction.
 
     Examples
     --------
@@ -884,14 +899,14 @@ class Hessian(Hessdiag):
 
     @order.setter
     def order(self, order):
-        valid_order = dict(backward=1, forward=1).get(self.method, 2)
+        valid_order = self.order
         if order != valid_order:
             msg = 'Can not change order to {}! The only valid order is {} for method={}.'
             warnings.warn(msg.format(order, valid_order, self.method))
 
     def _apply_fd_rule(self, step_ratio, sequence, steps):
         """
-        Return derivative estimates of f at x0 for a sequence of stepsizes h
+        Return derivative estimates of fun at x0 for a sequence of stepsizes h
 
         Here the difference rule is already applied. Just return result.
         """
@@ -937,7 +952,9 @@ class Hessian(Hessdiag):
         """Eq 9."""
         n = len(x)
         ee = np.diag(h)
-        hess = np.outer(h, h)
+        dtype = np.result_type(fx)
+        hess = np.empty((n, n), dtype=dtype)
+        np.outer(h, h, out=hess)
         for i in range(n):
             hess[i, i] = (f(x + 2 * ee[i, :]) - 2 * fx + f(x - 2 * ee[i, :])) / (4. * hess[i, i])
             for j in range(i + 1, n):

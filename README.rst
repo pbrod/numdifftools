@@ -2,7 +2,7 @@
 Numdifftools
 ============
 
-|pkg_img| |tests_img| |tests2_img| |docs_img| |health_img| |coverage_img| |versions_img| |depsy_img|
+|pkg_img| |tests_img| |tests2_img| |docs_img| |health_img| |coverage_img| |versions_img| 
 
 
 Numdifftools is a suite of tools written in `_Python <http://www.python.org/>`_
@@ -211,9 +211,6 @@ References
 
 .. |versions_img| image:: https://img.shields.io/pypi/pyversions/numdifftools.svg
    :target: https://github.com/pbrod/numdifftools
-
-.. |depsy_img| image:: http://depsy.org/api/package/pypi/Numdifftools/badge.svg
-   :target: http://depsy.org/package/python/Numdifftools
 
 
 Note

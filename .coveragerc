@@ -2,9 +2,9 @@
 [run]
 branch = True
 source = */numdifftools/*
-omit = 
-  */run_benchmark.py
-  */tests/*
+#omit = 
+#  */run_benchmark.py
+#  */tests/*
 [report]
 # Regexes for lines to exclude from consideration
 exclude_lines =

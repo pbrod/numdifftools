@@ -1,21 +1,135 @@
+"""
+Numdifftools.nd_statsmodels
+======================
+This module provides an easy to use interface to derivatives calculated with
+statsmodels.numdiff.
+"""
+
 from __future__ import division, print_function
+from functools import partial
 from statsmodels.tools.numdiff import (  # approx_fprime,
     approx_fprime_cs,
     approx_hess,
     approx_hess1,
     approx_hess2,
     approx_hess3,
-    approx_hess_cs)
+    approx_hess_cs,
+    _get_epsilon)
 import numpy as np
+import warnings
 _EPS = np.finfo(float).eps
 
 
-class _Common(object):
+def approx_fprime(x, f, epsilon=None, args=(), kwargs=None, centered=True):
+    """
+    Gradient of function, or Jacobian if function fun returns 1d array
 
-    def __init__(self, fun, step=None, method='central', order=2):
+    Parameters
+    ----------
+    x : array
+        parameters at which the derivative is evaluated
+    fun : function
+        `fun(*((x,)+args), **kwargs)` returning either one value or 1d array
+    epsilon : float, optional
+        Stepsize, if None, optimal stepsize is used. This is _EPS**(1/2)*x for
+        `centered` == False and _EPS**(1/3)*x for `centered` == True.
+    args : tuple
+        Tuple of additional arguments for function `fun`.
+    kwargs : dict
+        Dictionary of additional keyword arguments for function `fun`.
+    centered : bool
+        Whether central difference should be returned. If not, does forward
+        differencing.
+
+    Returns
+    -------
+    grad : array
+        gradient or Jacobian
+
+    Notes
+    -----
+    If fun returns a 1d array, it returns a Jacobian. If a 2d array is returned
+    by fun (e.g., with a value for each observation), it returns a 3d array
+    with the Jacobian of each observation with shape xk x nobs x xk. I.e.,
+    the Jacobian of the first observation would be [:, 0, :]
+
+    """
+    kwargs = {} if kwargs is None else kwargs
+    n = len(x)
+    f0 = f(*(x,) + args, **kwargs)
+    dim = np.atleast_1d(f0).shape  # it could be a scalar
+    grad = np.zeros((n,) + dim, float)
+    ei = np.zeros(np.shape(x), float)
+    if not centered:
+        epsilon = _get_epsilon(x, 2, epsilon, n)
+        for k in range(n):
+            ei[k] = epsilon[k]
+            grad[k, :] = (f(*(x + ei,) + args, **kwargs) - f0) / epsilon[k]
+            ei[k] = 0.0
+    else:
+        epsilon = _get_epsilon(x, 3, epsilon, n) / 2.
+        for k in range(n):
+            ei[k] = epsilon[k]
+            grad[k, :] = (f(*(x + ei,) + args, **kwargs) -
+                          f(*(x - ei,) + args, **kwargs)) / (2 * epsilon[k])
+            ei[k] = 0.0
+    grad = grad.squeeze()
+    axes = [0, 1, 2][:grad.ndim]
+    axes[:2] = axes[1::-1]
+    return np.transpose(grad, axes=axes).squeeze()
+
+
+def _approx_fprime_backward(x, f, epsilon=None, args=(), kwargs=None):
+    n = len(x)
+    epsilon = - np.abs(_get_epsilon(x, 2, epsilon, n))
+    return approx_fprime(x, f, epsilon, args, kwargs, centered=False)
+
+
+def _approx_hess1_backward(x, f, epsilon=None, args=(), kwargs=None):
+    n = len(x)
+    epsilon = - np.abs(_get_epsilon(x, 3, epsilon, n))
+    return approx_hess1(x, f, epsilon, args, kwargs, centered=False)
+
+
+class _Common(object):
+    def __init__(self, fun, step=None, method='central', order=None):
         self.fun = fun
         self.step = step
         self.method = method
+        self.order = order
+
+    _callables = {}
+    n = property(fget=lambda cls: 1)
+
+    @property
+    def order(self):
+        return dict(forward=1, backward=1).get(self.method, 2)
+
+    @order.setter
+    def order(self, order):
+        if order is None:
+            return
+        valid_order = self.order
+        if order != valid_order:
+            msg = 'Can not change order to {}! The only valid order is {} for method={}.'
+            warnings.warn(msg.format(order, valid_order, self.method))
+
+    @property
+    def method(self):
+        return self._method
+
+    @method.setter
+    def method(self, method):
+        self._metod = method
+        callable = self._callables.get(method)
+        if callable:
+            self._derivative_nonzero_order = callable
+        else:
+            warnings.warn('{} is an illegal method! Setting method="central"'.format(method))
+            self.method = 'central'
+
+    def __call__(self, x, *args, **kwds):
+        return self._derivative_nonzero_order(np.atleast_1d(x), self.fun, self.step, args, kwds)
 
 
 class Hessian(_Common):
@@ -30,7 +144,7 @@ class Hessian(_Common):
         Stepsize, if None, optimal stepsize is used, i.e.,
         x * _EPS**(1/3) for method==`forward`, `complex`  or `central2`
         x * _EPS**(1/4) for method==`central`.
-    method : {'central', 'complex', 'forward'}
+    method : {'central', 'complex', 'forward', 'backward'}
         defines the method used in the approximation.
 
     Examples
@@ -59,15 +173,13 @@ class Hessian(_Common):
     --------
     Jacobian, Gradient
     """
+    n = property(fget=lambda cls: 2)
 
-    def __call__(self, x, *args, **kwds):
-        approx_hess_fun = dict(complex=approx_hess_cs,
-                               forward=approx_hess1,
-                               central2=approx_hess2).get(self.method,
-                                                          approx_hess3)
-
-        return approx_hess_fun(np.atleast_1d(x), self.fun, self.step, args,
-                               kwds)
+    _callables = dict(complex=approx_hess_cs,
+                      forward=approx_hess1,
+                      backward=_approx_hess1_backward,
+                      central=approx_hess3,
+                      central2=approx_hess2)
 
 
 class Jacobian(_Common):
@@ -83,7 +195,7 @@ class Jacobian(_Common):
         x * _EPS for method==`complex`
         x * _EPS**(1/2) for method==`forward`
         x * _EPS**(1/3) for method==`central`.
-    method : {'central', 'complex', 'forward'}
+    method : {'central', 'complex', 'forward', 'backward'}
         defines the method used in the approximation.
 
     Examples
@@ -123,15 +235,10 @@ class Jacobian(_Common):
     ...              [   2.,   20.]]])
     True
     """
-
-    def __call__(self, x, *args, **kwds):
-        x = np.atleast_1d(x)
-        if self.method.startswith('complex'):
-            grad = approx_fprime_cs(x, self.fun, self.step, args, kwds)
-        else:
-            grad = approx_fprime(x, self.fun, self.step, args, kwds,
-                                 centered=self.method.startswith('central'))
-        return grad
+    _callables = dict(complex=approx_fprime_cs,
+                      central=partial(approx_fprime, centered=True),
+                      forward=partial(approx_fprime, centered=False),
+                      backward=_approx_fprime_backward)
 
 
 class Gradient(Jacobian):
@@ -147,7 +254,7 @@ class Gradient(Jacobian):
         x * _EPS for method==`complex`
         x * _EPS**(1/2) for method==`forward`
         x * _EPS**(1/3) for method==`central`.
-    method : {'central', 'complex', 'forward'}
+    method : {'central', 'complex', 'forward', 'backward'}
         defines the method used in the approximation.
 
     Examples
@@ -188,79 +295,6 @@ class Gradient(Jacobian):
                                               *args, **kwds).squeeze()
 
 
-def _get_epsilon(x, s, epsilon, n):
-    if epsilon is None:
-        h = _EPS**(1. / s) * np.maximum(np.abs(x), 0.1)
-    else:
-        if np.isscalar(epsilon):
-            h = np.empty(n)
-            h.fill(epsilon)
-        else:  # pragma : no cover
-            h = np.asarray(epsilon)
-            if h.shape != x.shape:
-                raise ValueError("If h is not a scalar it must have the same"
-                                 " shape as x.")
-    return h
-
-
-def approx_fprime(x, f, epsilon=None, args=(), kwargs=None, centered=True):
-    """
-    Gradient of function, or Jacobian if function fun returns 1d array
-
-    Parameters
-    ----------
-    x : array
-        parameters at which the derivative is evaluated
-    fun : function
-        `fun(*((x,)+args), **kwargs)` returning either one value or 1d array
-    epsilon : float, optional
-        Stepsize, if None, optimal stepsize is used. This is _EPS**(1/2)*x for
-        `centered` == False and _EPS**(1/3)*x for `centered` == True.
-    args : tuple
-        Tuple of additional arguments for function `fun`.
-    kwargs : dict
-        Dictionary of additional keyword arguments for function `fun`.
-    centered : bool
-        Whether central difference should be returned. If not, does forward
-        differencing.
-
-    Returns
-    -------
-    grad : array
-        gradient or Jacobian
-
-    Notes
-    -----
-    If fun returns a 1d array, it returns a Jacobian. If a 2d array is returned
-    by fun (e.g., with a value for each observation), it returns a 3d array
-    with the Jacobian of each observation with shape xk x nobs x xk. I.e.,
-    the Jacobian of the first observation would be [:, 0, :]
-
-    """
-    kwargs = {} if kwargs is None else kwargs
-    n = len(x)
-    # TODO:  add scaled stepsize
-    f0 = f(*(x,) + args, **kwargs)
-    dim = np.atleast_1d(f0).shape  # it could be a scalar
-    grad = np.zeros((n,) + dim, float)
-    ei = np.zeros(np.shape(x), float)
-    if not centered:
-        epsilon = _get_epsilon(x, 2, epsilon, n)
-        for k in range(n):
-            ei[k] = epsilon[k]
-            grad[k, :] = (f(*(x + ei,) + args, **kwargs) - f0) / epsilon[k]
-            ei[k] = 0.0
-    else:
-        epsilon = _get_epsilon(x, 3, epsilon, n) / 2.
-        for k in range(n):
-            ei[k] = epsilon[k]
-            grad[k, :] = (f(*(x + ei,) + args, **kwargs) -
-                          f(*(x - ei,) + args, **kwargs)) / (2 * epsilon[k])
-            ei[k] = 0.0
-    grad = grad.squeeze()
-    axes = [0, 1, 2][:grad.ndim]
-    axes[:2] = axes[1::-1]
-    return np.transpose(grad, axes=axes).squeeze()
 
 
 if __name__ == '__main__':

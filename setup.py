@@ -43,7 +43,7 @@ PyPi upload:
 """
 
 import sys
-from setuptools import setup
+from setuptools import setup, find_packages
 
 
 def print_version():
@@ -60,8 +60,11 @@ def print_version():
 def setup_package():
     needs_sphinx = {'build_sphinx', 'upload_docs'}.intersection(sys.argv)
     sphinx = ['sphinx', 'numpydoc'] if needs_sphinx else []
-    setup(setup_requires=['pyscaffold>=3.0a0,<3.1a0'] + sphinx,
-          # tests_require=['pytest_cov', 'pytest', 'hypothesis', 'matplotlib'],
+    setup(setup_requires=['pyscaffold==2.5.11'] + sphinx,
+          package_dir = {'': 'src'},
+          include_package_data=True,
+          packages=find_packages(where=r'./src'),
+          tests_require=['pytest_cov', 'pytest', 'hypothesis', 'matplotlib', 'line_profiler'],
           use_pyscaffold=True)
     print_version()
 
