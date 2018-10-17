@@ -1,4 +1,3 @@
-import unittest
 import numpy as np
 import numdifftools.core as nd
 import numdifftools.nd_algopy as nda
@@ -7,7 +6,7 @@ from numpy.testing import assert_array_almost_equal
 from numdifftools.example_functions import function_names, get_function
 
 
-class TestExampleFunctions(unittest.TestCase):
+class TestExampleFunctions(object):
     @staticmethod
     def test_high_order_derivative():
         x = 0.5
@@ -53,7 +52,3 @@ class TestExampleFunctions(unittest.TestCase):
                     dm = 7
                     print(i, name, method, dm, np.abs(val-tval))
                     assert_array_almost_equal(val, tval, decimal=dm)
-
-
-if __name__ == '__main__':
-    unittest.main()

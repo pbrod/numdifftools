@@ -1,6 +1,6 @@
-import unittest
+import pytest
 import numpy as np
-from numpy.testing import assert_array_almost_equal, assert_allclose
+from numpy.testing.utils import assert_array_almost_equal, assert_allclose
 from numdifftools.testing import capture_stdout_and_stderr
 from numdifftools.profiletools import do_profile, do_cprofile, timefun, TimeWith, LineProfiler
 
@@ -73,7 +73,7 @@ class ExpensiveClass4(object):
 FIRST_LINE = 'Line #      Hits         Time  Per Hit   % Time  Line Contents'
 
 # Tests
-class TestTimeFun(unittest.TestCase):
+class TestTimeFun(object):
 
     def test_decorate_function(self):
         @timefun
@@ -85,23 +85,23 @@ class TestTimeFun(unittest.TestCase):
             expensive_function()
         msg = str(out)
         # print(out)
-        self.assertTrue(len(out), msg)
-        self.assertTrue(out[0].startswith('@timefun:expensive_function took'), msg=msg)
+        assert len(out), msg
+        assert out[0].startswith('@timefun:expensive_function took'), msg
         time = float(out[0].split('took')[1].strip().split(' ')[0])
-        self.assertTrue(time > 0)
+        assert time > 0
 
     def test_direct_on_function(self):
         with capture_stdout_and_stderr() as out:
             timefun(_expensive_function)()
         msg = str(out)
         # print(out)
-        self.assertTrue(len(out), msg)
-        self.assertTrue(out[0].startswith('@timefun:_expensive_function took'), msg=msg)
+        assert len(out), msg
+        assert out[0].startswith('@timefun:_expensive_function took'), msg
         time = float(out[0].split('took')[1].strip().split(' ')[0])
-        self.assertTrue(time > 0)
+        assert time > 0
 
 
-class TestTimeWith(unittest.TestCase):
+class TestTimeWith(object):
     def test_timing_with_context_manager(self):
         # prints something like:
         # fancy thing done with something took 0.582462072372 seconds
@@ -117,11 +117,11 @@ class TestTimeWith(unittest.TestCase):
 
         msg = str(out)
         # print(out)
-        self.assertTrue(len(out), msg)
+        assert len(out), msg
         out0 = out[0].split('\n')
-        self.assertTrue(out0[0].startswith('fancy thing done with something took'), msg)
-        self.assertTrue(out0[1].startswith('fancy thing done with something else took'), msg)
-        self.assertTrue(out0[2].startswith('fancy thing finished took'), msg)
+        assert out0[0].startswith('fancy thing done with something took'), msg
+        assert out0[1].startswith('fancy thing done with something else took'), msg
+        assert out0[2].startswith('fancy thing finished took'), msg
 
     def test_direct_timing(self):
 
@@ -133,11 +133,11 @@ class TestTimeWith(unittest.TestCase):
 
         msg = str(out)
         # print(out)
-        self.assertTrue(len(out), msg)
-        self.assertTrue(out[0].startswith('fancy thing done with something took'), msg)
+        assert len(out), msg
+        assert out[0].startswith('fancy thing done with something took'), msg
 
 
-class TestDoCProfile(unittest.TestCase):
+class TestDoCProfile(object):
 
     def test_on_function(self):
         @do_cprofile
@@ -150,17 +150,16 @@ class TestDoCProfile(unittest.TestCase):
         results = _extract_do_cprofile_results(out[0])
         print(results)
         msg = str(results)
-        self.assertTrue(len(results), msg)
-        self.assertTrue(results[0][5].startswith('function calls in'))
-        self.assertTrue(results[0][0] > 50000)
-        self.assertEqual(results[1],
-                         'ncalls  tottime  percall  cumtime  percall filename:lineno(function)')
+        assert len(results), msg
+        assert results[0][5].startswith('function calls in')
+        assert results[0][0] > 50000
+        assert results[1] == 'ncalls  tottime  percall  cumtime  percall filename:lineno(function)'
         num_tests = 0
         for result in results[2:]:
             if result[5].endswith('(expensive_function)'):
                 num_tests += 1
                 for i in range(5):
-                    self.assertGreater(result[i], 0)
+                    assert result[i] > 0
             elif result[5].endswith('(_get_number)'):
                 num_tests += 1
         if num_tests != 2:
@@ -168,8 +167,8 @@ class TestDoCProfile(unittest.TestCase):
 
 
 # @unittest.skipIf(LineProfiler is None, 'LineProfiler is not installed.')
-@unittest.skip('Suspect this test fucks up coverage stats.')
-class TestDoProfile(unittest.TestCase):  # TODO: Check this!
+#  @pytest.mark.skip('Suspect this test fucks up coverage stats.')
+class TestDoProfile(object):  # TODO: Check this!
 
     def test_on_function_and_follow_function(self):
         @do_profile(follow=[_get_number])
@@ -181,15 +180,14 @@ class TestDoProfile(unittest.TestCase):  # TODO: Check this!
             expensive_function()
         results = _extract_do_profile_results(out[0])
         msg = str(results)
-        self.assertTrue(len(results)>0, msg)
-        self.assertEqual(results[0], FIRST_LINE)
-        self.assertEqual(results[1][5].strip(), 'def _get_number():')
-        self.assertEqual(results[2][5].strip(), 'for x in range(50000):')
-        self.assertEqual(results[2][1], 50001)
-        self.assertTrue(results[2][2] > 4000)
-        self.assertEqual(results[4], FIRST_LINE)
-        self.assertEqual(results[5][5].strip(),
-                         '@do_profile(follow=[_get_number])')
+        assert len(results) > 0, msg
+        assert results[0] == FIRST_LINE
+        assert results[1][5].strip() == 'def _get_number():'
+        assert results[2][5].strip() == 'for x in range(50000):'
+        assert results[2][1] == 50001
+        assert results[2][2] > 4000
+        assert results[4] == FIRST_LINE
+        assert results[5][5].strip() == '@do_profile(follow=[_get_number])'
 
     def test_on_class_method_and_follow_function(self):
         class ExpensiveClass1(object):
@@ -205,17 +203,14 @@ class TestDoProfile(unittest.TestCase):  # TODO: Check this!
         results = _extract_do_profile_results(out[0])
         print(results)
         msg = str(results)
-        self.assertTrue(len(results)>0, msg)
-        self.assertEqual(results[0], FIRST_LINE, msg=msg)
-        self.assertEqual(results[1][5].strip(),
-                         'def _get_number():', msg=msg)
-        self.assertEqual(results[2][5].strip(),
-                         "for x in range(50000):", msg=msg)
-        self.assertEqual(results[2][1], 50001, msg=msg)
-        self.assertTrue(results[2][2] > 2900, msg=msg)
-        self.assertEqual(results[4], FIRST_LINE, msg=msg)
-        self.assertEqual(results[5][5].strip(),
-                         '@do_profile(follow=[_get_number])', msg=msg)
+        assert len(results) > 0, msg
+        assert results[0] == FIRST_LINE, msg
+        assert results[1][5].strip() == 'def _get_number():', msg
+        assert results[2][5].strip() == "for x in range(50000):", msg
+        assert results[2][1] == 50001, msg
+        assert results[2][2] > 2900, msg
+        assert results[4] == FIRST_LINE, msg
+        assert results[5][5].strip() == '@do_profile(follow=[_get_number])', msg
 
     def test_on_class_method_and_follow_class_method(self):
         class ExpensiveClass2(object):
@@ -237,16 +232,14 @@ class TestDoProfile(unittest.TestCase):  # TODO: Check this!
         results = _extract_do_profile_results(out[0])
         print(results)
         msg = str(results)
-        self.assertTrue(len(results)>0, msg)
-        self.assertEqual(results[0], FIRST_LINE, msg=msg)
-        self.assertEqual(results[1][5].strip(),
-                         "@do_profile(follow=['_get_number2'])", msg=msg)
-        self.assertEqual(results[2][5].strip(),
-                         'def expensive_method2(self):', msg=msg)
-        self.assertEqual(results[2][1], 0, msg=msg)
-        self.assertEqual(results[2][2], 0, msg=msg)
-        self.assertEqual(results[6], FIRST_LINE, msg=msg)
-        self.assertEqual(results[7][5].strip(), 'def _get_number2(self):', msg=msg)
+        assert len(results) > 0, msg
+        assert results[0] == FIRST_LINE, msg
+        assert results[1][5].strip() == "@do_profile(follow=['_get_number2'])", msg
+        assert results[2][5].strip() == 'def expensive_method2(self):', msg
+        assert results[2][1] == 0, msg
+        assert results[2][2] == 0, msg
+        assert results[6] == FIRST_LINE, msg
+        assert results[7][5].strip() == 'def _get_number2(self):', msg
 
     def test_on_all_class_methods(self):
         class ExpensiveClass3(object):
@@ -271,16 +264,14 @@ class TestDoProfile(unittest.TestCase):  # TODO: Check this!
             ExpensiveClass3().expensive_method3()
         results = _extract_do_profile_results(out[0])
         msg = str(results)
-        self.assertTrue(len(results)>0, msg)
-        self.assertEqual(results[0], FIRST_LINE)
-        self.assertEqual(results[1][5].strip(),
-                         '@do_profile(follow_all_methods=True)')
-        self.assertEqual(results[2][5].strip(),
-                         'def expensive_method3(self):')
-        self.assertEqual(results[2][1], 0)
-        self.assertEqual(results[2][2], 0)
-        self.assertEqual(results[7], FIRST_LINE)
-        self.assertEqual(results[8][5].strip(), 'def _get_number3(self):')
+        assert len(results) > 0, msg
+        assert results[0] == FIRST_LINE
+        assert results[1][5].strip() == '@do_profile(follow_all_methods=True)'
+        assert results[2][5].strip() == 'def expensive_method3(self):'
+        assert results[2][1] == 0
+        assert results[2][2] == 0
+        assert results[7] == FIRST_LINE
+        assert results[8][5].strip() == 'def _get_number3(self):'
 
     def test_on_all_class_methods_without_decorator(self):
         with capture_stdout_and_stderr() as out:
@@ -289,13 +280,11 @@ class TestDoProfile(unittest.TestCase):  # TODO: Check this!
         results = _extract_do_profile_results(out[0])
         print(results)
         msg = str(results)
-        self.assertTrue(len(results)>0, msg)
-        self.assertEqual(results[0], FIRST_LINE, msg=msg)
-        self.assertEqual(results[1][5].strip(),
-                         'def expensive_method4(self):', msg=msg)
-        self.assertEqual(results[2][5].strip(),
-                         'for x in self._get_number4():', msg=msg)
-        self.assertEqual(results[2][1], 5001, msg=msg)
-        self.assertTrue(results[2][2] > 10, msg=msg)
-        self.assertEqual(results[5], FIRST_LINE, msg=msg)
-        self.assertEqual(results[6][5].strip(), 'def _get_number4(self):', msg=msg)
+        assert len(results) > 0, msg
+        assert results[0] == FIRST_LINE, msg
+        assert results[1][5].strip() == 'def expensive_method4(self):', msg
+        assert results[2][5].strip() == 'for x in self._get_number4():', msg
+        assert results[2][1] == 5001, msg
+        assert results[2][2] > 10, msg
+        assert results[5] == FIRST_LINE, msg
+        assert results[6][5].strip() == 'def _get_number4(self):', msg

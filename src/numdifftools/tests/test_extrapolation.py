@@ -1,11 +1,11 @@
 import unittest
 import numpy as np
-from numpy.testing import assert_array_almost_equal, assert_allclose
+from numpy.testing.utils import assert_array_almost_equal, assert_allclose
 from numdifftools.extrapolation import Dea, dea3, Richardson, EpsAlg
 
 
-class TestRichardson(unittest.TestCase):
-    def setUp(self):
+class TestRichardson(object):
+    def setup_method(self):
         self.true_vals = {
             (1, 1, 1): [-0.9999999999999998, 1.9999999999999998],
             (1, 1, 2): [-0.33333333333333304, 1.333333333333333],
@@ -81,9 +81,9 @@ class TestRichardson(unittest.TestCase):
         # self.assert_(False)
 
 
-class TestExtrapolation(unittest.TestCase):
+class TestExtrapolation(object):
 
-    def setUp(self):
+    def setup_method(self):
         n = 7
         e_i = np.zeros(n)
         h = np.zeros(n)
@@ -101,7 +101,7 @@ class TestExtrapolation(unittest.TestCase):
         assert_allclose(true_err,
                         [-2.00805680e-04, -5.01999079e-05, -1.25498825e-05])
         assert_allclose(e_n, 1.)
-        self.assertLessEqual(err, 0.00021)
+        assert err <= 0.00021
 
     def test_dea_on_trapz_sin(self):
         e_i = self.e_i
@@ -114,15 +114,15 @@ class TestExtrapolation(unittest.TestCase):
                                    1.25498825e-05, 3.13746471e-06,
                                    7.84365809e-07, 1.96091429e-07,
                                    4.90228558e-08])
-        self.assertTrue(np.all(true_err < err_bound))
+        assert np.all(true_err < err_bound)
         assert_allclose(e_n, 1.)
-        self.assertLessEqual(err, 1e-10)
+        assert err <= 1e-10
 
     def test_richardson(self):
         e_i, h = self.e_i[:, np.newaxis], self.h[:, np.newaxis]
         e_n, err, _step = Richardson(step=1, order=1)(e_i, h)
         assert_allclose(e_n, 1.)
-        self.assertTrue(np.all(err < 0.0022))
+        assert np.all(err < 0.0022)
 
     def test_epsal(self):
         true_vals = [0.78539816, 0.94805945, 0.99945672]
@@ -135,6 +135,3 @@ class TestExtrapolation(unittest.TestCase):
                                   [0.99979919432001874, 0.99994980009210122,
                                    0.99999999949599017, 0.99999999996850009,
                                    1.0, 1.0])
-
-if __name__ == "__main__":
-    unittest.main()

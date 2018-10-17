@@ -3,8 +3,6 @@ Created on 22. apr. 2015
 
 @author: pab
 """
-import unittest
-
 from numdifftools.multicomplex import Bicomplex
 from numdifftools.example_functions import get_function
 import numpy as np
@@ -17,27 +15,27 @@ def _default_base_step(x, scale, epsilon=None):
     return h
 
 
-class BicomplexTester(unittest.TestCase):
+class TestBicomplex(object):
 
     def test_init(self):
         z = Bicomplex(1, 2)
-        self.assertEqual(z.z1, 1)
-        self.assertEqual(z.z2, 2)
+        assert z.z1 == 1
+        assert z.z2 == 2
 
     def test_neg(self):
         z = Bicomplex(1, 2)
         z2 = -z
-        self.assertEqual(z2.z1, -z.z1)
-        self.assertEqual(z2.z2, -z.z2)
+        assert z2.z1 == -z.z1
+        assert z2.z2 == -z.z2
 
     def test_shape(self):
         shape = (3, 3)
         t = np.arange(9).reshape(shape)
         z = Bicomplex(t, 2 * t)
-        self.assertEqual(z.shape, shape)
+        assert z.shape == shape
 
         z = Bicomplex(1, 2)
-        self.assertEqual(z.shape, ())
+        assert z.shape == ()
 
     def test_norm(self):
         shape = (3, 3)
@@ -46,7 +44,7 @@ class BicomplexTester(unittest.TestCase):
         np.testing.assert_array_equal(z.norm(), np.sqrt(5*t**2))
 
         z = Bicomplex(1, 2)
-        self.assertEqual(z.norm(), np.sqrt(5))
+        assert z.norm() == np.sqrt(5)
 
     @staticmethod
     def test_lt():
@@ -55,9 +53,9 @@ class BicomplexTester(unittest.TestCase):
         z = Bicomplex(t, 2 * t)
         z2 = Bicomplex(1, 2)
         val = z < z2
-        truth = np.array([[True, False, False],
-                          [False, False, False],
-                          [False, False, False]], dtype=bool)
+        truth = [[True, False, False],
+                 [False, False, False],
+                 [False, False, False]]
         np.testing.assert_array_equal(val, truth)
 
     @staticmethod
@@ -67,9 +65,9 @@ class BicomplexTester(unittest.TestCase):
         z = Bicomplex(t, 2 * t)
         z2 = Bicomplex(1, 2)
         val = z <= z2
-        truth = np.array([[True, True, False],
-                          [False, False, False],
-                          [False, False, False]], dtype=bool)
+        truth = [[True, True, False],
+                 [False, False, False],
+                 [False, False, False]]
         np.testing.assert_array_equal(val, truth)
 
     @staticmethod
@@ -79,9 +77,9 @@ class BicomplexTester(unittest.TestCase):
         z = Bicomplex(t, 2 * t)
         z2 = Bicomplex(1, 2)
         val = z >= z2
-        truth = np.array([[False, True, True],
-                          [True, True, True],
-                          [True, True, True]], dtype=bool)
+        truth = [[False, True, True],
+                 [True, True, True],
+                 [True, True, True]]
         np.testing.assert_array_equal(val, truth)
 
     @staticmethod
@@ -91,9 +89,9 @@ class BicomplexTester(unittest.TestCase):
         z = Bicomplex(t, 2 * t)
         z2 = Bicomplex(1, 2)
         val = z > z2
-        truth = np.array([[False, False, True],
-                          [True, True, True],
-                          [True, True, True]], dtype=bool)
+        truth = [[False, False, True],
+                 [True, True, True],
+                 [True, True, True]]
         np.testing.assert_array_equal(val, truth)
 
     @staticmethod
@@ -111,14 +109,14 @@ class BicomplexTester(unittest.TestCase):
     def test_conjugate(self):
         z = Bicomplex(1, 2)
         z2 = Bicomplex(1, -2)
-        self.assertTrue(z.conjugate() == z2)
+        assert z.conjugate() == z2
 
     def test_flat(self):
         shape = (3, 3)
         t = np.arange(9).reshape(shape)
         z = Bicomplex(t, 2 * t)
         t = z.flat(1)
-        self.assertTrue(t == Bicomplex(1, 2))
+        assert t == Bicomplex(1, 2)
 
     @staticmethod
     def test_subsref():
@@ -181,7 +179,7 @@ class BicomplexTester(unittest.TestCase):
     def test_repr(self):
         z = Bicomplex(1, 2)
         txt = repr(z)
-        self.assertEqual(txt, "Bicomplex(z1=(1+0j), z2=(2+0j))")
+        assert txt == "Bicomplex(z1=(1+0j), z2=(2+0j))"
 
     @staticmethod
     def test_multiplication():
@@ -364,7 +362,7 @@ _function_names = ['cos', 'sin', 'tan', 'arccos', 'arcsin', 'arctan', 'cosh',
                    'arctanh']
 
 
-class DerivativeTester(unittest.TestCase):
+class TestDerivative(object):
     @staticmethod
     def test_all_first_derivatives():
         for name in _function_names:
@@ -374,7 +372,3 @@ class DerivativeTester(unittest.TestCase):
     def test_all_second_derivatives():
         for name in _function_names:
             _test_second_derivative(name)
-
-
-if __name__ == "__main__":
-    unittest.main()

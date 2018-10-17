@@ -1,22 +1,22 @@
 # -*- coding:utf-8 -*-
 """"""
-
 from __future__ import division
-import unittest
+import pytest
 import numdifftools.nd_algopy as nd
 import numpy as np
-from numpy.testing import assert_allclose
+from numpy.testing.utils import assert_allclose
 import algopy
 from numdifftools.testing import rosen
 from numdifftools.tests.hamiltonian import run_hamiltonian
 from hypothesis import given, example, note, strategies as st
 
-class TestHessian(unittest.TestCase):
+
+class TestHessian(object):
 
     def test_run_hamiltonian(self):
         h, _error_estimate, true_h = run_hamiltonian(nd.Hessian(None),
                                                      verbose=False)
-        self.assertTrue((np.abs((h - true_h)/true_h) < 1e-4).all())
+        assert (np.abs((h - true_h)/true_h) < 1e-4).all()
 
     @staticmethod
     def test_hessian_cos_x_y__at_0_0():
@@ -34,7 +34,7 @@ class TestHessian(unittest.TestCase):
             assert_allclose(h2, htrue)
 
 
-class TestDerivative(unittest.TestCase):
+class TestDerivative(object):
 
     # TODO: Derivative does not tackle non-finite values.
     #     def test_infinite_functions(self):
@@ -42,7 +42,7 @@ class TestDerivative(unittest.TestCase):
     #             return np.inf * np.ones_like(x)
     #         df = nd.Derivative(finf, method='forward')
     #         val = df(0)
-    #         self.assert_(np.isnan(val))
+    #         assert  np.isnan(val)
     @staticmethod
     def test_directional_diff():
         v = [1, -1]
@@ -120,9 +120,9 @@ class TestDerivative(unittest.TestCase):
             dsinh = nd.Derivative(np.sinh, method=method)
             val = dsinh(x)
             if np.isnan(true_val):
-                self.assertEqual(np.isnan(val), np.isnan(true_val))
+                assert np.isnan(val) == np.isnan(true_val)
             else:
-                self.assertAlmostEqual(val, true_val)
+                assert_allclose(val, true_val)
 
     @staticmethod
     @given(st.floats(min_value=1e-5))
@@ -133,7 +133,7 @@ class TestDerivative(unittest.TestCase):
             assert_allclose(dlog(x), 1.0 / x)
 
 
-class TestJacobian(unittest.TestCase):
+class TestJacobian(object):
     @staticmethod
     @given(st.floats(min_value=-1e153, max_value=1e153))
     def test_scalar_to_vector(val):
@@ -172,7 +172,8 @@ class TestJacobian(unittest.TestCase):
 
         # TODO: 'forward' not implemented
         j_fun = nd.Jacobian(fun, method='forward')
-        self.assertRaises(NotImplementedError, j_fun, [1, 2, 0.75])
+        with pytest.raises(NotImplementedError):
+            j_fun([1, 2, 0.75])
 
     @staticmethod
     def test_on_matrix_valued_function():
@@ -237,7 +238,7 @@ class TestJacobian(unittest.TestCase):
                              [0., 1.]]])
 
 
-class TestGradient(unittest.TestCase):
+class TestGradient(object):
     @staticmethod
     def test_on_scalar_function():
         def fun(x):
@@ -252,7 +253,7 @@ class TestGradient(unittest.TestCase):
             assert_allclose(d, dtrue)
 
 
-class TestHessdiag(unittest.TestCase):
+class TestHessdiag(object):
     @staticmethod
     def test_forward():
         def fun(x):
@@ -260,7 +261,7 @@ class TestHessdiag(unittest.TestCase):
         htrue = np.array([0., 2., 18.])
         h_fun = nd.Hessdiag(fun)
         hd = h_fun([1, 2, 3])
-        _error = hd - htrue
+
         assert_allclose(hd, htrue)
 
     @staticmethod
@@ -270,9 +271,4 @@ class TestHessdiag(unittest.TestCase):
         htrue = np.array([0., 2., 18.])
         h_fun = nd.Hessdiag(fun, method='reverse')
         hd = h_fun([1, 2, 3])
-        _error = hd - htrue
         assert_allclose(hd, htrue)
-
-if __name__ == '__main__':
-    # _run_hamiltonian()
-    unittest.main()

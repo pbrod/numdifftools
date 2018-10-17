@@ -3,8 +3,7 @@ import pytest
 import numdifftools.core as nd
 import numpy as np
 from numdifftools.step_generators import MinStepGenerator, MaxStepGenerator, EPS
-from numpy.testing import assert_array_almost_equal, assert_equal
-
+from numpy.testing.utils import assert_array_almost_equal, assert_equal
 
 
 def test_min_step_generator_with_step_ratio4():

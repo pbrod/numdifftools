@@ -4,15 +4,15 @@ Created on 28. aug. 2015
 @author: pab
 """
 from __future__ import absolute_import, division, print_function
-import unittest
+
 import numpy as np
-from numpy.testing import assert_array_almost_equal, assert_allclose
+from numpy.testing.utils import assert_array_almost_equal, assert_allclose
 from numdifftools.limits import Limit, Residue, CStepGenerator
 from numdifftools.step_generators import make_exact
 from numdifftools.extrapolation import EPS
 
 
-class TestCStepGenerator(unittest.TestCase):
+class TestCStepGenerator(object):
 
     @staticmethod
     def test_default_generator():
@@ -41,7 +41,7 @@ class TestCStepGenerator(unittest.TestCase):
         assert_array_almost_equal((h[0] - desired) / desired, 0)
 
 
-class TestLimit(unittest.TestCase):
+class TestLimit(object):
 
     def test_sinx_div_x(self):
         def fun(x):
@@ -52,7 +52,7 @@ class TestLimit(unittest.TestCase):
             x = np.arange(-10, 10) / np.pi
             lim_f0, err = lim_f(x*np.pi)
             assert_array_almost_equal(lim_f0, np.sinc(x))
-            self.assertTrue(np.all(err.error_estimate < 1.0e-14))
+            assert np.all(err.error_estimate < 1.0e-14)
 
     def test_derivative_of_cos(self):
         x0 = np.pi/2
@@ -61,7 +61,7 @@ class TestLimit(unittest.TestCase):
             return (np.cos(x0+x)-np.cos(x0))/x
         lim, err = Limit(fun, step=CStepGenerator(), full_output=True)(0)
         assert_allclose(lim, -1)
-        self.assertTrue(err.error_estimate < 1e-14)
+        assert err.error_estimate < 1e-14
 
     def test_residue_1_div_1_minus_exp_x(self):
 
@@ -70,7 +70,7 @@ class TestLimit(unittest.TestCase):
         lim, err = Limit(fun, full_output=True)(0)
         assert_allclose(lim, -0.5)
 
-        self.assertTrue(err.error_estimate < 1e-14)
+        assert err.error_estimate < 1e-14
 
     def test_difficult_limit(self):
 
@@ -80,10 +80,10 @@ class TestLimit(unittest.TestCase):
             lim, err = Limit(fun, path=path, full_output=True)(0)
             assert_allclose(lim, 0.5)
 
-            self.assertTrue(err.error_estimate < 1e-8)
+            assert err.error_estimate < 1e-8
 
 
-class TestResidue(unittest.TestCase):
+class TestResidue(object):
 
     def test_residue_1_div_1_minus_exp_x(self):
 
@@ -93,7 +93,7 @@ class TestResidue(unittest.TestCase):
         res_h, err = Residue(fun, full_output=True)(0)
         assert_allclose(res_h, -0.5)
 
-        self.assertTrue(err.error_estimate < 1e-14)
+        assert err.error_estimate < 1e-14
 
     def test_residue_1_div_sin_x2(self):
         def fun(z):
@@ -102,8 +102,4 @@ class TestResidue(unittest.TestCase):
         res_h, info = Residue(fun, full_output=True, pole_order=2)(np.pi)
         assert_allclose(res_h, 1)
 
-        self.assertTrue(info.error_estimate < 1e-10)
-
-
-if __name__ == "__main__":
-    unittest.main()
+        assert info.error_estimate < 1e-10

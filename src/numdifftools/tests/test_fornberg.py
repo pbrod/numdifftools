@@ -4,13 +4,11 @@ from numdifftools.fornberg import (fd_weights, fd_weights_all, derivative,
                                    fd_derivative,
                                    CENTRAL_WEIGHTS_AND_POINTS)
 import numpy as np
-from numpy.testing import assert_array_almost_equal, assert_allclose
+from numpy.testing.utils import assert_array_almost_equal, assert_allclose
 from numdifftools.example_functions import function_names, get_function
 from hypothesis import given, example, note, strategies as st
 
-# class TestExampleFunctions(unittest.TestCase):
-#
-#     @staticmethod
+
 @given(st.floats(min_value=1e-1, max_value=0.98))
 def test_high_order_derivative(x):
     #     small_radius = ['sqrt', 'log', 'log2', 'log10', 'arccos', 'log1p',
@@ -51,7 +49,7 @@ def test_all_weights():
                -0.083333333333],
               [-0.5, 1., 0., -1., 0.5 ],
               [ 1., -4., 6., -4., 1.]]
-    np.testing.assert_allclose(w, true_w, atol=1e-12)
+    assert_allclose(w, true_w, atol=1e-12)
 
 
 def test_weights():
@@ -61,7 +59,7 @@ def test_weights():
         w, x = CENTRAL_WEIGHTS_AND_POINTS[name]
 
         weights = fd_weights(np.array(x, dtype=float), 0.0, n=n)
-        np.testing.assert_allclose(weights, w, atol=1e-15)
+        assert_allclose(weights, w, atol=1e-15)
 
 
 def test_fd_derivative():
@@ -70,9 +68,9 @@ def test_fd_derivative():
     for n in range(1, 7):
         df = fd_derivative(fx, x, n=n)
         m = n // 2 + 2
-        np.testing.assert_allclose(df[m:-m], fx[m:-m], atol=1e-5)
-        np.testing.assert_allclose(df[-m:], fx[-m:], atol=1e-4)
-        np.testing.assert_allclose(df[:m], fx[:m], atol=1e-4)
+        assert_allclose(df[m:-m], fx[m:-m], atol=1e-5)
+        assert_allclose(df[-m:], fx[-m:], atol=1e-4)
+        assert_allclose(df[:m], fx[:m], atol=1e-4)
 
 
 class ExampleFunctions(object):

@@ -1,6 +1,6 @@
 """Test functions for numdifftools module"""
 from __future__ import print_function
-import unittest
+import pytest
 import numdifftools.core as nd
 import numdifftools.nd_statsmodels as nds
 from numdifftools.step_generators import default_scale
@@ -11,7 +11,7 @@ from numdifftools.tests.hamiltonian import run_hamiltonian
 from hypothesis import given, example, note, strategies as st
 
 
-class TestRichardson(unittest.TestCase):
+class TestRichardson(object):
 
     @staticmethod
     def test_central_forward_backward():
@@ -119,7 +119,7 @@ class TestRichardson(unittest.TestCase):
                                     err_msg=msg)
 
 
-class TestDerivative(unittest.TestCase):
+class TestDerivative(object):
 
     @staticmethod
     def test_directional_diff():
@@ -134,10 +134,10 @@ class TestDerivative(unittest.TestCase):
             return np.inf * np.ones_like(x)
         df = nd.Derivative(finf)
         val = df(0)
-        self.assert_(np.isnan(val))
+        assert np.isnan(val)
 
         df.n = 0
-        self.assertEqual(df(0), np.inf)
+        assert df(0) == np.inf
 
     @staticmethod
     def test_high_order_derivative_cos():
@@ -152,7 +152,7 @@ class TestDerivative(unittest.TestCase):
                     d3cos = nd.Derivative(np.cos, n=n, order=order,
                                           method=method, full_output=True)
                     y, _info = d3cos(np.pi / 2.0)
-                    _error = np.abs(y - true_val)
+                    # _error = np.abs(y - true_val)
 #                 small = error <= info.error_estimate
 #                 if not small:
 #                     small = error < 10**(-12 + n)
@@ -196,7 +196,7 @@ class TestDerivative(unittest.TestCase):
         for method, scale in zip(['complex', 'central', 'forward', 'backward',
                                   'multicomplex'],
                                  [1.35, 2.5, 2.5, 2.5, 1.35]):
-            np.testing.assert_allclose(scale, default_scale(method, n=1))
+            assert_allclose(scale, default_scale(method, n=1))
 
     @staticmethod
     def test_fun_with_additional_parameters():
@@ -264,7 +264,7 @@ class TestDerivative(unittest.TestCase):
         # Compute the derivative of a function using a backward difference
         # scheme.  A backward scheme will only look below x0.
         dsinh = nd.Derivative(np.sinh, method='backward')
-        self.assertAlmostEqual(dsinh(0.0), np.cosh(0.0))
+        assert_allclose(dsinh(0.0), np.cosh(0.0))
 
     def test_central_and_forward_derivative_on_log(self):
         # Although a central rule may put some samples in the wrong places, it
@@ -272,14 +272,14 @@ class TestDerivative(unittest.TestCase):
         epsilon = nd.MinStepGenerator(num_steps=15, offset=0, step_ratio=2)
         dlog = nd.Derivative(np.log, method='central', step=epsilon)
         x = 0.001
-        self.assertAlmostEqual(dlog(x), 1.0 / x)
+        assert_allclose(dlog(x), 1.0 / x)
 
         # But forcing the use of a one-sided rule may be smart anyway
         dlog = nd.Derivative(np.log, method='forward', step=epsilon)
-        self.assertAlmostEqual(dlog(x), 1 / x)
+        assert_allclose(dlog(x), 1 / x)
 
 
-class TestJacobian(unittest.TestCase):
+class TestJacobian(object):
 
     @staticmethod
     @given(st.floats(min_value=-1000, max_value=1000))
@@ -408,6 +408,7 @@ class TestJacobian(unittest.TestCase):
         assert_allclose(nds.approx_fprime(x, fun3), tv)
 
     @staticmethod
+    @pytest.mark.slow
     def test_issue_27a():
         """Test for memory-error"""
         n = 500
@@ -417,13 +418,14 @@ class TestJacobian(unittest.TestCase):
                             2 * np.diag(np.ones(n)))
 
     @staticmethod
+    @pytest.mark.slow
     def test_issue_27b():
         n = 1000
         x = np.ones(n)
         assert_allclose(nd.Jacobian(lambda x: x**2, method='complex')(x),
                             2 * np.diag(np.ones(n)))
 
-class TestGradient(unittest.TestCase):
+class TestGradient(object):
 
     @staticmethod
     def test_directional_diff():
@@ -447,10 +449,10 @@ class TestGradient(unittest.TestCase):
                 dfun = nd.Gradient(fun, method=method, order=order)
                 d = dfun([1, 2, 3])
                 assert_allclose(d, dtrue)
-        # self.assert_(False)
+        # assert False
 
 
-class TestHessdiag(unittest.TestCase):
+class TestHessdiag(object):
 
     @staticmethod
     def _fun(x):
@@ -471,7 +473,7 @@ class TestHessdiag(unittest.TestCase):
             h_fun = nd.Hessdiag(self._fun, step=steps, method=method,
                                 full_output=True)
             h_val, _info = h_fun([1, 2, 3])
-            _error = h_val - htrue
+
             assert_allclose(h_val, htrue)
 
     @given(st.tuples(st.floats(-100, 100), st.floats(-100, 100),
@@ -507,12 +509,12 @@ class TestHessdiag(unittest.TestCase):
                 h_fun = nd.Hessdiag(self._fun, method=method, order=order,
                                     full_output=True)
                 h_val, _info = h_fun([1, 2, 3])
-                _error = h_val - htrue
+                # _error = h_val - htrue
                 tol = min(1e-8, _info.error_estimate.max())
                 assert_allclose(h_val, htrue, atol=tol)
 
 
-class TestHessian(unittest.TestCase):
+class TestHessian(object):
 
     def test_run_hamiltonian(self):
         # Important to restrict the step in order to avoid the
@@ -523,7 +525,7 @@ class TestHessian(unittest.TestCase):
             hessian = nd.Hessian(None, step=step, method=method)
             h, _error_estimate, true_h = run_hamiltonian(hessian,
                                                          verbose=False)
-            self.assertTrue((np.abs((h - true_h) / true_h) < 1e-4).all())
+            assert (np.abs((h - true_h) / true_h) < 1e-4).all()
 
     def test_complex_hessian_issue_35(self):
         """ """
@@ -536,7 +538,8 @@ class TestHessian(unittest.TestCase):
                 x = np.random.randn(3) + offset
                 hessn = nd.Hessian(foo, method=method)
                 if method.endswith('complex'):
-                    self.assertRaises(ValueError, hessn, x)
+                    with pytest.raises(ValueError):
+                        hessn(x)
                 else:
                     val = hessn(x)
 
@@ -561,7 +564,3 @@ class TestHessian(unittest.TestCase):
                 h_val, _info = h_fun([0, 0])
                 # print(method, (h_val-np.array(htrue)))
                 assert_allclose(h_val, htrue)
-
-
-if __name__ == '__main__':
-    unittest.main()
