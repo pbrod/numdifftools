@@ -28,6 +28,71 @@ def _assert(cond, msg):
         raise ValueError(msg)
 
 
+def make_exact(h):
+    """Make sure h is an exact representable number
+
+    This is important when calculating numerical derivatives and is
+    accomplished by adding 1.0 and then subtracting 1.0.
+    """
+    return (h + 1.0) - 1.0
+
+
+class DifferenceFunctions(object):
+    """
+    Class defining difference functions
+    """
+
+    @staticmethod
+    def _central_even(f, f_x0i, x0i, h):
+        return (f(x0i + h) + f(x0i - h)) / 2.0 - f_x0i
+
+    @staticmethod
+    def _central(f, f_x0i, x0i, h):
+        return (f(x0i + h) - f(x0i - h)) / 2.0
+
+    @staticmethod
+    def _forward(f, f_x0i, x0i, h):
+        return f(x0i + h) - f_x0i
+
+    @staticmethod
+    def _backward(f, f_x0i, x0i, h):
+        return f_x0i - f(x0i - h)
+
+    @staticmethod
+    def _complex(f, fx, x, h):
+        return f(x + 1j * h).imag
+
+    @staticmethod
+    def _complex_odd(f, fx, x, h):
+        ih = h * _SQRT_J
+        return ((_SQRT_J / 2.) * (f(x + ih) - f(x - ih))).imag
+
+    @staticmethod
+    def _complex_odd_higher(f, fx, x, h):
+        ih = h * _SQRT_J
+        return ((3 * _SQRT_J) * (f(x + ih) - f(x - ih))).real
+
+    @staticmethod
+    def _complex_even(f, fx, x, h):
+        ih = h * _SQRT_J
+        return (f(x + ih) + f(x - ih)).imag
+
+    @staticmethod
+    def _complex_even_higher(f, fx, x, h):
+        ih = h * _SQRT_J
+        return 12.0 * (f(x + ih) + f(x - ih) - 2 * fx).real
+
+    @staticmethod
+    def _multicomplex(f, fx, x, h):
+        z = Bicomplex(x + 1j * h, 0)
+        return Bicomplex.__array_wrap__(f(z)).imag
+
+    @staticmethod
+    def _multicomplex2(f, fx, x, h):
+        z = Bicomplex(x + 1j * h, h)
+        return Bicomplex.__array_wrap__(f(z)).imag12
+
+
 class LogRule(object):
     """ Log spaced finite difference rule class
 
@@ -40,49 +105,49 @@ class LogRule(object):
     order : int, optional
         defines the order of the error term in the Taylor approximation used.
         For 'central' and 'complex' methods, it must be an even number.
-    step_ratio : real scalar, optional, default 2.0
-        Ratio between sequential steps generated.
 
 
     Examples
     --------
-    >>> np.allclose(LogRule(n=1, method='central', order=2, step_ratio=2.).rule, 1)
+    >>> np.allclose(LogRule(n=1, method='central', order=2).rule(step_ratio=2.0), 1)
     True
-    >>> np.allclose(LogRule(n=1, method='central', order=4, step_ratio=2.).rule,
+    >>> np.allclose(LogRule(n=1, method='central', order=4).rule(step_ratio=2.),
     ...             [-0.33333333,  2.66666667])
     True
-    >>> np.allclose(LogRule(n=1, method='central', order=6, step_ratio=2.).rule,
+    >>> np.allclose(LogRule(n=1, method='central', order=6).rule(step_ratio=2.),
     ...             [ 0.02222222, -0.88888889,  5.68888889])
     True
 
-    >>> np.allclose(LogRule(n=1, method='forward', order=2, step_ratio=2.).rule, [-1.,  4.])
+    >>> np.allclose(LogRule(n=1, method='forward', order=2).rule(step_ratio=2.), [-1.,  4.])
     True
 
-    >>> np.allclose(LogRule(n=1, method='forward', order=4, step_ratio=2.).rule,
+    >>> np.allclose(LogRule(n=1, method='forward', order=4).rule(step_ratio=2.),
     ...             [ -0.04761905,   1.33333333, -10.66666667,  24.38095238])
     True
-    >>> np.allclose(LogRule(n=1, method='forward', order=6, step_ratio=2.).rule,
+    >>> np.allclose(LogRule(n=1, method='forward', order=6).rule(step_ratio=2.),
     ...    [ -1.02406554e-04,   1.26984127e-02,  -5.07936508e-01,
     ...       8.12698413e+00,  -5.20126984e+01,   1.07381055e+02])
     True
-    >>> fd_rule = LogRule(n=2, method='forward', order=4, step_ratio=2.0)
-    >>> h = 0.002*(1./fd_rule.step_ratio)**np.arange(6)
+    >>> step_ratio=2.0
+    >>> fd_rule = LogRule(n=2, method='forward', order=4)
+    >>> h = 0.002*(1./step_ratio)**np.arange(6)
     >>> x0 = 1.
     >>> f = np.exp
     >>> f_x0 = f(x0)
     >>> f_del = f(x0+h) - f_x0  # forward difference
-    >>> fder, h = fd_rule.apply(f_del, h)
+    >>> f_del = fd_rule.diff(f, f_x0, x0, h)  # or alternatively
+    >>> fder, h = fd_rule.apply(f_del, h, step_ratio)
     >>> np.allclose(fder, f(x0))
     True
 
     """
 
-    def __init__(self, n, method, order=2, step_ratio=2.0):
+    def __init__(self, n=1, method='central', order=2):
         self.n = n
         self.method = method
         self.order = order
-        self.step_ratio = step_ratio
 
+    _difference_functions = DifferenceFunctions()
 # --- properties ---
 
     @property
@@ -195,17 +260,23 @@ class LogRule(object):
         return last
 
     @property
-    def function(self):
+    def diff(self):
+        "Return difference function"
         first = '_{0!s}'.format(self.method)
         middle = self._get_middle_name()
         last = self._get_last_name()
         name = first + middle + last
-        return getattr(self, name)
+        return getattr(self._difference_functions, name)
 
-    @property
-    def rule(self):
+    def rule(self, step_ratio=2.0):
+
         """
         Return finite differencing rule.
+
+        Parameters
+        ----------
+        step_ratio : real scalar, optional, default 2.0
+            Ratio between sequential steps generated.
 
         The rule is for a nominal unit step size, and must be scaled later
         to reflect the local step size.
@@ -220,11 +291,10 @@ class LogRule(object):
         order
         method
         """
-        step_ratio = self.step_ratio
         method = self.method
         if method in ('multicomplex', ) or self.n == 0:
             return np.ones((1,))
-
+        step_ratio = make_exact(step_ratio)
         order, method_order = self.n - 1, self._method_order
         parity = self._parity(method, order, method_order)
         step = self._richardson_step()
@@ -239,12 +309,20 @@ class LogRule(object):
             return -fd_rules[ix]
         return fd_rules[ix]
 
-    def apply(self, f_del, h):
+    def apply(self, f_del, h, step_ratio=2.0):
         """
         Apply finite difference rule along the first axis.
+
+        Return derivative estimates of fun at x0 for a sequence of stepsizes h
+
+        Parameters
+        ----------
+        f_del: finite differences
+        h: steps
+
         """
 
-        fd_rule = self.rule
+        fd_rule = self.rule(step_ratio)
 
         ne = h.shape[0]
         nr = fd_rule.size - 1
@@ -256,75 +334,6 @@ class LogRule(object):
         der_init = f_diff / (h ** self.n)
         ne = max(ne - nr, 1)
         return der_init[:ne], h[:ne]
-
-
-class DifferenceFunction(LogRule):
-    """
-
-    Derivative(fun, step, diff)
-    Examples
-    --------
-    >>> fd_rule = DifferenceFunction(n=2, method='forward', order=4, step_ratio=2.0)
-    >>> h = 0.002*(1./fd_rule.step_ratio)**np.arange(6)
-    >>> x0 = 1.
-    >>> f = np.exp
-    >>> f_x0 = f(x0)
-
-    >>> f_del = fd_rule.function(f, f_x0, x0, h)
-    >>> fder, h = fd_rule.apply(f_del, h)
-    >>> np.allclose(fder, f(x0))
-    True
-    """
-
-    @staticmethod
-    def _central_even(f, f_x0i, x0i, h):
-        return (f(x0i + h) + f(x0i - h)) / 2.0 - f_x0i
-
-    @staticmethod
-    def _central(f, f_x0i, x0i, h):
-        return (f(x0i + h) - f(x0i - h)) / 2.0
-
-    @staticmethod
-    def _forward(f, f_x0i, x0i, h):
-        return f(x0i + h) - f_x0i
-
-    @staticmethod
-    def _backward(f, f_x0i, x0i, h):
-        return f_x0i - f(x0i - h)
-
-    @staticmethod
-    def _complex(f, fx, x, h):
-        return f(x + 1j * h).imag
-
-    @staticmethod
-    def _complex_odd(f, fx, x, h):
-        ih = h * _SQRT_J
-        return ((_SQRT_J / 2.) * (f(x + ih) - f(x - ih))).imag
-
-    @staticmethod
-    def _complex_odd_higher(f, fx, x, h):
-        ih = h * _SQRT_J
-        return ((3 * _SQRT_J) * (f(x + ih) - f(x - ih))).real
-
-    @staticmethod
-    def _complex_even(f, fx, x, h):
-        ih = h * _SQRT_J
-        return (f(x + ih) + f(x - ih)).imag
-
-    @staticmethod
-    def _complex_even_higher(f, fx, x, h):
-        ih = h * _SQRT_J
-        return 12.0 * (f(x + ih) + f(x - ih) - 2 * fx).real
-
-    @staticmethod
-    def _multicomplex(f, fx, x, h):
-        z = Bicomplex(x + 1j * h, 0)
-        return Bicomplex.__array_wrap__(f(z)).imag
-
-    @staticmethod
-    def _multicomplex2(f, fx, x, h):
-        z = Bicomplex(x + 1j * h, h)
-        return Bicomplex.__array_wrap__(f(z)).imag12
 
 
 if __name__ == '__main__':

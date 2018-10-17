@@ -161,10 +161,8 @@ def run_gradient_and_hessian_benchmarks(problem_sizes=(4, 8, 16, 32, 64, 96)):
     print(results_gradients.shape)
 
     for i, txt in enumerate(['run times', 'errors']):
-        objects = [('Jacobian ' + txt, gradient_funs,
-                    results_gradients[..., i].T),
-                   ('Hessian ' + txt, hessian_funs,
-                    results_hessians[..., i].T)]
+        objects = [('Jacobian ' + txt, gradient_funs, results_gradients[..., i].T),
+                   ('Hessian ' + txt, hessian_funs, results_hessians[..., i].T)]
         if i == 0:
             plot_runtimes(objects, problem_sizes, symbols)
         else:
