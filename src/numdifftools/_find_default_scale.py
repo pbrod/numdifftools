@@ -200,4 +200,3 @@ if __name__ == '__main__':
     run_all_benchmarks(method='complex', order=2, x_values=[50.,], #0.1, 0.5, 1.0, 5, 10, 50,],
                        n_max=11)
     plt.show('hold')
-
