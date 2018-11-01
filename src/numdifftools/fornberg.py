@@ -210,6 +210,9 @@ def _poor_convergence(z, r, f, bn, mvec):
 
 
 def _get_logn(n):
+    if n == 1:
+        return 0
+
     return np.int_(np.log2(n - 1) - 1.5849625007211561).clip(min=0)
 
 
