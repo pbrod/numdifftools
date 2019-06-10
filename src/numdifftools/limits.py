@@ -202,9 +202,8 @@ class _Limit(object):
     @staticmethod
     def _vstack(sequence, steps):
         original_shape = np.shape(sequence[0])
-        f_del = np.vstack(list(np.ravel(r)) for r in sequence)
-        h = np.vstack(list(np.ravel(np.ones(original_shape) * step))
-                      for step in steps)
+        f_del = np.vstack([list(np.ravel(r)) for r in sequence])
+        h = np.vstack([list(np.ravel(np.ones(original_shape) * step)) for step in steps])
         _assert(f_del.size == h.size, 'fun did not return data of correct '
                 'size (it must be vectorized)')
         return f_del, h, original_shape
