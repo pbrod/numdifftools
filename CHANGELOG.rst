@@ -2,6 +2,13 @@
 Changelog
 =========
 
+Version 0.9.39 Jun 10, 2019
+===========================
+
+Robert Parini (1):
+      * Fix issue #43: numpy future warning
+
+
 
 Version 0.9.38 Jun 10, 2019
 ===========================
