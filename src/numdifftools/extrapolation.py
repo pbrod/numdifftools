@@ -254,6 +254,7 @@ class EpsAlg(object):
 
 def epsalg_demo():
     """
+    >>> from numdifftools.extrapolation import epsalg_demo
     >>> epsalg_demo()
     NO. PANELS      TRAP. APPROX          APPROX W/EA           abserr
         1           0.78539816            0.78539816            0.21460184
@@ -282,8 +283,9 @@ def epsalg_demo():
 
 def dea_demo():
     """
+    >>> from numdifftools.extrapolation import dea_demo
     >>> dea_demo()
-        NO. PANELS      TRAP. APPROX          APPROX W/EA           abserr
+    NO. PANELS      TRAP. APPROX          APPROX W/EA           abserr
         1           0.78539816            0.78539816            0.78539816
         2           0.94805945            0.94805945            0.97596771
         4           0.98711580            0.99945672            0.21405856
@@ -336,33 +338,34 @@ def dea3(v0, v1, v2, symmetric=False):
     convergence. The routine is based on the epsilon algorithm of
     P. Wynn, see [1]_.
 
-     Examples
-     --------
-     # integrate sin(x) from 0 to pi/2
+    Examples
+    --------
+    # integrate sin(x) from 0 to pi/2
 
-     >>> import numpy as np
-     >>> import numdifftools as nd
-     >>> Ei= np.zeros(3)
-     >>> linfun = lambda i : np.linspace(0, np.pi/2., 2**(i+5)+1)
-     >>> for k in np.arange(3):
-     ...    x = linfun(k)
-     ...    Ei[k] = np.trapz(np.sin(x),x)
-     >>> [En, err] = nd.dea3(Ei[0], Ei[1], Ei[2])
-     >>> truErr = np.abs(En-1.)
-     >>> np.all(truErr < err)
-     True
-     >>> np.allclose(En, 1)
-     True
-     >>> np.all(np.abs(Ei-1)<1e-3)
-     True
+    >>> import numpy as np
+    >>> import numdifftools as nd
+    >>> Ei= np.zeros(3)
+    >>> linfun = lambda i : np.linspace(0, np.pi/2., 2**(i+5)+1)
+    >>> for k in np.arange(3):
+    ...    x = linfun(k)
+    ...    Ei[k] = np.trapz(np.sin(x),x)
+    >>> [En, err] = nd.dea3(Ei[0], Ei[1], Ei[2])
+    >>> truErr = np.abs(En-1.)
+    >>> np.all(truErr < err)
+    True
+    >>> np.allclose(En, 1)
+    True
+    >>> np.all(np.abs(Ei-1)<1e-3)
+    True
 
-     See also
-     --------
-     dea
+    See also
+    --------
+    dea
 
-     References
-     ----------
-     .. [1] C. Brezinski and M. Redivo Zaglia (1991)
+    References
+    ----------
+
+    .. [1] C. Brezinski and M. Redivo Zaglia (1991)
             "Extrapolation Methods. Theory and Practice", North-Holland.
 
     ..  [2] C. Brezinski (1977)

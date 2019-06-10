@@ -4,7 +4,7 @@ Created on Jun 25, 2016
 @author: pab
 '''
 import numpy as np
-from numpy import pi, r_, sqrt  #  , abs as c_abs
+from numpy import pi, r_, sqrt
 from scipy import constants, linalg, optimize
 from numdifftools.multicomplex import c_abs
 

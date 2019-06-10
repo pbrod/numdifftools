@@ -5,20 +5,20 @@ Created on 22. apr. 2015
 
 References
 ----------
-A METHODOLOGY FOR ROBUST OPTIMIZATION OF
-LOW-THRUST TRAJECTORIES IN MULTI-BODY
-ENVIRONMENTS
+A methodology for robust optimization of
+low-thrust trajectories in multi-body
+environments
 Gregory Lantoine (2010)
 Phd thesis, Georgia Institute of Technology
 
-USING MULTICOMPLEX VARIABLES FOR AUTOMATIC
-COMPUTATION OF HIGH-ORDER DERIVATIVES
+Using multicomplex variables for automatic
+computation of high-order derivatives
 Gregory Lantoine, Ryan P. Russell , and Thierry Dargent
 ACM Transactions on Mathematical Software, Vol. 38, No. 3, Article 16,
 April 2012, 21 pages,
 http://doi.acm.org/10.1145/2168773.2168774
 
-
+Bicomplex Numbers and Their Elementary Functions
 M.E. Luna-Elizarraras, M. Shapiro, D.C. Struppa1, A. Vajiac (2012)
 CUBO A Mathematical Journal
 Vol. 14, No 2, (61-80). June 2012.

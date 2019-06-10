@@ -4,9 +4,9 @@ from numdifftools.extrapolation import EPS
 from collections import namedtuple
 
 _STATE = namedtuple('State', ['x', 'method', 'n', 'order'])
-__all__=('one_step', 'make_exact', 'valarray', 'nominal_step', 'base_step',
-         'default_scale', 'MinStepGenerator', 'MaxStepGenerator',
-         'BasicMaxStepGenerator', 'BasicMinStepGenerator')
+__all__ = ('one_step', 'make_exact', 'nominal_step', 'base_step',
+           'default_scale', 'MinStepGenerator', 'MaxStepGenerator',
+           'BasicMaxStepGenerator', 'BasicMinStepGenerator')
 
 
 def make_exact(h):
@@ -16,17 +16,6 @@ def make_exact(h):
     accomplished by adding 1.0 and then subtracting 1.0.
     """
     return (h + 1.0) - 1.0
-
-
-def valarray(shape, value=np.NaN, typecode=None):
-    """Return an array of all value."""
-    if typecode is None:
-        typecode = bool
-    out = np.ones(shape, dtype=typecode) * value
-
-    if not isinstance(out, np.ndarray):
-        out = np.asarray(out)
-    return out
 
 
 def nominal_step(x=None):
@@ -99,7 +88,7 @@ class BasicMaxStepGenerator(object):
     def _range(self):
         return range(self.num_steps)
 
-    def __call__(self):
+    def __call__(self, *args, **kwds):
         base_step, step_ratio = self.base_step, self.step_ratio
         sgn, offset = self._sign, self.offset
         for i in self._range():
@@ -269,7 +258,7 @@ class MinStepGenerator(object):
         x = self._state.x
         if self._step_nom is None:
             return nominal_step(x)
-        return valarray(x.shape, value=self._step_nom)
+        return np.full(x.shape, fill_value=self._step_nom)
 
     @step_nom.setter
     def step_nom(self, step_nom):

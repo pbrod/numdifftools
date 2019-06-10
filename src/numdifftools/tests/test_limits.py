@@ -35,8 +35,7 @@ class TestCStepGenerator(object):
     @staticmethod
     def test_fixed_base_step():
         desired = 0.1
-        step_gen = CStepGenerator(base_step=desired, num_steps=1, scale=2,
-                                    offset=0)
+        step_gen = CStepGenerator(base_step=desired, num_steps=1, scale=2, offset=0)
         h = [h for h in step_gen(0)]
         assert_array_almost_equal((h[0] - desired) / desired, 0)
 

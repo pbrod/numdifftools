@@ -1,14 +1,22 @@
 # -*- coding:utf-8 -*-
 """"""
-from __future__ import division
+from __future__ import absolute_import, division
 import pytest
-import numdifftools.nd_algopy as nd
 import numpy as np
 from numpy.testing.utils import assert_allclose
-import algopy
 from numdifftools.testing import rosen
-from numdifftools.tests.hamiltonian import run_hamiltonian
+from .hamiltonian import run_hamiltonian
 from hypothesis import given, example, note, strategies as st
+import pytest
+try:
+    import algopy
+except ImportError:
+    algopy = None
+else:
+    import numdifftools.nd_algopy as nd
+
+
+pytestmark = pytest.mark.skipif(algopy is None, reason="algopy is not installed!")
 
 
 class TestHessian(object):
@@ -16,7 +24,7 @@ class TestHessian(object):
     def test_run_hamiltonian(self):
         h, _error_estimate, true_h = run_hamiltonian(nd.Hessian(None),
                                                      verbose=False)
-        assert (np.abs((h - true_h)/true_h) < 1e-4).all()
+        assert (np.abs((h - true_h) / true_h) < 1e-4).all()
 
     @staticmethod
     def test_hessian_cos_x_y__at_0_0():

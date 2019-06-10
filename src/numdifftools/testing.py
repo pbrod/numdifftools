@@ -41,6 +41,7 @@ def capture_stdout_and_stderr():
 
     Examples
     --------
+    >>> from numdifftools.testing import capture_stdout_and_stderr
     >>> with capture_stdout_and_stderr() as out:
     ...    print('This is a test')
     >>> out[0].startswith('This is a test')

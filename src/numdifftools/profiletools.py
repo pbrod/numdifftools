@@ -28,7 +28,6 @@ try:
         else:
             profiler.add_function(f)
 
-
     def do_profile(follow=(), follow_all_methods=False):
         """
         Decorator to profile a function or class method
@@ -75,6 +74,7 @@ try:
 except ImportError as error:
     LineProfiler = None
     warnings.warn(str(error))
+
     def do_profile(follow=(), follow_all_methods=False):
         "Helpful if you accidentally leave in production!"
         def inner(func):
@@ -119,6 +119,7 @@ class TimeWith():
     Timing context manager
 
     """
+
     def __init__(self, name=''):
         self.name = name
         self.start = timer()

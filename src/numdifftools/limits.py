@@ -240,8 +240,9 @@ class Limit(_Limit):
         estimated limit of f(z) as z --> z0
     info:
         Only given if full_output is True and contains the following:
+
         error estimate: ndarray
-            95 uncertainty estimate around the limit, such that
+            95 % uncertainty estimate around the limit, such that
             abs(limit_fz - lim z->z0 f(z)) < error_estimate
         final_step: ndarray
             final step used in approximation
@@ -430,18 +431,19 @@ class Residue(Limit):
         estimated residue, i.e., limit of f(z)*(z-z0)**pole_order as z --> z0
         When the residue is estimated as approximately zero,
           the wrong order pole may have been specified.
-
-    info:
+    info: namedtuple,
         Only given if full_output is True and contains the following:
+
         error estimate: ndarray
-            95 uncertainty estimate around the residue, such that
+            95 % uncertainty estimate around the residue, such that
             abs(res_fz - lim z->z0 f(z)*(z-z0)**pole_order) < error_estimate
             Large uncertainties here suggest that the wrong order
             pole was specified for f(z0).
         final_step: ndarray
             final step used in approximation
 
-
+    Notes
+    -----
     Residue computes the residue of a given function at a simple first order
     pole, or at a second order pole.
 
@@ -451,7 +453,6 @@ class Residue(Limit):
 
     z0  - scalar point at which to compute the residue. z0 may be
           real or complex.
-
 
     See the document DERIVEST.pdf for more explanation of the
     algorithms behind the parameters of Residue. In most cases,

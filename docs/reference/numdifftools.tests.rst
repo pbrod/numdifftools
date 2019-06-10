@@ -1,3 +1,6 @@
+.. _numdifftools.tests:
+
+
 numdifftools.tests package
 ==========================
 

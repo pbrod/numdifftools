@@ -2,7 +2,7 @@
 Introduction to Numdifftools
 ============================
 
-|pkg_img| |tests_img| |tests2_img| |docs_img| |health_img| |coverage_img| |versions_img| |depsy_img|
+|pkg_img| |tests_img| |tests2_img| |docs_img| |health_img| |coverage_img| |versions_img| |downloads_img|
 
 
 Numdifftools is a suite of tools written in `_Python <http://www.python.org/>`_
@@ -145,7 +145,7 @@ To test if the toolbox is working paste the following in an interactive
 python session::
 
    import numdifftools as nd
-   nd.test(coverage=True, doctests=True)
+   nd.test('--doctest-modules', '--disable-warnings')
 
 
 Acknowledgement
@@ -181,7 +181,9 @@ References
     http://doi.acm.org/10.1145/2168773.2168774
 
 .. [Luna-ElizarrarasEtal2012] M.E. Luna-Elizarraras, M. Shapiro, D.C. Struppa1,
-    A. Vajiac (2012), CUBO A Mathematical Journal,
+    A. Vajiac (2012),
+    Bicomplex Numbers and Their Elementary Functions,
+    CUBO A Mathematical Journal,
     Vol. 14, No 2, (61-80). June 2012.
 
 .. [Verheyleweghen2014] Adriaen Verheyleweghen, (2014)
@@ -189,8 +191,8 @@ References
     Project report, NTNU
 
 
-.. |pkg_img| image:: https://badge.fury.io/py/numdifftools.png
-    :target: https://pypi.python.org/pypi/Numdifftools/
+.. |pkg_img| image:: https://repology.org/badge/latest-versions/python:numdifftools.svg
+    :target: https://pypi.python.org/pypi/numdifftools/
 
 .. |tests_img| image:: https://travis-ci.org/pbrod/numdifftools.svg?branch=master
     :target: https://travis-ci.org/pbrod/numdifftools
@@ -202,17 +204,15 @@ References
 .. |docs_img| image:: https://readthedocs.org/projects/pip/badge/?version=stable
     :target: http://numdifftools.readthedocs.org/en/stable/
 
-.. |health_img| image:: https://landscape.io/github/pbrod/numdifftools/master/landscape.svg?style=flat
-   :target: https://landscape.io/github/pbrod/numdifftools/master
-   :alt: Code Health
-
-.. |coverage_img| image:: https://coveralls.io/repos/pbrod/numdifftools/badge.svg?branch=master
-   :target: https://coveralls.io/github/pbrod/numdifftools?branch=master
-
+.. |health_img| image:: https://api.codeclimate.com/v1/badges/698996d1ec94028ec223/maintainability
+   :target: https://codeclimate.com/github/pbrod/numdifftools/maintainability
+   :alt: Maintainability
+.. |coverage_img| image:: https://codecov.io/gh/pbrod/numdifftools/branch/master/graph/badge.svg
+   :target: https://codecov.io/gh/pbrod/numdifftools
 .. |versions_img| image:: https://img.shields.io/pypi/pyversions/numdifftools.svg
    :target: https://github.com/pbrod/numdifftools
+.. |downloads_img| image:: https://img.shields.io/pypi/dm/numdifftools.svg
+   :alt: PyPI - Downloads
 
-.. |depsy_img| image:: http://depsy.org/api/package/pypi/Numdifftools/badge.svg
-   :target: http://depsy.org/package/python/Numdifftools
 
 """

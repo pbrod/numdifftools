@@ -17,7 +17,7 @@ from numdifftools.multicomplex import Bicomplex
 from numdifftools.extrapolation import Richardson, dea3, convolve
 from numdifftools.step_generators import MaxStepGenerator, MinStepGenerator
 from numdifftools.limits import _Limit
-# from numdifftools.finite_difference import LogRule
+from numdifftools.finite_difference import LogRule
 from scipy import special
 
 __all__ = ('dea3', 'Derivative', 'Jacobian', 'Gradient', 'Hessian', 'Hessdiag',
@@ -40,14 +40,14 @@ _cmn_doc = """
     fun : function
        function of one array fun(x, `*args`, `**kwds`)
     step : float, array-like or StepGenerator object, optional
-       Defines the spacing used in the approximation.
-       Default is MinStepGenerator(base_step=step, step_ratio=None,
+        Defines the spacing used in the approximation.
+        Default is MinStepGenerator(base_step=step, step_ratio=None,
                                    num_extrap=0, **step_options)
-       if step or method in in ['complex', 'multicomplex'],
-       otherwise
-           MaxStepGenerator(step_ratio=None, num_extrap=14, **step_options)
-       The results are extrapolated if the StepGenerator generate more than 3
-       steps.
+        if step or method in in ['complex', 'multicomplex'],
+        otherwise
+            MaxStepGenerator(step_ratio=None, num_extrap=14, **step_options)
+        The results are extrapolated if the StepGenerator generate more than 3
+        steps.
     method : {'central', 'complex', 'multicomplex', 'forward', 'backward'}
         defines the method used in the approximation%(extra_parameter)s
     full_output : bool, optional
@@ -57,14 +57,15 @@ _cmn_doc = """
     **step_options:
         options to pass on to the XXXStepGenerator used.
 
-    Call Parameters
-    ---------------
-    x : array_like
-       value at which function derivative is evaluated
-    args : tuple
-        Arguments for function `fun`.
-    kwds : dict
-        Keyword arguments for function `fun`.
+    Methods
+    -------
+    __call__ : callable with the following parameters:
+        x : array_like
+            value at which function derivative is evaluated
+        args : tuple
+            Arguments for function `fun`.
+        kwds : dict
+            Keyword arguments for function `fun`.
     %(returns)s
     Notes
     -----
@@ -214,6 +215,8 @@ class Derivative(_Limit):
                  **step_options):
         self.n = n
         self.richardson_terms = 2
+        self.log_rule = LogRule(n=n, method=method, order=order)
+
         super(Derivative,
               self).__init__(fun, step=step, method=method, order=order, full_output=full_output,
                              **step_options)
@@ -432,12 +435,9 @@ class Derivative(_Limit):
         The rule is for a nominal unit step size, and will
         be scaled later to reflect the local step size.
 
-        Member methods used
-        -------------------
-        _fd_matrix
+        Member method used: _fd_matrix
 
-        Member variables used
-        ---------------------
+        Member variables used:
         n
         order
         method
@@ -886,7 +886,7 @@ class _HessianDifferenceFunctions(object):
         """Eq 9."""
         n = len(x)
         ee = np.diag(h)
-        dtype = np.result_type(fx)
+        dtype = np.result_type(fx, float)  # make sure it is at least float64
         hess = np.empty((n, n), dtype=dtype)
         np.outer(h, h, out=hess)
         for i in range(n):
@@ -904,7 +904,7 @@ class _HessianDifferenceFunctions(object):
         """Eq. 8"""
         n = len(x)
         ee = np.diag(h)
-        dtype = np.result_type(fx)
+        dtype = np.result_type(fx, float)
         g = np.empty(n, dtype=dtype)
         gg = np.empty(n, dtype=dtype)
         for i in range(n):
@@ -927,7 +927,7 @@ class _HessianDifferenceFunctions(object):
         """Eq. 7"""
         n = len(x)
         ee = np.diag(h)
-        dtype = np.result_type(fx)
+        dtype = np.result_type(fx, float)
         g = np.empty(n, dtype=dtype)
         for i in range(n):
             g[i] = f(x + ee[i, :])
@@ -1029,4 +1029,3 @@ class Hessian(Hessdiag):
         Here the difference rule is already applied. Just return result.
         """
         return self._vstack(sequence, steps)
-

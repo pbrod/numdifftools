@@ -41,7 +41,7 @@ class TestBicomplex(object):
         shape = (3, 3)
         t = np.arange(9).reshape(shape)
         z = Bicomplex(t, 2 * t)
-        np.testing.assert_array_equal(z.norm(), np.sqrt(5*t**2))
+        np.testing.assert_array_equal(z.norm(), np.sqrt(5 * t ** 2))
 
         z = Bicomplex(1, 2)
         assert z.norm() == np.sqrt(5)

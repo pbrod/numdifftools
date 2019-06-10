@@ -109,7 +109,7 @@ class TestExtrapolation(object):
         for val in e_i:
             e_n, err = dea_3(val)
 
-        true_err = np.abs(e_i-1.)
+        true_err = np.abs(e_i - 1.)
         err_bound = 10 * np.array([2.00805680e-04, 5.01999079e-05,
                                    1.25498825e-05, 3.13746471e-06,
                                    7.84365809e-07, 1.96091429e-07,

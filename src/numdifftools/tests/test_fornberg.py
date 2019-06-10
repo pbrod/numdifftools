@@ -32,7 +32,7 @@ def test_high_order_derivative(x):
             tval = true_df(y)
 
             aerr0 = info.error_estimate[n] + 1e-15
-            aerr = min(aerr0, max(np.abs(tval)*1e-6, 1e-8))
+            aerr = min(aerr0, max(np.abs(tval) * 1e-6, 1e-8))
             print(n, name, y, vals[n], tval, info.iterations, aerr0, aerr)
             note("{}, {}, {}, {}, {}, {}, {}, {}".format(
                 n, name, y, vals[n], tval, info.iterations, aerr0, aerr))

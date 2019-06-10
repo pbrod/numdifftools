@@ -73,6 +73,16 @@ _cmn_doc = """
         function of one array fun(x, `*args`, `**kwds`)%(extra_parameter)s
     method : string, optional {'forward', 'reverse'}
         defines method used in the approximation
+
+    Methods
+    -------
+    __call__ : callable with the following parameters:
+        x : array_like
+           value at which function derivative is evaluated
+        args : tuple
+            Arguments for function `fun`.
+        kwds : dict
+            Keyword arguments for function `fun`.
     %(returns)s
     Notes
     -----

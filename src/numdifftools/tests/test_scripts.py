@@ -1,7 +1,7 @@
 import pytest
 from numdifftools.profile_numdifftools import main, profile_hessian
 from numdifftools._find_default_scale import run_all_benchmarks
-from numdifftools.run_benchmark import run_gradient_and_hessian_benchmarks
+from numdifftools import run_benchmark
 
 
 def test__find_default_scale_run_all_benchmarks():
@@ -9,7 +9,7 @@ def test__find_default_scale_run_all_benchmarks():
 
 
 def test_run_gradient_and_hessian_benchmarks():
-    run_gradient_and_hessian_benchmarks(problem_sizes=(4, 8, 16))
+    run_benchmark.main(problem_sizes=(4, 8, 16))
 
 
 def test_profile_numdifftools_main():

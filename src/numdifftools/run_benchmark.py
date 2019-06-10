@@ -3,11 +3,15 @@ import numpy as np
 import timeit
 
 import numdifftools as nd
-import numdifftools.nd_algopy as nda
 import numdifftools.nd_statsmodels as nds
 import numdifftools.nd_scipy as nsc
-from algopy import dot
-
+try:
+    from algopy import dot
+except ImportError:
+    nda = None
+    dot = np.dot
+else:
+    import numdifftools.nd_algopy as nda
 from collections import OrderedDict
 from numdifftools.core import MinStepGenerator, MaxStepGenerator
 import matplotlib
@@ -64,44 +68,6 @@ def loglimits(data, border=0.05):
     return low/scale, high*scale
 
 
-fixed_step = MinStepGenerator(num_steps=1, use_exact_steps=True, offset=0)
-epsilon = MaxStepGenerator(num_steps=14, use_exact_steps=True,
-                           step_ratio=1.6, offset=0)
-adaptiv_txt = '_adaptive_{0:d}_{1!s}_{2:d}'.format(epsilon.num_steps,
-                                                   str(epsilon.step_ratio),
-                                                   epsilon.offset)
-gradient_funs = OrderedDict()
-nda_method = 'forward'
-nda_txt = 'algopy_' + nda_method
-gradient_funs[nda_txt] = nda.Jacobian(1, method=nda_method)
-
-hessian_fun = 'Hessdiag'
-hessian_fun = 'Hessian'
-ndc_hessian = getattr(nd, hessian_fun)
-hessian_funs = OrderedDict()
-hessian_funs[nda_txt] = getattr(nda, hessian_fun)(1, method=nda_method)
-
-order = 2
-for method in ['forward', 'central', 'complex']:
-    method2 = method + adaptiv_txt
-    options = dict(method=method, order=order)
-    gradient_funs[method] = nd.Jacobian(1, step=fixed_step, **options)
-    gradient_funs[method2] = nd.Jacobian(1, step=epsilon, **options)
-    hessian_funs[method] = ndc_hessian(1, step=fixed_step, **options)
-    hessian_funs[method2] = ndc_hessian(1, step=epsilon, **options)
-
-hessian_funs['forward_statsmodels'] = nds.Hessian(1, method='forward')
-hessian_funs['central_statsmodels'] = nds.Hessian(1, method='central')
-hessian_funs['complex_statsmodels'] = nds.Hessian(1, method='complex')
-
-gradient_funs['forward_statsmodels'] = nds.Jacobian(1, method='forward')
-gradient_funs['central_statsmodels'] = nds.Jacobian(1, method='central')
-gradient_funs['complex_statsmodels'] = nds.Jacobian(1, method='complex')
-gradient_funs['forward_scipy'] = nsc.Jacobian(1, method='forward')
-gradient_funs['central_scipy'] = nsc.Jacobian(1, method='central')
-gradient_funs['complex_scipy'] = nsc.Jacobian(1, method='complex')
-
-
 def _compute_benchmark(functions, problem_sizes):
     result_list = []
     for n in problem_sizes:
@@ -134,7 +100,7 @@ def _compute_benchmark(functions, problem_sizes):
 def compute_gradients(gradient_funs, problem_sizes):
     print('starting gradient computation ')
     results_gradients = _compute_benchmark(gradient_funs, problem_sizes)
-    print(list(hessian_funs))
+    print(list(gradient_funs))
     print('run_time, err, preproc_time')
     print('results_gradients=\n', results_gradients)
     return results_gradients
@@ -150,7 +116,8 @@ def compute_hessians(hessian_funs, problem_sizes):
     return results_hessians
 
 
-def run_gradient_and_hessian_benchmarks(problem_sizes=(4, 8, 16, 32, 64, 96)):
+def run_gradient_and_hessian_benchmarks(gradient_funs, hessian_funs,
+                                        problem_sizes=(4, 8, 16, 32, 64, 96)):
 
     symbols = ('-kx', ':k>', ':k<', '--k^', '--kv', '-kp', '-ks',
                'b', '--b', '-b+', 'r', '--r', '-r+')
@@ -169,5 +136,50 @@ def run_gradient_and_hessian_benchmarks(problem_sizes=(4, 8, 16, 32, 64, 96)):
             plot_errors(objects, problem_sizes, symbols)
 
 
+def main(problem_sizes=(4, 8, 16, 32, 64, 96)):
+    fixed_step = MinStepGenerator(num_steps=1, use_exact_steps=True, offset=0)
+    epsilon = MaxStepGenerator(num_steps=14, use_exact_steps=True,
+                               step_ratio=1.6, offset=0)
+    adaptiv_txt = '_adaptive_{0:d}_{1!s}_{2:d}'.format(epsilon.num_steps,
+                                                       str(epsilon.step_ratio),
+                                                       epsilon.offset)
+    gradient_funs = OrderedDict()
+    hessian_funs = OrderedDict()
+
+    hessian_fun = 'Hessdiag'
+    hessian_fun = 'Hessian'
+
+    if nda is not None:
+        nda_method = 'forward'
+        nda_txt = 'algopy_' + nda_method
+        gradient_funs[nda_txt] = nda.Jacobian(1, method=nda_method)
+
+        hessian_funs[nda_txt] = getattr(nda, hessian_fun)(1, method=nda_method)
+    ndc_hessian = getattr(nd, hessian_fun)
+
+
+    order = 2
+    for method in ['forward', 'central', 'complex']:
+        method2 = method + adaptiv_txt
+        options = dict(method=method, order=order)
+        gradient_funs[method] = nd.Jacobian(1, step=fixed_step, **options)
+        gradient_funs[method2] = nd.Jacobian(1, step=epsilon, **options)
+        hessian_funs[method] = ndc_hessian(1, step=fixed_step, **options)
+        hessian_funs[method2] = ndc_hessian(1, step=epsilon, **options)
+
+    hessian_funs['forward_statsmodels'] = nds.Hessian(1, method='forward')
+    hessian_funs['central_statsmodels'] = nds.Hessian(1, method='central')
+    hessian_funs['complex_statsmodels'] = nds.Hessian(1, method='complex')
+
+    gradient_funs['forward_statsmodels'] = nds.Jacobian(1, method='forward')
+    gradient_funs['central_statsmodels'] = nds.Jacobian(1, method='central')
+    gradient_funs['complex_statsmodels'] = nds.Jacobian(1, method='complex')
+    gradient_funs['forward_scipy'] = nsc.Jacobian(1, method='forward')
+    gradient_funs['central_scipy'] = nsc.Jacobian(1, method='central')
+    gradient_funs['complex_scipy'] = nsc.Jacobian(1, method='complex')
+
+    run_gradient_and_hessian_benchmarks(gradient_funs, hessian_funs, problem_sizes)
+
+
 if __name__ == '__main__':
-    run_gradient_and_hessian_benchmarks()
+    main(problem_sizes=(4, 8, 16, 32, 64, 96))

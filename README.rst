@@ -1,8 +1,8 @@
 
-Numdifftools
-============
+Introduction to Numdifftools
+============================
 
-|pkg_img| |tests_img| |tests2_img| |docs_img| |health_img| |coverage_img| |versions_img| 
+|pkg_img| |tests_img| |tests2_img| |docs_img| |health_img| |coverage_img| |versions_img| |downloads_img|
 
 
 Numdifftools is a suite of tools written in `_Python <http://www.python.org/>`_
@@ -51,7 +51,7 @@ Visualize high order derivatives of the tanh function
     ...    y = df(x)
     ...    h = plt.plot(x, y/np.abs(y).max())
 
-    >>> plt.show()
+    plt.show()
 
 .. image:: https://raw.githubusercontent.com/pbrod/numdifftools/master/examples/fun.png
     :target: https://github.com/pbrod/numdifftools/blob/master/examples/fun.py
@@ -80,8 +80,8 @@ Compute gradient of sum(x**2)::
 
     >>> fun = lambda x: np.sum(x**2)
     >>> dfun = nd.Gradient(fun)
-    >>> dfun([1,2,3])
-    array([ 2.,  4.,  6.])
+    >>> np.allclose(dfun([1,2,3]), [ 2.,  4.,  6.])
+    True
 
 Compute the same with the easy to use interface to AlgoPy::
 
@@ -107,8 +107,8 @@ Compute gradient of sum(x**2)::
 
     >>> fun = lambda x: np.sum(x**2)
     >>> dfun = nda.Gradient(fun)
-    >>> dfun([1,2,3])
-    array([ 2.,  4.,  6.])
+    >>> np.allclose(dfun([1,2,3]), [ 2.,  4.,  6.])
+    True
 
 
 See also
@@ -145,7 +145,7 @@ To test if the toolbox is working paste the following in an interactive
 python session::
 
    import numdifftools as nd
-   nd.test(coverage=True, doctests=True)
+   nd.test('--doctest-modules', '--disable-warnings')
 
 
 Acknowledgement
@@ -157,7 +157,7 @@ based on the adaptive numerical differentiation toolbox written in
 
 Numdifftools has as of version 0.9 been extended with some of the functionality
 found in the statsmodels.tools.numdiff module written by Josef Perktold
-[Perktold2014]_.
+[Perktold2014]_ and in the project report of [Verheyleweghen2014]_.
 
 
 References
@@ -181,7 +181,9 @@ References
     http://doi.acm.org/10.1145/2168773.2168774
 
 .. [Luna-ElizarrarasEtal2012] M.E. Luna-Elizarraras, M. Shapiro, D.C. Struppa1,
-    A. Vajiac (2012), CUBO A Mathematical Journal,
+    A. Vajiac (2012),
+    Bicomplex Numbers and Their Elementary Functions,
+    CUBO A Mathematical Journal,
     Vol. 14, No 2, (61-80). June 2012.
 
 .. [Verheyleweghen2014] Adriaen Verheyleweghen, (2014)
@@ -189,8 +191,8 @@ References
     Project report, NTNU
 
 
-.. |pkg_img| image:: https://badge.fury.io/py/numdifftools.png
-    :target: https://pypi.python.org/pypi/Numdifftools/
+.. |pkg_img| image:: https://repology.org/badge/latest-versions/python:numdifftools.svg
+    :target: https://pypi.python.org/pypi/numdifftools/
 
 .. |tests_img| image:: https://travis-ci.org/pbrod/numdifftools.svg?branch=master
     :target: https://travis-ci.org/pbrod/numdifftools
@@ -202,19 +204,14 @@ References
 .. |docs_img| image:: https://readthedocs.org/projects/pip/badge/?version=stable
     :target: http://numdifftools.readthedocs.org/en/stable/
 
-.. |health_img| image:: https://landscape.io/github/pbrod/numdifftools/master/landscape.svg?style=flat
-   :target: https://landscape.io/github/pbrod/numdifftools/master
-   :alt: Code Health
-
-.. |coverage_img| image:: https://coveralls.io/repos/pbrod/numdifftools/badge.svg?branch=master
-   :target: https://coveralls.io/github/pbrod/numdifftools?branch=master
-
+.. |health_img| image:: https://api.codeclimate.com/v1/badges/698996d1ec94028ec223/maintainability
+   :target: https://codeclimate.com/github/pbrod/numdifftools/maintainability
+   :alt: Maintainability
+.. |coverage_img| image:: https://codecov.io/gh/pbrod/numdifftools/branch/master/graph/badge.svg
+   :target: https://codecov.io/gh/pbrod/numdifftools
 .. |versions_img| image:: https://img.shields.io/pypi/pyversions/numdifftools.svg
    :target: https://github.com/pbrod/numdifftools
+.. |downloads_img| image:: https://img.shields.io/pypi/dm/numdifftools.svg
+   :alt: PyPI - Downloads
 
 
-Note
-====
-
-This project has been set up using PyScaffold 3.0. For details and usage
-information on PyScaffold see http://pyscaffold.readthedocs.org/.

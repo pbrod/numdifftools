@@ -1,9 +1,14 @@
 import numpy as np
 import numdifftools.core as nd
-import numdifftools.nd_algopy as nda
 import numdifftools.nd_statsmodels as nds
-from numpy.testing import assert_array_almost_equal
+from numpy.testing.utils import assert_array_almost_equal
 from numdifftools.example_functions import function_names, get_function
+try:
+    import algopy
+except ImportError:
+    nda = None
+else:
+    import numdifftools.nd_algopy as nda
 
 
 class TestExampleFunctions(object):
@@ -11,9 +16,11 @@ class TestExampleFunctions(object):
     def test_high_order_derivative():
         x = 0.5
         min_dm = dict(complex=2, forward=2, backward=2, central=4)
-        methods = [ 'complex', 'central',  'backward', 'forward']
-
-        for i, derivative in enumerate([nd.Derivative, nda.Derivative]):
+        methods = ['complex', 'central',  'backward', 'forward']
+        derivatives = [nd.Derivative]
+        if nda is not None:
+            derivatives.append(nda.Derivative)
+        for i, derivative in enumerate(derivatives):
             for name in function_names:
                 if i>0 and name in ['arcsinh', 'exp2']:
                     continue
@@ -35,8 +42,12 @@ class TestExampleFunctions(object):
     def test_first_order_derivative(self):
         x = 0.5
         methods = [ 'complex', 'central',  'backward', 'forward']
+        derivatives = [nd.Derivative, nds.Gradient]
 
-        for i, derivative in enumerate([nd.Derivative, nds.Gradient, nda.Derivative]):
+        if nda is not None:
+            derivatives.append(nda.Derivative)
+
+        for i, derivative in enumerate(derivatives):
             for name in function_names:
                 if i>1 and name in ['arcsinh', 'exp2']:
                     continue

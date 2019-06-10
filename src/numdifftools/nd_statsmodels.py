@@ -1,6 +1,6 @@
 """
 Numdifftools.nd_statsmodels
-======================
+===========================
 This module provides an easy to use interface to derivatives calculated with
 statsmodels.numdiff.
 """
@@ -293,8 +293,6 @@ class Gradient(Jacobian):
     def __call__(self, x, *args, **kwds):
         return super(Gradient, self).__call__(np.atleast_1d(x).ravel(),
                                               *args, **kwds).squeeze()
-
-
 
 
 if __name__ == '__main__':

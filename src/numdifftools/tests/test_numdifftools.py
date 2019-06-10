@@ -290,7 +290,7 @@ class TestJacobian(object):
         for method in ['multicomplex', 'complex', 'central', 'forward',
                        'backward']:
             j0, info = nd.Jacobian(fun, method=method, full_output=True)(val)
-            error = np.abs(j0-truth)
+            error = np.abs(j0 - truth)
             note('method={}, error={}, error_est={}'.format(method, error,
                                                             info.error_estimate))
             assert_allclose(j0, truth, rtol=1e-3, atol=1e-6)
@@ -307,7 +307,7 @@ class TestJacobian(object):
 
     @staticmethod
     def test_on_vector_valued_function():
-        xdata = np.arange(0, 1, 0.1) #.reshape((-1, 1))
+        xdata = np.arange(0, 1, 0.1)  #.reshape((-1, 1))
         ydata = 1 + 2 * np.exp(0.75 * xdata)
 
         def fun(c):
@@ -395,7 +395,7 @@ class TestJacobian(object):
                              [0., 1.]],
                             [[1., 0.],
                              [0., 1.]]])
-        fun3 = lambda x : np.vstack((x[0]*x[1]*x[2]**2, x[0]*x[1]*x[2]))
+        fun3 = lambda x : np.vstack((x[0] * x[1] * x[2] ** 2, x[0] * x[1] * x[2]))
         jfun3 = nd.Jacobian(fun3)
         x = np.array([[1.,2.,3.], [4., 5., 6.]]).T
         tv = [[[18., 180.],
