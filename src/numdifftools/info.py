@@ -192,8 +192,8 @@ References
     Project report, NTNU
 
 
-.. |pkg_img| image:: https://repology.org/badge/latest-versions/python:numdifftools.svg
-    :target: https://pypi.python.org/pypi/numdifftools/
+.. |pkg_img| image:: https://badge.fury.io/py/numdifftools.svg
+    :target: https://badge.fury.io/py/numdifftools
 
 .. |tests_img| image:: https://travis-ci.org/pbrod/numdifftools.svg?branch=master
     :target: https://travis-ci.org/pbrod/numdifftools
