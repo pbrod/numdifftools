@@ -2,25 +2,171 @@
 Changelog
 =========
 
-Created with gitcommand: git shortlog v0.9.17..v0.9.18
+
+Version 0.9.37, Jun 10, 2017
+---------------------------------
+
+
+Andrew Nelson (1):
+      * MAINT: special.factorial instead of misc.factorial
+
+Dougal J. Sutherland (1):
+      * include LICENSE.txt in distributions
+
+Per A Brodtkorb (140):
+      * Adjusted runtime for hypothesis tests to avoid failure and fixed pep8
+         failures.
+      * Fixed a bug in setup.cfg
+      * Replaced valarray function with numpy.full in step_generators.py Added
+         try except on import of algopy Updated the badges used in the
+         README.rst Replaced numpy.testing.Tester with pytest. Removed
+         dependence on pyscaffold Simplified setup.py and setup.cfg Updated
+         .travis.yml configuration Reorganized the documentation. Ongoing
+         refactoring to simplify things:
+      * Ongoing work to simplify the classes.
+      * Replaced unittest with pytest.
+      * New attempt to make travis not crash.
+      * Added finite_difference.py
+      * replaced , with .
+      * Reverted to coverage=4.3.4
+      * New attempt
+      * Fixed conflicting import
+      * Missing import of EPS
+      * Added missing FD_RULES = {}
+      * Removed pinned coverage, removed dependence on pyscaffold
+      * Updated .travis.yml and .appveyor.yml
+      * Replaced conda channel omnia with conda-forge
+      * Removed commented out code. Set pyqt=5 in appveyor.yml
+      * Updated codeclimate checks
+      * Dropped support for python 3.3 and 3.4. Added support for python 3.6, 3.7
+      * Simplified code.
+      * Pinned IPython==5.0 in order to make the testserver not crash.
+      * Added line_profiler to appveyor.yml
+      * Removed line_profiler from requirements.txt
+      * Fix issue #37: Unable to install on Python 2.7 
+      * Added method='backward' to nd_statsmodels.py Skip
+         test_profile_numdifftools_profile_hessian and TestDoProfile
+      * Added missing import of warnings
+      * Added tests for the scripts from profile_numdifftools.py,
+         _find_default_scale.py and run_benchmark.py.
+      * Added reason to unittest.skipIf
+      * Removed unused code.
+      * Added line_profiler to requirements.
+      * misssing import of warnings fixed.
+      * Renamed test so it comes last, because I suspect this test mess up the
+         coverage stats.
+      * Reordered the tests.
+      * Added more tests.
+      * Cleaned up _find_default_scale.py
+      * Updated tests.
+      * Removed link to depsy
+      * Reverted: install of cython and pip install setuptools
+      * Disabled sonar-scanner -X for python 3.5 because it crashes.
+      * Reverted [options.packages.find] to exclude tests again
+      * Added cython and reverted to pip install setuptools
+      * Updated sphinx to 1.6.7
+      * Try to install setuptools with conda instead.
+      * Added hypothesis and pytest to requirements.readthedocs.txt
+      * Set version of setuptools==37.0
+      * Added algopy, statsmodels and numpy to requirements.readthedocs.txt
+      * Restricted sphinx in the hope that the docs will be generated.
+      * Removed exclusion of tests/ directory from test coverage.
+      * Added dependencies into setup.cfg
+      * Readded six as dependency
+      * Refactored and removed commented out code.
+      * Fixed a bug in the docstring example: Made sure the shape passed on to
+         zeros is an integer.
+      * Fixed c_abs so it works with algopy on python 3.6.
+      * Fixed flaky test and made it more robust.
+      * Fixed bug in .travis.yml
+      * Refactored the taylor function into the Taylor class in order to
+         simplify the code.
+      * Fixed issue #35 and added tests
+      * Attempt to simplify complexity
+      * Made doctests more robust
+      * Updated project path
+      * Changed install of algopy
+      * Fixed small bugs
+      * Updated docstrings
+      * Changed Example and Reference to Examples and References in docstrings
+         to comply with numpydoc-style.
+      * Renamed CHANGES.rst to CHANGELOG.rst
+      * Renamed source path
+      * Hack due to a bug in algopy or changed behaviour.
+      * Small fix.
+      * Try to reduce complexity
+      * Reduced cognitive complexity of min_num_steps
+      * Simplified  code in Jacobian
+      * Merge branch 'master' of https://github.com/pbrod/numdifftools
+      * Fixed issue #34 Licence clarification.
+      * Locked coverage=4.3.4 due to a bug in coverage that cause code-climate
+         test-reporter to fail.
+      * Added script for finding default scale
+      * updated from sonarcube to sonarcloud
+      * Made sure shape is an integer.
+      * Refactored make_step_generator into a step property
+      * Issue warning message to the user when setting the order to something
+         different than 1 or 2 in Hessian.
+      * pep8
+      * Updated example in Gradient.
+      * Reverted --timid option to coverage because it took too long time to
+         run.
+      * Reverted --pep8 option
+      * pep8 + added --timid in .travis.yml coverage run in order to to increase
+         missed coverage.
+      * Refactored taylor to reduce complexity
+      * No support for python 3.3. Added python 3.6
+      * Fixed a small bug and updated test.
+      * Removed unneccasarry perenthesis. Reduced the complexity of do_profile
+      * Made python3 compatible
+      * Removed assert False
+      * Made unittests more forgiving.
+      * updated doctest in nd_scipy.py and profiletools.py install line_profiler
+         on travis
+      * Made python 3 compatible
+      * Updated tests
+      * Added test_profiletools.py and capture_stdout_and_stderr in testing.py
+      * pep8
+      * Optimized numdifftools.core.py for speed: fd_rules are now only computed
+         once.
+      * Only keeping html docs in the distribution.
+      * Added doctest and updated .pylintrc and requirements.txt
+      * Reduced time footprint on tests in the hope that it will pass on Travis
+         CI.
+      * Prefer static methods over instance methods
+      * Better memory handling: This fixes issue #27
+      * Added statsmodels to requirements.txt
+      * Added nd_statsmodels.py
+      * Simplified input
+      * Merge branch 'master' of https://github.com/pbrod/numdifftools
+      * Updated link to the documentation.
+
+Robert Parini (4):
+      * Avoid RuntimeWarning in _get_logn
+      * Allow fd_derivative to take complex valued functions
+
+solarjoe (1):
+      * doc: added nd.directionaldiff example
+
+
 
 
 Version 0.9.20, Jan 11, 2017
----------------------------------
+----------------------------
 
 Per A Brodtkorb (1):
      * Updated the author email address in order for twine to be able to upload to pypi.
 
 
 Version 0.9.19, Jan 11, 2017
----------------------------------
+----------------------------
 
 Per A Brodtkorb (1):
       * Updated setup.py in a attempt to get upload to pypi working again.
 
 
 Version 0.9.18, Jan 11, 2017
----------------------------------
+----------------------------
 
 Per A Brodtkorb (38):
       * Updated setup
@@ -39,7 +185,7 @@ Per A Brodtkorb (38):
 
 
 Version 0.9.17, Sep 8, 2016
----------------------------------
+---------------------------
 
 Andrew Fowlie (1):
       * Fix ReadTheDocs link as mentioned in #21
@@ -89,7 +235,7 @@ Per A Brodtkorb (79):
 
 
 Version 0.9.15, May 10, 2016
----------------------------------
+----------------------------
 
 Cody (2):
       * Migrated `%` string formating
@@ -160,7 +306,7 @@ pbrod (53):
 
 
 Version 0.9.13, October 30, 2015
----------------------------------
+--------------------------------
 
 pbrod (21):
       * Updated README.rst and CHANGES.rst.
