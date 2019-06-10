@@ -5,7 +5,7 @@ The script remove the previous built binaries and generated documentation
 before it generate the documentation and build the binaries and finally
 check the built binaries.
 
-It assumes that the nvector library is installed in so called develop mode.
+It assumes that the numdifftools library is installed in so called develop mode.
 
 Created on 7. des. 2018
 
