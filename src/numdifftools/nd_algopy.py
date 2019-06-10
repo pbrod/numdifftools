@@ -53,9 +53,12 @@ https://en.wikipedia.org/wiki/Automatic_differentiation
 https://pythonhosted.org/algopy/index.html
 """
 from __future__ import division
-import numpy as np
-from scipy import misc
+
 from collections import namedtuple
+
+from scipy import special
+
+import numpy as np
 try:
     import algopy
     from algopy import UTPM
@@ -212,7 +215,7 @@ class Derivative(_Derivative):
         z = self.fun(x, *args, **kwds)
         y = UTPM.as_utpm(z)
 
-        return y.data[self.n, 0] * misc.factorial(self.n)
+        return y.data[self.n, 0] * special.factorial(self.n)
 
     def _reverse(self, x, *args, **kwds):
         if self.n != 1:

@@ -16,7 +16,7 @@ def test_profile_numdifftools_main():
     main()
 
 
-@pytest.mark.skip('Suspect this test breaks all further testing or at least makes the coverage to not show.')
+@pytest.mark.skip(
+    'Suspect this test breaks all further testing or at least makes the coverage to not show.')
 def test_profile_numdifftools_profile_hessian():
     profile_hessian()
-

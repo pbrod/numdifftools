@@ -1,14 +1,16 @@
 """Test functions for numdifftools module"""
 from __future__ import print_function
+
+from hypothesis import given, example, note, settings, strategies as st
+from numpy.testing import assert_allclose
 import pytest
+
 import numdifftools.core as nd
 import numdifftools.nd_statsmodels as nds
 from numdifftools.step_generators import default_scale
-import numpy as np
-from numpy.testing import assert_allclose
 from numdifftools.testing import rosen
 from numdifftools.tests.hamiltonian import run_hamiltonian
-from hypothesis import given, example, note, strategies as st
+import numpy as np
 
 
 class TestRichardson(object):
@@ -166,6 +168,7 @@ class TestDerivative(object):
         # self.assert_(False)
 
     @staticmethod
+    @settings(deadline=500.0)
     @given(st.floats(min_value=0, max_value=10))
     @example(7.6564547238847105)
     def test_derivative_of_cos_x(x):
@@ -399,16 +402,19 @@ class TestJacobian(object):
         x = np.array([1., 2.])
         v0 = nds.approx_fprime(x, g_fun)
         assert_allclose(v0, [[[1., 0.],
-                             [0., 1.]],
-                            [[1., 0.],
-                             [0., 1.]]])
+                              [0., 1.]],
+                             [[1., 0.],
+                              [0., 1.]]])
 
         dg = dg_dx(x)
         assert_allclose(dg, [[[1., 0.],
-                             [0., 1.]],
-                            [[1., 0.],
-                             [0., 1.]]])
-        fun3 = lambda x : np.vstack((x[0] * x[1] * x[2] ** 2, x[0] * x[1] * x[2]))
+                              [0., 1.]],
+                             [[1., 0.],
+                              [0., 1.]]])
+
+        def fun3(x):
+            return np.vstack((x[0] * x[1] * x[2] ** 2, x[0] * x[1] * x[2]))
+
         jfun3 = nd.Jacobian(fun3)
         x = np.array([[1., 2., 3.], [4., 5., 6.]]).T
         tv = [[[18., 180.],
@@ -436,7 +442,7 @@ class TestJacobian(object):
         n = 1000
         x = np.ones(n)
         assert_allclose(nd.Jacobian(lambda x: x ** 2, method='complex')(x),
-                            2 * np.diag(np.ones(n)))
+                        2 * np.diag(np.ones(n)))
 
 
 class TestGradient(object):
@@ -492,6 +498,7 @@ class TestHessdiag(object):
 
             assert_allclose(h_val, htrue)
 
+    @settings(deadline=500.0)
     @given(st.tuples(st.floats(-100, 100), st.floats(-100, 100), st.floats(-100, 100)))
     @example((0.0, 16.003907623933742, 68.02057249966789))
     @example([1, 2, 3])

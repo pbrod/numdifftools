@@ -140,7 +140,7 @@ class _HessdiagDifferenceFunctions(object):
         n = len(x)
         increments = np.identity(n) * h
         partials = [(f(x + 2 * hi) + f(x - 2 * hi)
-                     +2 * fx - 2 * f(x + hi) - 2 * f(x - hi)) / 4.0
+                     + 2 * fx - 2 * f(x + hi) - 2 * f(x - hi)) / 4.0
                     for hi in increments]
         return np.array(partials)
 
@@ -198,7 +198,7 @@ class _HessianDifferenceFunctions(object):
         for i in range(n):
             for j in range(i, n):
                 hess[i, j] = (f(x + 1j * ee[i] + ee[j])
-                              -f(x + 1j * ee[i] - ee[j])).imag / hess[j, i]
+                              - f(x + 1j * ee[i] - ee[j])).imag / hess[j, i]
                 hess[j, i] = hess[i, j]
         return hess
 
@@ -228,9 +228,9 @@ class _HessianDifferenceFunctions(object):
             hess[i, i] = (f(x + 2 * ee[i, :]) - 2 * fx + f(x - 2 * ee[i, :])) / (4. * hess[i, i])
             for j in range(i + 1, n):
                 hess[i, j] = (f(x + ee[i, :] + ee[j, :])
-                              -f(x + ee[i, :] - ee[j, :])
-                              -f(x - ee[i, :] + ee[j, :])
-                              +f(x - ee[i, :] - ee[j, :])) / (4. * hess[j, i])
+                              - f(x + ee[i, :] - ee[j, :])
+                              - f(x - ee[i, :] + ee[j, :])
+                              + f(x - ee[i, :] - ee[j, :])) / (4. * hess[j, i])
                 hess[j, i] = hess[i, j]
         return hess
 
@@ -251,9 +251,9 @@ class _HessianDifferenceFunctions(object):
         for i in range(n):
             for j in range(i, n):
                 hess[i, j] = (f(x + ee[i, :] + ee[j, :])
-                              +f(x - ee[i, :] - ee[j, :])
-                              -g[i] - g[j] + fx
-                              -gg[i] - gg[j] + fx) / (2 * hess[j, i])
+                              + f(x - ee[i, :] - ee[j, :])
+                              - g[i] - g[j] + fx
+                              - gg[i] - gg[j] + fx) / (2 * hess[j, i])
                 hess[j, i] = hess[i, j]
         return hess
 
@@ -376,9 +376,9 @@ class LogRule(object):
         if self.n == 1 and method_order < 4:
             return (order % 2) + 1
         return (3
-                +2 * int(self._odd_derivative)
-                +int(self._derivative_mod_four_is_three)
-                +int(self._derivative_mod_four_is_zero))
+                + 2 * int(self._odd_derivative)
+                + int(self._derivative_mod_four_is_three)
+                + int(self._derivative_mod_four_is_zero))
 
     def _parity(self, method, order, method_order):
         if method.startswith('central'):
@@ -456,7 +456,6 @@ class LogRule(object):
         return getattr(self._difference_functions, name)
 
     def rule(self, step_ratio=2.0):
-
         """
         Return finite differencing rule.
 

@@ -422,7 +422,8 @@ class Taylor(object):
                 return True, r
 
         if not self._degenerate:
-            self._degenerate, needs_smaller = _check_fft(bn / self._crat, m, check_degenerate=i > self.min_iter)
+            self._degenerate, needs_smaller = _check_fft(bn / self._crat, m,
+                                                         check_degenerate=i > self.min_iter)
             needs_smaller = needs_smaller or _poor_convergence(z0, r, self.fun, bn, self._mvec)
         if self._degenerate:
             needs_smaller = i % 2 == 0

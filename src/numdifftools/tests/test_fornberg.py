@@ -1,14 +1,19 @@
 from __future__ import print_function
+
+from datetime import timedelta
+
+from hypothesis import given, example, note, settings, strategies as st
+from numpy.testing.utils import assert_array_almost_equal, assert_allclose
 import pytest
+
+from numdifftools.example_functions import function_names, get_function
 from numdifftools.fornberg import (fd_weights, fd_weights_all, derivative,
                                    fd_derivative,
                                    CENTRAL_WEIGHTS_AND_POINTS)
 import numpy as np
-from numpy.testing.utils import assert_array_almost_equal, assert_allclose
-from numdifftools.example_functions import function_names, get_function
-from hypothesis import given, example, note, strategies as st
 
 
+@settings(deadline=800.0)
 @given(st.floats(min_value=1e-1, max_value=0.98))
 def test_high_order_derivative(x):
     #     small_radius = ['sqrt', 'log', 'log2', 'log10', 'arccos', 'log1p',
@@ -22,8 +27,7 @@ def test_high_order_derivative(x):
         if name == 'arccosh':
             y = y + 1
 
-        vals, info = derivative(f, y, r=r, n=n_max, full_output=True,
-                                step_ratio=1.6)
+        vals, info = derivative(f, y, r=r, n=n_max, full_output=True, step_ratio=1.6)
         for n in range(1, n_max):
             f, true_df = get_function(name, n=n)
             if true_df is None:
@@ -42,13 +46,13 @@ def test_high_order_derivative(x):
 def test_all_weights():
     w = fd_weights_all(range(-2, 3), n=4)
     print(w)
-    true_w = [[0., 0., 1., 0., 0. ],
-              [ 0.0833333333333, -0.6666666666667, 0., 0.6666666666667,
+    true_w = [[0., 0., 1., 0., 0.],
+              [0.0833333333333, -0.6666666666667, 0., 0.6666666666667,
                -0.0833333333333],
               [-0.0833333333333, 1.333333333333, -2.5, 1.333333333333,
                -0.083333333333],
-              [-0.5, 1., 0., -1., 0.5 ],
-              [ 1., -4., 6., -4., 1.]]
+              [-0.5, 1., 0., -1., 0.5],
+              [1., -4., 6., -4., 1.]]
     assert_allclose(w, true_w, atol=1e-12)
 
 

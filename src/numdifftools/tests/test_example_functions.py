@@ -42,7 +42,7 @@ class TestExampleFunctions(object):
 
     def test_first_order_derivative(self):
         x = 0.5
-        methods = [ 'complex', 'central', 'backward', 'forward']
+        methods = ['complex', 'central', 'backward', 'forward']
         derivatives = [nd.Derivative, nds.Gradient]
 
         if nda is not None:

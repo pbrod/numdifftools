@@ -1,13 +1,16 @@
 # -*- coding:utf-8 -*-
 """"""
 from __future__ import absolute_import, division
-import pytest
-import numpy as np
-from numpy.testing.utils import assert_allclose
-from numdifftools.testing import rosen
-from .hamiltonian import run_hamiltonian
+
 from hypothesis import given, example, note, strategies as st
+from numpy.testing.utils import assert_allclose
 import pytest
+import pytest
+
+from numdifftools.testing import rosen
+import numpy as np
+
+from .hamiltonian import run_hamiltonian
 try:
     import algopy
 except ImportError:
@@ -99,8 +102,7 @@ class TestDerivative(object):
         for method in ['forward', 'reverse']:
             dcube = nd.Derivative(cube, method=method)
             dx = dcube(x)
-            assert_allclose(list(dx.shape), list(shape),
-                                      err_msg='Shape mismatch')
+            assert_allclose(list(dx.shape), list(shape), err_msg='Shape mismatch')
             txt = 'First differing element %d\n value = %g,\n true value = %g'
             for i, (val, tval) in enumerate(zip(dx.ravel(),
                                                 (3 * x ** 2).ravel())):
@@ -250,9 +252,9 @@ class TestJacobian(object):
         x = [1, 2]
         dg = dg_dx(x)
         assert_allclose(dg, [[[1., 0.],
-                             [0., 1.]],
-                            [[1., 0.],
-                             [0., 1.]]])
+                              [0., 1.]],
+                             [[1., 0.],
+                              [0., 1.]]])
 
 
 class TestGradient(object):
