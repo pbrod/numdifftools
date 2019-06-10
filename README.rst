@@ -1,11 +1,12 @@
 
-Introduction to Numdifftools
-============================
+============
+numdifftools
+============
 
 |pkg_img| |tests_img| |tests2_img| |docs_img| |health_img| |coverage_img| |versions_img| |downloads_img|
 
 
-Numdifftools is a suite of tools written in `_Python <http://www.python.org/>`_
+The numdifftools library is a suite of tools written in `_Python <http://www.python.org/>`_
 to solve automatic numerical differentiation problems in one or more variables.
 Finite differences are used in an adaptive manner, coupled with a Richardson
 extrapolation methodology to provide a maximally accurate result.
@@ -38,7 +39,8 @@ that are implemented as Python programs.
 
 
 Getting Started
----------------
+===============
+
 
 Visualize high order derivatives of the tanh function
 
@@ -207,10 +209,13 @@ References
 .. |health_img| image:: https://api.codeclimate.com/v1/badges/698996d1ec94028ec223/maintainability
    :target: https://codeclimate.com/github/pbrod/numdifftools/maintainability
    :alt: Maintainability
+
 .. |coverage_img| image:: https://codecov.io/gh/pbrod/numdifftools/branch/master/graph/badge.svg
    :target: https://codecov.io/gh/pbrod/numdifftools
+
 .. |versions_img| image:: https://img.shields.io/pypi/pyversions/numdifftools.svg
    :target: https://github.com/pbrod/numdifftools
+
 .. |downloads_img| image:: https://img.shields.io/pypi/dm/numdifftools.svg
    :alt: PyPI - Downloads
 

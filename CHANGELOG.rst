@@ -3,9 +3,8 @@ Changelog
 =========
 
 
-Version 0.9.37, Jun 10, 2017
----------------------------------
-
+Version 0.9.38 Jun 10, 2019
+===========================
 
 Andrew Nelson (1):
       * MAINT: special.factorial instead of misc.factorial
@@ -14,18 +13,18 @@ Dougal J. Sutherland (1):
       * include LICENSE.txt in distributions
 
 Per A Brodtkorb (140):
-      * Adjusted runtime for hypothesis tests to avoid failure and fixed pep8
-         failures.
+      * Adjusted runtime for hypothesis tests to avoid failure and fixed pep8 failures.
       * Fixed a bug in setup.cfg
-      * Replaced valarray function with numpy.full in step_generators.py Added
-         try except on import of algopy Updated the badges used in the
-         README.rst Replaced numpy.testing.Tester with pytest. Removed
-         dependence on pyscaffold Simplified setup.py and setup.cfg Updated
-         .travis.yml configuration Reorganized the documentation. Ongoing
-         refactoring to simplify things:
+      * Replaced valarray function with numpy.full in step_generators.py 
+      * Added try except on import of algopy 
+      * Updated the badges used in the README.rst 
+      * Replaced numpy.testing.Tester with pytest. 
+      * Removed dependence on pyscaffold.
+      * Simplified setup.py and setup.cfg 
+      * Updated .travis.yml configuration.
+      * Reorganized the documentation. 
       * Ongoing work to simplify the classes.
       * Replaced unittest with pytest.
-      * New attempt to make travis not crash.
       * Added finite_difference.py
       * replaced , with .
       * Reverted to coverage=4.3.4
@@ -44,21 +43,17 @@ Per A Brodtkorb (140):
       * Added line_profiler to appveyor.yml
       * Removed line_profiler from requirements.txt
       * Fix issue #37: Unable to install on Python 2.7 
-      * Added method='backward' to nd_statsmodels.py Skip
-         test_profile_numdifftools_profile_hessian and TestDoProfile
+      * Added method='backward' to nd_statsmodels.py 
+      * Skip test_profile_numdifftools_profile_hessian and TestDoProfile
       * Added missing import of warnings
-      * Added tests for the scripts from profile_numdifftools.py,
-         _find_default_scale.py and run_benchmark.py.
+      * Added tests for the scripts from profile_numdifftools.py, _find_default_scale.py and run_benchmark.py.
       * Added reason to unittest.skipIf
-      * Removed unused code.
       * Added line_profiler to requirements.
       * misssing import of warnings fixed.
-      * Renamed test so it comes last, because I suspect this test mess up the
-         coverage stats.
+      * Renamed test so it comes last, because I suspect this test mess up the coverage stats.
       * Reordered the tests.
       * Added more tests.
       * Cleaned up _find_default_scale.py
-      * Updated tests.
       * Removed link to depsy
       * Reverted: install of cython and pip install setuptools
       * Disabled sonar-scanner -X for python 3.5 because it crashes.
@@ -74,13 +69,11 @@ Per A Brodtkorb (140):
       * Added dependencies into setup.cfg
       * Readded six as dependency
       * Refactored and removed commented out code.
-      * Fixed a bug in the docstring example: Made sure the shape passed on to
-         zeros is an integer.
+      * Fixed a bug in the docstring example: Made sure the shape passed on to zeros is an integer.
       * Fixed c_abs so it works with algopy on python 3.6.
       * Fixed flaky test and made it more robust.
       * Fixed bug in .travis.yml
-      * Refactored the taylor function into the Taylor class in order to
-         simplify the code.
+      * Refactored the taylor function into the Taylor class in order to simplify the code.
       * Fixed issue #35 and added tests
       * Attempt to simplify complexity
       * Made doctests more robust
@@ -88,8 +81,7 @@ Per A Brodtkorb (140):
       * Changed install of algopy
       * Fixed small bugs
       * Updated docstrings
-      * Changed Example and Reference to Examples and References in docstrings
-         to comply with numpydoc-style.
+      * Changed Example and Reference to Examples and References in docstrings to comply with numpydoc-style.
       * Renamed CHANGES.rst to CHANGELOG.rst
       * Renamed source path
       * Hack due to a bug in algopy or changed behaviour.
@@ -99,21 +91,16 @@ Per A Brodtkorb (140):
       * Simplified  code in Jacobian
       * Merge branch 'master' of https://github.com/pbrod/numdifftools
       * Fixed issue #34 Licence clarification.
-      * Locked coverage=4.3.4 due to a bug in coverage that cause code-climate
-         test-reporter to fail.
+      * Locked coverage=4.3.4 due to a bug in coverage that cause code-climate test-reporter to fail.
       * Added script for finding default scale
       * updated from sonarcube to sonarcloud
       * Made sure shape is an integer.
       * Refactored make_step_generator into a step property
-      * Issue warning message to the user when setting the order to something
-         different than 1 or 2 in Hessian.
-      * pep8
+      * Issue warning message to the user when setting the order to something different than 1 or 2 in Hessian.
       * Updated example in Gradient.
-      * Reverted --timid option to coverage because it took too long time to
-         run.
+      * Reverted --timid option to coverage because it took too long time to run.
       * Reverted --pep8 option
-      * pep8 + added --timid in .travis.yml coverage run in order to to increase
-         missed coverage.
+      * pep8 + added --timid in .travis.yml coverage run in order to to increase missed coverage.
       * Refactored taylor to reduce complexity
       * No support for python 3.3. Added python 3.6
       * Fixed a small bug and updated test.
@@ -121,18 +108,14 @@ Per A Brodtkorb (140):
       * Made python3 compatible
       * Removed assert False
       * Made unittests more forgiving.
-      * updated doctest in nd_scipy.py and profiletools.py install line_profiler
-         on travis
+      * updated doctest in nd_scipy.py and profiletools.py install line_profiler on travis
       * Made python 3 compatible
       * Updated tests
       * Added test_profiletools.py and capture_stdout_and_stderr in testing.py
-      * pep8
-      * Optimized numdifftools.core.py for speed: fd_rules are now only computed
-         once.
+      * Optimized numdifftools.core.py for speed: fd_rules are now only computed once.
       * Only keeping html docs in the distribution.
       * Added doctest and updated .pylintrc and requirements.txt
-      * Reduced time footprint on tests in the hope that it will pass on Travis
-         CI.
+      * Reduced time footprint on tests in the hope that it will pass on Travis CI.
       * Prefer static methods over instance methods
       * Better memory handling: This fixes issue #27
       * Added statsmodels to requirements.txt
@@ -150,23 +133,22 @@ solarjoe (1):
 
 
 
-
 Version 0.9.20, Jan 11, 2017
-----------------------------
+============================
 
 Per A Brodtkorb (1):
      * Updated the author email address in order for twine to be able to upload to pypi.
 
 
 Version 0.9.19, Jan 11, 2017
-----------------------------
+============================
 
 Per A Brodtkorb (1):
       * Updated setup.py in a attempt to get upload to pypi working again.
 
 
 Version 0.9.18, Jan 11, 2017
-----------------------------
+============================
 
 Per A Brodtkorb (38):
       * Updated setup
@@ -185,7 +167,7 @@ Per A Brodtkorb (38):
 
 
 Version 0.9.17, Sep 8, 2016
----------------------------
+============================
 
 Andrew Fowlie (1):
       * Fix ReadTheDocs link as mentioned in #21
@@ -235,7 +217,7 @@ Per A Brodtkorb (79):
 
 
 Version 0.9.15, May 10, 2016
-----------------------------
+============================
 
 Cody (2):
       * Migrated `%` string formating
@@ -284,7 +266,7 @@ pbrod (17):
 
 
 Version 0.9.14, November 10, 2015
----------------------------------
+=================================
 
 pbrod (53):
       * Updated documentation of setup.py
@@ -306,7 +288,7 @@ pbrod (53):
 
 
 Version 0.9.13, October 30, 2015
---------------------------------
+================================
 
 pbrod (21):
       * Updated README.rst and CHANGES.rst.
@@ -332,7 +314,7 @@ kikocorreoso (1):
 
 
 Version 0.9.12, August 28, 2015
--------------------------------
+===============================
 
 pbrod (12):
       
@@ -347,7 +329,7 @@ pbrod (12):
 
 
 Version 0.9.11, August 27, 2015
--------------------------------
+===============================
 
 pbrod (2):
       * Fixed sphinx-build and updated docs.
@@ -355,7 +337,7 @@ pbrod (2):
 
 
 Version 0.9.10, August 26, 2015
--------------------------------
+===============================
 
 pbrod (7):
       * Fixed sphinx-build and updated docs.
@@ -364,14 +346,14 @@ pbrod (7):
 
 
 Version 0.9.4, August 26, 2015
-------------------------------
+==============================
 
 pbrod (7):
       * Fixed sphinx-build and updated docs.
 
 
 Version 0.9.3, August 23, 2015
-------------------------------
+==============================
 
 Paul Kienzle (1):
       * more useful benchmark plots.
@@ -385,7 +367,7 @@ pbrod (7):
 
 
 Version 0.9.2, August 20, 2015
-------------------------------
+==============================
 
 pbrod (3):
       * Updated documentation
@@ -394,7 +376,7 @@ pbrod (3):
       
 
 Version 0.9.1, August 20,2015
------------------------------
+=============================
 
 Christoph Deil (1):
       * Fix Sphinx build
@@ -412,7 +394,7 @@ pbrod (47):
 
 
 Version 0.7.7, December 18, 2014
---------------------------------
+================================
 
 pbrod (35):
       * Got travis-ci working in order to run the tests automatically.
@@ -424,7 +406,7 @@ pbrod (35):
 
 
 Version 0.7.3, December 17, 2014
---------------------------------
+================================
 
 pbrod (5):
       * Small cosmetic fixes.
@@ -434,7 +416,7 @@ pbrod (5):
 
 
 Version 0.6.0, February 8, 2014
---------------------------------
+===============================
 
 pbrod (20):
       * Update and rename README.md to README.rst.
@@ -446,7 +428,7 @@ pbrod (20):
 
 
 Version 0.5.0, January 10, 2014
--------------------------------
+===============================
 
 pbrod (9):
       * Updated the examples in Gradient class and in info.py.
@@ -458,7 +440,7 @@ pbrod (9):
 
 
 Version 0.4.0, May 5, 2012
---------------------------
+==========================
 
 pbrod (1)
       * Fixed a bug for inf and nan values.
@@ -467,14 +449,14 @@ pbrod (1)
 
 
 Version 0.3.5, May 19, 2011
----------------------------
+===========================
 
 pbrod (1)
       * Fixed a bug for inf and nan values.
 
 
 Version 0.3.4, Feb 24, 2011
----------------------------
+===========================
 
 pbrod (11)
       * Made automatic choice for the stepsize more robust.
@@ -482,7 +464,7 @@ pbrod (11)
 
 
 Version 0.3.1, May 20, 2009
----------------------------
+===========================
 
 pbrod (4)
       * First version of numdifftools published on google.code
