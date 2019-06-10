@@ -39,10 +39,10 @@ def test_min_step_generator_with_base_step01():
     methods = ['forward', 'backward', 'central', 'complex']
     for n in range(1, 5):
         for order in [1, 2, 4, 6, 8]:
-            min_length =  n + order - 1
+            min_length = n + order - 1
             lengths = [min_length, min_length, max(min_length // 2, 1),
                        max(min_length // 4, 1)]
-            for m, method in zip(lengths,methods):
+            for m, method in zip(lengths, methods):
                 h = [h for h in step_gen(0, method=method, n=n,
                                          order=order)]
                 # print(len(h), n, order, method)
@@ -54,7 +54,7 @@ def test_default_max_step_generator():
     step_gen = nd.MaxStepGenerator(num_steps=10)
     h = np.array([h for h in step_gen(0)])
 
-    desired = 2.0* 2.0 ** (-np.arange(10)+ 0)
+    desired = 2.0 * 2.0 ** (-np.arange(10) + 0)
 
     assert_array_almost_equal((h - desired) / desired, 0)
 
@@ -71,7 +71,7 @@ def test_max_step_generator_with_base_step01():
     step_gen = nd.MaxStepGenerator(base_step=desired, num_steps=1, offset=0)
     methods = ['forward', 'backward', 'central', 'complex']
     lengths = [2, 2, 1, 1]
-    for n, method in zip(lengths,methods):
+    for n, method in zip(lengths, methods):
         h = [h for h in step_gen(0, method=method)]
         assert_array_almost_equal((h[0] - desired) / desired, 0)
         assert_equal(n, len(h))

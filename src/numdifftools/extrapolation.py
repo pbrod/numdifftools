@@ -268,8 +268,10 @@ def epsalg_demo():
       256           0.99999686            1.00000000            0.00000000
       512           0.99999922            1.00000000            0.00000000
     """
+
     def linfun(i):
-        return np.linspace(0, np.pi / 2., 2**i + 1)
+        return np.linspace(0, np.pi / 2., 2 ** i + 1)
+
     dea = EpsAlg(limexp=15)
     print('NO. PANELS      TRAP. APPROX          APPROX W/EA           abserr')
     txt = '{0:5d} {1:20.8f}  {2:20.8f}  {3:20.8f}'
@@ -299,8 +301,10 @@ def dea_demo():
      1024           0.99999980            1.00000000            0.00000000
      2048           0.99999995            1.00000000            0.00000000
     """
+
     def linfun(i):
-        return np.linspace(0, np.pi / 2., 2**i + 1)
+        return np.linspace(0, np.pi / 2., 2 ** i + 1)
+
     dea = Dea(limexp=6)
     print('NO. PANELS      TRAP. APPROX          APPROX W/EA           abserr')
     txt = '{0:5d} {1:20.8f}  {2:20.8f}  {3:20.8f}'
@@ -463,7 +467,7 @@ class Richardson(object):
     def _estimate_error(new_sequence, old_sequence, steps, rule):
         m = new_sequence.shape[0]
         mo = old_sequence.shape[0]
-        cov1 = np.sum(rule**2)  # 1 spare dof
+        cov1 = np.sum(rule ** 2)  # 1 spare dof
         fact = np.maximum(12.7062047361747 * np.sqrt(cov1), EPS * 10.)
         if mo < 2:
             return (np.abs(new_sequence) * EPS + steps) * fact
@@ -485,7 +489,7 @@ class Richardson(object):
         converged = err <= tol
         abserr = err + np.where(converged, tol * 10,
                                 abs(new_sequence[:-1] -
-                                    old_sequence[-m+1:]) * fact)
+                                    old_sequence[-m + 1:]) * fact)
         return abserr
 
     def extrapolate(self, sequence, steps):
@@ -496,7 +500,7 @@ class Richardson(object):
         rule = self.rule(ne)
         nr = rule.size - 1
         m = ne - nr
-        mm = min(ne, m+1)
+        mm = min(ne, m + 1)
         new_sequence = convolve(sequence, rule[::-1], axis=0, origin=nr // 2)
         abserr = self._estimate_error(new_sequence[:mm], sequence, steps, rule)
         return new_sequence[:m], abserr[:m], steps[:m]

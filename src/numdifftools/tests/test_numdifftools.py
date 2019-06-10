@@ -130,8 +130,10 @@ class TestDerivative(object):
         assert_allclose(directional_diff, 743.87633380824832)
 
     def test_infinite_functions(self):
+
         def finf(x):
             return np.inf * np.ones_like(x)
+
         df = nd.Derivative(finf)
         val = df(0)
         assert np.isnan(val)
@@ -201,8 +203,10 @@ class TestDerivative(object):
     @staticmethod
     def test_fun_with_additional_parameters():
         """Test for issue #9"""
+
         def func(x, a, b=1):
             return b * a * x * x * x
+
         methods = ['forward', 'backward', 'central', 'complex', 'multicomplex']
         dfuns = [nd.Gradient, nd.Derivative, nd.Jacobian, nd.Hessdiag,
                  nd.Hessian]
@@ -219,8 +223,10 @@ class TestDerivative(object):
 
     @staticmethod
     def test_derivative_with_step_options():
+
         def func(x, a, b=1):
             return b * a * x * x * x
+
         methods = ['forward', 'backward', 'central', 'complex', 'multicomplex']
         dfuns = [nd.Gradient, nd.Derivative, nd.Jacobian, nd.Hessdiag,
                  nd.Hessian]
@@ -234,15 +240,17 @@ class TestDerivative(object):
     @staticmethod
     def test_derivative_cube():
         """Test for Issue 7"""
+
         def cube(x):
             return x * x * x
+
         dcube = nd.Derivative(cube)
         shape = (3, 2)
         x = np.ones(shape) * 2
         dx = dcube(x)
         assert_allclose(list(dx.shape), list(shape), err_msg='Shape mismatch')
         txt = 'First differing element %d\n value = %g,\n true value = %g'
-        for i, (val, tval) in enumerate(zip(dx.ravel(), (3 * x**2).ravel())):
+        for i, (val, tval) in enumerate(zip(dx.ravel(), (3 * x ** 2).ravel())):
             assert_allclose(val, tval, rtol=1e-8, err_msg=txt % (i, val, tval))
 
     @staticmethod
@@ -284,9 +292,11 @@ class TestJacobian(object):
     @staticmethod
     @given(st.floats(min_value=-1000, max_value=1000))
     def test_scalar_to_vector(val):
+
         def fun(x):
-            return np.array([x, x**2, x**3])
-        truth = np.array([[1., 2 * val, 3 * val**2]])
+            return np.array([x, x ** 2, x ** 3])
+
+        truth = np.array([[1., 2 * val, 3 * val ** 2]])
         for method in ['multicomplex', 'complex', 'central', 'forward',
                        'backward']:
             j0, info = nd.Jacobian(fun, method=method, full_output=True)(val)
@@ -297,6 +307,7 @@ class TestJacobian(object):
 
     @staticmethod
     def test_on_scalar_function():
+
         def fun(x):
             return x[0] * x[1] * x[2] + np.exp(x[0]) * x[1]
 
@@ -307,7 +318,7 @@ class TestJacobian(object):
 
     @staticmethod
     def test_on_vector_valued_function():
-        xdata = np.arange(0, 1, 0.1)  #.reshape((-1, 1))
+        xdata = np.arange(0, 1, 0.1)  # .reshape((-1, 1))
         ydata = 1 + 2 * np.exp(0.75 * xdata)
 
         def fun(c):
@@ -323,6 +334,7 @@ class TestJacobian(object):
 
     @staticmethod
     def test_on_matrix_valued_function():
+
         def fun(x):
             x = np.atleast_1d(x)
             f0 = x[0] ** 2 + x[1] ** 2
@@ -376,6 +388,7 @@ class TestJacobian(object):
 
     @staticmethod
     def test_issue_25():
+
         def g_fun(x):
             out = np.zeros((2, 2))
             out[0] = x
@@ -397,7 +410,7 @@ class TestJacobian(object):
                              [0., 1.]]])
         fun3 = lambda x : np.vstack((x[0] * x[1] * x[2] ** 2, x[0] * x[1] * x[2]))
         jfun3 = nd.Jacobian(fun3)
-        x = np.array([[1.,2.,3.], [4., 5., 6.]]).T
+        x = np.array([[1., 2., 3.], [4., 5., 6.]]).T
         tv = [[[18., 180.],
                [9., 144.],
                [12., 240.]],
@@ -414,7 +427,7 @@ class TestJacobian(object):
         n = 500
         x = np.ones(n)
         for method in ['complex', 'central', 'forward', 'backward']:
-            assert_allclose(nd.Jacobian(lambda x: x**2, method=method)(x),
+            assert_allclose(nd.Jacobian(lambda x: x ** 2, method=method)(x),
                             2 * np.diag(np.ones(n)))
 
     @staticmethod
@@ -422,8 +435,9 @@ class TestJacobian(object):
     def test_issue_27b():
         n = 1000
         x = np.ones(n)
-        assert_allclose(nd.Jacobian(lambda x: x**2, method='complex')(x),
+        assert_allclose(nd.Jacobian(lambda x: x ** 2, method='complex')(x),
                             2 * np.diag(np.ones(n)))
+
 
 class TestGradient(object):
 
@@ -439,8 +453,10 @@ class TestGradient(object):
 
     @staticmethod
     def test_gradient():
+
         def fun(x):
             return np.sum(x ** 2)
+
         dtrue = [2., 4., 6.]
 
         for method in ['multicomplex', 'complex', 'central', 'backward',
@@ -476,8 +492,7 @@ class TestHessdiag(object):
 
             assert_allclose(h_val, htrue)
 
-    @given(st.tuples(st.floats(-100, 100), st.floats(-100, 100),
-                     st.floats(-100, 100)) )
+    @given(st.tuples(st.floats(-100, 100), st.floats(-100, 100), st.floats(-100, 100)))
     @example((0.0, 16.003907623933742, 68.02057249966789))
     @example([1, 2, 3])
     @example((1.2009289063e-314, 1.2009289063e-314, 1.2009289063e-314))
@@ -498,7 +513,7 @@ class TestHessdiag(object):
                 _error = np.abs(h_val - htrue)
                 note('error = {}, error_est = {}'.format(_error,
                                                          _info.error_estimate))
-                assert_allclose(h_val, htrue, atol=100*max(_info.error_estimate))
+                assert_allclose(h_val, htrue, atol=100 * max(_info.error_estimate))
 
     def test_default_step(self):
         htrue = np.array([0., 2., 18.])
@@ -529,11 +544,12 @@ class TestHessian(object):
 
     def test_complex_hessian_issue_35(self):
         """ """
+
         def foo(x):
             return 1j * np.inner(x, x)
 
         for method in ['multicomplex', 'complex', 'central', 'central2', 'forward', 'backward']:
-            for offset in [0, 1j]: # testing real and complex argument
+            for offset in [0, 1j]:  # testing real and complex argument
                 print(method)
                 x = np.random.randn(3) + offset
                 hessn = nd.Hessian(foo, method=method)
@@ -553,6 +569,7 @@ class TestHessian(object):
 
         def fun(xy):
             return np.cos(xy[0] - xy[1])
+
         htrue = [[-1., 1.],
                  [1., -1.]]
         methods = ['multicomplex', 'complex', 'central', 'central2', 'forward', 'backward']

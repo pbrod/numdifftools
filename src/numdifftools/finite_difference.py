@@ -6,7 +6,6 @@ from scipy import special
 from numdifftools.extrapolation import convolve
 from numdifftools.multicomplex import Bicomplex
 
-
 _SQRT_J = (1j + 1.0) / np.sqrt(2.0)  # = 1j**0.5
 
 # step_ratio, parity, nterms
@@ -96,6 +95,7 @@ class DifferenceFunctions(object):
 
 
 class _JacobianDifferenceFunctions(object):
+
     @staticmethod
     def _central(f, fx, x, h):
         n = len(x)
@@ -127,18 +127,20 @@ class _JacobianDifferenceFunctions(object):
     def _multicomplex(f, fx, x, h):
         n = len(x)
         cmplx_wrap = Bicomplex.__array_wrap__
-        partials = [cmplx_wrap(f(Bicomplex(x + 1j*hi, 0))).imag
+        partials = [cmplx_wrap(f(Bicomplex(x + 1j * hi, 0))).imag
                     for hi in Jacobian._increments(n, h)]
         return np.array(partials)
 
+
 class _HessdiagDifferenceFunctions(object):
+
     @staticmethod
     def _central2(f, fx, x, h):
         """Eq. 8"""
         n = len(x)
         increments = np.identity(n) * h
         partials = [(f(x + 2 * hi) + f(x - 2 * hi)
-                     + 2 * fx - 2 * f(x + hi) - 2 * f(x - hi)) / 4.0
+                     +2 * fx - 2 * f(x + hi) - 2 * f(x - hi)) / 4.0
                     for hi in increments]
         return np.array(partials)
 
@@ -196,7 +198,7 @@ class _HessianDifferenceFunctions(object):
         for i in range(n):
             for j in range(i, n):
                 hess[i, j] = (f(x + 1j * ee[i] + ee[j])
-                              - f(x + 1j * ee[i] - ee[j])).imag / hess[j, i]
+                              -f(x + 1j * ee[i] - ee[j])).imag / hess[j, i]
                 hess[j, i] = hess[i, j]
         return hess
 
@@ -226,9 +228,9 @@ class _HessianDifferenceFunctions(object):
             hess[i, i] = (f(x + 2 * ee[i, :]) - 2 * fx + f(x - 2 * ee[i, :])) / (4. * hess[i, i])
             for j in range(i + 1, n):
                 hess[i, j] = (f(x + ee[i, :] + ee[j, :])
-                              - f(x + ee[i, :] - ee[j, :])
-                              - f(x - ee[i, :] + ee[j, :])
-                              + f(x - ee[i, :] - ee[j, :])) / (4. * hess[j, i])
+                              -f(x + ee[i, :] - ee[j, :])
+                              -f(x - ee[i, :] + ee[j, :])
+                              +f(x - ee[i, :] - ee[j, :])) / (4. * hess[j, i])
                 hess[j, i] = hess[i, j]
         return hess
 
@@ -249,9 +251,9 @@ class _HessianDifferenceFunctions(object):
         for i in range(n):
             for j in range(i, n):
                 hess[i, j] = (f(x + ee[i, :] + ee[j, :])
-                              + f(x - ee[i, :] - ee[j, :])
-                              - g[i] - g[j] + fx
-                              - gg[i] - gg[j] + fx) / (2 * hess[j, i])
+                              +f(x - ee[i, :] - ee[j, :])
+                              -g[i] - g[j] + fx
+                              -gg[i] - gg[j] + fx) / (2 * hess[j, i])
                 hess[j, i] = hess[i, j]
         return hess
 
@@ -370,14 +372,13 @@ class LogRule(object):
         order = max((self.order // step) * step, step)
         return order
 
-
     def _parity_complex(self, order, method_order):
         if self.n == 1 and method_order < 4:
             return (order % 2) + 1
         return (3
-                + 2 * int(self._odd_derivative)
-                + int(self._derivative_mod_four_is_three)
-                + int(self._derivative_mod_four_is_zero))
+                +2 * int(self._odd_derivative)
+                +int(self._derivative_mod_four_is_three)
+                +int(self._derivative_mod_four_is_zero))
 
     def _parity(self, method, order, method_order):
         if method.startswith('central'):
@@ -475,7 +476,7 @@ class LogRule(object):
         method
         """
         method = self.method
-        if method in ('multicomplex', ) or self.n == 0:
+        if method in ('multicomplex',) or self.n == 0:
             return np.ones((1,))
         step_ratio = make_exact(step_ratio)
         order, method_order = self.n - 1, self._method_order
@@ -511,7 +512,7 @@ class LogRule(object):
         nr = fd_rule.size - 1
         _assert(nr < ne, 'num_steps ({0:d}) must  be larger than '
                 '({1:d}) n + order - 1 = {2:d} + {3:d} -1'
-                ' ({4:s})'.format(ne, nr+1, self.n, self.order, self.method))
+                ' ({4:s})'.format(ne, nr + 1, self.n, self.order, self.method))
         f_diff = convolve(f_del, fd_rule[::-1], axis=0, origin=nr // 2)
 
         der_init = f_diff / (h ** self.n)

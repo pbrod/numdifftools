@@ -60,7 +60,7 @@ class CStepGenerator(MinStepGenerator):
 
     def __init__(self, base_step=None, step_ratio=4.0, num_steps=None,
                  step_nom=None, offset=0, scale=1.2, use_exact_steps=True,
-                 path='radial', dtheta=np.pi/8, **kwds):
+                 path='radial', dtheta=np.pi / 8, **kwds):
         self.path = path
         self.dtheta = dtheta
         super(CStepGenerator,
@@ -97,7 +97,7 @@ class CStepGenerator(MinStepGenerator):
     @property
     def num_steps(self):
         if self._num_steps is None:
-            return 2 * int(np.round(16.0/np.log(np.abs(self.step_ratio)))) + 1
+            return 2 * int(np.round(16.0 / np.log(np.abs(self.step_ratio)))) + 1
         return self._num_steps
 
     @num_steps.setter
@@ -164,7 +164,7 @@ class _Limit(object):
             median = np.nanmedian(der, axis=0)
             p75 = np.nanpercentile(der, 75, axis=0)
             p25 = np.nanpercentile(der, 25, axis=0)
-            iqr = np.abs(p75-p25)
+            iqr = np.abs(p75 - p25)
         except ValueError as msg:
             warnings.warn(str(msg))
             return 0 * der
@@ -172,7 +172,7 @@ class _Limit(object):
         a_median = np.abs(median)
         outliers = (((abs(der) < (a_median / trim_fact)) +
                     (abs(der) > (a_median * trim_fact))) * (a_median > 1e-8) +
-                    ((der < p25-1.5*iqr) + (p75+1.5*iqr < der)))
+                    ((der < p25 - 1.5 * iqr) + (p75 + 1.5 * iqr < der)))
         errors = outliers * np.abs(der - median)
         return errors
 
@@ -203,7 +203,7 @@ class _Limit(object):
     def _vstack(sequence, steps):
         original_shape = np.shape(sequence[0])
         f_del = np.vstack(list(np.ravel(r)) for r in sequence)
-        h = np.vstack(list(np.ravel(np.ones(original_shape)*step))
+        h = np.vstack(list(np.ravel(np.ones(original_shape) * step))
                       for step in steps)
         _assert(f_del.size == h.size, 'fun did not return data of correct '
                 'size (it must be vectorized)')

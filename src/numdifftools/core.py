@@ -109,6 +109,7 @@ _cmn_doc = """
 
 
 class _DerivativeDifferenceFunctions(object):
+
     @staticmethod
     def _central_even(f, f_x0i, x0i, h):
         return (f(x0i + h) + f(x0i - h)) / 2.0 - f_x0i
@@ -319,8 +320,10 @@ class Derivative(_Limit):
     def _get_functions(self, args, kwds):
         name = self._get_function_name()
         fun = self.fun
+
         def export_fun(x):
             return fun(x, *args, **kwds)
+
         return getattr(self._difference_functions, name), export_fun
 
     def _get_steps(self, xi):
@@ -358,7 +361,6 @@ class Derivative(_Limit):
 
         _assert(not np.any(np.iscomplex(f_x)),
                 msg + ' But the function given is complex valued!')
-
 
     def _eval_first(self, f, x):
         if self.method in ['complex', 'multicomplex']:
@@ -417,9 +419,9 @@ class Derivative(_Limit):
         if self.n == 1 and method_order < 4:
             return (order % 2) + 1
         return (3
-                + 2 * int(self._odd_derivative)
-                + int(self._derivative_mod_four_is_three)
-                + int(self._derivative_mod_four_is_zero))
+                +2 * int(self._odd_derivative)
+                +int(self._derivative_mod_four_is_three)
+                +int(self._derivative_mod_four_is_zero))
 
     def _parity(self, method, order, method_order):
         if method.startswith('central'):
@@ -443,7 +445,7 @@ class Derivative(_Limit):
         method
         """
         method = self.method
-        if method in ('multicomplex', ) or self.n == 0:
+        if method in ('multicomplex',) or self.n == 0:
             return np.ones((1,))
 
         order, method_order = self.n - 1, self._method_order
@@ -474,13 +476,12 @@ class Derivative(_Limit):
         nr = fd_rule.size - 1
         _assert(nr < ne, 'num_steps ({0:d}) must  be larger than '
                 '({1:d}) n + order - 1 = {2:d} + {3:d} -1'
-                ' ({4:s})'.format(ne, nr+1, self.n, self.order, self.method))
+                ' ({4:s})'.format(ne, nr + 1, self.n, self.order, self.method))
         f_diff = convolve(f_del, fd_rule[::-1], axis=0, origin=nr // 2)
 
         der_init = f_diff / (h ** self.n)
         ne = max(ne - nr, 1)
         return der_init[:ne], h[:ne], original_shape
-
 
 
 def directionaldiff(f, x0, vec, **options):
@@ -533,6 +534,7 @@ def directionaldiff(f, x0, vec, **options):
 
 
 class _JacobianDifferenceFunctions(object):
+
     @staticmethod
     def _central(f, fx, x, h):
         n = len(x)
@@ -564,7 +566,7 @@ class _JacobianDifferenceFunctions(object):
     def _multicomplex(f, fx, x, h):
         n = len(x)
         cmplx_wrap = Bicomplex.__array_wrap__
-        partials = [cmplx_wrap(f(Bicomplex(x + 1j*hi, 0))).imag
+        partials = [cmplx_wrap(f(Bicomplex(x + 1j * hi, 0))).imag
                     for hi in Jacobian._increments(n, h)]
         return np.array(partials)
 
@@ -637,7 +639,7 @@ class Jacobian(Derivative):
     @staticmethod
     def _atleast_2d(original_shape, ndim):
         if ndim == 1:
-            original_shape = (1, ) + tuple(original_shape)
+            original_shape = (1,) + tuple(original_shape)
         return tuple(original_shape)
 
     def _vstack(self, sequence, steps):
@@ -747,13 +749,14 @@ class Gradient(Jacobian):
 
 
 class _HessdiagDifferenceFunctions(object):
+
     @staticmethod
     def _central2(f, fx, x, h):
         """Eq. 8"""
         n = len(x)
         increments = np.identity(n) * h
         partials = [(f(x + 2 * hi) + f(x - 2 * hi)
-                     + 2 * fx - 2 * f(x + hi) - 2 * f(x - hi)) / 4.0
+                     +2 * fx - 2 * f(x + hi) - 2 * f(x - hi)) / 4.0
                     for hi in increments]
         return np.array(partials)
 
@@ -842,8 +845,6 @@ class Hessdiag(Derivative):
     n = property(fget=lambda cls: 2,
                  fset=lambda cls, n: cls._set_derivative())
 
-
-
     def __call__(self, x, *args, **kwds):
         return super(Hessdiag, self).__call__(np.atleast_1d(x), *args, **kwds)
 
@@ -863,7 +864,7 @@ class _HessianDifferenceFunctions(object):
         for i in range(n):
             for j in range(i, n):
                 hess[i, j] = (f(x + 1j * ee[i] + ee[j])
-                              - f(x + 1j * ee[i] - ee[j])).imag / hess[j, i]
+                              -f(x + 1j * ee[i] - ee[j])).imag / hess[j, i]
                 hess[j, i] = hess[i, j]
         return hess
 
@@ -893,9 +894,9 @@ class _HessianDifferenceFunctions(object):
             hess[i, i] = (f(x + 2 * ee[i, :]) - 2 * fx + f(x - 2 * ee[i, :])) / (4. * hess[i, i])
             for j in range(i + 1, n):
                 hess[i, j] = (f(x + ee[i, :] + ee[j, :])
-                              - f(x + ee[i, :] - ee[j, :])
-                              - f(x - ee[i, :] + ee[j, :])
-                              + f(x - ee[i, :] - ee[j, :])) / (4. * hess[j, i])
+                              -f(x + ee[i, :] - ee[j, :])
+                              -f(x - ee[i, :] + ee[j, :])
+                              +f(x - ee[i, :] - ee[j, :])) / (4. * hess[j, i])
                 hess[j, i] = hess[i, j]
         return hess
 
@@ -916,9 +917,9 @@ class _HessianDifferenceFunctions(object):
         for i in range(n):
             for j in range(i, n):
                 hess[i, j] = (f(x + ee[i, :] + ee[j, :])
-                              + f(x - ee[i, :] - ee[j, :])
-                              - g[i] - g[j] + fx
-                              - gg[i] - gg[j] + fx) / (2 * hess[j, i])
+                              +f(x - ee[i, :] - ee[j, :])
+                              -g[i] - g[j] + fx
+                              -gg[i] - gg[j] + fx) / (2 * hess[j, i])
                 hess[j, i] = hess[i, j]
         return hess
 

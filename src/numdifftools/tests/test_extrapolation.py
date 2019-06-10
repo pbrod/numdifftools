@@ -5,6 +5,7 @@ from numdifftools.extrapolation import Dea, dea3, Richardson, EpsAlg
 
 
 class TestRichardson(object):
+
     def setup_method(self):
         self.true_vals = {
             (1, 1, 1): [-0.9999999999999998, 1.9999999999999998],
@@ -88,7 +89,7 @@ class TestExtrapolation(object):
         e_i = np.zeros(n)
         h = np.zeros(n)
         for k in np.arange(n):
-            x = np.linspace(0, np.pi/2., 2**(k+5)+1)
+            x = np.linspace(0, np.pi / 2., 2 ** (k + 5) + 1)
             e_i[k] = np.trapz(np.sin(x), x)
             h[k] = x[1]
         self.e_i = e_i
@@ -97,7 +98,7 @@ class TestExtrapolation(object):
     def test_dea3_on_trapz_sin(self):
         e_i = self.e_i
         e_n, err = dea3(e_i[0], e_i[1], e_i[2])
-        true_err = e_i[:3]-1.
+        true_err = e_i[:3] - 1.
         assert_allclose(true_err,
                         [-2.00805680e-04, -5.01999079e-05, -1.25498825e-05])
         assert_allclose(e_n, 1.)

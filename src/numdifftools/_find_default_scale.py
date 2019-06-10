@@ -108,7 +108,6 @@ def plot_error(scales, relativ_error, scale0, title='', label=''):
     plt.axis([min(scales), max(scales), np.nanmin(relativ_error), 1])
 
 
-
 def _compute_relative_errors(x, dfun, fd, scales):
     t = []
     for scale in scales:
@@ -197,6 +196,6 @@ def run_all_benchmarks(method='forward', order=4, x_values=(0.1, 0.5, 1.0, 5), n
 
 if __name__ == '__main__':
 
-    run_all_benchmarks(method='complex', order=2, x_values=[50.,], #0.1, 0.5, 1.0, 5, 10, 50,],
+    run_all_benchmarks(method='complex', order=2, x_values=[50., ],  # 0.1, 0.5, 1.0, 5, 10, 50,],
                        n_max=11)
     plt.show('hold')

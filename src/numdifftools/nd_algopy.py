@@ -157,7 +157,7 @@ class _Derivative(object):
         x0 = np.asarray(x, dtype=float)
         df = fun(x0, *args, **kwds)
         if self.full_output:
-            return df, self.info(np.maximum(10*EPS * np.abs(df), EPS), EPS, 0)
+            return df, self.info(np.maximum(10 * EPS * np.abs(df), EPS), EPS, 0)
         return df
 
 
@@ -477,7 +477,7 @@ class Hessdiag(Hessian):
     """)
 
     def _forward(self, x, *args, **kwds):
-        d, n = 2+1, x.size
+        d, n = 2 + 1, x.size
         p = n
         y = UTPM(np.zeros((d, p, n)))
 
@@ -539,8 +539,8 @@ def directionaldiff(f, x0, vec, **options):
     if x0.size != vec.size:
         raise ValueError('vec and x0 must be the same shapes')
 
-    vec = np.reshape(vec/np.linalg.norm(vec.ravel()), x0.shape)
-    return Derivative(lambda t: f(x0+t*vec), **options)(0)
+    vec = np.reshape(vec / np.linalg.norm(vec.ravel()), x0.shape)
+    return Derivative(lambda t: f(x0 + t * vec), **options)(0)
 
 
 if __name__ == '__main__':

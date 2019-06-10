@@ -170,12 +170,12 @@ def fd_derivative(fx, x, n=1, m=2):
     # 2 * mm boundary points
     for i in range(mm):
         du[i] = np.dot(fd_weights(x[:size], x0=x[i], n=n), fx[:size])
-        du[-i-1] = np.dot(fd_weights(x[-size:], x0=x[-i-1], n=n), fx[-size:])
+        du[-i - 1] = np.dot(fd_weights(x[-size:], x0=x[-i - 1], n=n), fx[-size:])
 
     # interior points
-    for i in range(mm, num_x-mm):
-        du[i] = np.dot(fd_weights(x[i-mm:i+mm+1], x0=x[i], n=n),
-                       fx[i-mm:i+mm+1])
+    for i in range(mm, num_x - mm):
+        du[i] = np.dot(fd_weights(x[i - mm:i + mm + 1], x0=x[i], n=n),
+                       fx[i - mm:i + mm + 1])
 
     return du
 
@@ -279,9 +279,8 @@ def _get_best_taylor_coefficients(bs, rs, m):
     mvec = np.arange(m)
     if len(extrap) > 2:
         all_coefs, all_errors = dea3(extrap[:-2], extrap[1:-1], extrap[2:])
-        steps = np.atleast_1d(rs[4:])[:, None]*mvec
-        coefs, info = _Limit._get_best_estimate(all_coefs, all_errors, steps,
-                                                (m,))
+        steps = np.atleast_1d(rs[4:])[:, None] * mvec
+        coefs, info = _Limit._get_best_estimate(all_coefs, all_errors, steps, (m,))
         errors = info.error_estimate
     else:
         errors = EPS / np.power(rs[2], mvec) * np.maximum(m1, m2)
@@ -416,7 +415,7 @@ class Taylor(object):
         self._num_changes = 0
         return m, self._mvec
 
-    def _check_convergence(self, i, z0, r,  m, bn):
+    def _check_convergence(self, i, z0, r, m, bn):
         if self._direction_changes > 1 or self._degenerate:
             self._num_changes += 1
             if self._num_changes >= 1 + self.num_extrap:
@@ -463,7 +462,7 @@ class Taylor(object):
             bs.append(bn * np.power(r, -mvec))
             rs.append(r)
 
-            converged, r = self._check_convergence(i, z0, r,  m, bn)
+            converged, r = self._check_convergence(i, z0, r, m, bn)
             if converged:
                 break
 

@@ -15,7 +15,6 @@ except ImportError:
 else:
     import numdifftools.nd_algopy as nd
 
-
 pytestmark = pytest.mark.skipif(algopy is None, reason="algopy is not installed!")
 
 
@@ -32,6 +31,7 @@ class TestHessian(object):
 
         def fun(xy):
             return np.cos(xy[0] - xy[1])
+
         htrue = [[-1., 1.], [1., -1.]]
         methods = ['forward', ]  # 'reverse']
 
@@ -74,8 +74,10 @@ class TestDerivative(object):
     @staticmethod
     def test_fun_with_additional_parameters():
         """Test for issue #9"""
+
         def func(x, a, b=1):
             return b * a * x * x * x
+
         methods = ['reverse', 'forward']
         dfuns = [nd.Jacobian, nd.Derivative, nd.Gradient, nd.Hessdiag,
                  nd.Hessian]
@@ -88,6 +90,7 @@ class TestDerivative(object):
     @staticmethod
     def test_derivative_cube():
         """Test for Issue 7"""
+
         def cube(x):
             return x * x * x
 
@@ -100,7 +103,7 @@ class TestDerivative(object):
                                       err_msg='Shape mismatch')
             txt = 'First differing element %d\n value = %g,\n true value = %g'
             for i, (val, tval) in enumerate(zip(dx.ravel(),
-                                                (3 * x**2).ravel())):
+                                                (3 * x ** 2).ravel())):
                 assert_allclose(val, tval, err_msg=txt % (i, val, tval))
 
     @staticmethod
@@ -142,24 +145,28 @@ class TestDerivative(object):
 
 
 class TestJacobian(object):
+
     @staticmethod
     @given(st.floats(min_value=-1e153, max_value=1e153))
     def test_scalar_to_vector(val):
+
         def fun(x):
-            out = algopy.zeros((3, ), dtype=x)
+            out = algopy.zeros((3,), dtype=x)
             out[0] = x
-            out[1] = x**2
-            out[2] = x**3
+            out[1] = x ** 2
+            out[2] = x ** 3
             return out
 
         for method in ['reverse', 'forward']:
             j0 = nd.Jacobian(fun, method=method)(val).T
-            assert_allclose(j0, [[1., 2*val, 3*val**2]], atol=1e-14)
+            assert_allclose(j0, [[1., 2 * val, 3 * val ** 2]], atol=1e-14)
 
     @staticmethod
     def test_on_scalar_function():
+
         def fun(x):
             return x[0] * x[1] * x[2] + np.exp(x[0]) * x[1]
+
         for method in ['forward', 'reverse']:
             j_fun = nd.Jacobian(fun, method=method)
             x = j_fun([3., 5., 7.])
@@ -185,6 +192,7 @@ class TestJacobian(object):
 
     @staticmethod
     def test_on_matrix_valued_function():
+
         def fun(x):
 
             f0 = x[0] ** 2 + x[1] ** 2
@@ -229,6 +237,7 @@ class TestJacobian(object):
 
     @staticmethod
     def test_issue_25():
+
         def g_fun(x):
             out = algopy.zeros((2, 2), dtype=x)
             out[0, 0] = x[0]
@@ -237,7 +246,7 @@ class TestJacobian(object):
             out[1, 1] = x[1]
             return out
 
-        dg_dx = nd.Jacobian(g_fun) # TODO:  method='reverse' fails
+        dg_dx = nd.Jacobian(g_fun)  # TODO:  method='reverse' fails
         x = [1, 2]
         dg = dg_dx(x)
         assert_allclose(dg, [[[1., 0.],
@@ -247,8 +256,10 @@ class TestJacobian(object):
 
 
 class TestGradient(object):
+
     @staticmethod
     def test_on_scalar_function():
+
         def fun(x):
             return np.sum(x ** 2)
 
@@ -262,10 +273,13 @@ class TestGradient(object):
 
 
 class TestHessdiag(object):
+
     @staticmethod
     def test_forward():
+
         def fun(x):
             return x[0] + x[1] ** 2 + x[2] ** 3
+
         htrue = np.array([0., 2., 18.])
         h_fun = nd.Hessdiag(fun)
         hd = h_fun([1, 2, 3])
@@ -274,8 +288,10 @@ class TestHessdiag(object):
 
     @staticmethod
     def test_reverse():
+
         def fun(x):
             return x[0] + x[1] ** 2 + x[2] ** 3
+
         htrue = np.array([0., 2., 18.])
         h_fun = nd.Hessdiag(fun, method='reverse')
         hd = h_fun([1, 2, 3])

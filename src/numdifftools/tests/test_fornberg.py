@@ -40,12 +40,12 @@ def test_high_order_derivative(x):
 
 
 def test_all_weights():
-    w = fd_weights_all(range(-2,3), n=4)
+    w = fd_weights_all(range(-2, 3), n=4)
     print(w)
     true_w = [[0., 0., 1., 0., 0. ],
               [ 0.0833333333333, -0.6666666666667, 0., 0.6666666666667,
                -0.0833333333333],
-              [-0.0833333333333, 1.333333333333, -2.5,  1.333333333333,
+              [-0.0833333333333, 1.333333333333, -2.5, 1.333333333333,
                -0.083333333333],
               [-0.5, 1., 0., -1., 0.5 ],
               [ 1., -4., 6., -4., 1.]]
@@ -74,13 +74,14 @@ def test_fd_derivative():
 
 
 class ExampleFunctions(object):
+
     @staticmethod
     def fun0(z):
         return np.exp(z)
 
     @staticmethod
     def fun1(z):
-        return np.exp(z) / (np.sin(z)**3 + np.cos(z)**3)
+        return np.exp(z) / (np.sin(z) ** 3 + np.cos(z) ** 3)
 
     @staticmethod
     def fun2(z):
@@ -88,11 +89,11 @@ class ExampleFunctions(object):
 
     @staticmethod
     def fun3(z):
-        return z**6
+        return z ** 6
 
     @staticmethod
     def fun4(z):
-        return z * (0.5 + 1./np.expm1(z))
+        return z * (0.5 + 1. / np.expm1(z))
 
     @staticmethod
     def fun5(z):
@@ -100,7 +101,7 @@ class ExampleFunctions(object):
 
     @staticmethod
     def fun6(z):
-        return 1.0j + z + 1.0j * z**2
+        return 1.0j + z + 1.0j * z ** 2
 
     @staticmethod
     def fun7(z):
@@ -108,15 +109,15 @@ class ExampleFunctions(object):
 
     @staticmethod
     def fun8(z):
-        return (1+z)**10*np.log1p(z)
+        return (1 + z) ** 10 * np.log1p(z)
 
     @staticmethod
     def fun9(z):
-        return 10*5 + 1./(1-z)
+        return 10 * 5 + 1. / (1 - z)
 
     @staticmethod
     def fun10(z):
-        return 1./(1-z)
+        return 1. / (1 - z)
 
     @staticmethod
     def fun11(z):

@@ -64,8 +64,8 @@ def plot_runtimes(run_time_objects, problem_sizes, symbols):
 
 def loglimits(data, border=0.05):
     low, high = np.min(data), np.max(data)
-    scale = (high/low)**border
-    return low/scale, high*scale
+    scale = (high / low) ** border
+    return low / scale, high * scale
 
 
 def _compute_benchmark(functions, problem_sizes):
@@ -156,7 +156,6 @@ def main(problem_sizes=(4, 8, 16, 32, 64, 96)):
 
         hessian_funs[nda_txt] = getattr(nda, hessian_fun)(1, method=nda_method)
     ndc_hessian = getattr(nd, hessian_fun)
-
 
     order = 2
     for method in ['forward', 'central', 'complex']:
