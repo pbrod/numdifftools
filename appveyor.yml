@@ -47,8 +47,8 @@ install:
   - "python -m pip install --upgrade pip"
   - pip install coverage
   - pip install hypothesis
-#  - python setup.py bdist_wheel
-#  - pip install numdifftools --find-links=dist
+  - python setup.py bdist_wheel
+  - pip install numdifftools --find-links=dist
 
 test_script:
   - coverage run --source=numdifftools setup.py test
