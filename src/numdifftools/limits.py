@@ -156,10 +156,12 @@ class _Limit(object):
 
     @staticmethod
     def _add_error_to_outliers(der, trim_fact=10):
-        # discard any estimate that differs wildly from the
-        # median of all estimates. A factor of 10 to 1 in either
-        # direction is probably wild enough here. The actual
-        # trimming factor is defined as a parameter.
+        """
+        discard any estimate that differs wildly from the
+        median of all estimates. A factor of 10 to 1 in either
+        direction is probably wild enough here. The actual
+        trimming factor is defined as a parameter.
+        """
         try:
             median = np.nanmedian(der, axis=0)
             p75 = np.nanpercentile(der, 75, axis=0)

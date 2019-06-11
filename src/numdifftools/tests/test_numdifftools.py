@@ -504,6 +504,7 @@ class TestHessdiag(object):
     @example([1, 2, 3])
     @example((1.2009289063e-314, 1.2009289063e-314, 1.2009289063e-314))
     @example((88.01663712016305, 88.01663712016305, 88.01663712016305))
+    @example((0.0, 19.945812226807096, 54.11322414875562))
     def test_fixed_step(self, vals):
         htrue = self._hfun(vals)
         methods = ['central2', 'central', 'multicomplex', 'complex', 'forward',

@@ -48,7 +48,7 @@ install:
 #  - conda install --yes conda-build
   - conda config --add channels conda-forge
   - conda config --add channels https://conda.anaconda.org/qttesting
-  - "conda create -q -n test-environment python=%PYTHON_VERSION% numpy scipy algopy pytest pytest-runner pytest-pep8 pytest-cov pyqt matplotlib pip statsmodels line_profiler IPython"
+  - "conda create -q -n test-environment python=%PYTHON_VERSION% numpy scipy algopy pytest pytest-runner pytest-pep8 pytest-cov matplotlib pyqt pip statsmodels line_profiler IPython"
 
   - activate test-environment
   - "python -m pip install --upgrade pip"
