@@ -568,7 +568,7 @@ class TestHessian(object):
 
                     assert_allclose(val, [[2j, 0j, 0j],
                                           [0j, 2j, 0j],
-                                          [0j, 0j, 2j]], atol=1e-13)
+                                          [0j, 0j, 2j]], atol=1e-11)
 
     @staticmethod
     def test_hessian_cos_x_y_at_0_0():
