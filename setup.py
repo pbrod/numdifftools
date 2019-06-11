@@ -87,7 +87,8 @@ def setup_package():
 
     sphinx_requires = ['sphinx>=1.3.1']
     needs_sphinx = {'build_sphinx'}.intersection(sys.argv)
-    sphinx = ['numpydoc', 'imgmath',
+    sphinx = ['numpydoc',
+              'imgmath',
               'sphinx_rtd_theme>=0.1.7'] + sphinx_requires if needs_sphinx else []
     setup(setup_requires=["pytest-runner"] + sphinx,
           version=version,

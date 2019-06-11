@@ -44,6 +44,7 @@ install:
   - "conda create -q -n test-environment python=%PYTHON_VERSION% numpy scipy algopy pytest pytest-runner pytest-pep8 pytest-cov pyqt matplotlib pip statsmodels line_profiler IPython"
 
   - activate test-environment
+  - pip install --upgrade pip
   - pip install coverage
   - pip install hypothesis
   - python setup.py install
