@@ -4,9 +4,6 @@
 numdifftools.tests package
 ==========================
 
-Submodules
-----------
-
 numdifftools.tests.conftest module
 ----------------------------------
 
@@ -71,11 +68,3 @@ numdifftools.tests.test_numdifftools_docstrings module
     :undoc-members:
     :show-inheritance:
 
-
-Module contents
----------------
-
-.. automodule:: numdifftools.tests
-    :members:
-    :undoc-members:
-    :show-inheritance:
