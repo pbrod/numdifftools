@@ -45,9 +45,10 @@ install:
 
   - activate test-environment
   - "python -m pip install --upgrade pip"
+  - "python -m pip install --upgrade setuptools"
   - pip install coverage
   - pip install hypothesis
-  - python setup.py bdist_wheel
+  - python setup.py sdist
   - pip install numdifftools --find-links=dist
 
 test_script:
