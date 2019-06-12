@@ -171,6 +171,8 @@ class TestDerivative(object):
     @settings(deadline=500.0)
     @given(st.floats(min_value=0, max_value=10))
     @example(7.6564547238847105)
+    @example(8.9428143931508)
+    @example(2.2204460492503134e-14)
     def test_derivative_of_cos_x(x):
         note('x = {}'.format(x))
         msg = 'order = {}, error = {}, err_est = {}'
@@ -507,8 +509,7 @@ class TestHessdiag(object):
     @example((0.0, 19.945812226807096, 54.11322414875562))
     def test_fixed_step(self, vals):
         htrue = self._hfun(vals)
-        methods = ['central2', 'central', 'multicomplex', 'complex', 'forward',
-                   'backward']
+        methods = ['central2', 'central', 'multicomplex', 'complex', 'forward', 'backward']
         for order in range(2, 7, 2):
             steps = nd.MinStepGenerator(num_steps=order + 1,
                                         use_exact_steps=True,
@@ -521,7 +522,7 @@ class TestHessdiag(object):
                 _error = np.abs(h_val - htrue)
                 note('error = {}, error_est = {}'.format(_error,
                                                          _info.error_estimate))
-                assert_allclose(h_val, htrue, atol=100 * max(_info.error_estimate))
+                assert_allclose(h_val, htrue, rtol=1e-5, atol=100 * max(_info.error_estimate))
 
     def test_default_step(self):
         htrue = np.array([0., 2., 18.])
