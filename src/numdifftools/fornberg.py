@@ -359,8 +359,7 @@ class Taylor(object):
     magnitude at least. For most cases, the default configuration is likely to
     succeed.
 
-    Restrictions
-
+    Restrictions:
     The method uses the coefficients themselves to control the truncation
     error, so the error will not be properly bounded for functions like
     low-order polynomials whose Taylor series coefficients are nearly zero.
@@ -370,8 +369,8 @@ class Taylor(object):
 
     Examples
     --------
-
     Compute the first 6 taylor coefficients 1 / (1 - z) expanded round  z0 = 0:
+
     >>> import numdifftools.fornberg as ndf
     >>> import numpy as np
     >>> c, info = ndf.Taylor(lambda x: 1./(1-x), n=6, full_output=True)(z0=0)
@@ -381,7 +380,6 @@ class Taylor(object):
     True
     >>> (info.function_count, info.iterations, info.failed) == (144, 18, False)
     True
-
 
     References
     ----------
@@ -529,8 +527,7 @@ def taylor(fun, z0=0, n=1, r=0.0061, num_extrap=3, step_ratio=1.6, **kwds):
     magnitude at least. For most cases, the default configuration is likely to
     succeed.
 
-    Restrictions
-
+    Restrictions:
     The method uses the coefficients themselves to control the truncation
     error, so the error will not be properly bounded for functions like
     low-order polynomials whose Taylor series coefficients are nearly zero.
@@ -540,8 +537,8 @@ def taylor(fun, z0=0, n=1, r=0.0061, num_extrap=3, step_ratio=1.6, **kwds):
 
     Examples
     --------
-
     Compute the first 6 taylor coefficients 1 / (1 - z) expanded round  z0 = 0:
+
     >>> import numdifftools.fornberg as ndf
     >>> import numpy as np
     >>> c, info = ndf.taylor(lambda x: 1./(1-x), z0=0, n=6, full_output=True)
@@ -598,7 +595,7 @@ def derivative(fun, z0, n=1, **kwds):
     Returns
     -------
     der : ndarray
-       array of derivatives
+        array of derivatives
     status: Optional object into which output information is written. Fields:
         degenerate: True if the algorithm was unable to bound the error
         iterations: Number of iterations executed
@@ -607,6 +604,8 @@ def derivative(fun, z0, n=1, **kwds):
         failed: True if the maximum number of iterations was reached
         error_estimate: approximate bounds of the rounding error.
 
+    Notes
+    -----
     This module uses the method of Fornberg to compute the derivatives of a
     complex analytic function along with error bounds. The method uses a
     Fast Fourier Transform to invert function evaluations around a circle into
@@ -617,8 +616,7 @@ def derivative(fun, z0, n=1, **kwds):
     radius-to within a number of orders of magnitude at least. For most cases,
     the default configuration is likely to succeed.
 
-    Restrictions
-
+    Restrictions:
     The method uses the coefficients themselves to control the truncation
     error, so the error will not be properly bounded for functions like
     low-order polynomials whose Taylor series coefficients are nearly zero.
@@ -628,9 +626,9 @@ def derivative(fun, z0, n=1, **kwds):
 
     Examples
     --------
-
     To compute the first five derivatives of 1 / (1 - z) at z = 0:
     Compute the first 6 taylor derivatives of 1 / (1 - z) at z0 = 0:
+
     >>> import numdifftools.fornberg as ndf
     >>> import numpy as np
     >>> def fun(x):
