@@ -1,8 +1,5 @@
-import pytest
-import numpy as np
-from numpy.testing.utils import assert_array_almost_equal, assert_allclose
 from numdifftools.testing import capture_stdout_and_stderr
-from numdifftools.profiletools import do_profile, do_cprofile, timefun, TimeWith, LineProfiler
+from numdifftools.profiletools import do_profile, do_cprofile, timefun, TimeWith  # , LineProfiler
 
 
 def _get_stats(line):

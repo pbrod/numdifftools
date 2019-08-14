@@ -1,10 +1,7 @@
 from __future__ import print_function
 
-from datetime import timedelta
-
 from hypothesis import given, example, note, settings, strategies as st
-from numpy.testing.utils import assert_array_almost_equal, assert_allclose
-import pytest
+from numpy.testing.utils import assert_allclose
 
 from numdifftools.example_functions import function_names, get_function
 from numdifftools.fornberg import (fd_weights, fd_weights_all, derivative,
@@ -141,8 +138,8 @@ class ExampleFunctions(object):
 
 
 def test_low_order_derivative_on_example_functions():
-    for i in range(15):
-        fun = getattr(ExampleFunctions, 'fun{}'.format(i))
+    for j in range(15):
+        fun = getattr(ExampleFunctions, 'fun{}'.format(j))
         der, info = derivative(fun, z0=0., r=0.06, n=10, max_iter=30,
                                full_output=True, step_ratio=1.6)
         print(info)
