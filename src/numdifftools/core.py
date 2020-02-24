@@ -744,8 +744,10 @@ class Gradient(Jacobian):
     """)
 
     def __call__(self, x, *args, **kwds):
-        return super(Gradient, self).__call__(np.atleast_1d(x).ravel(),
-                                              *args, **kwds).squeeze()
+        result = super(Gradient, self).__call__(np.atleast_1d(x).ravel(), *args, **kwds)
+        if self.full_output:
+            return result[0].squeeze(), result[1]
+        return result.squeeze()
 
 
 class _HessdiagDifferenceFunctions(object):
