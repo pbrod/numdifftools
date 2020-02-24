@@ -114,13 +114,15 @@ disable=import-star-module-level,
         unicode-builtin,
         xrange-builtin,
         coerce-method,
-        delslice-method,getslice-method,
+        delslice-method,
+        getslice-method,
         setslice-method,
         input-builtin,
         round-builtin,
         hex-method,
         nonzero-method,
-        map-builtin-not-iterating,W0201
+        map-builtin-not-iterating,
+        W0201
 
 
 [REPORTS]
