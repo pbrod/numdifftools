@@ -460,6 +460,19 @@ class TestGradient(object):
         assert_allclose(dd, 743.87633380824832)
 
     @staticmethod
+    def test_gradient_fulloutput():
+        """Fix issue#52:
+
+        Gradient tries to apply squeeze to the output tuple containing both the result
+        and the full_output object.
+        """
+        res, info = nd.Gradient(lambda x, y: x + y, full_output=True)(1, 3)
+        assert_allclose(res, 1)
+        assert info.error_estimate < 1e-13
+        assert info.final_step == 0.015625
+        assert info.index == 5
+
+    @staticmethod
     def test_gradient():
 
         def fun(x):
@@ -467,8 +480,7 @@ class TestGradient(object):
 
         dtrue = [2., 4., 6.]
 
-        for method in ['multicomplex', 'complex', 'central', 'backward',
-                       'forward']:
+        for method in ['multicomplex', 'complex', 'central', 'backward', 'forward']:
             for order in [2, 4]:
                 dfun = nd.Gradient(fun, method=method, order=order)
                 d = dfun([1, 2, 3])
