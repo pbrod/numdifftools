@@ -71,7 +71,7 @@ before_script:
     fi
 script:
   - coverage erase
-  - coverage run --source=numdifftools setup.py test
+  - coverage run -m py.test src/numdifftools/tests
 # see http://www.camillescott.org/2016/07/15/travis-pytest-scipyconf/
   - coverage xml -o coverage.xml
 #  - sed -i 's/filename="/filename=".\//g' coverage.xml
