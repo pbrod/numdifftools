@@ -109,7 +109,7 @@ _cmn_doc = """
 
 
 class _DerivativeDifferenceFunctions(object):
-
+    # pylint: disable=unused-argument
     @staticmethod
     def _central_even(f, f_x0i, x0i, h):
         return (f(x0i + h) + f(x0i - h)) / 2.0 - f_x0i
@@ -534,7 +534,7 @@ def directionaldiff(f, x0, vec, **options):
 
 
 class _JacobianDifferenceFunctions(object):
-
+    # pylint: disable=unused-argument
     @staticmethod
     def _central(f, fx, x, h):
         n = len(x)
@@ -958,7 +958,7 @@ class Hessian(Hessdiag):
     -------
     hess : ndarray
        array of partial second derivatives, Hessian
-    """, extra_note="""
+    """, extra_note=r"""
     Computes the Hessian according to method as:
     'forward' :eq:`7`, 'central' :eq:`9` and 'complex' :eq:`10`:
 
