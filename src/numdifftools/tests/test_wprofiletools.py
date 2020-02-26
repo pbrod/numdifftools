@@ -1,5 +1,6 @@
+import pytest
 from numdifftools.testing import capture_stdout_and_stderr
-from numdifftools.profiletools import do_profile, do_cprofile, timefun, TimeWith  # , LineProfiler
+from numdifftools.profiletools import do_profile, do_cprofile, timefun, TimeWith, LineProfiler
 
 
 def _get_stats(line):
@@ -9,10 +10,10 @@ def _get_stats(line):
     except ValueError:
         return None
     try:
-        vals = []
+        vals = [0] * 4
         for i in range(4):
             item, _, tail = tail.strip().partition(' ')
-            vals.append(float(item))
+            vals[i] = float(item)
 
         hits, time, perhit, percent_time = vals
     except ValueError:
@@ -172,9 +173,9 @@ class TestDoCProfile(object):
             raise ValueError('Did not find _get_number or expensive_function')
 
 
-# @unittest.skipIf(LineProfiler is None, 'LineProfiler is not installed.')
 #  @pytest.mark.skip('Suspect this test fucks up coverage stats.')
-class TestDoProfile(object):  # TODO: Check this!
+@pytest.mark.skipif(LineProfiler is None, reason='LineProfiler is not installed.')
+class TestDoProfile(object):
 
     def test_on_function_and_follow_function(self):
 
@@ -263,7 +264,7 @@ class TestDoProfile(object):  # TODO: Check this!
             @do_profile(follow_all_methods=True)
             def expensive_method3(self):
                 for x in self._get_number3():
-                    for y in self._get_number32():
+                    for _ in self._get_number32():
                         i = x ^ 9
                 return i
 
