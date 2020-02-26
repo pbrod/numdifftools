@@ -65,13 +65,12 @@ class CStepGenerator(MinStepGenerator):
         self.dtheta = dtheta
         super(CStepGenerator,
               self).__init__(base_step=base_step, step_ratio=step_ratio,
-                             num_steps=num_steps, offset=offset, scale=scale,
+                             num_steps=num_steps, step_nom=step_nom, offset=offset, scale=scale,
                              use_exact_steps=use_exact_steps, **kwds)
         self._check_path()
 
     def _check_path(self):
-        _assert(self.path in ['spiral', 'radial'],
-                'Invalid Path: {}'.format(str(self.path)))
+        _assert(self.path in ['spiral', 'radial'], 'Invalid Path: {}'.format(str(self.path)))
 
     @property
     def step_ratio(self):
