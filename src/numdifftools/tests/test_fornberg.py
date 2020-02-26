@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-from hypothesis import given, example, note, settings, strategies as st
+from hypothesis import given, note, settings, strategies as st
 from numpy.testing.utils import assert_allclose
 
 from numdifftools.example_functions import function_names, get_function
@@ -58,7 +58,7 @@ def test_weights():
         # print(name)
         n, m = name
         w, x = CENTRAL_WEIGHTS_AND_POINTS[name]
-
+        assert len(w) == m
         weights = fd_weights(np.array(x, dtype=float), 0.0, n=n)
         assert_allclose(weights, w, atol=1e-15)
 
