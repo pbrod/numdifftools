@@ -536,40 +536,52 @@ def directionaldiff(f, x0, vec, **options):
 
 
 class _JacobianDifferenceFunctions(object):
+    @staticmethod
+    def increments(n, h):
+        ei = np.zeros(np.shape(h), float)
+        for k in range(n):
+            ei[k] = h[k]
+            yield ei
+            ei[k] = 0
+
     # pylint: disable=unused-argument
     @staticmethod
     def _central(f, fx, x, h):
         n = len(x)
-        return np.array([(f(x + hi) - f(x - hi)) / 2.0 for hi in Jacobian._increments(n, h)])
+        steps = _JacobianDifferenceFunctions.increments(n, h)
+        return np.array([(f(x + hi) - f(x - hi)) / 2.0 for hi in steps])
 
     @staticmethod
     def _backward(f, fx, x, h):
         n = len(x)
-        return np.array([fx - f(x - hi) for hi in Jacobian._increments(n, h)])
+        steps = _JacobianDifferenceFunctions.increments(n, h)
+        return np.array([fx - f(x - hi) for hi in steps])
 
     @staticmethod
     def _forward(f, fx, x, h):
         n = len(x)
-        return np.array([f(x + hi) - fx for hi in Jacobian._increments(n, h)])
+        steps = _JacobianDifferenceFunctions.increments(n, h)
+        return np.array([f(x + hi) - fx for hi in steps])
 
     @staticmethod
     def _complex(f, fx, x, h):
         n = len(x)
-        return np.array([f(x + 1j * ih).imag for ih in Jacobian._increments(n, h)])
+        steps = _JacobianDifferenceFunctions.increments(n, h)
+        return np.array([f(x + 1j * ih).imag for ih in steps])
 
     @staticmethod
     def _complex_odd(f, fx, x, h):
         n = len(x)
         j1 = _SQRT_J
-        return np.array([((j1 / 2.) * (f(x + j1 * ih) - f(x - j1 * ih))).imag
-                         for ih in Jacobian._increments(n, h)])
+        steps = _JacobianDifferenceFunctions.increments(n, h)
+        return np.array([((j1 / 2.) * (f(x + j1 * ih) - f(x - j1 * ih))).imag for ih in steps])
 
     @staticmethod
     def _multicomplex(f, fx, x, h):
         n = len(x)
+        steps = _JacobianDifferenceFunctions.increments(n, h)
         cmplx_wrap = Bicomplex.__array_wrap__
-        partials = [cmplx_wrap(f(Bicomplex(x + 1j * hi, 0))).imag
-                    for hi in Jacobian._increments(n, h)]
+        partials = [cmplx_wrap(f(Bicomplex(x + 1j * hi, 0))).imag for hi in steps]
         return np.array(partials)
 
 
@@ -658,14 +670,6 @@ class Jacobian(Derivative):
         _assert(f_del.size == h.size, 'fun did not return data of correct '
                 'size (it must be vectorized)')
         return f_del, h, self._atleast_2d(original_shape, ndim)
-
-    @staticmethod
-    def _increments(n, h):
-        ei = np.zeros(np.shape(h), float)
-        for k in range(n):
-            ei[k] = h[k]
-            yield ei
-            ei[k] = 0
 
     @staticmethod
     def _expand_steps(steps, x_i, fxi):

@@ -117,6 +117,8 @@ class _Limit(object):
         self.full_output = full_output
         self.step = step, options
 
+        self.richardson = Richardson(step_ratio=1.6, step=1, order=1, num_terms=2)
+
     def _parse_step_options(self, step):
         options = {}
         if isinstance(step, tuple) and isinstance(step[-1], dict):
@@ -344,7 +346,7 @@ class Limit(_Limit):
         return self.fun(z + dz, *args, **kwds)
 
     def _get_steps(self, xi):
-        return [step for step in self.step(xi)]
+        return [step for step in self.step(xi)]  # pylint: disable=not-callable
 
     def _set_richardson_rule(self, step_ratio, num_terms=2):
         self.richardson = Richardson(step_ratio=step_ratio, step=1, order=1,
@@ -352,8 +354,8 @@ class Limit(_Limit):
 
     def _lim(self, f, z):
         sign = dict(forward=1, above=1, backward=-1, below=-1)[self.method]
-        steps = [sign * step for step in self.step(z)]
-
+        steps = [sign * step for step in self.step(z)]  # pylint: disable=not-callable
+        # pylint: disable=no-member
         self._set_richardson_rule(self.step.step_ratio, self.order + 1)
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")

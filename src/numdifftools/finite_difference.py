@@ -1,6 +1,6 @@
 from __future__ import division, print_function
 import numpy as np
-import warnings
+
 from numpy import linalg
 from scipy import special
 from numdifftools.extrapolation import convolve
@@ -10,18 +10,20 @@ _SQRT_J = (1j + 1.0) / np.sqrt(2.0)  # = 1j**0.5
 
 # step_ratio, parity, nterms
 FD_RULES = {}
-#     (2.0, 1, 1): array([[1.]]),
-#     (2.0, 1, 2): array([[-0.333333333333333333333, 2.666666666666666666666666666],
-#                         [8., -16.]]),
-#     (2.0, 1, 3): array([[2.22222222222222222e-02, -8.8888888888889e-01, 5.6888888888888889e+00],
-#                         [-2.666666666666667e+00, 9.0666666666666667e+01, -1.7066666666666667e+02],
-#                         [1.7066666666666667e+02, -1.7066666666666667e+03, 2.7306666666666667e+03]]),
-#     (2.0, 0, 2): array([[-1., 4.],
-#                         [4., -8.]]),
-#     (2.0, 0, 4): array([[-4.76190476e-02, 1.33333333e+00, -1.06666667e+01, 2.43809524e+01],
-#                         [1.33333333e+00, -3.46666667e+01, 2.34666667e+02, -3.41333333e+02],
-#                         [-1.60000000e+01, 3.52000000e+02, -1.66400000e+03, 2.04800000e+03],
-#                         [7.31428571e+01, -1.02400000e+03, 4.09600000e+03, -4.68114286e+03]])}
+# (2.0, 1, 1): array([[1.]]),
+# (2.0, 1, 2): array([[-0.333333333333333333333, 2.666666666666666666666666666],
+#                     [8., -16.]]),
+# (2.0, 1, 3): array([[2.22222222222222222e-02, -8.8888888888889e-01, 5.6888888888888889e+00],
+#                     [-2.666666666666667e+00, 9.0666666666666667e+01, -1.7066666666666667e+02],
+#                     [1.7066666666666667e+02, -1.7066666666666667e+03, 2.7306666666666667e+03]]),
+# (2.0, 0, 2): array([[-1., 4.],
+#                     [4., -8.]]),
+# (2.0, 0, 4): array([[-4.76190476e-02, 1.33333333e+00, -1.06666667e+01, 2.43809524e+01],
+#                     [1.33333333e+00, -3.46666667e+01, 2.34666667e+02, -3.41333333e+02],
+#                     [-1.60000000e+01, 3.52000000e+02, -1.66400000e+03, 2.04800000e+03],
+#                     [7.31428571e+01, -1.02400000e+03, 4.09600000e+03, -4.68114286e+03]])}
+
+# @PydevIgnore
 
 
 def _assert(cond, msg):
@@ -42,7 +44,7 @@ class DifferenceFunctions(object):
     """
     Class defining difference functions
     """
-
+    # pylint: disable=unused-argument
     @staticmethod
     def _central_even(f, f_x0i, x0i, h):
         return (f(x0i + h) + f(x0i - h)) / 2.0 - f_x0i
@@ -95,45 +97,57 @@ class DifferenceFunctions(object):
 
 
 class _JacobianDifferenceFunctions(object):
+    # pylint: disable=unused-argument
+    @staticmethod
+    def increments(n, h):
+        ei = np.zeros(np.shape(h), float)
+        for k in range(n):
+            ei[k] = h[k]
+            yield ei
+            ei[k] = 0
 
     @staticmethod
     def _central(f, fx, x, h):
         n = len(x)
-        return np.array([(f(x + hi) - f(x - hi)) / 2.0 for hi in Jacobian._increments(n, h)])
+        steps = _JacobianDifferenceFunctions.increments(n, h)
+        return np.array([(f(x + hi) - f(x - hi)) / 2.0 for hi in steps])
 
     @staticmethod
     def _backward(f, fx, x, h):
         n = len(x)
-        return np.array([fx - f(x - hi) for hi in Jacobian._increments(n, h)])
+        steps = _JacobianDifferenceFunctions.increments(n, h)
+        return np.array([fx - f(x - hi) for hi in steps])
 
     @staticmethod
     def _forward(f, fx, x, h):
         n = len(x)
-        return np.array([f(x + hi) - fx for hi in Jacobian._increments(n, h)])
+        steps = _JacobianDifferenceFunctions.increments(n, h)
+        return np.array([f(x + hi) - fx for hi in steps])
 
     @staticmethod
     def _complex(f, fx, x, h):
         n = len(x)
-        return np.array([f(x + 1j * ih).imag for ih in Jacobian._increments(n, h)])
+        steps = _JacobianDifferenceFunctions.increments(n, h)
+        return np.array([f(x + 1j * ih).imag for ih in steps])
 
     @staticmethod
     def _complex_odd(f, fx, x, h):
         n = len(x)
         j1 = _SQRT_J
-        return np.array([((j1 / 2.) * (f(x + j1 * ih) - f(x - j1 * ih))).imag
-                         for ih in Jacobian._increments(n, h)])
+        steps = _JacobianDifferenceFunctions.increments(n, h)
+        return np.array([((j1 / 2.) * (f(x + j1 * ih) - f(x - j1 * ih))).imag for ih in steps])
 
     @staticmethod
     def _multicomplex(f, fx, x, h):
         n = len(x)
+        steps = _JacobianDifferenceFunctions.increments(n, h)
         cmplx_wrap = Bicomplex.__array_wrap__
-        partials = [cmplx_wrap(f(Bicomplex(x + 1j * hi, 0))).imag
-                    for hi in Jacobian._increments(n, h)]
+        partials = [cmplx_wrap(f(Bicomplex(x + 1j * hi, 0))).imag for hi in steps]
         return np.array(partials)
 
 
 class _HessdiagDifferenceFunctions(object):
-
+    # pylint: disable=unused-argument
     @staticmethod
     def _central2(f, fx, x, h):
         """Eq. 8"""
@@ -184,7 +198,7 @@ class _HessdiagDifferenceFunctions(object):
 
 
 class _HessianDifferenceFunctions(object):
-
+    # pylint: disable=unused-argument
     @staticmethod
     def _complex_even(f, fx, x, h):
         """
