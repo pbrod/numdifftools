@@ -109,6 +109,7 @@ _cmn_doc = """
 
 
 class _DerivativeDifferenceFunctions(object):
+
     # pylint: disable=unused-argument
     @staticmethod
     def _central_even(f, f_x0i, x0i, h):
@@ -328,6 +329,7 @@ class Derivative(_Limit):
 
     def _get_steps(self, xi):
         method, n, order = self.method, self.n, self._method_order
+        # pylint: disable=no-member
         step_gen = self.step.step_generator_function(xi, method, n, order)
         return [step for step in step_gen()], step_gen.step_ratio
 

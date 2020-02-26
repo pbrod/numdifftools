@@ -200,8 +200,7 @@ class TestDerivative(object):
 
     @staticmethod
     def test_default_scale():
-        for method, scale in zip(['complex', 'central', 'forward', 'backward',
-                                  'multicomplex'],
+        for method, scale in zip(['complex', 'central', 'forward', 'backward', 'multicomplex'],
                                  [1.35, 2.5, 2.5, 2.5, 1.35]):
             assert_allclose(scale, default_scale(method, n=1))
 
@@ -220,7 +219,7 @@ class TestDerivative(object):
             for method in methods:
                 df = dfun(func, method=method)
                 val = df(0.0, 1.0, b=2)
-                assert_allclose(val, 0, atol=1e-14)
+                assert_allclose(val, 0, atol=1e-13)
 
                 val = df(1.0, 1.0, b=2)
                 truth = truths.get(dfun, 6)
@@ -233,14 +232,13 @@ class TestDerivative(object):
             return b * a * x * x * x
 
         methods = ['forward', 'backward', 'central', 'complex', 'multicomplex']
-        dfuns = [nd.Gradient, nd.Derivative, nd.Jacobian, nd.Hessdiag,
-                 nd.Hessian]
+        dfuns = [nd.Gradient, nd.Derivative, nd.Jacobian, nd.Hessdiag, nd.Hessian]
         step_options = dict(num_extrap=5)
         for dfun in dfuns:
             for method in methods:
                 df = dfun(func, method=method, **step_options)
                 val = df(0.0, 1.0, b=2)
-                assert_allclose(val, 0, atol=1e-14)
+                assert_allclose(val, 0, atol=1e-13)
 
     @staticmethod
     def test_derivative_cube():

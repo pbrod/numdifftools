@@ -4,7 +4,7 @@ from numdifftools.extrapolation import EPS
 from collections import namedtuple
 
 _STATE = namedtuple('State', ['x', 'method', 'n', 'order'])
-__all__ = ('one_step', 'make_exact', 'nominal_step', 'base_step',
+__all__ = ('one_step', 'make_exact', 'get_nominal_step', 'get_base_step',
            'default_scale', 'MinStepGenerator', 'MaxStepGenerator',
            'BasicMaxStepGenerator', 'BasicMinStepGenerator')
 
@@ -18,14 +18,14 @@ def make_exact(h):
     return (h + 1.0) - 1.0
 
 
-def nominal_step(x=None):
+def get_nominal_step(x=None):
     """Return nominal step"""
     if x is None:
         return 1.0
     return np.log1p(np.abs(x)).clip(min=1.0)
 
 
-def base_step(scale):
+def get_base_step(scale):
     """Return base_step = EPS ** (1. / scale)"""
     return EPS ** (1. / scale)
 
@@ -207,7 +207,7 @@ class MinStepGenerator(object):
     @property
     def base_step(self):
         if self._base_step is None:
-            return base_step(self.scale)
+            return get_base_step(self.scale)
         return self._base_step
 
     @base_step.setter
@@ -257,7 +257,7 @@ class MinStepGenerator(object):
     def step_nom(self):
         x = self._state.x
         if self._step_nom is None:
-            return nominal_step(x)
+            return get_nominal_step(x)
         return np.full(x.shape, fill_value=self._step_nom)
 
     @step_nom.setter
