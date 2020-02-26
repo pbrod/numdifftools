@@ -168,7 +168,7 @@ class Bicomplex(object):
 
     def __setitem__(self, index, value):
         value = self._coerce(value)
-        if index in ['z1', 'z2']:
+        if isinstance(index, str) and index in {'z1', 'z2'}:
             setattr(self, index, value)
         else:
             self.z1[index] = value.z1
@@ -193,15 +193,17 @@ class Bicomplex(object):
     def __rsub__(self, other):
         return -self.__sub__(other)
 
-    def __div__(self, other):
+    def __div__(self, other):  # python 2
         """elementwise division"""
         return self * other ** -1  # np.exp(-np.log(other))
 
-    __truediv__ = __div__
+    __truediv__ = __div__  # python 3
 
-    def __rdiv__(self, other):
+    def __rdiv__(self, other):  # python 2
         """elementwise division"""
         return other * self ** -1
+
+    __rtruediv__ = __rdiv__  # python3
 
     def __mul__(self, other):
         """elementwise multiplication"""

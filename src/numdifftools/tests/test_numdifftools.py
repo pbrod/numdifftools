@@ -448,6 +448,14 @@ class TestJacobian(object):
 class TestGradient(object):
 
     @staticmethod
+    def test_issue_39(self):
+        """
+        Test that checks float/Bicomplex works
+        """
+        fun = nd.Gradient(lambda x: 1.0/(np.exp(x[0]) + np.cos(x[1]) + 10), method="multicomplex")
+        assert_allclose(fun([1.0, 2.0]), [-0.017961123762187736, 0.0060082083648822])
+
+    @staticmethod
     def test_directional_diff():
         v = np.r_[1, -1]
         v = v / np.linalg.norm(v)
