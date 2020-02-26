@@ -448,7 +448,7 @@ class TestJacobian(object):
 class TestGradient(object):
 
     @staticmethod
-    def test_issue_39(self):
+    def test_issue_39():
         """
         Test that checks float/Bicomplex works
         """
