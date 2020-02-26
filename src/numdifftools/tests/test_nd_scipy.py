@@ -11,15 +11,16 @@ import numpy as np
 
 from .hamiltonian import run_hamiltonian
 try:
-    import algopy
+    import scipy
 except ImportError:
-    algopy = None
+    scipy = None
 else:
-    import numdifftools.nd_algopy as nd
+    import numdifftools.nd_scipy as nd
 
-pytestmark = pytest.mark.skipif(algopy is None, reason="algopy is not installed!")
+pytestmark = pytest.mark.skipif(scipy is None, reason="scipy is not installed!")
 
 
+@pytest.mark.skip("Hessian not implemented")
 class TestHessian(object):
 
     def test_run_hamiltonian(self):
@@ -44,6 +45,7 @@ class TestHessian(object):
             assert_allclose(h2, htrue)
 
 
+@pytest.mark.skip("Hessian not implemented")
 class TestDerivative(object):
 
     # TODO: Derivative does not tackle non-finite values.
@@ -128,7 +130,7 @@ class TestDerivative(object):
     @given(st.floats())
     def test_derivative_on_sinh(self, x):
         true_val = np.cosh(x)
-        for method in ['forward', ]:  # 'reverse']: # TODO: reverse fails
+        for method in ['forward', 'backward']:
             dsinh = nd.Derivative(np.sinh, method=method)
             val = dsinh(x)
             if np.isnan(true_val):
@@ -148,19 +150,20 @@ class TestDerivative(object):
 class TestJacobian(object):
 
     @staticmethod
-    @given(st.floats(min_value=-1e153, max_value=1e153))
+    @given(st.floats(min_value=-1e53, max_value=1e53))
     def test_scalar_to_vector(val):
 
         def fun(x):
-            out = algopy.zeros((3,), dtype=x)
+            dtype = complex if isinstance(x, complex) else float
+            out = np.zeros((3,), dtype=dtype)
             out[0] = x
             out[1] = x ** 2
             out[2] = x ** 3
             return out
 
-        for method in ['reverse', 'forward']:
+        for method in ['backward', 'forward', "central", ]:  # TODO:  "complex" does not work
             j0 = nd.Jacobian(fun, method=method)(val).T
-            assert_allclose(j0, [[1., 2 * val, 3 * val ** 2]], atol=1e-14)
+            assert_allclose(j0, [[1., 2 * val, 3 * val ** 2]], atol=1e-6)
 
     @staticmethod
     def test_on_scalar_function():
@@ -168,10 +171,10 @@ class TestJacobian(object):
         def fun(x):
             return x[0] * x[1] * x[2] + np.exp(x[0]) * x[1]
 
-        for method in ['forward', 'reverse']:
+        for method in ['forward', 'backward', "central", "complex"]:
             j_fun = nd.Jacobian(fun, method=method)
             x = j_fun([3., 5., 7.])
-            assert_allclose(x, [[135.42768462, 41.08553692, 15.]])
+            assert_allclose(x, [135.42768462, 41.08553692, 15.])
 
     def test_on_vector_valued_function(self):
         xdata = np.arange(0, 1, 0.1)
@@ -180,17 +183,13 @@ class TestJacobian(object):
         def fun(c):
             return (c[0] + c[1] * np.exp(c[2] * xdata) - ydata) ** 2
 
-        for method in ['reverse', ]:
+        for method in ['forward', 'backward', "central", "complex"]:
 
             j_fun = nd.Jacobian(fun, method=method)
             J = j_fun([1, 2, 0.75])  # should be numerically zero
-            assert_allclose(J, np.zeros((ydata.size, 3)))
+            assert_allclose(J, np.zeros((ydata.size, 3)), atol=1e-6)
 
-        # TODO: 'forward' not implemented
-        j_fun = nd.Jacobian(fun, method='forward')
-        with pytest.raises(NotImplementedError):
-            j_fun([1, 2, 0.75])
-
+    @pytest.mark.skip("Not implemented for matrix valued functions")
     @staticmethod
     def test_on_matrix_valued_function():
 
@@ -201,7 +200,7 @@ class TestJacobian(object):
 
             s0 = f0.size
             s1 = f1.size
-            out = algopy.zeros((2, (s0 + s1) // 2), dtype=x)
+            out = np.zeros((2, (s0 + s1) // 2), dtype=float)
             out[0, :] = f0
             out[1, :] = f1
             return out
@@ -236,11 +235,12 @@ class TestJacobian(object):
                                    [0., 0., 27., 0., 0., 0., 147., 0.],
                                    [0., 0., 0., 48., 0., 0., 0., 192.]]])
 
+    @pytest.mark.skip("Does not work on vector valued functions.")
     @staticmethod
     def test_issue_25():
 
         def g_fun(x):
-            out = algopy.zeros((2, 2), dtype=x)
+            out = np.zeros((2, 2), dtype=float)
             out[0, 0] = x[0]
             out[0, 1] = x[1]
             out[1, 0] = x[0]
@@ -248,12 +248,17 @@ class TestJacobian(object):
             return out
 
         dg_dx = nd.Jacobian(g_fun)  # TODO:  method='reverse' fails
-        x = [1, 2]
+        x = np.array([1, 2])
+
+        tv = [[[1., 0.],
+               [0., 1.]],
+              [[1., 0.],
+               [0., 1.]]]
+        _EPS = np.MachAr().eps
+        epsilon = _EPS**(1./4)
+        assert_allclose(nd.approx_fprime(x, g_fun, epsilon), tv)
         dg = dg_dx(x)
-        assert_allclose(dg, [[[1., 0.],
-                              [0., 1.]],
-                             [[1., 0.],
-                              [0., 1.]]])
+        assert_allclose(dg, tv)
 
 
 class TestGradient(object):
@@ -266,13 +271,14 @@ class TestGradient(object):
 
         dtrue = [2., 4., 6.]
 
-        for method in ['forward', 'reverse']:  #
+        for method in ['forward', 'backward']:  #
 
             dfun = nd.Gradient(fun, method=method)
             d = dfun([1, 2, 3])
             assert_allclose(d, dtrue)
 
 
+@pytest.mark.skip("Hessdiag not implemented")
 class TestHessdiag(object):
 
     @staticmethod
