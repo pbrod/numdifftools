@@ -969,7 +969,7 @@ class Hessian(Hessdiag):
     'forward' :eq:`7`, 'central' :eq:`9` and 'complex' :eq:`10`:
 
     .. math::
-        \quad ((f(x + d_j e_j + d_k e_k) - f(x + d_j e_j))) / (d_j d_k)
+        \quad ((f(x + d_j e_j + d_k e_k) + f(x) - f(x + d_j e_j) - f(x + d_k e_k))) / (d_j d_k)
         :label: 7
 
     .. math::
