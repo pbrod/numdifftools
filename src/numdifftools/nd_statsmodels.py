@@ -9,7 +9,7 @@ from __future__ import division, print_function
 from functools import partial
 from statsmodels.tools.numdiff import (  # approx_fprime,
     approx_fprime_cs,
-    approx_hess,
+    # approx_hess, # same as approx_hess3
     approx_hess1,
     approx_hess2,
     approx_hess3,
@@ -88,7 +88,7 @@ def _approx_fprime_backward(x, f, epsilon=None, args=(), kwargs=None):
 def _approx_hess1_backward(x, f, epsilon=None, args=(), kwargs=None):
     n = len(x)
     epsilon = - np.abs(_get_epsilon(x, 3, epsilon, n))
-    return approx_hess1(x, f, epsilon, args, kwargs, centered=False)
+    return approx_hess1(x, f, epsilon, args, kwargs)
 
 
 class _Common(object):
@@ -116,14 +116,14 @@ class _Common(object):
 
     @property
     def method(self):
-        return self._method
+        return self._method  # pylint: disable=no-member
 
     @method.setter
     def method(self, method):
         self._metod = method
-        callable = self._callables.get(method)
-        if callable:
-            self._derivative_nonzero_order = callable
+        callable_ = self._callables.get(method)
+        if callable_:
+            self._derivative_nonzero_order = callable_
         else:
             warnings.warn('{} is an illegal method! Setting method="central"'.format(method))
             self.method = 'central'

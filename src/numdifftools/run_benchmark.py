@@ -14,7 +14,7 @@ else:
     import numdifftools.nd_algopy as nda
 from collections import OrderedDict
 from numdifftools.core import MinStepGenerator, MaxStepGenerator
-import matplotlib
+# import matplotlib
 # matplotlib.use('Qt4Agg')
 import matplotlib.pyplot as plt
 
@@ -146,7 +146,7 @@ def main(problem_sizes=(4, 8, 16, 32, 64, 96)):
     gradient_funs = OrderedDict()
     hessian_funs = OrderedDict()
 
-    hessian_fun = 'Hessdiag'
+    # hessian_fun = 'Hessdiag'
     hessian_fun = 'Hessian'
 
     if nda is not None:
