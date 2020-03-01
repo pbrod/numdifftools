@@ -63,11 +63,12 @@ class Bicomplex(object):
     Creates an instance of a Bicomplex object.
     zeta = z1 + j*z2, where z1 and z2 are complex numbers.
     """
+    __slots__ = ('z1', 'z2')
 
-    def __init__(self, z1, z2):
+    def __init__(self, z1, z2, dtype=np.complex128):
         z1, z2 = np.broadcast_arrays(z1, z2)
-        self.z1 = np.asanyarray(z1, dtype=np.complex128)
-        self.z2 = np.asanyarray(z2, dtype=np.complex128)
+        self.z1 = np.asanyarray(z1, dtype=dtype)
+        self.z2 = np.asanyarray(z2, dtype=dtype)
 
     @property
     def shape(self):
@@ -79,8 +80,8 @@ class Bicomplex(object):
 
     def mod_c(self):
         """Complex modulus"""
-        r12, r22 = self.z1 * self.z1, self.z2 * self.z2
-        r = np.sqrt(r12 + r22)
+        r11, r22 = self.z1 * self.z1, self.z2 * self.z2
+        r = np.sqrt(r11 + r22)
         return r
 
     def norm(self):
@@ -360,8 +361,7 @@ class Bicomplex(object):
 
     @staticmethod
     def _arg_c(z1, z2):
-        sign = np.where((z1.real == 0) * (z2.real == 0), 0,
-                        np.where(0 <= z2.real, 1, -1))
+        sign = np.where((z1.real == 0) * (z2.real == 0), 0, np.where(0 <= z2.real, 1, -1))
         # clip to avoid nans for complex args
         arg = z2 / (z1 + _TINY).clip(min=-1e150, max=1e150)
         arg_c = np.arctan(arg) + sign * np.pi * (z1.real <= 0)

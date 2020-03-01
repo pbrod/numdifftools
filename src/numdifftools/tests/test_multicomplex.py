@@ -6,12 +6,12 @@ Created on 22. apr. 2015
 from numdifftools.multicomplex import Bicomplex
 from numdifftools.example_functions import get_function
 import numpy as np
-from numpy.testing import assert_allclose, assert_array_equal
+from numpy.testing import assert_allclose, assert_array_equal  # @UnresolvedImport
 
 EPS = np.MachAr().eps
 
 
-def _default_base_step(x, scale, epsilon=None):
+def _default_base_step(x, scale):
     h = (10 * EPS) ** (1. / scale) * np.maximum(np.log1p(np.abs(x)), 0.1)
     return h
 
@@ -265,6 +265,18 @@ class TestBicomplex(object):
         z3 = Bicomplex(0.1, np.linspace(0, np.pi, 5))
         z4 = z3.arg_c()
         assert_allclose(z4.real, np.arctan2(z3.z2.real, z3.z1.real))
+
+    @staticmethod
+    def test_mod_c():
+        z1 = Bicomplex(np.linspace(0, np.pi, 5), 0)
+        z2 = z1.mod_c()
+        assert_array_equal(z2, np.sqrt(z1.z1**2 + z1.z2**2))
+
+        z3 = Bicomplex(0.1, np.linspace(0, np.pi, 5))
+        z4 = z3.mod_c()
+        trueval = np.sqrt(z3*z3.conjugate())
+        assert_allclose(z4, np.sqrt(z3.z1**2 + z3.z2**2))
+        assert_allclose(z4, trueval.z1)
 
     @staticmethod
     def test_arcsin():

@@ -45,7 +45,7 @@ class TestHessian(object):
             assert_allclose(h2, htrue)
 
 
-@pytest.mark.skip("Hessian not implemented")
+@pytest.mark.skip("Derivative not implemented")
 class TestDerivative(object):
 
     # TODO: Derivative does not tackle non-finite values.
@@ -271,7 +271,7 @@ class TestGradient(object):
 
         dtrue = [2., 4., 6.]
 
-        for method in ['forward', 'backward']:  #
+        for method in ['forward', 'backward', "central", "complex"]:
 
             dfun = nd.Gradient(fun, method=method)
             d = dfun([1, 2, 3])
