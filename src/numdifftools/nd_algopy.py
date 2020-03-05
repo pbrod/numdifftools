@@ -57,13 +57,13 @@ from __future__ import division
 from collections import namedtuple
 
 from scipy import special
-
 import numpy as np
 try:
     import algopy
     from algopy import UTPM
 except ImportError:
-    algopy = None
+    UTPM = algopy = None
+
 
 EPS = np.MachAr().eps
 
@@ -72,19 +72,19 @@ _cmn_doc = """
 
     Parameters
     ----------
-    fun : function
+    fun: function
         function of one array fun(x, `*args`, `**kwds`)%(extra_parameter)s
-    method : string, optional {'forward', 'reverse'}
+    method: string, optional {'forward', 'reverse'}
         defines method used in the approximation
 
     Methods
     -------
-    __call__ : callable with the following parameters:
-        x : array_like
+    __call__: callable with the following parameters:
+        x: array_like
            value at which function derivative is evaluated
-        args : tuple
+        args: tuple
             Arguments for function `fun`.
-        kwds : dict
+        kwds: dict
             Keyword arguments for function `fun`.
     %(returns)s
     Notes
@@ -169,12 +169,12 @@ class Derivative(_Derivative):
     __doc__ = _cmn_doc % dict(
         derivative='n-th derivative',
         extra_parameter="""
-    n : int, optional
+    n: int, optional
         Order of the derivative.""",
         extra_note="", returns="""
     Returns
     -------
-    der : ndarray
+    der: ndarray
        array of derivatives
     """, example="""
     Examples
@@ -236,7 +236,7 @@ class Gradient(_Derivative):
         extra_note="", returns="""
     Returns
     -------
-    grad : array
+    grad: array
         gradient
     """, example="""
     Examples
@@ -278,9 +278,9 @@ class Gradient(_Derivative):
     def _forward(self, x, *args, **kwds):
         # forward mode without building the computational graph
 
-        tmp = algopy.UTPM.init_jacobian(x)
+        tmp = UTPM.init_jacobian(x)
         y = self.fun(tmp, *args, **kwds)
-        return algopy.UTPM.extract_jacobian(y)
+        return UTPM.extract_jacobian(y)
 
     def _reverse(self, x, *args, **kwds):
 
@@ -296,7 +296,7 @@ class Jacobian(Gradient):
         extra_note="", returns="""
     Returns
     -------
-    jacob : array
+    jacob: array
         Jacobian
     """, example="""
     Examples
@@ -423,9 +423,9 @@ class Hessian(_Derivative):
 
     def _forward(self, x, *args, **kwds):
         x = np.atleast_1d(x)
-        tmp = algopy.UTPM.init_hessian(x)
+        tmp = UTPM.init_hessian(x)
         y = self.fun(tmp, *args, **kwds)
-        return algopy.UTPM.extract_hessian(len(x), y)
+        return UTPM.extract_hessian(len(x), y)
 
     def _reverse(self, x, *args, **kwds):
         x = np.atleast_1d(np.asarray(x, dtype=float))
@@ -544,6 +544,53 @@ def directionaldiff(f, x0, vec, **options):
 
     vec = np.reshape(vec / np.linalg.norm(vec.ravel()), x0.shape)
     return Derivative(lambda t: f(x0 + t * vec), **options)(0)
+
+
+class Taylor(object):
+
+    """
+    Return Taylor coefficients of function using algorithmic differentiation
+
+    Parameters
+    ----------
+    fun: callable
+        function to differentiate
+    z0: real or complex array
+        at which to evaluate the derivatives
+    n: scalar integer, default 1
+        Number of taylor coefficents to compute.
+
+    Returns
+    -------
+    coefs: ndarray
+       array of taylor coefficents
+
+    Examples
+    --------
+    Compute the first 6 taylor coefficients 1 + 2*z + 3*z**2 expanded round  z0 = 0:
+
+    >>> import numdifftools.nd_algopy as nda
+    >>> import numpy as np
+    >>> c = nda.Taylor(lambda x: 1+2*x+3*x**2, n=6)(z0=0)
+    >>> np.allclose(c, [1, 2, 3, 0, 0, 0])
+    True
+
+    """
+
+    def __init__(self, fun, n=1):
+        self.fun = fun
+        self.n = n
+
+    def __call__(self, z0=0):
+        z = np.atleast_1d(z0).ravel()
+        x = UTPM(np.zeros((self.n, 1, z.size), dtype=z.dtype))
+
+        x.data[0, 0, :] = z
+        x.data[1, 0, :] = 1
+
+        y = self.fun(x)
+        coefs = np.squeeze(y.data)
+        return coefs
 
 
 if __name__ == '__main__':

@@ -274,7 +274,7 @@ def _extrapolate(bs, rs, m):
     return extrap
 
 
-def _get_best_taylor_coefficients(bs, rs, m):
+def _get_best_taylor_coefficients(bs, rs, m, max_m1m2):
     extrap = _extrapolate(bs, rs, m)
     mvec = np.arange(m)
     if len(extrap) > 2:
@@ -283,15 +283,14 @@ def _get_best_taylor_coefficients(bs, rs, m):
         coefs, info = _Limit._get_best_estimate(all_coefs, all_errors, steps, (m,))
         errors = info.error_estimate
     else:
-        errors = EPS / np.power(rs[2], mvec) * np.maximum(m1, m2)
+        errors = EPS / np.power(rs[2], mvec) * max_m1m2()
         coefs = extrap[-1]
     return coefs, errors
 
 
-def _check_fft(bnc, m, check_degenerate=True):
-    # If not degenerate, check for geometric progression in the FFT:
-    m1 = np.max(np.abs(bnc[:m // 2]))
-    m2 = np.max(np.abs(bnc[m // 2:]))
+def _check_fft(m1, m2, check_degenerate=True):
+    # If not degenerate, check for geometric progression in the FFT by comparing m1 and m2:
+
     # If there's an extreme mismatch, then we can consider the
     # geometric progression degenerate, whether one way or the other,
     # and just alternate directions instead of trying to target a
@@ -391,9 +390,9 @@ class Taylor(object):
 
     def __init__(self, fun, n=1, r=0.0061, num_extrap=3, step_ratio=1.6, **kwds):
         self.fun = fun
-        self.max_iter = kwds.get('max_iter', 30)
-        self.min_iter = kwds.get('min_iter', self.max_iter // 2)
-        self.full_output = kwds.get('full_output', False)
+        self.max_iter = kwds.pop('max_iter', 30)
+        self.min_iter = kwds.pop('min_iter', self.max_iter // 2)
+        self.full_output = kwds.pop('full_output', False)
         self.n = n
         self.r = r
         self.num_extrap = num_extrap
@@ -413,6 +412,17 @@ class Taylor(object):
         self._num_changes = 0
         return m, self._mvec
 
+    def _get_max_m1m2(self, bn, m):
+        m1, m2 = self._get_m1_m2(bn, m)
+        return np.maximum(m1, m2)
+
+    def _get_m1_m2(self, bn, m):
+        # If not degenerate, check for geometric progression in the FFT:
+        bnc = bn / self._crat
+        m1 = np.max(np.abs(bnc[:m // 2]))
+        m2 = np.max(np.abs(bnc[m // 2:]))
+        return m1, m2
+
     def _check_convergence(self, i, z0, r, m, bn):
         if self._direction_changes > 1 or self._degenerate:
             self._num_changes += 1
@@ -420,8 +430,11 @@ class Taylor(object):
                 return True, r
 
         if not self._degenerate:
-            self._degenerate, needs_smaller = _check_fft(bn / self._crat, m,
-                                                         check_degenerate=i > self.min_iter)
+            m1, m2 = self._get_m1_m2(bn, m)
+            # Note: only consider it degenerate if we've had a chance to steer
+            # the radius in the direction at least `min_iter` times:
+            check_degenerate = i > self.min_iter
+            self._degenerate, needs_smaller = _check_fft(m1, m2, check_degenerate)
             needs_smaller = needs_smaller or _poor_convergence(z0, r, self.fun, bn, self._mvec)
         if self._degenerate:
             needs_smaller = i % 2 == 0
@@ -465,9 +478,9 @@ class Taylor(object):
             if converged:
                 break
 
-        failed = not converged
-        coefs, errors = _get_best_taylor_coefficients(bs, rs, m)
+        coefs, errors = _get_best_taylor_coefficients(bs, rs, m, lambda: self._get_max_m1m2(bn, m))
         if self.full_output:
+            failed = not converged
             info = _INFO(errors, self._degenerate, final_radius=r,
                          function_count=i * m, iterations=i, failed=failed)
             return coefs, info
