@@ -146,8 +146,7 @@ class TestDerivative(object):
     @staticmethod
     def test_high_order_derivative_cos():
         true_vals = (0.0, -1.0, 0.0, 1.0, 0.0, -1.0, 0.0)
-        methods = ['complex', 'multicomplex', 'central',
-                   'forward', 'backward']
+        methods = ['complex', 'multicomplex', 'central', 'forward', 'backward']
         for method in methods:
             n_max = dict(multicomplex=2, central=6).get(method, 5)
             for n in range(0, n_max + 1):
@@ -300,12 +299,15 @@ class TestJacobian(object):
             return np.array([x, x ** 2, x ** 3])
 
         truth = np.array([[1., 2 * val, 3 * val ** 2]])
-        for method in ['multicomplex', 'complex', 'central', 'forward',
-                       'backward']:
+        for method in ['multicomplex', 'complex', 'central', 'forward', 'backward']:
             j0, info = nd.Jacobian(fun, method=method, full_output=True)(val)
+            if method != "multicomplex":
+                j00 = nds.Jacobian(fun, method=method)(val).T
+                error = np.abs(j00 - truth)
+                note('statsmodel: method={}, error={}'.format(method, error))
+                assert_allclose(j00, truth, rtol=1e-3, atol=1e-6)
             error = np.abs(j0 - truth)
-            note('method={}, error={}, error_est={}'.format(method, error,
-                                                            info.error_estimate))
+            note('method={}, error={}, error_est={}'.format(method, error, info.error_estimate))
             assert_allclose(j0, truth, rtol=1e-3, atol=1e-6)
 
     @staticmethod
