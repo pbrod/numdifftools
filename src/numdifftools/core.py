@@ -374,8 +374,9 @@ class Derivative(_Limit):
 
     def __call__(self, x, *args, **kwds):
         xi = np.asarray(x)
-        results = self._derivative(xi, args, kwds)
-        derivative, info = self._extrapolate(*results)
+        with np.errstate(divide='ignore', invalid='ignore'):
+            results = self._derivative(xi, args, kwds)
+            derivative, info = self._extrapolate(*results)
         if self.full_output:
             return derivative, info
         return derivative

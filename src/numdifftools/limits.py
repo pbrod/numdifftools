@@ -357,9 +357,7 @@ class Limit(_Limit):
         steps = [sign * step for step in self.step(z)]  # pylint: disable=not-callable
         # pylint: disable=no-member
         self._set_richardson_rule(self.step.step_ratio, self.order + 1)
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            sequence = [f(z, h) for h in steps]
+        sequence = [f(z, h) for h in steps]
         results = self._vstack(sequence, steps)
         lim_fz, info = self._extrapolate(*results)
         return lim_fz, info
@@ -390,11 +388,9 @@ class Limit(_Limit):
     def __call__(self, x, *args, **kwds):
         z = np.asarray(x)
         f = partial(self._fun, args=args, kwds=kwds)
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+        with np.errstate(divide='ignore', invalid='ignore'):
             fz = f(z, 0)
-
-        fz, info = self._call_lim(fz, z, f)
+            fz, info = self._call_lim(fz, z, f)
 
         if self.full_output:
             return fz, info
