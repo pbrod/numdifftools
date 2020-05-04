@@ -329,7 +329,8 @@ class Derivative(_Limit):
 
     def _get_steps(self, xi):
         method, n, order = self.method, self.n, self._method_order
-        step_gen = self.step.step_generator_function(xi, method, n, order)  #pylint: disable=no-member
+        # pylint: disable=no-member
+        step_gen = self.step.step_generator_function(xi, method, n, order)
         return [step for step in step_gen()], step_gen.step_ratio
 
     @property
