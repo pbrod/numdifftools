@@ -15,18 +15,19 @@ import os
 import re
 import shutil
 import subprocess
-
+import importlib
 import click
-
-from numdifftools.info import __doc__ as INFO_TXT
 
 
 ROOT = os.path.abspath(os.path.dirname(__file__))
 PACKAGE_NAME = 'numdifftools'
+INFO = importlib.import_module(PACKAGE_NAME+'.info','./src')
+LICENSE = importlib.import_module(PACKAGE_NAME+'.license','./src')
 
 
 def remove_previous_build():
-    """Removes ./dist, ./build, ./docs/_build, and ./src/{}.egg-info directories.""".format(PACKAGE_NAME)
+    """Removes ./dist, ./build, ./docs/_build, and ./src/{}.egg-info directories.
+    """.format(PACKAGE_NAME)
     egginfo_path = os.path.join('src', '{}.egg-info'.format(PACKAGE_NAME))
     docs_folder = os.path.join('docs', '_build')
 
@@ -36,7 +37,7 @@ def remove_previous_build():
             shutil.rmtree(path)
 
 def update_readme():
-    readme_txt = INFO_TXT.replace(
+    readme_txt = INFO_TXT.__doc__.replace(
         """Introduction to {}
 ================{}
 """.format(PACKAGE_NAME, '='*len(PACKAGE_NAME)), """{1}
@@ -65,6 +66,11 @@ def set_package(version):
         with open(filename, "w") as fid:
             fid.write(new_text)
 
+def update_license():
+    filename = os.path.join(ROOT, "LICENSE.txt")
+    with open(filename, "w") as fid:
+        fid.write(LICENSE.__doc__)
+
 
 class ChangeDir:
     """Context manager for changing the current working directory"""
@@ -82,7 +88,7 @@ class ChangeDir:
 def call_subprocess(cmd_opts):
     """Safe call to subprocess"""
     print("\n\n***********************************************")
-    print("Running {}".format(' '.join(cmd_opts))
+    print("Running {}".format(' '.join(cmd_opts)))
     try:
         subprocess.call(cmd_opts)
     except Exception as error:  # subprocess.CalledProcessError:
@@ -102,9 +108,10 @@ def build_main(version):
     """.format(PACKAGE_NAME)
     remove_previous_build()
     set_package(version)
+    update_license()
     update_readme()
 
-    for cmd in ['docs', 'latexpdf', 'sdist', 'bdist_wheel', 'egg_info']:
+    for cmd in ['docs', 'latexpdf', 'egg_info', 'sdist', 'bdist_wheel']:
         if cmd == 'latexpdf':
             with ChangeDir('./docs'):
                 call_subprocess(["make.bat", cmd])
