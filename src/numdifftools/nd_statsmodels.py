@@ -55,7 +55,7 @@ def approx_fprime(x, f, epsilon=None, args=(), kwargs=None, centered=True):
 
     """
     kwargs = {} if kwargs is None else kwargs
-    x = np.atleast_1d(x).ravel()
+    x = np.atleast_1d(x)  # .ravel()
     n = len(x)
     f0 = f(*(x,) + args, **kwargs)
     dim = np.atleast_1d(f0).shape  # it could be a scalar
@@ -83,7 +83,7 @@ def approx_fprime(x, f, epsilon=None, args=(), kwargs=None, centered=True):
 
 
 def _approx_fprime_backward(x, f, epsilon=None, args=(), kwargs=None):
-    x = np.atleast_1d(x).ravel()
+    x = np.atleast_1d(x) # .ravel()
     n = len(x)
     epsilon = - np.abs(_get_epsilon(x, 2, epsilon, n))
     return approx_fprime(x, f, epsilon, args, kwargs, centered=False)
@@ -123,7 +123,7 @@ def approx_fprime_cs(x, f, epsilon=None, args=(), kwargs=None):
     # May 04 2010 thread "Improvement of performance"
     # http://mail.scipy.org/pipermail/numpy-discussion/2010-May/050250.html
     kwargs = {} if kwargs is None else kwargs
-    x = np.atleast_1d(x).ravel()
+    x = np.atleast_1d(x) # .ravel()
     n = len(x)
     epsilon = _get_epsilon(x, 1, epsilon, n)
     increments = np.identity(n) * 1j * epsilon

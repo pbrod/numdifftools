@@ -43,7 +43,7 @@ import re
 import sys
 from setuptools import setup, Command
 
-HERE = os.path.abspath(os.path.dirname(__file__))
+ROOT = os.path.abspath(os.path.dirname(__file__))
 PACKAGE_NAME = 'numdifftools'
 
 
@@ -53,7 +53,7 @@ def read(*parts):
 
 
 def find_version(*file_paths):
-    version_file = read(HERE, *file_paths)
+    version_file = read(ROOT, *file_paths)
     version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]",
                               version_file, re.M)  # @UndefinedVariable
     if version_match:

@@ -298,11 +298,11 @@ class TestJacobian(object):
         def fun(x):
             return np.array([x, x ** 2, x ** 3])
 
-        truth = np.array([[1., 2 * val, 3 * val ** 2]])
+        truth = np.array([[[1.]], [[2 * val]], [[3 * val ** 2]]])
         for method in ['multicomplex', 'complex', 'central', 'forward', 'backward']:
             j0, info = nd.Jacobian(fun, method=method, full_output=True)(val)
             if method != "multicomplex":
-                j00 = nds.Jacobian(fun, method=method)(val).T
+                j00 = nds.Jacobian(fun, method=method)(val)
                 error = np.abs(j00 - truth)
                 note('statsmodel: method={}, error={}'.format(method, error))
                 assert_allclose(j00, truth, rtol=1e-3, atol=1e-6)
@@ -388,8 +388,8 @@ class TestJacobian(object):
                                 [75., 108., 147., 192.]]])
         v0 = nds.approx_fprime(x, fun)
         val = jaca(x)
-        assert_allclose(v0, tval)
         assert_allclose(val, tval)
+        assert_allclose(v0, tval)
 
     @staticmethod
     def test_issue_25():
@@ -441,6 +441,7 @@ class TestJacobian(object):
     @staticmethod
     @pytest.mark.slow
     def test_issue_27b():
+        """Test for memory-error"""
         n = 1000
         x = np.ones(n)
         assert_allclose(nd.Jacobian(lambda x: x ** 2, method='complex')(x),

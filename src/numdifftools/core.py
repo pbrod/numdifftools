@@ -658,16 +658,18 @@ class Jacobian(Derivative):
         return tuple(original_shape)
 
     def _vstack(self, sequence, steps):
-        original_shape = list(np.shape(np.atleast_1d(sequence[0].squeeze())))
+        original_shape = list(np.shape(np.atleast_1d(sequence[0])))
         ndim = len(original_shape)
-        axes = [0, 1, 2][:ndim]
-        axes[:2] = axes[1::-1]
-        original_shape[:2] = original_shape[1::-1]
+        if sum(original_shape) == ndim:
+            f_del = np.vstack(sequence)
+            h = np.vstack(steps)
+        else:
+            axes = [0, 1, 2][:ndim]
+            axes[:2] = axes[1::-1]
+            original_shape[:2] = original_shape[1::-1]
 
-        f_del = np.vstack([np.atleast_1d(r.squeeze()).transpose(axes).ravel()
-                           for r in sequence])
-        h = np.vstack([np.atleast_1d(r.squeeze()).transpose(axes).ravel()
-                       for r in steps])
+            f_del = np.vstack([np.atleast_1d(r).transpose(axes).ravel() for r in sequence])
+            h = np.vstack([np.atleast_1d(r).transpose(axes).ravel() for r in steps])
         _assert(f_del.size == h.size, 'fun did not return data of correct '
                 'size (it must be vectorized)')
         return f_del, h, self._atleast_2d(original_shape, ndim)
