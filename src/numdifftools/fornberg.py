@@ -487,7 +487,7 @@ class Taylor(object):
         return coefs
 
 
-def taylor(fun, z0=0, n=1, r=0.0061, num_extrap=3, step_ratio=1.6, **kwds):
+def taylor(fun, z0=0, n=1, r=0.061, num_extrap=3, step_ratio=1.6, **kwds):
     """
     Return Taylor coefficients of complex analytic function using FFT
 
@@ -498,7 +498,7 @@ def taylor(fun, z0=0, n=1, r=0.0061, num_extrap=3, step_ratio=1.6, **kwds):
     z0 : real or complex scalar at which to evaluate the derivatives
     n : scalar integer, default 1
         Number of taylor coefficents to compute. Maximum number is 100.
-    r : real scalar, default 0.0061
+    r : real scalar, default 0.061
         Initial radius at which to evaluate. For well-behaved functions,
         the computation should be insensitive to the initial radius to within
         about four orders of magnitude.
@@ -559,7 +559,7 @@ def taylor(fun, z0=0, n=1, r=0.0061, num_extrap=3, step_ratio=1.6, **kwds):
     True
     >>> np.all(info.error_estimate < 1e-9)
     True
-    >>> (info.function_count, info.iterations, info.failed) == (144, 18, False)
+    >>> (info.function_count, info.iterations, info.failed) == (88, 11, False)
     True
 
 
@@ -651,7 +651,7 @@ def derivative(fun, z0, n=1, **kwds):
     True
     >>> np.all(info.error_estimate < 1e-9*c.real)
     True
-    >>> (info.function_count, info.iterations, info.failed) == (144, 18, False)
+    >>> (info.function_count, info.iterations, info.failed) == (88, 11, False)
     True
 
 

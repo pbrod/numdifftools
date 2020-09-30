@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-from hypothesis import given, note, settings, strategies as st
+from hypothesis import given, note, settings, strategies as st, reproduce_failure
 from numpy.testing.utils import assert_allclose
 
 from numdifftools.example_functions import function_names, get_function
@@ -9,14 +9,15 @@ from numdifftools.fornberg import (fd_weights, fd_weights_all, derivative,
                                    CENTRAL_WEIGHTS_AND_POINTS)
 import numpy as np
 
-
+#@reproduce_failure('5.36.1', b'AAJRcYUpZHQ=')
+#@reproduce_failure('4.32.2', b'AAJRcYUpZHQ=')
 @settings(deadline=800.0)
 @given(st.floats(min_value=1e-1, max_value=0.98))
 def test_high_order_derivative(x):
     #     small_radius = ['sqrt', 'log', 'log2', 'log10', 'arccos', 'log1p',
     #                     'arcsin', 'arctan', 'arcsinh', 'tan', 'tanh',
     #                     'arctanh', 'arccosh']
-    r = 0.0061
+    r = 0.061
     n_max = 20
     y = x
     for name in function_names + ['arccosh', 'arctanh']:
@@ -34,10 +35,13 @@ def test_high_order_derivative(x):
 
             aerr0 = info.error_estimate[n] + 1e-15
             aerr = min(aerr0, max(np.abs(tval) * 1e-6, 1e-8))
-            print(n, name, y, vals[n], tval, info.iterations, aerr0, aerr)
-            note("{}, {}, {}, {}, {}, {}, {}, {}".format(
-                n, name, y, vals[n], tval, info.iterations, aerr0, aerr))
-            assert_allclose(np.real(vals[n]), tval, rtol=1e-6, atol=aerr)
+            try:
+                assert_allclose(np.real(vals[n]), tval, rtol=1e-6, atol=aerr)
+            except AssertionError as error:
+                print(n, name, y, vals[n], tval, info.iterations, aerr0, aerr)
+                note("{}, {}, {}, {}, {}, {}, {}, {}".format(
+                    n, name, y, vals[n], tval, info.iterations, aerr0, aerr))
+                raise error
 
 
 def test_all_weights():
