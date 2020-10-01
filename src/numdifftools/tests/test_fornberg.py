@@ -17,7 +17,7 @@ def test_high_order_derivative(x):
     #     small_radius = ['sqrt', 'log', 'log2', 'log10', 'arccos', 'log1p',
     #                     'arcsin', 'arctan', 'arcsinh', 'tan', 'tanh',
     #                     'arctanh', 'arccosh']
-    r = 0.061
+    r = 0.0059
     n_max = 20
     y = x
     for name in function_names + ['arccosh', 'arctanh']:
