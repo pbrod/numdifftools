@@ -36,6 +36,7 @@ def remove_previous_build():
         if os.path.exists(path) and os.path.isdir(path):
             shutil.rmtree(path)
 
+
 def update_readme():
     readme_txt = INFO_TXT.__doc__.replace(
         """Introduction to {}
@@ -66,6 +67,7 @@ def set_package(version):
         with open(filename, "w") as fid:
             fid.write(new_text)
 
+
 def update_license():
     filename = os.path.join(ROOT, "LICENSE.txt")
     with open(filename, "w") as fid:
@@ -94,7 +96,6 @@ def call_subprocess(cmd_opts):
     except Exception as error:  # subprocess.CalledProcessError:
         print(str(error))
     print("***********************************************\n")
-
 
 
 @click.command(context_settings=dict(help_option_names=['-h', '--help']))
