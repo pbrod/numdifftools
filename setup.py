@@ -137,7 +137,7 @@ def setup_package():
         setup_requires=["pytest-runner"] + sphinx,
         tests_require=['pytest',
                        'pytest-cov', 
-                       'pytest-pep8', 
+                       'pytest-pep8',
                        'hypothesis', 
                        'matplotlib', 
                        'line_profiler'],
