@@ -21,8 +21,8 @@ import click
 
 ROOT = os.path.abspath(os.path.dirname(__file__))
 PACKAGE_NAME = 'numdifftools'
-INFO = importlib.import_module(PACKAGE_NAME+'.info','./src')
-LICENSE = importlib.import_module(PACKAGE_NAME+'.license','./src')
+INFO = importlib.import_module(PACKAGE_NAME+'.info', './src')
+LICENSE = importlib.import_module(PACKAGE_NAME+'.license', './src')
 
 
 def remove_previous_build():
@@ -38,7 +38,7 @@ def remove_previous_build():
 
 
 def update_readme():
-    readme_txt = INFO_TXT.__doc__.replace(
+    readme_txt = INFO.__doc__.replace(
         """Introduction to {}
 ================{}
 """.format(PACKAGE_NAME, '='*len(PACKAGE_NAME)), """{1}
