@@ -9,7 +9,7 @@ numdifftools.core module
 ------------------------
 .. autosummary::
     :toctree: generated/
-	
+
     Derivative
     Gradient
     Jacobian

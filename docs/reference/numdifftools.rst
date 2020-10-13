@@ -33,7 +33,7 @@ numdifftools.extrapolation module
 
 numdifftools.finite_difference module
 =====================================
-.. automodule:: numdifftools.fornberg
+.. automodule:: numdifftools.finite_difference
     :members:
     :undoc-members:
     :show-inheritance:
