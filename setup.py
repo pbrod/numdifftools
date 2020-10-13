@@ -19,7 +19,7 @@ Build
 
 Recommended build
   git pull origin
-  git shortlog v0.9.20..HEAD -w80 --format="* %s" --reverse > log.txt  # update Changes.rst
+  git shortlog v0.9.20..HEAD -w80 --format="* %s" --reverse > log.txt
 # update CHANGELOG.rst with info from log.txt
 # update numdifftools.info (this file will be the generated README.rst)
   python build_package.py 0.10.0rc0
@@ -130,7 +130,7 @@ def setup_package():
         name=PACKAGE_NAME,
         version=version,
         install_requires=read(os.path.join(ROOT, 'requirements.txt'), lines=True),
-        extras_require={'build_sphinx': sphinx_requires,},
+        extras_require={'build_sphinx': sphinx_requires},
         setup_requires=["pytest-runner"] + sphinx,
         tests_require=['pytest',
                        'pytest-cov', 
