@@ -10,6 +10,9 @@ addons:
       secure: "67bcbf1aefb992993fdd45b78fb4977a05be39b9"
   code_climate:
     repo_token: e5452096cdc930ddd2a4bec5c310cdb9b657484e049a2475ef0b5a347b9e5812
+env:
+  global:
+    CC_TEST_REPORTER_ID=9c5d44592ed63ccd3c2b4aabf54fd9aee50f02e21cd016f67f4287e68f708dba
 jdk:
   - oraclejdk8
 sudo: false
@@ -70,7 +73,7 @@ script:
   - coverage erase
   - coverage run --source=numdifftools -m py.test build/lib
 # see http://www.camillescott.org/2016/07/15/travis-pytest-scipyconf/
-  - coverage xml -o coverage.xml
+  - coverage xml -o ./coverage-reports/coverage.xml
 #  - sed -i 's/filename="/filename=".\//g' coverage.xml
 #  - pylint numdifftools -r n --msg-template="{path}:{line}: [{msg_id}({symbol}), {obj}] {msg}" > pylint-report.txt
 after_script:
