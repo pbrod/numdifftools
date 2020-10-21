@@ -274,7 +274,7 @@ latex_show_urls = 'footnote'  # 'no', 'inline'
 
 # For "manual" documents, if this is true, then toplevel headings are parts,
 # not chapters.
-# latex_use_parts = False
+latex_use_parts = True
 
 # -- Options for manual page output ---------------------------------------
 
