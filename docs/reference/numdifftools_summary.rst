@@ -21,7 +21,7 @@ numdifftools.core module
 .. currentmodule:: numdifftools.step_generators
 
 Step generators
-----------------
+---------------
 .. autosummary::
     :toctree: generated/
 
@@ -86,7 +86,7 @@ numdifftools.nd_algopy module
 .. currentmodule:: numdifftools.nd_scipy
 
 numdifftools.nd_scipy module
------------------------------
+----------------------------
 .. autosummary::
     :toctree: generated/
 
@@ -97,7 +97,7 @@ numdifftools.nd_scipy module
 .. currentmodule:: numdifftools.nd_statsmodels
 
 numdifftools.nd_statsmodels module
------------------------------
+----------------------------------
 .. autosummary::
     :toctree: generated/
 

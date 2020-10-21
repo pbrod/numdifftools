@@ -133,10 +133,10 @@ def setup_package():
         extras_require={'build_sphinx': sphinx_requires},
         setup_requires=["pytest-runner"] + sphinx,
         tests_require=['pytest',
-                       'pytest-cov', 
+                       'pytest-cov',
                        'pytest-pep8',
-                       'hypothesis', 
-                       'matplotlib', 
+                       'hypothesis',
+                       'matplotlib',
                        'line_profiler'
                        ],
         cmdclass={'doctest': Doctest,
@@ -145,4 +145,5 @@ def setup_package():
 
 
 if __name__ == "__main__":
+    # sys.argv.append('docs')
     setup_package()

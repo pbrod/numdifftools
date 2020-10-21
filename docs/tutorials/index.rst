@@ -34,7 +34,7 @@ in the order presented here.
 
 .. seealso::
 
-    LibCdf is 100% Python_, so if you're new to Python_, you might want to start
+    Numdifftools is 100% Python_, so if you're new to Python_, you might want to start
     by getting an idea of what the language is like. Below we have given some pointers
     to some resources you can use to get acquainted with the language.
 

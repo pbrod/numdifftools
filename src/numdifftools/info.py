@@ -2,7 +2,9 @@
 Introduction to numdifftools
 ============================
 
-|pkg_img| |tests_img| |tests2_img| |docs_img| |health_img| |coverage_img| |versions_img| |downloads_img|
+.. only:: html
+
+    |pkg_img| |tests_img| |tests2_img| |docs_img| |health_img| |coverage_img| |versions_img| |downloads_img|
 
 
 The numdifftools library is a suite of tools written in `_Python <http://www.python.org/>`_
@@ -158,11 +160,11 @@ based on the adaptive numerical differentiation toolbox written in
 
 Later the package was extended with some of the functionality
 found in the statsmodels.tools.numdiff module written by Josef Perktold
-[Perktold2014]_ which is based on [Ridout2009]_. 
-The implementation of bicomplex numbers is based on the matlab implementation 
+[Perktold2014]_ which is based on [Ridout2009]_.
+The implementation of bicomplex numbers is based on the matlab implementation
 described in the project report of [Verheyleweghen2014]_ which is based on [LantoineEtal2012].
 For completeness the [Fornberg1998]_  method for computing the weights and points in general
-finite difference formulas as well as the [Fornberg1981]_ method for cumputing the   
+finite difference formulas as well as the [Fornberg1981]_ method for cumputing the
 taylor coefficients of complex analytic function using FFT, was added.
 
 
@@ -177,7 +179,7 @@ References
     Project report, NTNU
 
 .. [LantoineEtal2012] Gregory Lantoine, R.P. Russell, and T. Dargent (2012)
-    "Using multicomplex variables for automatic computation of high-order derivatives", 
+    "Using multicomplex variables for automatic computation of high-order derivatives",
     ACM Transactions on Mathematical Software,
     Vol. 38, No. 3, Article 16, April 2012, 21 pages,
     http://doi.acm.org/10.1145/2168773.2168774
@@ -188,19 +190,19 @@ References
     Vol. 14, No 2, (61-80). June 2012.
 
 .. [Lantoine2010] Gregory Lantoine (2010),
-    "A methodology for robust optimization of low-thrust trajectories in multi-body environments", 
+    "A methodology for robust optimization of low-thrust trajectories in multi-body environments",
     Phd thesis, Georgia Institute of Technology
 
-.. [Ridout2009] Ridout, M.S. (2009) 
-    "Statistical applications of the complex-step method of numerical differentiation", 
+.. [Ridout2009] Ridout, M.S. (2009)
+    "Statistical applications of the complex-step method of numerical differentiation",
     *The American Statistician*, 63, 66-74
 
 .. [DErrico2006] D'Errico, J. R.  (2006),
     "Adaptive Robust Numerical Differentiation",
     http://www.mathworks.com/matlabcentral/fileexchange/13490-adaptive-robust-numerical-differentiation
 
-.. [LaiCrassidisCheng2005] K.-L. Lai, J.L. Crassidis, Y. Cheng, J. Kim (2005), 
-    "New complex step derivative approximations with application to second-order kalman filtering", 
+.. [LaiCrassidisCheng2005] K.-L. Lai, J.L. Crassidis, Y. Cheng, J. Kim (2005),
+    "New complex step derivative approximations with application to second-order kalman filtering",
     AIAA Guidance, *Navigation and Control Conference*,
     San Francisco, California, August 2005, AIAA-2005-5944.
 
@@ -213,41 +215,41 @@ References
     ACM Transactions on Mathematical Software (TOMS),
     7(4), 512-526. http://doi.org/10.1145/355972.355979
 
-.. [LynessMoler1969] Lyness, J. M., Moler, C. B. (1969). 
+.. [LynessMoler1969] Lyness, J. M., Moler, C. B. (1969).
     "Generalized Romberg Methods for Integrals of Derivatives", *Numerische Mathematik*.
 
-.. [LynessMoler1966] Lyness, J. M., Moler, C. B. (1966). 
+.. [LynessMoler1966] Lyness, J. M., Moler, C. B. (1966).
     "Vandermonde Systems and Numerical Differentiation", *Numerische Mathematik*.
 
 .. [NAG] *NAG Library*. NAG Fortran Library Document: D04AAF
 
+.. only:: html
 
+    .. |pkg_img| image:: https://badge.fury.io/py/numdifftools.svg
+        :target: https://badge.fury.io/py/numdifftools
 
-.. |pkg_img| image:: https://badge.fury.io/py/numdifftools.svg
-    :target: https://badge.fury.io/py/numdifftools
+    .. |tests_img| image:: https://travis-ci.org/pbrod/numdifftools.svg?branch=master
+        :target: https://travis-ci.org/pbrod/numdifftools
 
-.. |tests_img| image:: https://travis-ci.org/pbrod/numdifftools.svg?branch=master
-    :target: https://travis-ci.org/pbrod/numdifftools
+    .. |tests2_img| image:: https://ci.appveyor.com/api/projects/status/qeoegaocw41lkarv/branch/master?svg=true
+        :target: https://ci.appveyor.com/project/pbrod/numdifftools
 
-.. |tests2_img| image:: https://ci.appveyor.com/api/projects/status/qeoegaocw41lkarv/branch/master?svg=true
-    :target: https://ci.appveyor.com/project/pbrod/numdifftools
+    .. |health_img| image:: https://api.codeclimate.com/v1/badges/698996d1ec94028ec223/maintainability.svg
+       :target: https://codeclimate.com/github/pbrod/numdifftools/maintainability
+       :alt: Maintainability
 
+    .. |coverage_img| image:: https://api.codeclimate.com/v1/badges/698996d1ec94028ec223/test_coverage.svg
+       :target: https://codeclimate.com/github/pbrod/numdifftools/test_coverage
+       :alt: Test Coverage
 
-.. |docs_img| image:: https://readthedocs.org/projects/pip/badge/?version=stable
-    :target: http://numdifftools.readthedocs.org/en/stable/
+    .. |versions_img| image:: https://img.shields.io/pypi/pyversions/numdifftools.svg
+       :target: https://github.com/pbrod/numdifftools
 
-.. |health_img| image:: https://api.codeclimate.com/v1/badges/698996d1ec94028ec223/maintainability
-   :target: https://codeclimate.com/github/pbrod/numdifftools/maintainability
-   :alt: Maintainability
+    .. |downloads_img| image:: https://img.shields.io/pypi/dm/numdifftools.svg
+       :alt: PyPI - Downloads
 
-.. |coverage_img| image:: https://codecov.io/gh/pbrod/numdifftools/branch/master/graph/badge.svg
-   :target: https://codecov.io/gh/pbrod/numdifftools
-
-.. |versions_img| image:: https://img.shields.io/pypi/pyversions/numdifftools.svg
-   :target: https://github.com/pbrod/numdifftools
-
-.. |downloads_img| image:: https://img.shields.io/pypi/dm/numdifftools.svg
-   :alt: PyPI - Downloads
-
+    .. |docs_img| image:: https://readthedocs.org/projects/numdifftools/badge/?svg=true
+        :target: http://numdifftools.readthedocs.org/en/stable/
+        :alt: Documentation
 
 """
