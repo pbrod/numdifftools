@@ -211,8 +211,7 @@ class TestDerivative(object):
             return b * a * x * x * x
 
         methods = ['forward', 'backward', 'central', 'complex', 'multicomplex']
-        dfuns = [nd.Gradient, nd.Derivative, nd.Jacobian, nd.Hessdiag,
-                 nd.Hessian]
+        dfuns = [nd.Gradient, nd.Derivative, nd.Jacobian, nd.Hessdiag, nd.Hessian]
         truths = {nd.Hessdiag: 12, nd.Hessian: 12}
         for dfun in dfuns:
             for method in methods:
@@ -447,6 +446,16 @@ class TestJacobian(object):
         assert_allclose(nd.Jacobian(lambda x: x ** 2, method='complex')(x),
                         2 * np.diag(np.ones(n)))
 
+    @staticmethod
+    def test_jacobian_fulloutput():
+        """test """
+        res, info = nd.Jacobian(lambda x, y: x + y, full_output=True)(1, 3)
+        assert_allclose(res, 1)
+        assert info.error_estimate < 1e-13
+        assert info.final_step == 0.015625
+        assert info.index == 5
+        assert info.f_value == 4
+
 
 class TestGradient(object):
 
@@ -480,6 +489,7 @@ class TestGradient(object):
         assert info.error_estimate < 1e-13
         assert info.final_step == 0.015625
         assert info.index == 5
+        assert info.f_value == 4
 
     @staticmethod
     def test_gradient():
@@ -520,6 +530,7 @@ class TestHessdiag(object):
             h_val, _info = h_fun([1, 2, 3])
 
             assert_allclose(h_val, htrue)
+            assert _info.f_value == 32  # self._fun([1, 2, 3])= 1+4+27
 
     @settings(deadline=500.0)
     @given(st.tuples(st.floats(-100, 100), st.floats(-100, 100), st.floats(-100, 100)))
@@ -611,3 +622,4 @@ class TestHessian(object):
                 h_val, _info = h_fun([0, 0])
                 # print(method, (h_val-np.array(htrue)))
                 assert_allclose(h_val, htrue)
+                assert _info.f_value == 1

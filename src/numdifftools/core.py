@@ -19,6 +19,7 @@ from numdifftools.step_generators import MaxStepGenerator, MinStepGenerator
 from numdifftools.limits import _Limit
 from numdifftools.finite_difference import LogRule
 from scipy import special
+from collections import namedtuple
 
 __all__ = ('dea3', 'Derivative', 'Jacobian', 'Gradient', 'Hessian', 'Hessdiag',
            'MinStepGenerator', 'MaxStepGenerator', 'Richardson',
@@ -213,6 +214,8 @@ class Derivative(_Limit):
     Hessian
     """)
 
+    info = namedtuple('info', ['f_value', 'error_estimate', 'final_step', 'index'])
+
     def __init__(self, fun, step=None, method='central', order=2, n=1, full_output=False,
                  **step_options):
         self.n = n
@@ -252,7 +255,7 @@ class Derivative(_Limit):
         steps = [np.zeros_like(xi)]
         results = [self.fun(xi, *args, **kwds)]
         self.set_richardson_rule(2, 0)
-        return self._vstack(results, steps)
+        return self._vstack(results, steps), results[0]
 
     def _derivative_nonzero_order(self, xi, args, kwds):
         diff, f = self._get_functions(args, kwds)
@@ -262,7 +265,7 @@ class Derivative(_Limit):
 
         self.set_richardson_rule(step_ratio, self.richardson_terms)
 
-        return self._apply_fd_rule(step_ratio, results, steps)
+        return self._apply_fd_rule(step_ratio, results, steps), fxi
 
     @property
     def _method_order(self):
@@ -369,17 +372,17 @@ class Derivative(_Limit):
             f_x = f(x)
             self._raise_error_if_any_is_complex(x, f_x)
             return f_x
-        if self._eval_first_condition():
+        if self._eval_first_condition() or self.full_output:
             return f(x)
         return 0.0
 
     def __call__(self, x, *args, **kwds):
         xi = np.asarray(x)
         with np.errstate(divide='ignore', invalid='ignore'):
-            results = self._derivative(xi, args, kwds)
+            results, fxi = self._derivative(xi, args, kwds)
             derivative, info = self._extrapolate(*results)
         if self.full_output:
-            return derivative, info
+            return derivative, self.info(fxi, *info)
         return derivative
 
     @staticmethod
@@ -691,7 +694,7 @@ class Jacobian(Derivative):
         steps2 = self._expand_steps(steps, xi, fxi)
 
         self.set_richardson_rule(step_ratio, self.richardson_terms)
-        return self._apply_fd_rule(step_ratio, results, steps2)
+        return self._apply_fd_rule(step_ratio, results, steps2), fxi
 
     def __call__(self, x, *args, **kwds):
         return super(Jacobian, self).__call__(np.atleast_1d(x), *args, **kwds)
