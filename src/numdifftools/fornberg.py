@@ -280,6 +280,7 @@ def _get_best_taylor_coefficients(bs, rs, m, max_m1m2):
     if len(extrap) > 2:
         all_coefs, all_errors = dea3(extrap[:-2], extrap[1:-1], extrap[2:])
         steps = np.atleast_1d(rs[4:])[:, None] * mvec
+        # pylint: disable=protected-access
         coefs, info = _Limit._get_best_estimate(all_coefs, all_errors, steps, (m,))
         errors = info.error_estimate
     else:

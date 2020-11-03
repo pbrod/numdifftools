@@ -2,7 +2,7 @@
 from __future__ import print_function
 
 from hypothesis import given, example, note, settings, strategies as st
-from numpy.testing import assert_allclose
+from numpy.testing import assert_allclose  # @UnresolvedImport
 import pytest
 
 import numdifftools.core as nd

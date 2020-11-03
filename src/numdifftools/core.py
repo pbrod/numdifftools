@@ -14,7 +14,7 @@ import numpy as np
 import warnings
 from numpy import linalg
 from numdifftools.multicomplex import Bicomplex
-from numdifftools.extrapolation import Richardson, dea3, convolve
+from numdifftools.extrapolation import Richardson, dea3, convolve  # @UnusedImport
 from numdifftools.step_generators import MaxStepGenerator, MinStepGenerator
 from numdifftools.limits import _Limit
 from numdifftools.finite_difference import LogRule
@@ -116,7 +116,7 @@ class _DerivativeDifferenceFunctions(object):
         return (f(x0i + h) + f(x0i - h)) / 2.0 - f_x0i
 
     @staticmethod
-    def _central(f, f_x0i, x0i, h):
+    def _central(f, f_x0i, x0i, h):  # @UnusedVariable
         return (f(x0i + h) - f(x0i - h)) / 2.0
 
     @staticmethod
@@ -128,21 +128,21 @@ class _DerivativeDifferenceFunctions(object):
         return f_x0i - f(x0i - h)
 
     @staticmethod
-    def _complex(f, fx, x, h):
+    def _complex(f, fx, x, h):  # @UnusedVariable
         return f(x + 1j * h).imag
 
     @staticmethod
-    def _complex_odd(f, fx, x, h):
+    def _complex_odd(f, fx, x, h):  # @UnusedVariable
         ih = h * _SQRT_J
         return ((_SQRT_J / 2.) * (f(x + ih) - f(x - ih))).imag
 
     @staticmethod
-    def _complex_odd_higher(f, fx, x, h):
+    def _complex_odd_higher(f, fx, x, h):  # @UnusedVariable
         ih = h * _SQRT_J
         return ((3 * _SQRT_J) * (f(x + ih) - f(x - ih))).real
 
     @staticmethod
-    def _complex_even(f, fx, x, h):
+    def _complex_even(f, fx, x, h):  # @UnusedVariable
         ih = h * _SQRT_J
         return (f(x + ih) + f(x - ih)).imag
 
@@ -152,12 +152,12 @@ class _DerivativeDifferenceFunctions(object):
         return 12.0 * (f(x + ih) + f(x - ih) - 2 * fx).real
 
     @staticmethod
-    def _multicomplex(f, fx, x, h):
+    def _multicomplex(f, fx, x, h):  # @UnusedVariable
         z = Bicomplex(x + 1j * h, 0)
         return Bicomplex.__array_wrap__(f(z)).imag
 
     @staticmethod
-    def _multicomplex2(f, fx, x, h):
+    def _multicomplex2(f, fx, x, h):  # @UnusedVariable
         z = Bicomplex(x + 1j * h, h)
         return Bicomplex.__array_wrap__(f(z)).imag12
 
@@ -547,7 +547,7 @@ class _JacobianDifferenceFunctions(object):
 
     # pylint: disable=unused-argument
     @staticmethod
-    def _central(f, fx, x, h):
+    def _central(f, fx, x, h):  # @UnusedVariable
         n = len(x)
         steps = _JacobianDifferenceFunctions.increments(n, h)
         return np.array([(f(x + hi) - f(x - hi)) / 2.0 for hi in steps])
@@ -565,20 +565,20 @@ class _JacobianDifferenceFunctions(object):
         return np.array([f(x + hi) - fx for hi in steps])
 
     @staticmethod
-    def _complex(f, fx, x, h):
+    def _complex(f, fx, x, h):  # @UnusedVariable
         n = len(x)
         steps = _JacobianDifferenceFunctions.increments(n, h)
         return np.array([f(x + 1j * ih).imag for ih in steps])
 
     @staticmethod
-    def _complex_odd(f, fx, x, h):
+    def _complex_odd(f, fx, x, h):  # @UnusedVariable
         n = len(x)
         j1 = _SQRT_J
         steps = _JacobianDifferenceFunctions.increments(n, h)
         return np.array([((j1 / 2.) * (f(x + j1 * ih) - f(x - j1 * ih))).imag for ih in steps])
 
     @staticmethod
-    def _multicomplex(f, fx, x, h):
+    def _multicomplex(f, fx, x, h):  # @UnusedVariable
         n = len(x)
         steps = _JacobianDifferenceFunctions.increments(n, h)
         cmplx_wrap = Bicomplex.__array_wrap__
@@ -647,7 +647,7 @@ class Jacobian(Derivative):
     Derivative, Hessian, Gradient
     """)
     n = property(fget=lambda cls: 1,
-                 fset=lambda cls, val: cls._set_derivative())
+                 fset=lambda cls, val: cls._set_derivative())  # @UnusedVariable
 
     _difference_functions = _JacobianDifferenceFunctions()
 
@@ -793,8 +793,9 @@ class _HessdiagDifferenceFunctions(object):
         partials = [f(x + hi) - fx for hi in increments]
         return np.array(partials)
 
+    # pylint: disable=unused-argument
     @staticmethod
-    def _multicomplex2(f, fx, x, h):
+    def _multicomplex2(f, fx, x, h):  # @UnusedVariable
         n = len(x)
         increments = np.identity(n) * h
         cmplx_wrap = Bicomplex.__array_wrap__
@@ -803,7 +804,7 @@ class _HessdiagDifferenceFunctions(object):
         return np.array(partials)
 
     @staticmethod
-    def _complex_even(f, fx, x, h):
+    def _complex_even(f, fx, x, h):  # @UnusedVariable
         n = len(x)
         increments = np.identity(n) * h * (1j + 1) / np.sqrt(2)
         partials = [(f(x + hi) + f(x - hi)).imag for hi in increments]
@@ -853,8 +854,9 @@ class Hessdiag(Derivative):
 
     _difference_functions = _HessdiagDifferenceFunctions()
 
+    # pylint: disable=unused-argument
     n = property(fget=lambda cls: 2,
-                 fset=lambda cls, n: cls._set_derivative())
+                 fset=lambda cls, n: cls._set_derivative())  # @UnusedVariable
 
     def __call__(self, x, *args, **kwds):
         return super(Hessdiag, self).__call__(np.atleast_1d(x), *args, **kwds)
@@ -863,7 +865,7 @@ class Hessdiag(Derivative):
 class _HessianDifferenceFunctions(object):
 
     @staticmethod
-    def _complex_even(f, fx, x, h):
+    def _complex_even(f, fx, x, h):  # @UnusedVariable pylint: disable=unused-argument
         """
         Calculate Hessian with complex-step derivative approximation
 
@@ -880,7 +882,7 @@ class _HessianDifferenceFunctions(object):
         return hess
 
     @staticmethod
-    def _multicomplex2(f, fx, x, h):
+    def _multicomplex2(f, fx, x, h):  # @UnusedVariable pylint: disable=unused-argument
         """Calculate Hessian with Bicomplex-step derivative approximation"""
         n = len(x)
         ee = np.diag(h)
@@ -1043,7 +1045,7 @@ class Hessian(Hessdiag):
     def _complex_high_order():
         return False
 
-    def _apply_fd_rule(self, step_ratio, sequence, steps):
+    def _apply_fd_rule(self, step_ratio, sequence, steps):  # @UnusedVariable
         """
         Return derivative estimates of fun at x0 for a sequence of stepsizes h
 
