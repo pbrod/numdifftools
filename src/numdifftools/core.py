@@ -902,12 +902,14 @@ class _HessianDifferenceFunctions(object):
         hess = np.empty((n, n), dtype=dtype)
         np.outer(h, h, out=hess)
         for i in range(n):
-            hess[i, i] = (f(x + 2 * ee[i, :]) - 2 * fx + f(x - 2 * ee[i, :])) / (4. * hess[i, i])
+            eei = ee[i, :]
+            hess[i, i] = (f(x + 2 * eei) - 2 * fx + f(x - 2 * eei)) / (4. * hess[i, i])
             for j in range(i + 1, n):
-                hess[i, j] = (f(x + ee[i, :] + ee[j, :])
-                              - f(x + ee[i, :] - ee[j, :])
-                              - f(x - ee[i, :] + ee[j, :])
-                              + f(x - ee[i, :] - ee[j, :])) / (4. * hess[j, i])
+                eej = ee[j, :]
+                hess[i, j] = (f(x + eei + eej)
+                              - f(x + eei - eej)
+                              - f(x - eei + eej)
+                              + f(x - eei - eej)) / (4. * hess[j, i])
                 hess[j, i] = hess[i, j]
         return hess
 
@@ -962,7 +964,7 @@ class Hessian(Hessdiag):
     __doc__ = _cmn_doc % dict(
         derivative='Hessian',
         extra_parameter="",
-        returns="""
+        returns=r"""
     Returns
     -------
     hess : ndarray
@@ -1016,6 +1018,13 @@ class Hessian(Hessdiag):
     --------
     Derivative, Hessian
     """)
+
+    def __init__(self, f, step=None, method='central', order=None,
+                 full_output=False, **step_options):
+        if order is None:
+            order = dict(backward=1, forward=1).get(method, 2)
+        super(Hessian, self).__init__(f, step=step, method=method, order=order,
+                                      full_output=full_output, **step_options)
 
     _difference_functions = _HessianDifferenceFunctions()
 

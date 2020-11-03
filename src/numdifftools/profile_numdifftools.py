@@ -21,7 +21,7 @@ def profile_hessian(n_values=(4, 8, 16, 32, 64, 96)):
                   cls._apply_fd_rule,
                   cls._get_finite_difference_rule,
                   cls._vstack,
-                  cls._central_even]
+                  cls._difference_functions._central_even]
 #         cls = nds.Hessian(f, step=None, method='central')
 #         follow = [cls._derivative_nonzero_order, ]
 
@@ -62,6 +62,7 @@ def profile_main():
     s = pstats.Stats("{}.profile".format(__file__))
     # s.strip_dirs()
     s.sort_stats("time").print_stats(20)
+
 
 if __name__ == '__main__':
     profile_hessian()

@@ -127,14 +127,15 @@ class TestDerivative(object):
 
     @given(st.floats())
     def test_derivative_on_sinh(self, x):
-        true_val = np.cosh(x)
-        for method in ['forward', ]:  # 'reverse']: # TODO: reverse fails
-            dsinh = nd.Derivative(np.sinh, method=method)
-            val = dsinh(x)
-            if np.isnan(true_val):
-                assert np.isnan(val) == np.isnan(true_val)
-            else:
-                assert_allclose(val, true_val)
+        with np.errstate(all='ignore'):
+            true_val = np.cosh(x)
+            for method in ['forward', ]:  # 'reverse']: # TODO: reverse fails
+                dsinh = nd.Derivative(np.sinh, method=method)
+                val = dsinh(x)
+                if np.isnan(true_val):
+                    assert np.isnan(val) == np.isnan(true_val)
+                else:
+                    assert_allclose(val, true_val)
 
     @staticmethod
     @given(st.floats(min_value=1e-5))
@@ -158,9 +159,10 @@ class TestJacobian(object):
             out[2] = x ** 3
             return out
 
-        for method in ['reverse', 'forward']:
-            j0 = nd.Jacobian(fun, method=method)(val).T
-            assert_allclose(j0, [[1., 2 * val, 3 * val ** 2]], atol=1e-14)
+        with np.errstate(all='ignore'):
+            for method in ['reverse', 'forward']:
+                j0 = nd.Jacobian(fun, method=method)(val).T
+                assert_allclose(j0, [[1., 2 * val, 3 * val ** 2]], atol=1e-14)
 
     @staticmethod
     def test_on_scalar_function():

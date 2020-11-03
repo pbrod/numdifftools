@@ -450,7 +450,8 @@ class Richardson(object):
     def _r_matrix(step_ratio, step, num_terms, order):
 
         i, j = np.ogrid[0:num_terms + 1, 0:num_terms]
-        r_mat = np.ones((num_terms + 1, num_terms + 1))
+        dtype = np.result_type(step_ratio, step, float)
+        r_mat = np.ones((num_terms + 1, num_terms + 1), dtype=dtype)
         r_mat[:, 1:] = (1.0 / step_ratio) ** (i * (step * j + order))
         return r_mat
 

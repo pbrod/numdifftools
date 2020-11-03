@@ -190,8 +190,7 @@ class TestJacobian(object):
             assert_allclose(J, np.zeros((ydata.size, 3)), atol=1e-6)
 
     @pytest.mark.skip("Not implemented for matrix valued functions")
-    @staticmethod
-    def test_on_matrix_valued_function():
+    def test_on_matrix_valued_function(self):
 
         def fun(x):
 
@@ -236,8 +235,7 @@ class TestJacobian(object):
                                    [0., 0., 0., 48., 0., 0., 0., 192.]]])
 
     @pytest.mark.skip("Does not work on vector valued functions.")
-    @staticmethod
-    def test_issue_25():
+    def test_issue_25(self):
 
         def g_fun(x):
             out = np.zeros((2, 2), dtype=float)
