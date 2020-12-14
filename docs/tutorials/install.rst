@@ -43,7 +43,7 @@ Numdifftools requires numpy 1.9 or newer,
 scipy 0.8 or newer, and Python 2.7 or 3.3 or newer. 
 This tutorial assumes you are using Python 3. 
 Optionally you may also want to install Algopy 0.4 or newer and statsmodels 0.6 or newer in order 
-to be able to use their easy to use interfaces to their derivative functions. 
+to be able to use the easy to use interfaces to their derivative functions. 
 
 
 Install numdifftools
