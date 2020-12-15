@@ -17,7 +17,7 @@ to go about it.
 
 Once you're familiar with the basics presented in these tutorials, you'll find
 the more in-depth coverage of the same topics in the :doc:`How-to
-</how_to/index>` section.
+</how-to/index>` section.
 
 The tutorials follow a logical progression, starting from installation of numdifftools and the
 creation of a brand new project, and build on each other, so it's recommended to work through them
