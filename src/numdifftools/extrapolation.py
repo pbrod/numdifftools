@@ -118,7 +118,7 @@ class Dea(object):
         newelm = n // 2
         old_n = n
         k1 = n
-        for I in range(newelm):
+        for ii in range(newelm):
             e0, e1, e2 = epstab[k1 - 2], epstab[k1 - 1], epstab[k1 + 2]
             res = e2
             delta2, delta3 = e2 - e1, e1 - e0
@@ -131,7 +131,7 @@ class Dea(object):
                 result = res
                 break
 
-            if I == 0:
+            if ii == 0:
                 any_converged = err2 <= tol2 or err3 <= tol3
                 if not any_converged:
                     SS = 1.0 / delta2 - 1.0 / delta3
@@ -146,7 +146,7 @@ class Dea(object):
 
             epstab[k1] = e1
             if any_converged or abs(SS * e1) <= 1e-04:
-                n = 2 * I
+                n = 2 * ii
                 if nres == 0:
                     abserr = err2 + err3
                     result = res
@@ -272,7 +272,7 @@ def epsalg_demo():
     def linfun(i):
         return np.linspace(0, np.pi / 2., 2 ** i + 1)
 
-    dea = EpsAlg(limexp=15)
+    dea = EpsAlg(limexp=10)
     print('NO. PANELS      TRAP. APPROX          APPROX W/EA           abserr')
     txt = '{0:5d} {1:20.8f}  {2:20.8f}  {3:20.8f}'
     for k in np.arange(10):
@@ -308,11 +308,20 @@ def dea_demo():
     dea = Dea(limexp=6)
     print('NO. PANELS      TRAP. APPROX          APPROX W/EA           abserr')
     txt = '{0:5d} {1:20.8f}  {2:20.8f}  {3:20.8f}'
+    vals = []
+    num_panels = []
     for k in np.arange(12):
         x = linfun(k)
         val = np.trapz(np.sin(x), x)
+        vals.append(val)
+        num_panels.append(len(x) - 1)
+    for k, val in zip(num_panels, vals):
         vale, err = dea(val)
-        print(txt.format(len(x) - 1, val, vale, err))
+        print(txt.format(k, val, vale, err))
+
+    # res, abserr = dea3(vals[:-2], vals[1:-1], vals[2:])
+    # for k, val, vale, err in zip(num_panels[2:], vals[2:], res, abserr):
+    #     print(txt.format(k, val, vale, err))
 
 
 def max_abs(a1, a2):
@@ -392,8 +401,8 @@ def dea3(v0, v1, v2, symmetric=False):
         delta1[err1 < _TINY] = _TINY
         delta2[err2 < _TINY] = _TINY  # avoid division by zero and overflow
         ss = 1.0 / delta2 - 1.0 / delta1 + _TINY
-        smalle2 = abs(ss * e1) <= 1.0e-3
-        converged = (err1 <= tol1) & (err2 <= tol2) | smalle2
+        smalle2 = abs(ss * e1) <= 1.0e-4
+        converged = (err1 <= tol1) | (err2 <= tol2) | smalle2
         result = np.where(converged, e2 * 1.0, e1 + 1.0 / ss)
     abserr = err1 + err2 + np.where(converged, tol2 * 10, np.abs(result - e2))
     if symmetric and len(result) > 1:
