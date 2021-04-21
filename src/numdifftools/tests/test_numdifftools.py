@@ -200,7 +200,7 @@ class TestDerivative(object):
     @staticmethod
     def test_default_scale():
         for method, scale in zip(['complex', 'central', 'forward', 'backward', 'multicomplex'],
-                                 [1.35, 2.5, 2.5, 2.5, 1.35]):
+                                 [1.06, 2.5, 2.5, 2.5, 1.06]):
             assert_allclose(scale, default_scale(method, n=1))
 
     @staticmethod
