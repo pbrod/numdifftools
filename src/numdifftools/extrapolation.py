@@ -4,10 +4,10 @@ Created on 28. aug. 2015
 @author: pab
 """
 from __future__ import division, print_function
+import warnings
 import numpy as np
 from scipy import linalg
 from scipy.ndimage.filters import convolve1d
-import warnings
 
 EPS = np.finfo(float).eps
 _EPS = EPS
@@ -55,7 +55,7 @@ class Dea(object):
              condensed epsilon table is computed. Only
              those elements needed for the computation of
              the next diagonal are preserved.
-    RES    - DOUBLE PREISION
+    RES    - DOUBLE PRECISION
              New element in the new diagonal of the
              epsilon table.
     ERROR  - DOUBLE PRECISION
@@ -63,7 +63,7 @@ class Dea(object):
              Routine decides whether RESULT=RES or
              RESULT=SVALUE by comparing ERROR with
              abserr from the previous call.
-    RES3LA - DOUBLE PREISION
+    RES3LA - DOUBLE PRECISION
              Vector of DIMENSION 3 containing at most
              the last 3 results.
     """
@@ -118,35 +118,35 @@ class Dea(object):
         newelm = n // 2
         old_n = n
         k1 = n
-        for ii in range(newelm):
-            e0, e1, e2 = epstab[k1 - 2], epstab[k1 - 1], epstab[k1 + 2]
-            res = e2
-            delta2, delta3 = e2 - e1, e1 - e0
+        for i in range(newelm):
+            e_0, e_1, e_2 = epstab[k1 - 2], epstab[k1 - 1], epstab[k1 + 2]
+            res = e_2
+            delta2, delta3 = e_2 - e_1, e_1 - e_0
             err2, err3 = abs(delta2), abs(delta3)
-            tol2 = max(abs(e2), abs(e1)) * _EPS
-            tol3 = max(abs(e1), abs(e0)) * _EPS
+            tol2 = max(abs(e_2), abs(e_1)) * _EPS
+            tol3 = max(abs(e_1), abs(e_0)) * _EPS
             all_converged = err2 <= tol2 and err3 <= tol3
             if all_converged:
                 abserr = err2 + err3
                 result = res
                 break
 
-            if ii == 0:
+            if i == 0:
                 any_converged = err2 <= tol2 or err3 <= tol3
                 if not any_converged:
-                    SS = 1.0 / delta2 - 1.0 / delta3
+                    sss = 1.0 / delta2 - 1.0 / delta3
             else:
-                e3 = epstab[k1]
-                delta1 = e1 - e3
+                e_3 = epstab[k1]
+                delta1 = e_1 - e_3
                 err1 = abs(delta1)
-                tol1 = max(abs(e1), abs(e3)) * _EPS
+                tol1 = max(abs(e_1), abs(e_3)) * _EPS
                 any_converged = err1 <= tol1 or err2 <= tol2 or err3 <= tol3
                 if not any_converged:
-                    SS = 1.0 / delta1 + 1.0 / delta2 - 1.0 / delta3
+                    sss = 1.0 / delta1 + 1.0 / delta2 - 1.0 / delta3
 
-            epstab[k1] = e1
-            if any_converged or abs(SS * e1) <= 1e-04:
-                n = 2 * ii
+            epstab[k1] = e_1
+            if any_converged or abs(sss * e_1) <= 1e-4:
+                n = 2 * i
                 if nres == 0:
                     abserr = err2 + err3
                     result = res
@@ -154,11 +154,11 @@ class Dea(object):
                     result = res3la[min(nres - 1, 2)]
                 break
 
-            res = e1 + 1.0 / SS
+            res = e_1 + 1.0 / sss
             epstab[k1] = res
             k1 = k1 - 2
             if nres == 0:
-                abserr = err2 + abs(res - e2) + err3
+                abserr = err2 + abs(res - e_2) + err3
                 result = res
                 continue
             error = self._compute_error(res3la, nres, res)
@@ -209,7 +209,11 @@ class EpsAlg(object):
     """
     Extrapolate a slowly convergent sequence
 
-    This implementaion is from [1]_
+    Notes
+    -----
+    The iterated Shanks transformation is computed using the Wynn
+    epsilon algorithm (see equation 4.3-10a to 4.3-10c given on page 25 in [1]_).
+
 
     References
     ----------
@@ -220,18 +224,14 @@ class EpsAlg(object):
             http://arxiv.org/abs/math/0306302v1
     """
 
-    def __init__(self, limexp=3):
-        _assert(limexp >= 3, 'LIMEXP IS LESS THAN 3')
-        self.limexp = 2 * (limexp // 2) + 1
-        self.epstab = np.zeros(limexp + 5)
-        self.abserr = 10.
-        self._n = 0
-        self._nres = 0
+    def __init__(self):
+        self.epstab = []
 
     def __call__(self, s_n):
-        n = self._n
+
         epstab = self.epstab
-        epstab[n] = s_n
+        n = len(epstab)
+        epstab.append(s_n)
         if n == 0:
             estlim = s_n
         else:
@@ -245,11 +245,47 @@ class EpsAlg(object):
                 else:
                     epstab[i - 1] = aux1 + 1.0 / delta
             estlim = epstab[n % 2]
-            _assert(n <= self.limexp - 1, "Eps table to small!")
 
-        n += 1
-        self._n = n
         return estlim
+
+
+def richardson_demo():
+    """
+    >>> from numdifftools.extrapolation import richardson_demo
+    >>> richardson_demo()
+    NO. PANELS      TRAP. APPROX          APPROX W/R            abserr
+        1           0.78539816            0.78539816            0.21460184
+        2           0.94805945            1.11072073            0.11072073
+        4           0.98711580            0.99798929            0.00201071
+        8           0.99678517            0.99988201            0.00011799
+       16           0.99919668            0.99999274            0.00000726
+       32           0.99979919            0.99999955            0.00000045
+       64           0.99994980            0.99999997            0.00000003
+      128           0.99998745            1.00000000            0.00000000
+      256           0.99999686            1.00000000            0.00000000
+      512           0.99999922            1.00000000            0.00000000
+    """
+
+    def linfun(i):
+        return np.linspace(0, np.pi / 2., 2 ** i + 1)
+    # richardson =
+    n = 10
+    Ei = []
+    h = []
+
+    print('NO. PANELS      TRAP. APPROX          APPROX W/R            abserr')
+    txt = '{0:5d} {1:20.8f}  {2:20.8f}  {3:20.8f}'
+    for k in np.arange(n):
+        x = linfun(k)
+        val = np.trapz(np.sin(x), x)
+        h.append(x[1])
+        Ei.append(val)
+        vale, _err0, _step = Richardson(step=1, order=1)(np.array(Ei), np.array(h))
+
+        # if len(vale) > 2:
+        #     vale, err1 = dea3(vale[:-2], vale[1:-1], vale[2:])
+        err = np.abs(1.0 - vale)
+        print(txt.format(len(x) - 1, val, vale[-1], err[-1]))
 
 
 def epsalg_demo():
@@ -272,7 +308,7 @@ def epsalg_demo():
     def linfun(i):
         return np.linspace(0, np.pi / 2., 2 ** i + 1)
 
-    dea = EpsAlg(limexp=10)
+    dea = EpsAlg()
     print('NO. PANELS      TRAP. APPROX          APPROX W/EA           abserr')
     txt = '{0:5d} {1:20.8f}  {2:20.8f}  {3:20.8f}'
     for k in np.arange(10):
@@ -324,8 +360,9 @@ def dea_demo():
     #     print(txt.format(k, val, vale, err))
 
 
-def max_abs(a1, a2):
-    return np.maximum(np.abs(a1), np.abs(a2))
+def max_abs(a, b):
+    """Returns element-wise maximum of absulute value of array elements"""
+    return np.maximum(np.abs(a), np.abs(b))
 
 
 def dea3(v0, v1, v2, symmetric=False):
@@ -378,7 +415,7 @@ def dea3(v0, v1, v2, symmetric=False):
     References
     ----------
 
-    .. [1] C. Brezinski and M. Redivo Zaglia (1991)
+    ..  [1] C. Brezinski and M. Redivo Zaglia (1991)
             "Extrapolation Methods. Theory and Practice", North-Holland.
 
     ..  [2] C. Brezinski (1977)
@@ -392,19 +429,19 @@ def dea3(v0, v1, v2, symmetric=False):
             Computer Physics Reports Vol. 10, 189 - 371
             http://arxiv.org/abs/math/0306302v1
     """
-    e0, e1, e2 = np.atleast_1d(v0, v1, v2)
+    e_0, e_1, e_2 = np.atleast_1d(v0, v1, v2)
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")  # ignore division by zero and overflow
-        delta2, delta1 = e2 - e1, e1 - e0
+        delta2, delta1 = e_2 - e_1, e_1 - e_0
         err2, err1 = np.abs(delta2), np.abs(delta1)
-        tol2, tol1 = max_abs(e2, e1) * _EPS, max_abs(e1, e0) * _EPS
+        tol2, tol1 = max_abs(e_2, e_1) * _EPS, max_abs(e_1, e_0) * _EPS
         delta1[err1 < _TINY] = _TINY
         delta2[err2 < _TINY] = _TINY  # avoid division by zero and overflow
-        ss = 1.0 / delta2 - 1.0 / delta1 + _TINY
-        smalle2 = abs(ss * e1) <= 1.0e-4
+        sss = 1.0 / delta2 - 1.0 / delta1 + _TINY
+        smalle2 = abs(sss * e_1) <= 1.0e-4
         converged = (err1 <= tol1) | (err2 <= tol2) | smalle2
-        result = np.where(converged, e2 * 1.0, e1 + 1.0 / ss)
-    abserr = err1 + err2 + np.where(converged, tol2 * 10, np.abs(result - e2))
+        result = np.where(converged, e_2 * 1.0, e_1 + 1.0 / sss)
+    abserr = err1 + err2 + np.where(converged, tol2 * 10, np.abs(result - e_2))
     if symmetric and len(result) > 1:
         return result[:-1], abserr[1:]
     return result, abserr
@@ -476,10 +513,10 @@ class Richardson(object):
     @staticmethod
     def _estimate_error(new_sequence, old_sequence, steps, rule):
         m = new_sequence.shape[0]
-        mo = old_sequence.shape[0]
+        m_old = old_sequence.shape[0]
         cov1 = np.sum(rule ** 2)  # 1 spare dof
         fact = np.maximum(12.7062047361747 * np.sqrt(cov1), EPS * 10.)
-        if mo < 2:
+        if m_old < 2:
             return (np.abs(new_sequence) * EPS + steps) * fact
         if m < 2:
             delta = np.diff(old_sequence, axis=0)
@@ -490,7 +527,7 @@ class Richardson(object):
                       np.where(converged[-m:], tol[-m:] * 10,
                                abs(new_sequence - old_sequence[-m:]) * fact))
             return abserr
-#         if mo>2:
+#         if m_old>2:
 #             res, abserr = dea3(old_sequence[:-2], old_sequence[1:-1],
 #                               old_sequence[2:] )
 #             return abserr[-m:] * fact

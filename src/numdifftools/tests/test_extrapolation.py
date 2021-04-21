@@ -1,4 +1,3 @@
-import unittest
 import numpy as np
 from numpy.testing.utils import assert_array_almost_equal, assert_allclose
 from numdifftools.extrapolation import Dea, dea3, Richardson, EpsAlg
@@ -127,10 +126,10 @@ class TestExtrapolation(object):
 
     def test_epsal(self):
         true_vals = [0.78539816, 0.94805945, 0.99945672]
-        dea = EpsAlg(limexp=7)
+        dea = EpsAlg()
         vals = [dea(val) for val in [0.78539816, 0.94805945, 0.98711580]]
         assert_array_almost_equal(true_vals, vals)
-        dea2 = EpsAlg(limexp=7)
+        dea2 = EpsAlg()
         vals2 = [dea2(val) for val in self.e_i[:-1]]
         assert_array_almost_equal(vals2,
                                   [0.99979919432001874, 0.99994980009210122,
