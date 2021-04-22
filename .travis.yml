@@ -69,14 +69,15 @@ script:
   - coverage erase
   - coverage run --source=numdifftools -m py.test build/lib
 # see http://www.camillescott.org/2016/07/15/travis-pytest-scipyconf/
-  - coverage xml -o ./coverage-reports/coverage.xml
-  - head ./coverage-reports/coverage.xml
-# see https://community.sonarsource.com/t/sonarqube-reports-zero-coverage-from-coverage-xml-generated-by-coverage-py-in-azure-devops/28817/7
-  - sed -i 's/home\/travis\/build\/pbrod\/numdifftools/g' ./coverage-reports/coverage.xml
 #  - sed -i 's/filename="/filename=".\//g' ./coverage-reports/coverage.xml
 #  - pylint numdifftools -r n --msg-template="{path}:{line}: [{msg_id}({symbol}), {obj}] {msg}" > pylint-report.txt
+# see https://community.sonarsource.com/t/sonarqube-reports-zero-coverage-from-coverage-xml-generated-by-coverage-py-in-  azure-devops/28817/7
+
 after_script:
   - if [[ "$TRAVIS_PYTHON_VERSION" == "3.7" ]]; then
+        coverage xml -o ./coverage-reports/coverage.xml;
+        head ./coverage-reports/coverage.xml;
+        sed -i 's/home\/travis\/build\/pbrod\/numdifftools/g' ./coverage-reports/coverage.xml;
         sonar-scanner -X;
         ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT;
     fi
