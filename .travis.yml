@@ -78,10 +78,13 @@ script:
 after_script:
   - if [[ "$TRAVIS_PYTHON_VERSION" == "3.7" ]]; then
         coverage xml -o ./coverage-reports/coverage.xml;
-        cat ./coverage-reports/coverage.xml;
-        sed -i 's/\/home\/travis\/build\/pbrod/src/g' ./coverage-reports/coverage.xml;
-        sed -i 's/build\.lib\.//g' ./coverage-reports/coverage.xml;
-        cat ./coverage-reports/coverage.xml;
+        head ./coverage-reports/coverage.xml;
+        tail ./coverage-reports/coverage.xml;
+
+        sed -i 's/\/home\/travis\/build\/pbrod\/numdifftools//g' ./coverage-reports/coverage.xml;
+        sed -i 's/build\/lib/src/g' ./coverage-reports/coverage.xml;
+        head ./coverage-reports/coverage.xml;
+        tail ./coverage-reports/coverage.xml;
    
         sonar-scanner -X;
         ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT;
