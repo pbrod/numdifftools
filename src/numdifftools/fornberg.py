@@ -1,9 +1,9 @@
 from __future__ import division
+from collections import namedtuple
 import numpy as np
 from scipy.special import factorial
 from numdifftools.extrapolation import EPS, dea3
 from numdifftools.limits import _Limit
-from collections import namedtuple
 
 _INFO = namedtuple('info', ['error_estimate',
                             'degenerate',
@@ -79,17 +79,17 @@ def fd_weights_all(x, x0=0, n=1):
 # @jit(void(float64[:,:], float64[:], float64, int64))
 def _fd_weights_all(weights, x, x0, n):
     m = len(x)
-    c1, c4 = 1, x[0] - x0
+    c_1, c_4 = 1, x[0] - x0
     weights[0, 0] = 1
     for i in range(1, m):
         j = np.arange(0, min(i, n) + 1)
-        c2, c5, c4 = 1, c4, x[i] - x0
+        c_2, c_5, c_4 = 1, c_4, x[i] - x0
         for v in range(i):
-            c3 = x[i] - x[v]
-            c2, c6, c7 = c2 * c3, j * weights[v, j - 1], weights[v, j]
-            weights[v, j] = (c4 * c7 - c6) / c3
-        weights[i, j] = c1 * (c6 - c5 * c7) / c2
-        c1 = c2
+            c_3 = x[i] - x[v]
+            c_2, c_6, c_7 = c_2 * c_3, j * weights[v, j - 1], weights[v, j]
+            weights[v, j] = (c_4 * c_7 - c_6) / c_3
+        weights[i, j] = c_1 * (c_6 - c_5 * c_7) / c_2
+        c_1 = c_2
 
 
 def fd_weights(x, x0=0, n=1):
