@@ -328,7 +328,7 @@ class TestJacobian(object):
         def fun(c):
             return (c[0] + c[1] * np.exp(c[2] * xdata) - ydata) ** 2
 
-        _j_0 = nds.approx_fprime([1, 2, 0.75], fun)
+        # _j_0 = nds.approx_fprime([1, 2, 0.75], fun)
 
         for method in ['complex', 'central', 'forward', 'backward']:
             for order in [2, 4]:
@@ -504,7 +504,6 @@ class TestGradient(object):
                 dfun = nd.Gradient(fun, method=method, order=order)
                 d = dfun([1, 2, 3])
                 assert_allclose(d, dtrue)
-        # assert False
 
 
 class TestHessdiag(object):
@@ -530,7 +529,7 @@ class TestHessdiag(object):
             h_val, _info = h_fun([1, 2, 3])
 
             assert_allclose(h_val, htrue)
-            assert _info.f_value == 32  # self._fun([1, 2, 3])= 1+4+27
+            assert _info.f_value == 32  # fun([1, 2, 3]) == 1+4+27
 
     @settings(deadline=500.0)
     @given(st.tuples(st.floats(-100, 100), st.floats(-100, 100), st.floats(-100, 100)))
@@ -565,7 +564,6 @@ class TestHessdiag(object):
                 h_fun = nd.Hessdiag(self._fun, method=method, order=order,
                                     full_output=True)
                 h_val, _info = h_fun([1, 2, 3])
-                # _error = h_val - htrue
                 tol = min(1e-8, _info.error_estimate.max())
                 assert_allclose(h_val, htrue, atol=tol)
 

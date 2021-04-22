@@ -66,6 +66,7 @@ before_script:
         ./cc-test-reporter before-build;
     fi
 script:
+  - pwd
   - coverage erase
   - coverage run --source=numdifftools -m py.test build/lib
 # see http://www.camillescott.org/2016/07/15/travis-pytest-scipyconf/
@@ -76,12 +77,11 @@ script:
 after_script:
   - if [[ "$TRAVIS_PYTHON_VERSION" == "3.7" ]]; then
         coverage xml -o ./coverage-reports/coverage.xml;
-        head ./coverage-reports/coverage.xml;
-        tail ./coverage-reports/coverage.xml;
-
-        sed -i 's/\/home\/travis\/build\/pbrod/numdifftools/g' ./coverage-reports/coverage.xml;
-        head ./coverage-reports/coverage.xml;
-        tail ./coverage-reports/coverage.xml;
+        cat ./coverage-reports/coverage.xml;
+        sed -i 's/\/home\/travis\/build\/pbrod/src/g' ./coverage-reports/coverage.xml;
+        sed -i 's/build\.lib\.//g' ./coverage-reports/coverage.xml;
+        cat ./coverage-reports/coverage.xml;
+   
         sonar-scanner -X;
         ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT;
     fi
