@@ -60,7 +60,7 @@ before_script:
   - git fetch --unshallow --quiet
   - git config --global user.email "per.andreas.brodtkorb@gmail.com"
   - git config --global user.name "pbrod"
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.7" ]]; then
         curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter;
         chmod +x ./cc-test-reporter;
         ./cc-test-reporter before-build;
@@ -73,7 +73,7 @@ script:
 #  - sed -i 's/filename="/filename=".\//g' coverage.xml
 #  - pylint numdifftools -r n --msg-template="{path}:{line}: [{msg_id}({symbol}), {obj}] {msg}" > pylint-report.txt
 after_script:
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.7" ]]; then
         sonar-scanner -X;
         ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT;
     fi

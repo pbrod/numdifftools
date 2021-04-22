@@ -74,16 +74,13 @@ def approx_fprime(x, f, epsilon=None, args=(), kwargs=None, centered=True):
             grad[k, :] = (f(*(x + ei,) + args, **kwargs) -
                           f(*(x - ei,) + args, **kwargs)) / (2 * epsilon[k])
             ei[k] = 0.0
-    # return grad
-    # return grad.T
-    # grad = grad.squeeze()
     axes = list(range(grad.ndim))
     axes[:2] = axes[1::-1]
     return np.transpose(grad, axes=axes)
 
 
 def _approx_fprime_backward(x, f, epsilon=None, args=(), kwargs=None):
-    x = np.atleast_1d(x) # .ravel()
+    x = np.atleast_1d(x)  # .ravel()
     n = len(x)
     epsilon = - np.abs(_get_epsilon(x, 2, epsilon, n))
     return approx_fprime(x, f, epsilon, args, kwargs, centered=False)
@@ -123,7 +120,7 @@ def approx_fprime_cs(x, f, epsilon=None, args=(), kwargs=None):
     # May 04 2010 thread "Improvement of performance"
     # http://mail.scipy.org/pipermail/numpy-discussion/2010-May/050250.html
     kwargs = {} if kwargs is None else kwargs
-    x = np.atleast_1d(x) # .ravel()
+    x = np.atleast_1d(x)  # .ravel()
     n = len(x)
     epsilon = _get_epsilon(x, 1, epsilon, n)
     increments = np.identity(n) * 1j * epsilon
@@ -133,8 +130,6 @@ def approx_fprime_cs(x, f, epsilon=None, args=(), kwargs=None):
     axes = list(range(partials[0].ndim+1))
     axes[:2] = axes[1::-1]
     return np.transpose(partials, axes=axes)
-
-    # return np.array(partials).T
 
 
 def _approx_hess1_backward(x, f, epsilon=None, args=(), kwargs=None):

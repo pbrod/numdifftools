@@ -268,9 +268,9 @@ def richardson_demo():
 
     def linfun(i):
         return np.linspace(0, np.pi / 2., 2 ** i + 1)
-    # richardson =
+
     n = 10
-    Ei = []
+    e_i = []
     h = []
 
     print('NO. PANELS      TRAP. APPROX          APPROX W/R            abserr')
@@ -279,11 +279,9 @@ def richardson_demo():
         x = linfun(k)
         val = np.trapz(np.sin(x), x)
         h.append(x[1])
-        Ei.append(val)
-        vale, _err0, _step = Richardson(step=1, order=1)(np.array(Ei), np.array(h))
+        e_i.append(val)
+        vale, _err0, _step = Richardson(step=1, order=1)(np.array(e_i), np.array(h))
 
-        # if len(vale) > 2:
-        #     vale, err1 = dea3(vale[:-2], vale[1:-1], vale[2:])
         err = np.abs(1.0 - vale)
         print(txt.format(len(x) - 1, val, vale[-1], err[-1]))
 
@@ -354,10 +352,6 @@ def dea_demo():
     for k, val in zip(num_panels, vals):
         vale, err = dea(val)
         print(txt.format(k, val, vale, err))
-
-    # res, abserr = dea3(vals[:-2], vals[1:-1], vals[2:])
-    # for k, val, vale, err in zip(num_panels[2:], vals[2:], res, abserr):
-    #     print(txt.format(k, val, vale, err))
 
 
 def max_abs(a, b):
