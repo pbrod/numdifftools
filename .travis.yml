@@ -67,6 +67,7 @@ before_script:
     fi
 script:
   - pwd
+  - ls
   - coverage erase
   - coverage run --source=numdifftools -m py.test build/lib
 # see http://www.camillescott.org/2016/07/15/travis-pytest-scipyconf/
