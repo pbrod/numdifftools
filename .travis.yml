@@ -6,7 +6,7 @@ dist: xenial
 #sudo: required
 addons:
   sonarcloud:
-    organization: "pbrod"
+
     token: "67bcbf1aefb992993fdd45b78fb4977a05be39b9"
   code_climate:
     repo_token: e5452096cdc930ddd2a4bec5c310cdb9b657484e049a2475ef0b5a347b9e5812
@@ -22,11 +22,7 @@ python:
   - 3.5
   - 3.6
   - 3.7
-
-matrix:
-  include:
-    - python: 3.8
-      sudo: true
+  - 3.8
 
 services:
     - xvfb
