@@ -31,6 +31,7 @@ def get_base_step(scale):
 
 
 def default_scale(method='forward', n=1, order=2):
+    """Returns good scale for MinStepGenerator"""
     high_order = int(n > 1 or order >= 4)
     order2 = max(order // 2 - 1, 0)
     n4 = n // 4

@@ -92,10 +92,9 @@ n=10, scale=14.200000000000001
 from __future__ import division, print_function
 from numdifftools.example_functions import get_function, function_names
 from numdifftools import Derivative
-from numdifftools.step_generators import default_scale, MinStepGenerator
+from numdifftools.step_generators import default_scale, MinStepGenerator, MaxStepGenerator
 import numpy as np
 import matplotlib.pyplot as plt
-import itertools
 
 
 def plot_error(scales, relativ_error, scale0, title='', label=''):
@@ -170,7 +169,8 @@ def _print_summary(method, order, x_values, scales):
 def run_all_benchmarks(method='forward', order=4, x_values=(0.1, 0.5, 1.0, 5), n_max=11,
                        show_plot=True):
 
-    epsilon = MinStepGenerator(num_steps=3, scale=None, step_nom=None)
+    epsilon = MinStepGenerator(base_step=None, scale=None, step_nom=None, num_extrap=0)
+
     scales = {}
     for n in range(1, n_max):
         plt.figure(n)
@@ -196,6 +196,6 @@ def run_all_benchmarks(method='forward', order=4, x_values=(0.1, 0.5, 1.0, 5), n
 
 if __name__ == '__main__':
 
-    run_all_benchmarks(method='complex', order=2, x_values=[50., ],  # 0.1, 0.5, 1.0, 5, 10, 50,],
+    run_all_benchmarks(method='complex', order=2, x_values=[0.1, 50],  # 0.1, 0.5, 1.0, 5, 10, 50,],
                        n_max=11)
-    plt.show('hold')
+    plt.show()
