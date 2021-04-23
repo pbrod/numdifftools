@@ -2,8 +2,6 @@ from __future__ import print_function
 import timeit
 from datetime import datetime
 from collections import OrderedDict
-# import matplotlib
-# matplotlib.use('Qt4Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -151,8 +149,7 @@ def main(problem_sizes=(4, 8, 16, 32, 64, 96)):
     gradient_funs = OrderedDict()
     hessian_funs = OrderedDict()
 
-    hessian_fun = 'Hessian'
-    hessian_fun = 'Hessdiag'
+    hessian_fun = 'Hessdiag'  # 'Hessian'
 
     if nda is not None:
         nda_method = 'forward'
@@ -187,8 +184,6 @@ def main(problem_sizes=(4, 8, 16, 32, 64, 96)):
     gradient_funs['complex_scipy'] = nsc.Jacobian(1, method='complex')
 
     symbols = ('-kx',  # algopy
-               #':k>', ':k<', '--k^',  #
-               #'--kv', '-kp', '-ks',
                '--m', '-m', '-m+',  # fixed: forward, central, complex
                '--g', '-g', '-g+',  # adaptive: forward, central, complex
                '--b', '-b', '-b+',  # statsmodels: forward, central, complex

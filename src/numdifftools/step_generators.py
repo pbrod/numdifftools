@@ -22,7 +22,7 @@ def get_nominal_step(x=None):
     """Return nominal step"""
     if x is None:
         return 1.0
-    return np.log1p(np.abs(x)).clip(min=1.0)
+    return np.log(1.718281828459045 + np.abs(x)).clip(min=1)
 
 
 def get_base_step(scale):
@@ -89,7 +89,7 @@ class BasicMaxStepGenerator(object):
     def _range(self):
         return range(self.num_steps)
 
-    def __call__(self, *args, **kwds):
+    def __call__(self):
         base_step, step_ratio = self.base_step, self.step_ratio
         sgn, offset = self._sign, self.offset
         for i in self._range():

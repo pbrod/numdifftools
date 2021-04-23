@@ -6,7 +6,7 @@ Created on 28. aug. 2015
 from __future__ import absolute_import, division, print_function
 
 import numpy as np
-from numpy.testing.utils import assert_array_almost_equal, assert_allclose
+from numpy.testing import assert_array_almost_equal, assert_allclose  # @UnresolvedImport
 from numdifftools.limits import Limit, Residue, CStepGenerator
 from numdifftools.step_generators import make_exact
 from numdifftools.extrapolation import EPS
