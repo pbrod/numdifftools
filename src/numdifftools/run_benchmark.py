@@ -35,10 +35,11 @@ class BenchmarkFunction(object):
 
 def _plot(plot, problem_sizes, objects, symbols, ylabel='', loc=2, logx=False):
 
-    now = datetime.now()
+    now = datetime.now().isoformat().rpartition(':')[0]
+
     for title, funcs, results in objects:
         plt.figure()
-        plt.title(title + ' ' + now.isoformat(timespec='minutes'))
+        plt.title(title + ' ' + now)
         for i, method in enumerate(funcs):
             plot(problem_sizes, results[i], symbols[i],
                  markerfacecolor='None', label=method)
@@ -150,8 +151,8 @@ def main(problem_sizes=(4, 8, 16, 32, 64, 96)):
     gradient_funs = OrderedDict()
     hessian_funs = OrderedDict()
 
-    hessian_fun = 'Hessdiag'
     hessian_fun = 'Hessian'
+    hessian_fun = 'Hessdiag'
 
     if nda is not None:
         nda_method = 'forward'
