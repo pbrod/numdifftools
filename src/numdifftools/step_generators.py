@@ -173,7 +173,7 @@ class MinStepGenerator(object):
 
     _step_generator = BasicMinStepGenerator
 
-    def __init__(self, base_step=None, step_ratio=2.0, num_steps=None,
+    def __init__(self, base_step=None, step_ratio=None, num_steps=None,
                  step_nom=None, offset=0, num_extrap=0, use_exact_steps=True,
                  check_num_steps=True, scale=None):
         self.base_step = base_step
@@ -294,7 +294,7 @@ class MaxStepGenerator(MinStepGenerator):
     ----------
     base_step : float, array-like, default 2.0
         Defines the maximum step, if None, the value is set to EPS**(1/scale)
-    step_ratio : real scalar, optional, default 2
+    step_ratio : real scalar, optional, default 2 or 1.6
         Ratio between sequential steps generated.
         Note: Ratio > 1
         If None then step_ratio is 2 for n=1 otherwise step_ratio is 1.6
@@ -319,8 +319,8 @@ class MaxStepGenerator(MinStepGenerator):
 
     _step_generator = BasicMaxStepGenerator
 
-    def __init__(self, base_step=2.0, step_ratio=2.0, num_steps=15,
-                 step_nom=None, offset=0, num_extrap=0,
+    def __init__(self, base_step=2.0, step_ratio=None, num_steps=15,
+                 step_nom=None, offset=0, num_extrap=9,
                  use_exact_steps=False, check_num_steps=True, scale=500):
         super(MaxStepGenerator,
               self).__init__(base_step=base_step, step_ratio=step_ratio,

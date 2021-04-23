@@ -1,6 +1,11 @@
 from __future__ import print_function
-import numpy as np
 import timeit
+from datetime import datetime
+from collections import OrderedDict
+# import matplotlib
+# matplotlib.use('Qt4Agg')
+import matplotlib.pyplot as plt
+import numpy as np
 
 import numdifftools as nd
 import numdifftools.nd_statsmodels as nds
@@ -12,11 +17,7 @@ except ImportError:
     dot = np.dot
 else:
     import numdifftools.nd_algopy as nda
-from collections import OrderedDict
 from numdifftools.core import MinStepGenerator, MaxStepGenerator
-# import matplotlib
-# matplotlib.use('Qt4Agg')
-import matplotlib.pyplot as plt
 
 
 class BenchmarkFunction(object):
@@ -33,9 +34,11 @@ class BenchmarkFunction(object):
 
 
 def _plot(plot, problem_sizes, objects, symbols, ylabel='', loc=2, logx=False):
+
+    now = datetime.now()
     for title, funcs, results in objects:
         plt.figure()
-        plt.title(title + ' 2018')
+        plt.title(title + ' ' + now.isoformat(timespec='minutes'))
         for i, method in enumerate(funcs):
             plot(problem_sizes, results[i], symbols[i],
                  markerfacecolor='None', label=method)
@@ -117,11 +120,12 @@ def compute_hessians(hessian_funs, problem_sizes):
 
 
 def run_gradient_and_hessian_benchmarks(gradient_funs, hessian_funs,
-                                        problem_sizes=(4, 8, 16, 32, 64, 96)):
+                                        problem_sizes=(4, 8, 16, 32, 64, 96),
+                                        symbols=None):
 
-    symbols = ('-kx', ':k>', ':k<', '--k^', '--kv', '-kp', '-ks',
-               'b', '--b', '-b+', 'r', '--r', '-r+')
-
+    if symbols is None:
+        symbols = ('-kx', ':k>', ':k<', '--k^', '--kv', '-kp', '-ks',
+                   'b', '--b', '-b+', 'r', '--r', '-r+')
     results_gradients = compute_gradients(gradient_funs, problem_sizes)
     results_hessians = compute_hessians(hessian_funs, problem_sizes)
 
@@ -146,7 +150,7 @@ def main(problem_sizes=(4, 8, 16, 32, 64, 96)):
     gradient_funs = OrderedDict()
     hessian_funs = OrderedDict()
 
-    # hessian_fun = 'Hessdiag'
+    hessian_fun = 'Hessdiag'
     hessian_fun = 'Hessian'
 
     if nda is not None:
@@ -158,12 +162,15 @@ def main(problem_sizes=(4, 8, 16, 32, 64, 96)):
     ndc_hessian = getattr(nd, hessian_fun)
 
     order = 2
+
+    for method in ['forward', 'central', 'complex']:
+        options = dict(method=method, order=order)
+        gradient_funs[method] = nd.Jacobian(1, step=fixed_step, **options)
+        hessian_funs[method] = ndc_hessian(1, step=fixed_step, **options)
     for method in ['forward', 'central', 'complex']:
         method2 = method + adaptiv_txt
         options = dict(method=method, order=order)
-        gradient_funs[method] = nd.Jacobian(1, step=fixed_step, **options)
         gradient_funs[method2] = nd.Jacobian(1, step=epsilon, **options)
-        hessian_funs[method] = ndc_hessian(1, step=fixed_step, **options)
         hessian_funs[method2] = ndc_hessian(1, step=epsilon, **options)
 
     hessian_funs['forward_statsmodels'] = nds.Hessian(1, method='forward')
@@ -173,11 +180,19 @@ def main(problem_sizes=(4, 8, 16, 32, 64, 96)):
     gradient_funs['forward_statsmodels'] = nds.Jacobian(1, method='forward')
     gradient_funs['central_statsmodels'] = nds.Jacobian(1, method='central')
     gradient_funs['complex_statsmodels'] = nds.Jacobian(1, method='complex')
+
     gradient_funs['forward_scipy'] = nsc.Jacobian(1, method='forward')
     gradient_funs['central_scipy'] = nsc.Jacobian(1, method='central')
     gradient_funs['complex_scipy'] = nsc.Jacobian(1, method='complex')
 
-    run_gradient_and_hessian_benchmarks(gradient_funs, hessian_funs, problem_sizes)
+    symbols = ('-kx',  # algopy
+               #':k>', ':k<', '--k^',  #
+               #'--kv', '-kp', '-ks',
+               '--m', '-m', '-m+',  # fixed: forward, central, complex
+               '--g', '-g', '-g+',  # adaptive: forward, central, complex
+               '--b', '-b', '-b+',  # statsmodels: forward, central, complex
+               '--r', '-r', '-r+')  # scipy: forward, central, complex
+    run_gradient_and_hessian_benchmarks(gradient_funs, hessian_funs, problem_sizes, symbols)
 
 
 if __name__ == '__main__':

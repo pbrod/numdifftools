@@ -1,6 +1,6 @@
 import numpy as np
 from numpy.testing import assert_array_almost_equal  # @UnresolvedImport
-import numdifftools.core as nd
+import numdifftools as nd
 import numdifftools.nd_statsmodels as nds
 from numdifftools.example_functions import function_names, get_function
 try:

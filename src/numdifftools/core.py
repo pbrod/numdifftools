@@ -185,15 +185,12 @@ class Derivative(_Limit):
     def _step_generator(self, step, options):
         if hasattr(step, '__call__'):
             return step
-        step_options = dict(step_ratio=None, num_extrap=14)
-        if step is None and self.method not in ['complex', 'multicomplex']:
-            step_options.update(**options)
-            return MaxStepGenerator(**step_options)
 
-        step_options['num_extrap'] = 0
-        step_options['step_nom'] = None if step is None else 1.0
-        step_options.update(**options)
-        return MinStepGenerator(base_step=step, **step_options)
+        if step is None and self.method not in ['complex', 'multicomplex']:
+            return MaxStepGenerator(**options)
+        if 'step_nom' not in options and step is not None:
+            options['step_nom'] = 1.0
+        return MinStepGenerator(base_step=step, **options)
 
     def _set_derivative(self):
         if self.n == 0:
