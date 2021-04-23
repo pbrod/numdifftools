@@ -536,12 +536,12 @@ class Jacobian(Derivative):
 
     >>> fun3 = lambda x : np.vstack((x[0]*x[1]*x[2]**2, x[0]*x[1]*x[2]))
     >>> jfun3 = nd.Jacobian(fun3)
-    >>> np.allclose(jfun3([1., 2., 3.]), [[18., 9., 12.], [6., 3., 2.]])
+
+    >>> np.allclose(jfun3([1., 2., 3.]), [[[18.], [9.], [12.]], [[6.], [3.], [2.]]])
     True
-    >>> np.allclose(jfun3([4., 5., 6.]), [[180., 144., 240.], [30., 24., 20.]])
+    >>> np.allclose(jfun3([4., 5., 6.]), [[[180.], [144.], [240.]], [[30.], [24.], [20.]]])
     True
-    >>> np.allclose(jfun3(np.array([[1.,2.,3.]]).T), [[ 18.,   9.,  12.],
-    ...                                               [ 6.,   3.,   2.]])
+    >>> np.allclose(jfun3(np.array([[1.,2.,3.]]).T), [[[18.], [9.], [12.]], [[6.], [3.], [2.]]])
     True
 
     """, see_also="""
@@ -804,3 +804,8 @@ class Hessian(Hessdiag):
         Here the difference rule is already applied. Just return result.
         """
         return self._vstack(sequence, steps)
+
+
+if __name__ == "__main__":
+    from numdifftools.testing import test_docstrings
+    test_docstrings(__file__)

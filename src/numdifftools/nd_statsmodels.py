@@ -267,11 +267,10 @@ class Jacobian(_Common):
     True
 
     >>> fun3 = lambda x : np.vstack((x[0]*x[1]*x[2]**2, x[0]*x[1]*x[2]))
-    >>> np.allclose(nd.Jacobian(fun3)([1., 2., 3.]),
-    ...            [[18., 9., 12.], [6., 3., 2.]])
+    >>> np.allclose(nd.Jacobian(fun3)([1., 2., 3.]), [[[18.], [9.], [12.]], [[6.], [3.], [2.]]])
     True
     >>> np.allclose(nd.Jacobian(fun3)([4., 5., 6.]),
-    ...            [[180., 144., 240.], [30., 24., 20.]])
+    ...            [[[180.], [144.], [240.]], [[30.], [24.], [20.]]])
     True
 
     >>> np.allclose(nd.Jacobian(fun3)(np.array([[1.,2.,3.], [4., 5., 6.]]).T),
