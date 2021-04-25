@@ -4,8 +4,7 @@ This script profile different parts of numdifftools.
 """
 from __future__ import print_function
 import numpy as np
-import numdifftools as nd
-import numdifftools.nd_statsmodels as nds
+import numdifftools as nd  # numdifftools.nd_statsmodels as nd
 from numdifftools.profiletools import do_profile
 from numdifftools.example_functions import function_names, get_function
 from numdifftools.run_benchmark import BenchmarkFunction
@@ -17,6 +16,7 @@ def profile_hessian(n_values=(4, 8, 16, 32, 64, 96)):
 
         step = nd.step_generators.one_step
         cls = nd.Hessian(f, step=step, method='central')
+        # pylint: disable=protected-access
         follow = [cls._derivative_nonzero_order,
                   cls._apply_fd_rule,
                   cls._get_finite_difference_rule,
@@ -34,10 +34,9 @@ def main():
     x = 0.5
     methods = ['complex', 'central', 'backward', 'forward']
 
-    # for i, Derivative in enumerate([nd.Derivative, nds.Gradient,
-    # nda.Derivative]):
+    # for i, derivative in enumerate([nd.Derivative, nds.Gradient, nda.Derivative]):
     i = 0
-    Derivative = nd.Derivative
+    derivative = nd.Derivative
     for name in function_names:
         if i > 1 and name in ['arcsinh', 'exp2']:
             continue
@@ -47,12 +46,11 @@ def main():
             continue
         for method in methods[3 * (i > 1):]:
 
-            df = Derivative(f, method=method)
+            df = derivative(f, method=method)
             val = df(x)
             tval = true_df(x)
             dm = 7
             print(i, name, method, dm, np.abs(val - tval))
-            # assert_array_almost_equal(val, tval, decimal=dm)
 
 
 def profile_main():
@@ -60,7 +58,7 @@ def profile_main():
     import pstats
     cProfile.run("main()", "{}.profile".format(__file__))
     s = pstats.Stats("{}.profile".format(__file__))
-    # s.strip_dirs()
+
     s.sort_stats("time").print_stats(20)
 
 

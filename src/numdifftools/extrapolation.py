@@ -110,6 +110,20 @@ class Dea(object):
         else:
             res3la[nres] = result
 
+    def _check_convergence(self, i, e_1, e_3, delta2, delta3, any_converged):
+        sss = 0
+        if i == 0:
+            if not any_converged:
+                sss = 1.0 / delta2 - 1.0 / delta3
+        else:
+            delta1 = e_1 - e_3
+            err1 = abs(delta1)
+            tol1 = max(abs(e_1), abs(e_3)) * _EPS
+            any_converged = any_converged or err1 <= tol1
+            if not any_converged:
+                sss = 1.0 / delta1 + 1.0 / delta2 - 1.0 / delta3
+        return any_converged, sss
+
     def _dea(self, epstab, n):
         nres = self._nres
         res3la = epstab[-3:]
@@ -131,18 +145,9 @@ class Dea(object):
                 result = res
                 break
 
-            if i == 0:
-                any_converged = err2 <= tol2 or err3 <= tol3
-                if not any_converged:
-                    sss = 1.0 / delta2 - 1.0 / delta3
-            else:
-                e_3 = epstab[k1]
-                delta1 = e_1 - e_3
-                err1 = abs(delta1)
-                tol1 = max(abs(e_1), abs(e_3)) * _EPS
-                any_converged = err1 <= tol1 or err2 <= tol2 or err3 <= tol3
-                if not any_converged:
-                    sss = 1.0 / delta1 + 1.0 / delta2 - 1.0 / delta3
+            any_converged = err2 <= tol2 or err3 <= tol3
+            e_3 = epstab[k1]
+            any_converged, sss = self._check_convergence(i, e_1, e_3, delta2, delta3, any_converged)
 
             epstab[k1] = e_1
             if any_converged or abs(sss * e_1) <= 1e-4:
@@ -207,7 +212,7 @@ class Dea(object):
 class EpsAlg(object):
 
     """
-    Extrapolate a slowly convergent sequence
+    Extrapolate a slowly convergent sequence using Shanks transformation.
 
     Notes
     -----
