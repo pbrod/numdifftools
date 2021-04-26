@@ -39,7 +39,7 @@ class Dea(object):
     estimate of the sequence's limiting value, thus improving the rate of convergence.
     The epsilon algorithm of P. Wynn, see [1]_, is used to perform the
     non-linear Shanks transformations. The routine is a translation of the
-    DQELG function found in the QUADPACK fortran library, see [2]_.
+    DQELG function found in the QUADPACK fortran library, see [2]_ and [3]_.
 
     List of major variables:
 
@@ -75,7 +75,7 @@ class Dea(object):
     ..  [2] R. Piessens, E. De Doncker-Kapenga and C. W. Uberhuber (1983),
             "QUADPACK: a subroutine package for automatic integration",
             Springer, ISBN: 3-540-12553-1, 1983.
-
+    ..  [3] http://www.netlib.org/quadpack/
     """
     def __init__(self, limexp=50):
         self.limexp = limexp
@@ -402,7 +402,8 @@ def dea3(v0, v1, v2, symmetric=False):
     better estimate of the sequence's limiting value based on only three values.
     The epsilon algorithm of P. Wynn, see [1]_, is used to perform the
     non-linear Shanks transformations. The routine is a vectorized translation
-    of the DQELG function found in the QUADPACK fortran library for LIMEXP=3, see [2]_.
+    of the DQELG function found in the QUADPACK fortran library for LIMEXP=3,
+    see [2]_ and [3]_.
 
     Examples
     --------
@@ -436,6 +437,7 @@ def dea3(v0, v1, v2, symmetric=False):
     ..  [2] R. Piessens, E. De Doncker-Kapenga and C. W. Uberhuber (1983),
             "QUADPACK: a subroutine package for automatic integration",
             Springer, ISBN: 3-540-12553-1, 1983.
+    ..  [3] http://www.netlib.org/quadpack/
     """
     e_0, e_1, e_2 = np.atleast_1d(v0, v1, v2)
     with warnings.catch_warnings():
