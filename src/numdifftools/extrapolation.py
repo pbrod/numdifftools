@@ -100,7 +100,6 @@ class Dea(object):
 
         abserr = _HUGE
         result = epstab[n]
-        # if(n.lt.3) go to 100
         limexp = self.limexp
         epstab[n+2] = epstab[n]
         newelm = n // 2
@@ -108,7 +107,7 @@ class Dea(object):
         old_n = n
         k1 = n
         all_converged = False
-        for i in range(newelm):  # do 40 i = 1,newelm
+        for i in range(newelm):
             res = epstab[k1+2]
             e0 = epstab[k1-2]
             e1 = epstab[k1-1]
@@ -122,11 +121,7 @@ class Dea(object):
             tol3 = max(e1abs, abs(e0)) * _EPS
             all_converged = not (err2 > tol2 or err3 > tol3)
             if all_converged:
-                #      if e0, e1 and e2 are equal to within machine
-                #      accuracy, convergence is assumed.
-                #      result = e2
-                #      abserr = abs(e1-e0) + abs(e2-e1)
-
+                # if e0, e1 and e2 are equal to within machine accuracy, convergence is assumed.
                 result = res
                 abserr = err2 + err3
 
@@ -139,17 +134,16 @@ class Dea(object):
             err1 = abs(delta1)
             tol1 = max(e1abs, abs(e3)) * _EPS
 
-            #      if two elements are very close to each other, omit
-            #      a part of the table by adjusting the value of n
+            # if two elements are very close to each other, omit
+            #  a part of the table by adjusting the value of n
 
             any_converged = err1 <= tol1 or err2 <= tol2 or err3 <= tol3
             if not any_converged:  # go to 20
                 ss = 1.0 / delta1 + 1.0 / delta2 - 1.0 / delta3
                 epsinf = abs(ss*e1)
 
-            #      test to detect irregular behaviour in the table, and
-            #      eventually omit a part of the table adjusting the value
-            #      of n.
+                # If irregular behaviour in the table is detected, omit a
+                # part of the table adjusting the value of n.
                 any_converged = epsinf <= 1e-4
 
             if any_converged:
@@ -158,17 +152,14 @@ class Dea(object):
                 # go to 50
                 break
 
-            #      compute a new element and eventually adjust
-            #      the value of result.
+            #  compute a new element and eventually adjust the value of result.
             res = e1 + 1.0/ss
             epstab[k1] = res
             k1 = k1 - 2
             error = err2 + abs(res-e2) + err3
-            if error > abserr:
-                # go to 40
-                continue
-            abserr = error
-            result = res
+            if not (error > abserr):
+                abserr = error
+                result = res
             # 40 continue
 
         # 50
