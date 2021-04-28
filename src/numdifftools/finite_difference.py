@@ -396,7 +396,7 @@ class LogRule(object):
 
     @property
     def eval_first_condition(self):
-        """Returns True if f(x0) needs to be evaluated given the differentiation method."""
+        """True if f(x0) needs to be evaluated given the differentiation method."""
         even_derivative = self._even_derivative
         return ((even_derivative and self.method in ('central', 'central2')) or
                 self.method in ['forward', 'backward'] or
@@ -408,7 +408,7 @@ class LogRule(object):
 
     @property
     def richardson_step(self):
-        """Returns Richardson step given the method"""
+        """The step between exponents in the error polynomial of the Richardson extrapolation."""
         complex_step = 4 if self._complex_high_order else 2
         return dict(central=2,
                     central2=2,
@@ -417,7 +417,7 @@ class LogRule(object):
 
     @property
     def method_order(self):
-        """Returns method order"""
+        """The leading order of the truncation error of the Richardson extrapolation."""
         step = self.richardson_step
         # Make sure it is even and at least 2 or 4
         order = max((self.order // step) * step, step)
@@ -498,7 +498,7 @@ class LogRule(object):
 
     @property
     def diff(self):
-        "Return difference function"
+        "The difference function"
         first = '_{0!s}'.format(self.method)
         middle = self._get_middle_name()
         last = self._get_last_name()

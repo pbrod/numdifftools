@@ -178,6 +178,7 @@ class Derivative(_Limit):
 
     @property
     def n(self):
+        """Order of the derivative."""
         return self.fd_rule.n
 
     @n.setter
@@ -187,6 +188,7 @@ class Derivative(_Limit):
 
     @property
     def order(self):
+        """Defines the order of the error term in the Taylor approximation used."""
         return self.fd_rule.order
 
     @order.setter
@@ -195,6 +197,7 @@ class Derivative(_Limit):
 
     @property
     def method(self):
+        """Defines the method used in the finite difference approximation."""
         return self.fd_rule.method
 
     @method.setter
@@ -203,6 +206,7 @@ class Derivative(_Limit):
 
     @property
     def method_order(self):
+        """Defines the leading order of the error term in the Richardson extrapolation method."""
         return self.fd_rule.method_order
 
     def _step_generator(self, step, options):

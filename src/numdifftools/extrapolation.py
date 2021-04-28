@@ -453,17 +453,32 @@ class Richardson(object):
     """
     Extrapolates a sequence with Richardsons method
 
+    Parameters
+    ----------
+    step_ratio: real scalar
+        Ratio between sequential steps, h, generated.
+    step: scalar integer
+        Defines the step between exponents in the error polynomial,
+        i.e., step = k_1 - k_0 = k_2 - k_1 = ... = k_{i+1} - k_i
+    order: scalar integer
+        Leading order of truncation error.
+    num_terms: scalar integer
+        Number of terms used in the polynomial fit.
+
     Notes
     -----
-    Suppose you have series expansion that goes like this
+    Suppose f(h) is an approximation of L (exact value) that depends on a positive
+    step size h described with a sequence of the form
 
-    L = f(h) + a0 * h^p_0 + a1 * h^p_1+ a2 * h^p_2 + ...
+    L = f(h) + a0 * h^k_0 + a1 * h^k_1+ a2 * h^k_2 + ...
 
-    where p_i = order + step * i  and f(h) -> L as h -> 0, but f(0) != L.
+    where the ai are unknown constants and the k_i are known constants such that h^k_i > h^(k_i+1).
 
     If we evaluate the right hand side for different stepsizes h
     we can fit a polynomial to that sequence of approximations.
     This is exactly what this class does.
+    Here k_0 is the leading order step size behavior of truncation error as L = f(h)+O(h^k_0)
+    (f(h) -> L as h -> 0, but f(0) != L) and k_i = order + step * i .
 
     Examples
     --------
@@ -488,10 +503,10 @@ class Richardson(object):
     """
 
     def __init__(self, step_ratio=2.0, step=1, order=1, num_terms=2):
-        self.num_terms = num_terms
-        self.order = order
-        self.step = step
         self.step_ratio = step_ratio
+        self.step = step
+        self.order = order
+        self.num_terms = num_terms
 
     @staticmethod
     def _r_matrix(step_ratio, step, num_terms, order):
