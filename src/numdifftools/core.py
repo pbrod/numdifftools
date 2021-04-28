@@ -44,15 +44,15 @@ _cmn_doc = """
        function of one array fun(x, `*args`, `**kwds`)
     step : float, array-like or StepGenerator object, optional
         Defines the spacing used in the approximation.
-        Default is MinStepGenerator(base_step=step, step_ratio=None,
-                                   num_extrap=0, **step_options)
-        if step or method in in ['complex', 'multicomplex'],
+        Default is MinStepGenerator(**step_options) if method in in ['complex', 'multicomplex'],
         otherwise
-            MaxStepGenerator(step_ratio=None, num_extrap=14, **step_options)
+            MaxStepGenerator(**step_options)
         The results are extrapolated if the StepGenerator generate more than 3
         steps.
     method : {'central', 'complex', 'multicomplex', 'forward', 'backward'}
         defines the method used in the approximation%(extra_parameter)s
+    richardson_terms: scalar integer, default 2.
+        number of terms used in the Richardson extrapolation.
     full_output : bool, optional
         If `full_output` is False, only the derivative is returned.
         If `full_output` is True, then (der, r) is returned `der` is the
