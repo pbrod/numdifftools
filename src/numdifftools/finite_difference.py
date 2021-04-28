@@ -122,6 +122,12 @@ class JacobianDifferenceFunctions(object):
         return np.array([(f(x + hi) - f(x - hi)) / 2.0 for hi in steps])
 
     @staticmethod
+    def _central_even(f, f_x, x, h):
+        n = len(x)
+        steps = JacobianDifferenceFunctions.increments(n, h)
+        return np.array([(f(x + hi) + f(x - hi)) / 2.0 - f_x for hi in steps])
+
+    @staticmethod
     def _backward(f, f_x, x, h):
         n = len(x)
         steps = JacobianDifferenceFunctions.increments(n, h)
@@ -138,6 +144,13 @@ class JacobianDifferenceFunctions(object):
         n = len(x)
         steps = JacobianDifferenceFunctions.increments(n, h)
         return np.array([f(x + 1j * ih).imag for ih in steps])
+
+    @staticmethod
+    def _complex_even(f, f_x, x, h):
+        n = len(x)
+        j_1 = _SQRT_J
+        steps = JacobianDifferenceFunctions.increments(n, h)
+        return np.array([(f(x + j_1*ih) + f(x - j_1*ih)).imag for ih in steps])
 
     @staticmethod
     def _complex_odd(f, f_x, x, h):
@@ -648,7 +661,7 @@ class LogJacobianRule(LogRule):
     """
     _difference_functions = JacobianDifferenceFunctions()
 
-    n = property(fget=lambda cls: 1, fset=lambda cls, n: None)
+    # n = property(fget=lambda cls: 1, fset=lambda cls, n: None)
 
     @staticmethod
     def _atleast_2d(original_shape, ndim):
@@ -753,7 +766,8 @@ class LogHessianRule(LogRule):
     @order.setter
     def order(self, order):
         valid_order = self.order
-        if order != valid_order:
+
+        if order is not None and order != valid_order:
             msg = 'Can not change order to {}! The only valid order is {} for method={}.'
             warnings.warn(msg.format(order, valid_order, self.method))
 

@@ -529,6 +529,7 @@ class Hessdiag(Derivative):
     _fd_rule = LogHessdiagRule
 
     def __init__(self, f, step=None, method='central', order=2, **options):
+        options.pop('n', None)
         super(Hessdiag, self).__init__(f, step=step, method=method, n=2, order=order, **options)
 
     def __call__(self, x, *args, **kwds):

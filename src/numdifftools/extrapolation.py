@@ -76,6 +76,7 @@ class Dea(object):
             "QUADPACK: a subroutine package for automatic integration",
             Springer, ISBN: 3-540-12553-1, 1983.
     ..  [3] http://www.netlib.org/quadpack/
+    ..  [4] https://mathworld.wolfram.com/WynnsEpsilonMethod.html
     """
     def __init__(self, limexp=50):
         self.limexp = limexp
@@ -234,6 +235,7 @@ class EpsAlg(object):
             convergence and the summation of divergent series"
             Computer Physics Reports Vol. 10, 189 - 371
             http://arxiv.org/abs/math/0306302v1
+    ..  [2] https://mathworld.wolfram.com/WynnsEpsilonMethod.html
     """
 
     def __init__(self):
@@ -429,6 +431,7 @@ def dea3(v0, v1, v2, symmetric=False):
             "QUADPACK: a subroutine package for automatic integration",
             Springer, ISBN: 3-540-12553-1, 1983.
     ..  [3] http://www.netlib.org/quadpack/
+    ..  [4] https://mathworld.wolfram.com/WynnsEpsilonMethod.html
     """
     e_0, e_1, e_2 = np.atleast_1d(v0, v1, v2)
     with warnings.catch_warnings():
