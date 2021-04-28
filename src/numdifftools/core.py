@@ -11,19 +11,17 @@ Licence:     New BSD
 
 from __future__ import division, print_function
 from collections import namedtuple
-import warnings
+
 import numpy as np
-from numpy import linalg
-from numdifftools.multicomplex import Bicomplex
 from numdifftools.extrapolation import Richardson, dea3, convolve  # @UnusedImport
 from numdifftools.step_generators import MaxStepGenerator, MinStepGenerator
 from numdifftools.limits import _Limit
-from numdifftools.finite_difference import (DifferenceFunctions,
-                                            HessdiagDifferenceFunctions,
-                                            HessianDifferenceFunctions,
-                                            JacobianDifferenceFunctions,
-                                            LogRule)
-from scipy import special
+from numdifftools.finite_difference import (LogRule,
+                                            LogHessdiagRule,
+                                            LogHessianRule,
+                                            LogJacobianRule,
+                                            )
+
 
 __all__ = ('dea3', 'Derivative', 'Jacobian', 'Gradient', 'Hessian', 'Hessdiag',
            'MinStepGenerator', 'MaxStepGenerator', 'Richardson',
@@ -164,23 +162,48 @@ class Derivative(_Limit):
     Hessian
     """)
 
+    _fd_rule = LogRule
     info = namedtuple('info', ['f_value', 'error_estimate', 'final_step', 'index'])
 
-    def __init__(self, fun, step=None, method='central', order=2, n=1, full_output=False,
-                 **step_options):
-        self.n = n
-        self.richardson_terms = 2
-        self.log_rule = LogRule(n=n, method=method, order=order)
+    def __init__(self, fun, step=None, method='central', order=2, n=1, **options):
+        self.richardson_terms = options.pop('richardson_terms', 2)
+        self.full_output = options.pop('full_output', False)
 
-        super(Derivative,
-              self).__init__(fun, step=step, method=method, order=order, full_output=full_output,
-                             **step_options)
+        self.fun = fun
 
-    n = property(fget=lambda cls: cls._n,
-                 fset=lambda cls, n: (setattr(cls, '_n', n),
-                                      cls._set_derivative()))
+        self.fd_rule = self._fd_rule(n=n, method=method, order=order)
 
-    _difference_functions = DifferenceFunctions()
+        super(Derivative, self).__init__(step=step,  **options)
+        self._set_derivative()
+
+    @property
+    def n(self):
+        return self.fd_rule.n
+
+    @n.setter
+    def n(self, value):
+        self.fd_rule.n = value
+        self._set_derivative()
+
+    @property
+    def order(self):
+        return self.fd_rule.order
+
+    @order.setter
+    def order(self, order):
+        self.fd_rule.order = order
+
+    @property
+    def method(self):
+        return self.fd_rule.method
+
+    @method.setter
+    def method(self, method):
+        self.fd_rule.method = method
+
+    @property
+    def method_order(self):
+        return self.fd_rule.method_order
 
     def _step_generator(self, step, options):
         if hasattr(step, '__call__'):
@@ -212,98 +235,29 @@ class Derivative(_Limit):
 
         self.set_richardson_rule(step_ratio, self.richardson_terms)
 
-        return self._apply_fd_rule(step_ratio, results, steps), fxi
-
-    @property
-    def _method_order(self):
-        step = self._richardson_step()
-        # Make sure it is even and at least 2 or 4
-        order = max((self.order // step) * step, step)
-        return order
-
-    @property
-    def _complex_high_order(self):
-        return self.method == 'complex' and (self.n > 1 or self.order >= 4)
-
-    def _richardson_step(self):
-        complex_step = 4 if self._complex_high_order else 2
-        return dict(central=2,
-                    central2=2,
-                    complex=complex_step,
-                    multicomplex=2).get(self.method, 1)
+        return self.fd_rule.apply(results, steps, step_ratio), fxi
 
     def set_richardson_rule(self, step_ratio, num_terms=2):
-        order = self._method_order
-        step = self._richardson_step()
+        order = self.method_order
+        step = self.fd_rule.richardson_step
         self.richardson = Richardson(step_ratio=step_ratio,
                                      step=step, order=order,
                                      num_terms=num_terms)
 
-    def _multicomplex_middle_name_or_empty(self):
-        if self.method == 'multicomplex' and self.n > 1:
-            _assert(self.n <= 2, 'Multicomplex method only support first '
-                    'and second order derivatives.')
-            return '2'
-        return ''
-
-    def _get_middle_name(self):
-        if self._even_derivative and self.method in ('central', 'complex'):
-            return '_even'
-        if self._complex_high_order and self._odd_derivative:
-            return '_odd'
-        return self._multicomplex_middle_name_or_empty()
-
-    def _get_last_name(self):
-        last = ''
-        if (self.method == 'complex' and self._derivative_mod_four_is_zero or
-                self._complex_high_order and
-                self._derivative_mod_four_is_three):
-            last = '_higher'
-        return last
-
-    def _get_function_name(self):
-        first = '_{0!s}'.format(self.method)
-        middle = self._get_middle_name()
-        last = self._get_last_name()
-        name = first + middle + last
-        return name
-
     def _get_functions(self, args, kwds):
-        name = self._get_function_name()
+
         fun = self.fun
 
         def export_fun(x):
             return fun(x, *args, **kwds)
 
-        return getattr(self._difference_functions, name), export_fun
+        return self.fd_rule.diff, export_fun
 
     def _get_steps(self, xi):
-        method, n, order = self.method, self.n, self._method_order
+        method, n, order = self.method, self.n, self.method_order
         # pylint: disable=no-member
         step_gen = self.step.step_generator_function(xi, method, n, order)
         return [step for step in step_gen()], step_gen.step_ratio
-
-    @property
-    def _odd_derivative(self):
-        return self.n % 2 == 1
-
-    @property
-    def _even_derivative(self):
-        return self.n % 2 == 0
-
-    @property
-    def _derivative_mod_four_is_three(self):
-        return self.n % 4 == 3
-
-    @property
-    def _derivative_mod_four_is_zero(self):
-        return self.n % 4 == 0
-
-    def _eval_first_condition(self):
-        even_derivative = self._even_derivative
-        return ((even_derivative and self.method in ('central', 'central2')) or
-                self.method in ['forward', 'backward'] or
-                self.method == 'complex' and self._derivative_mod_four_is_zero)
 
     def _raise_error_if_any_is_complex(self, x, f_x):
         msg = ('The {} step derivative method does only work on a real valued analytic '
@@ -319,7 +273,7 @@ class Derivative(_Limit):
             f_x = f(x)
             self._raise_error_if_any_is_complex(x, f_x)
             return f_x
-        if self._eval_first_condition() or self.full_output:
+        if self.fd_rule.eval_first_condition or self.full_output:
             return f(x)
         return 0.0
 
@@ -331,110 +285,6 @@ class Derivative(_Limit):
         if self.full_output:
             return derivative, self.info(fxi, *info)
         return derivative
-
-    @staticmethod
-    def _fd_matrix(step_ratio, parity, nterms):
-        """
-        Return matrix for finite difference and complex step derivation.
-
-        Parameters
-        ----------
-        step_ratio : real scalar
-            ratio between steps in unequally spaced difference rule.
-        parity : scalar, integer
-            0 (one sided, all terms included but zeroth order)
-            1 (only odd terms included)
-            2 (only even terms included)
-            3 (only every 4'th order terms included starting from order 2)
-            4 (only every 4'th order terms included starting from order 4)
-            5 (only every 4'th order terms included starting from order 1)
-            6 (only every 4'th order terms included starting from order 3)
-        nterms : scalar, integer
-            number of terms
-        """
-        _assert(0 <= parity <= 6,
-                'Parity must be 0, 1, 2, 3, 4, 5 or 6! ({0:d})'.format(parity))
-        step = [1, 2, 2, 4, 4, 4, 4][parity]
-        inv_sr = 1.0 / step_ratio
-        offset = [1, 1, 2, 2, 4, 1, 3][parity]
-        c0 = [1.0, 1.0, 1.0, 2.0, 24.0, 1.0, 6.0][parity]
-        c = c0 / \
-            special.factorial(np.arange(offset, step * nterms + offset, step))
-        [i, j] = np.ogrid[0:nterms, 0:nterms]
-        return np.atleast_2d(c[j] * inv_sr ** (i * (step * j + offset)))
-
-    @property
-    def _flip_fd_rule(self):
-        return ((self._even_derivative and (self.method == 'backward')) or
-                (self.method == 'complex' and (self.n % 8 in [3, 4, 5, 6])))
-
-    def _parity_complex(self, order, method_order):
-        if self.n == 1 and method_order < 4:
-            return (order % 2) + 1
-        return (3
-                + 2 * int(self._odd_derivative)
-                + int(self._derivative_mod_four_is_three)
-                + int(self._derivative_mod_four_is_zero))
-
-    def _parity(self, method, order, method_order):
-        if method.startswith('central'):
-            return (order % 2) + 1
-        if method == 'complex':
-            return self._parity_complex(order, method_order)
-        return 0
-
-    def _get_finite_difference_rule(self, step_ratio):
-        """
-        Generate finite differencing rule in advance.
-
-        The rule is for a nominal unit step size, and will
-        be scaled later to reflect the local step size.
-
-        Member method used: _fd_matrix
-
-        Member variables used:
-        n
-        order
-        method
-        """
-        method = self.method
-        if method in ('multicomplex',) or self.n == 0:
-            return np.ones((1,))
-
-        order, method_order = self.n - 1, self._method_order
-        parity = self._parity(method, order, method_order)
-        step = self._richardson_step()
-        num_terms, ix = (order + method_order) // step, order // step
-        fd_rules = FD_RULES.get((step_ratio, parity, num_terms))
-        if fd_rules is None:
-            fd_mat = self._fd_matrix(step_ratio, parity, num_terms)
-            fd_rules = linalg.pinv(fd_mat)
-            FD_RULES[(step_ratio, parity, num_terms)] = fd_rules
-
-        if self._flip_fd_rule:
-            return -fd_rules[ix]
-        return fd_rules[ix]
-
-    def _apply_fd_rule(self, step_ratio, sequence, steps):
-        """
-        Return derivative estimates of fun at x0 for a sequence of stepsizes h
-
-        Member variables used
-        ---------------------
-        n
-        """
-        f_del, h, original_shape = self._vstack(sequence, steps)
-        fd_rule = self._get_finite_difference_rule(step_ratio)
-        ne = h.shape[0]
-        nr = fd_rule.size - 1
-        _assert(nr < ne, 'num_steps ({0:d}) must  be larger than '
-                '({1:d}) n + order - 1 = {2:d} + {3:d} -1'
-                ' ({4:s})'.format(ne, nr + 1, self.n, self.order, self.method))
-        f_diff = convolve(f_del, fd_rule[::-1], axis=0, origin=nr // 2)
-
-        der_init = f_diff / (h ** self.n)
-        ne = max(ne - nr, 1)
-        return der_init[:ne], h[:ne], original_shape
 
 
 def directionaldiff(f, x0, vec, **options):
@@ -546,33 +396,11 @@ class Jacobian(Derivative):
     --------
     Derivative, Hessian, Gradient
     """)
-    n = property(fget=lambda cls: 1,
-                 fset=lambda cls, val: cls._set_derivative())  # @UnusedVariable
 
-    _difference_functions = JacobianDifferenceFunctions()
+#     n = property(fget=lambda cls: 1,
+#                  fset=lambda cls, val: cls._set_derivative())  # @UnusedVariable
 
-    @staticmethod
-    def _atleast_2d(original_shape, ndim):
-        if ndim == 1:
-            original_shape = (1,) + tuple(original_shape)
-        return tuple(original_shape)
-
-    def _vstack(self, sequence, steps):
-        original_shape = list(np.shape(np.atleast_1d(sequence[0])))
-        ndim = len(original_shape)
-        if sum(original_shape) == ndim:
-            f_del = np.vstack(sequence)
-            h = np.vstack(steps)
-        else:
-            axes = [0, 1, 2][:ndim]
-            axes[:2] = axes[1::-1]
-            original_shape[:2] = original_shape[1::-1]
-
-            f_del = np.vstack([np.atleast_1d(r).transpose(axes).ravel() for r in sequence])
-            h = np.vstack([np.atleast_1d(r).transpose(axes).ravel() for r in steps])
-        _assert(f_del.size == h.size, 'fun did not return data of correct '
-                'size (it must be vectorized)')
-        return f_del, h, self._atleast_2d(original_shape, ndim)
+    _fd_rule = LogJacobianRule
 
     @staticmethod
     def _expand_steps(steps, x_i, fxi):
@@ -591,7 +419,7 @@ class Jacobian(Derivative):
         steps2 = self._expand_steps(steps, xi, fxi)
 
         self.set_richardson_rule(step_ratio, self.richardson_terms)
-        return self._apply_fd_rule(step_ratio, results, steps2), fxi
+        return self.fd_rule.apply(results, steps2, step_ratio), fxi
 
     def __call__(self, x, *args, **kwds):
         return super(Jacobian, self).__call__(np.atleast_1d(x), *args, **kwds)
@@ -694,17 +522,10 @@ class Hessdiag(Derivative):
     Derivative, Hessian, Jacobian, Gradient
     """)
 
-    def __init__(self, f, step=None, method='central', order=2,
-                 full_output=False, **step_options):
-        super(Hessdiag, self).__init__(f, step=step, method=method, n=2,
-                                       order=order, full_output=full_output,
-                                       **step_options)
+    _fd_rule = LogHessdiagRule
 
-    _difference_functions = HessdiagDifferenceFunctions()
-
-    # pylint: disable=unused-argument
-    n = property(fget=lambda cls: 2,
-                 fset=lambda cls, n: cls._set_derivative())  # @UnusedVariable
+    def __init__(self, f, step=None, method='central', order=2, **options):
+        super(Hessdiag, self).__init__(f, step=step, method=method, n=2, order=order, **options)
 
     def __call__(self, x, *args, **kwds):
         return super(Hessdiag, self).__call__(np.atleast_1d(x), *args, **kwds)
@@ -770,37 +591,12 @@ class Hessian(Hessdiag):
     Derivative, Hessian
     """)
 
-    def __init__(self, f, step=None, method='central', order=None,
-                 full_output=False, **step_options):
+    _fd_rule = LogHessianRule
+
+    def __init__(self, f, step=None, method='central', order=None, **options):
         if order is None:
             order = dict(backward=1, forward=1).get(method, 2)
-        super(Hessian, self).__init__(f, step=step, method=method, order=order,
-                                      full_output=full_output, **step_options)
-
-    _difference_functions = HessianDifferenceFunctions()
-
-    @property
-    def order(self):
-        return dict(backward=1, forward=1).get(self.method, 2)
-
-    @order.setter
-    def order(self, order):
-        valid_order = self.order
-        if order != valid_order:
-            msg = 'Can not change order to {}! The only valid order is {} for method={}.'
-            warnings.warn(msg.format(order, valid_order, self.method))
-
-    @property
-    def _complex_high_order(self):
-        return False
-
-    def _apply_fd_rule(self, step_ratio, sequence, steps):  # @UnusedVariable
-        """
-        Return derivative estimates of fun at x0 for a sequence of stepsizes h
-
-        Here the difference rule is already applied. Just return result.
-        """
-        return self._vstack(sequence, steps)
+        super(Hessian, self).__init__(f, step=step, method=method, order=order, **options)
 
 
 if __name__ == "__main__":

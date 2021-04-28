@@ -451,7 +451,7 @@ def dea3(v0, v1, v2, symmetric=False):
 class Richardson(object):
 
     """
-    Extrapolates as sequence with Richardsons method
+    Extrapolates a sequence with Richardsons method
 
     Notes
     -----
@@ -515,7 +515,7 @@ class Richardson(object):
     def _estimate_error(new_sequence, old_sequence, steps, rule):
         m = new_sequence.shape[0]
         m_old = old_sequence.shape[0]
-        cov1 = np.sum(rule ** 2)  # 1 spare dof
+        cov1 = np.sum(np.abs(rule) ** 2)  # 1 spare dof
         fact = np.maximum(12.7062047361747 * np.sqrt(cov1), EPS * 10.)
         if m_old < 2:
             return (np.abs(new_sequence) * EPS + steps) * fact
@@ -544,12 +544,12 @@ class Richardson(object):
         return self.__call__(sequence, steps)
 
     def __call__(self, sequence, steps):
-        ne = sequence.shape[0]
-        rule = self.rule(ne)
-        nr = rule.size - 1
-        m = ne - nr
-        mm = min(ne, m + 1)
-        new_sequence = convolve(sequence, rule[::-1], axis=0, origin=nr // 2)
+        num_steps = sequence.shape[0]
+        rule = self.rule(num_steps)
+        n_r = rule.size - 1
+        m = num_steps - n_r
+        mm = min(num_steps, m + 1)
+        new_sequence = convolve(sequence, rule[::-1], axis=0, origin=n_r // 2)
         abserr = self._estimate_error(new_sequence[:mm], sequence, steps, rule)
         return new_sequence[:m], abserr[:m], steps[:m]
 

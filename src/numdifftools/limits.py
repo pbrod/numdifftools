@@ -110,11 +110,8 @@ class _Limit(object):
 
     info = namedtuple('info', ['error_estimate', 'final_step', 'index'])
 
-    def __init__(self, fun, step=None, method='above', order=4, full_output=False, **options):
-        self.fun = fun
-        self.method = method
-        self.order = order
-        self.full_output = full_output
+    def __init__(self, step=None, **options):
+
         self.step = step, options
 
         self.richardson = Richardson(step_ratio=1.6, step=1, order=1, num_terms=2)
@@ -345,6 +342,13 @@ class Limit(_Limit):
 
     """
 
+    def __init__(self, fun, step=None, method='above', order=4, full_output=False, **options):
+        super(Limit, self).__init__(step=step,  **options)
+        self.fun = fun
+        self.method = method
+        self.order = order
+        self.full_output = full_output
+
     def _fun(self, z, dz, args, kwds):
         return self.fun(z + dz, *args, **kwds)
 
@@ -374,15 +378,17 @@ class Limit(_Limit):
         return fz
 
     def _call_lim(self, fz, z, f):
-        err = np.zeros_like(fz)
+        err = np.zeros_like(fz, dtype=float)
         final_step = np.zeros_like(fz)
         index = np.zeros_like(fz, dtype=int)
         k = np.flatnonzero(np.isnan(fz))
         if k.size > 0:
-            fz = np.where(np.isnan(fz), 0, fz)
             lim_fz, info1 = self._lim(f, z.flat[k])
+            zero = np.zeros(1, dtype=np.result_type(lim_fz))
+            fz = np.where(np.isnan(fz), zero, fz)
             np.put(fz, k, lim_fz)
             if self.full_output:
+                final_step = np.where(np.isnan(fz), zero, final_step)
                 np.put(final_step, k, info1.final_step)
                 np.put(index, k, info1.index)
                 np.put(err, k, info1.error_estimate)

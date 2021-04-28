@@ -2,6 +2,7 @@
 Finite difference methods module.
 """
 from __future__ import division, print_function
+import warnings
 import numpy as np
 from numpy import linalg
 from scipy import special
@@ -45,6 +46,10 @@ def make_exact(h):
 class DifferenceFunctions(object):
     """
     Class defining difference functions
+
+    Notes
+    -----
+    The d
     """
     # pylint: disable=unused-argument
     @staticmethod
@@ -213,8 +218,9 @@ class HessianDifferenceFunctions(object):
 
     References
     ----------
-    Ridout, M.S. (2009) Statistical applications of the complex-step method
-        of numerical differentiation. The American Statistician, 63, 66-74
+    Ridout, M.S. (2009)
+    "Statistical applications of the complex-step method of numerical differentiation",
+    The American Statistician, 63, 66-74
     """
     # pylint: disable=unused-argument
     @staticmethod
@@ -315,7 +321,7 @@ class HessianDifferenceFunctions(object):
 
 
 class LogRule(object):
-    """ Log spaced finite difference rule class
+    """Log spaced finite difference rule class
 
     Parameters
     ----------
@@ -358,7 +364,7 @@ class LogRule(object):
     >>> f_x0 = f(x0)
     >>> f_del = f(x0+h) - f_x0  # forward difference
     >>> f_del = fd_rule.diff(f, f_x0, x0, h)  # or alternatively
-    >>> fder, h = fd_rule.apply(f_del, h, step_ratio)
+    >>> fder, h, shape = fd_rule.apply(f_del, h, step_ratio)
     >>> np.allclose(fder, f(x0))
     True
 
@@ -389,10 +395,20 @@ class LogRule(object):
         return self.n % 4 == 0
 
     @property
+    def eval_first_condition(self):
+        """Returns True if f(x0) needs to be evaluated given the differentiation method."""
+        even_derivative = self._even_derivative
+        return ((even_derivative and self.method in ('central', 'central2')) or
+                self.method in ['forward', 'backward'] or
+                self.method == 'complex' and self._derivative_mod_four_is_zero)
+
+    @property
     def _complex_high_order(self):
         return self.method == 'complex' and (self.n > 1 or self.order >= 4)
 
-    def _richardson_step(self):
+    @property
+    def richardson_step(self):
+        """Returns Richardson step given the method"""
         complex_step = 4 if self._complex_high_order else 2
         return dict(central=2,
                     central2=2,
@@ -400,8 +416,9 @@ class LogRule(object):
                     multicomplex=2).get(self.method, 1)
 
     @property
-    def _method_order(self):
-        step = self._richardson_step()
+    def method_order(self):
+        """Returns method order"""
+        step = self.richardson_step
         # Make sure it is even and at least 2 or 4
         order = max((self.order // step) * step, step)
         return order
@@ -497,6 +514,8 @@ class LogRule(object):
         step_ratio : real scalar, optional, default 2.0
             Ratio between sequential steps generated.
 
+        Notes
+        -----
         The rule is for a nominal unit step size, and must be scaled later
         to reflect the local step size.
 
@@ -511,9 +530,9 @@ class LogRule(object):
         if method in ('multicomplex',) or self.n == 0:
             return np.ones((1,))
         step_ratio = make_exact(step_ratio)
-        order, method_order = self.n - 1, self._method_order
+        order, method_order = self.n - 1, self.method_order
         parity = self._parity(method, order, method_order)
-        step = self._richardson_step()
+        step = self.richardson_step
         num_terms = (order + method_order) // step
         fd_rules = FD_RULES.get((step_ratio, parity, num_terms))
         if fd_rules is None:
@@ -526,7 +545,33 @@ class LogRule(object):
             return -fd_rules[rule_index]
         return fd_rules[rule_index]
 
-    def apply(self, f_del, h, step_ratio=2.0):
+    @staticmethod
+    def _vstack(sequence, steps):
+        original_shape = np.shape(sequence[0])
+        f_del = np.vstack([np.ravel(r) for r in sequence])
+        one = np.ones(original_shape)
+        h = np.vstack([np.ravel(one * step) for step in steps])
+        _assert(f_del.size == h.size, 'fun did not return data of correct '
+                'size (it must be vectorized)')
+        return f_del, h, original_shape
+
+    def apply(self, sequence, steps, step_ratio=2.0):
+        """
+        Apply finite difference rule along the first axis.
+
+        Return derivative estimates of fun at x0 for a sequence of stepsizes h
+
+        Parameters
+        ----------
+        sequence: finite differences
+        steps: steps
+
+        """
+        f_del, h, original_shape = self._vstack(sequence, steps)
+        der_init, h = self._apply(f_del, h, step_ratio)
+        return der_init, h, original_shape
+
+    def _apply(self, f_del, h, step_ratio=2.0):
         """
         Apply finite difference rule along the first axis.
 
@@ -538,7 +583,6 @@ class LogRule(object):
         h: steps
 
         """
-
         fd_rule = self.rule(step_ratio)
 
         num_steps = h.shape[0]
@@ -551,6 +595,186 @@ class LogRule(object):
         der_init = f_diff / (h ** self.n)
         num_steps = max(num_steps - n_r, 1)
         return der_init[:num_steps], h[:num_steps]
+
+
+class LogJacobianRule(LogRule):
+    """Log spaced finite difference Jacobian rule class
+
+    Parameters
+    ----------
+    n : 1
+        Order of the derivative.
+    method : {'central', 'complex', 'multicomplex', 'forward', 'backward'}
+        defines the method used in the approximation
+    order : int, optional
+        defines the order of the error term in the Taylor approximation used.
+        For 'central' and 'complex' methods, it must be an even number.
+
+    Examples
+    --------
+    >>> from numdifftools.finite_difference import LogJacobianRule as Rule
+    >>> np.allclose(Rule(n=1, method='central', order=2).rule(step_ratio=2.0), 1)
+    True
+    >>> np.allclose(Rule(n=1, method='central', order=4).rule(step_ratio=2.),
+    ...             [-0.33333333,  2.66666667])
+    True
+    >>> np.allclose(Rule(n=1, method='central', order=6).rule(step_ratio=2.),
+    ...             [ 0.02222222, -0.88888889,  5.68888889])
+    True
+
+    >>> np.allclose(Rule(n=1, method='forward', order=2).rule(step_ratio=2.), [-1.,  4.])
+    True
+
+    >>> np.allclose(Rule(n=1, method='forward', order=4).rule(step_ratio=2.),
+    ...             [ -0.04761905,   1.33333333, -10.66666667,  24.38095238])
+    True
+    >>> np.allclose(Rule(n=1, method='forward', order=6).rule(step_ratio=2.),
+    ...    [ -1.02406554e-04,   1.26984127e-02,  -5.07936508e-01,
+    ...       8.12698413e+00,  -5.20126984e+01,   1.07381055e+02])
+    True
+    >>> step_ratio=2.0
+    >>> fd_rule = Rule(n=1, method='forward', order=4)
+    >>> steps = 0.002*(1./step_ratio)**np.arange(6)
+
+    >>> x0 = np.atleast_1d(1.)
+    >>> f = np.exp
+    >>> f_x0 = f(x0)
+    >>> f_del = [f(x0+h) - f_x0  for h in steps] # forward difference
+    >>> f_del = [fd_rule.diff(f, f_x0, x0, h) for h in steps[:, None]]  # or alternatively
+    >>> fder, h, shape = fd_rule.apply(f_del, steps, step_ratio)
+    >>> np.allclose(fder, f(x0))
+    True
+
+    """
+    _difference_functions = JacobianDifferenceFunctions()
+
+    n = property(fget=lambda cls: 1, fset=lambda cls, n: None)
+
+    @staticmethod
+    def _atleast_2d(original_shape, ndim):
+        if ndim == 1:
+            original_shape = (1,) + tuple(original_shape)
+        return tuple(original_shape)
+
+    def _vstack(self, sequence, steps):
+        original_shape = list(np.shape(np.atleast_1d(sequence[0])))
+        ndim = len(original_shape)
+        if sum(original_shape) == ndim:
+            f_del = np.vstack(sequence)
+            h = np.vstack(steps)
+        else:
+            axes = [0, 1, 2][:ndim]
+            axes[:2] = axes[1::-1]
+            original_shape[:2] = original_shape[1::-1]
+
+            f_del = np.vstack([np.atleast_1d(r).transpose(axes).ravel() for r in sequence])
+            h = np.vstack([np.atleast_1d(r).transpose(axes).ravel() for r in steps])
+        _assert(f_del.size == h.size, 'fun did not return data of correct '
+                'size (it must be vectorized)')
+        return f_del, h, self._atleast_2d(original_shape, ndim)
+
+
+class LogHessdiagRule(LogRule):
+    """Log spaced finite difference Hessdiag rule class
+
+    Parameters
+    ----------
+    n : 2
+        Order of the derivative.
+    method : {'central', 'complex', 'multicomplex', 'forward', 'backward'}
+        defines the method used in the approximation
+    order : int, optional
+        defines the order of the error term in the Taylor approximation used.
+        For 'central' and 'complex' methods, it must be an even number.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from numdifftools.finite_difference import LogHessdiagRule as Rule
+
+    >>> np.allclose(Rule(method='central', order=2).rule(step_ratio=2.0), 2)
+    True
+    >>> np.allclose(Rule(method='central', order=4).rule(step_ratio=2.),
+    ...             [-0.66666667, 10.66666667])
+    True
+    >>> np.allclose(Rule(method='central', order=6).rule(step_ratio=2.),
+    ...             [ 4.44444444e-02, -3.55555556e+00,  4.55111111e+01])
+    True
+    >>> np.allclose(Rule(method='forward', order=2).rule(step_ratio=2.), [ -4.,  40., -64.])
+    True
+    >>> np.allclose(Rule(method='forward', order=4).rule(step_ratio=2.),
+    ...          [-1.90476190e-01,  1.10476190e+01, -1.92000000e+02,
+    ...          1.12152381e+03, -1.56038095e+03])
+    True
+    >>> np.allclose(Rule(method='forward', order=6).rule(step_ratio=2.),
+    ...    [-4.09626216e-04,  1.02406554e-01, -8.33015873e+00,  2.76317460e+02,
+    ...     -3.84893968e+03,  2.04024004e+04, -2.74895500e+04])
+    True
+    >>> step_ratio=2.0
+    >>> fd_rule = Rule(method='forward', order=4)
+    >>> steps = 0.002*(1./step_ratio)**np.arange(6)
+    >>> x0 = np.array([0., 0.])
+    >>> f = lambda xy : np.cos(xy[0]-xy[1])
+    >>> f_x0 = f(x0)
+    >>> f_del = [f(x0+h) - f_x0  for h in steps] # forward difference
+    >>> f_del = [fd_rule.diff(f, f_x0, x0, h) for h in steps]  # or alternatively
+    >>> fder, h, shape = fd_rule.apply(f_del, steps, step_ratio)
+
+    >>> np.allclose(fder, [[-1., -1.], [-1., -1.]])
+    True
+
+    """
+    _difference_functions = HessdiagDifferenceFunctions()
+
+    n = property(fget=lambda cls: 2, fset=lambda cls, n: None)
+
+
+class LogHessianRule(LogRule):
+    """Log spaced finite difference Hessian rule class
+
+    Parameters
+    ----------
+    n : 2
+        Order of the derivative.
+    method : {'central', 'complex', 'multicomplex', 'forward', 'backward'}
+        defines the method used in the approximation
+    order : int, optional
+        defines the order of the error term in the Taylor approximation used.
+        For 'central' and 'complex' methods, it must be an even number.
+    """
+    _difference_functions = HessianDifferenceFunctions()
+
+    n = property(fget=lambda cls: 2, fset=lambda cls, unused_n: None)
+
+    @property
+    def order(self):
+        return dict(backward=1, forward=1).get(self.method, 2)
+
+    @order.setter
+    def order(self, order):
+        valid_order = self.order
+        if order != valid_order:
+            msg = 'Can not change order to {}! The only valid order is {} for method={}.'
+            warnings.warn(msg.format(order, valid_order, self.method))
+
+    @property
+    def _complex_high_order(self):
+        return False
+
+    def apply(self, sequence, steps, step_ratio=2.0):
+        """
+        Apply finite difference rule along the first axis.
+
+        Return derivative estimates of fun at x0 for a sequence of stepsizes h
+
+        Parameters
+        ----------
+        sequence: finite differences
+        steps: steps
+
+        """
+        f_del, h, original_shape = self._vstack(sequence, steps)
+        return f_del, h, original_shape
 
 
 if __name__ == '__main__':
