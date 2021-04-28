@@ -295,9 +295,9 @@ class TestJacobian(object):
     def test_scalar_to_vector(val):
 
         def fun(x):
-            return np.array([x, x ** 2, x ** 3])
+            return np.array([x, x ** 2, x ** 3]).ravel()
 
-        truth = np.array([[[1.]], [[2 * val]], [[3 * val ** 2]]])
+        truth = np.array([[1.], [2 * val], [3 * val ** 2]])
         for method in ['multicomplex', 'complex', 'central', 'forward', 'backward']:
             j0, info = nd.Jacobian(fun, method=method, full_output=True)(val)
             if method != "multicomplex":
