@@ -9,10 +9,10 @@ Release date: 5/23/2008
 
 """
 from __future__ import absolute_import, division, print_function
-import numpy as np
 from collections import namedtuple
 from functools import partial
 import warnings
+import numpy as np
 from numdifftools.step_generators import MinStepGenerator
 from numdifftools.extrapolation import Richardson, dea3
 
@@ -74,6 +74,7 @@ class CStepGenerator(MinStepGenerator):
 
     @property
     def step_ratio(self):
+        """Ratio between sequential steps generated."""
         dtheta = self.dtheta
         _step_ratio = float(self._step_ratio)  # radial path
         if dtheta != 0:
@@ -86,6 +87,7 @@ class CStepGenerator(MinStepGenerator):
 
     @property
     def dtheta(self):
+        """Angular steps in radians used for the exponential spiral path."""
         radial_path = self.path[0].lower() == 'r'
         return 0 if radial_path else self._dtheta
 
@@ -95,6 +97,7 @@ class CStepGenerator(MinStepGenerator):
 
     @property
     def num_steps(self):
+        """The number of steps generated"""
         if self._num_steps is None:
             return 2 * int(np.round(16.0 / np.log(np.abs(self.step_ratio)))) + 1
         return self._num_steps
@@ -116,13 +119,15 @@ class _Limit(object):
 
         self.richardson = Richardson(step_ratio=1.6, step=1, order=1, num_terms=2)
 
-    def _parse_step_options(self, step):
+    @staticmethod
+    def _parse_step_options(step):
         options = {}
         if isinstance(step, tuple) and isinstance(step[-1], dict):
             step, options = step
         return step, options
 
-    def _step_generator(self, step, options):
+    @staticmethod
+    def _step_generator(step, options):
         if hasattr(step, '__call__'):
             return step
         step_nom = None if step is None else 1
@@ -130,6 +135,7 @@ class _Limit(object):
 
     @property
     def step(self):
+        """The step spacing(s) used in the approximation"""
         return self._step
 
     @step.setter
@@ -179,10 +185,10 @@ class _Limit(object):
     @staticmethod
     def _get_best_estimate(der, errors, steps, shape):
         errors += _Limit._add_error_to_outliers(der)
-        ix = _Limit._get_arg_min(errors)
-        final_step = steps.flat[ix].reshape(shape)
-        err = errors.flat[ix].reshape(shape)
-        return der.flat[ix].reshape(shape), _Limit.info(err, final_step, ix)
+        idx = _Limit._get_arg_min(errors)
+        final_step = steps.flat[idx].reshape(shape)
+        err = errors.flat[idx].reshape(shape)
+        return der.flat[idx].reshape(shape), _Limit.info(err, final_step, idx)
 
     @staticmethod
     def _wynn_extrapolate(der, steps):
@@ -349,11 +355,11 @@ class Limit(_Limit):
         self.order = order
         self.full_output = full_output
 
-    def _fun(self, z, dz, args, kwds):
-        return self.fun(z + dz, *args, **kwds)
+    def _fun(self, z, d_z, args, kwds):
+        return self.fun(z + d_z, *args, **kwds)
 
-    def _get_steps(self, xi):
-        return [step for step in self.step(xi)]  # pylint: disable=not-callable
+    def _get_steps(self, x_i):
+        return list(self.step(x_i))  # pylint: disable=not-callable
 
     def _set_richardson_rule(self, step_ratio, num_terms=2):
         self.richardson = Richardson(step_ratio=step_ratio, step=1, order=1,
@@ -370,40 +376,41 @@ class Limit(_Limit):
         return lim_fz, info
 
     def limit(self, x, *args, **kwds):
+        """Return lim f(z) as z-> x"""
         z = np.asarray(x)
         f = partial(self._fun, args=args, kwds=kwds)
-        fz, info = self._lim(f, z)
+        f_z, info = self._lim(f, z)
         if self.full_output:
-            return fz, info
-        return fz
+            return f_z, info
+        return f_z
 
-    def _call_lim(self, fz, z, f):
-        err = np.zeros_like(fz, dtype=float)
-        final_step = np.zeros_like(fz)
-        index = np.zeros_like(fz, dtype=int)
-        k = np.flatnonzero(np.isnan(fz))
+    def _call_lim(self, f_z, z, f):
+        err = np.zeros_like(f_z, dtype=float)
+        final_step = np.zeros_like(f_z)
+        index = np.zeros_like(f_z, dtype=int)
+        k = np.flatnonzero(np.isnan(f_z))
         if k.size > 0:
             lim_fz, info1 = self._lim(f, z.flat[k])
             zero = np.zeros(1, dtype=np.result_type(lim_fz))
-            fz = np.where(np.isnan(fz), zero, fz)
-            np.put(fz, k, lim_fz)
+            f_z = np.where(np.isnan(f_z), zero, f_z)
+            np.put(f_z, k, lim_fz)
             if self.full_output:
-                final_step = np.where(np.isnan(fz), zero, final_step)
+                final_step = np.where(np.isnan(f_z), zero, final_step)
                 np.put(final_step, k, info1.final_step)
                 np.put(index, k, info1.index)
                 np.put(err, k, info1.error_estimate)
-        return fz, self.info(err, final_step, index)
+        return f_z, self.info(err, final_step, index)
 
     def __call__(self, x, *args, **kwds):
         z = np.asarray(x)
         f = partial(self._fun, args=args, kwds=kwds)
         with np.errstate(divide='ignore', invalid='ignore'):
-            fz = f(z, 0)
-            fz, info = self._call_lim(fz, z, f)
+            f_z = f(z, 0)
+            f_z, info = self._call_lim(f_z, z, f)
 
         if self.full_output:
-            return fz, info
-        return fz
+            return f_z, info
+        return f_z
 
 
 class Residue(Limit):

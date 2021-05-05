@@ -314,17 +314,17 @@ class HessianDifferenceFunctions(object):
     def _forward(f, f_x, x, h):
         """Eq. 7 in Ridout (2009)"""
         n = len(x)
-        ee = np.diag(h)
+        eee = np.diag(h)
         dtype = np.result_type(f_x, float)
         g = np.empty(n, dtype=dtype)
         for i in range(n):
-            g[i] = f(x + ee[i, :])
+            g[i] = f(x + eee[i, :])
 
         hess = np.empty((n, n), dtype=dtype)
         np.outer(h, h, out=hess)
         for i in range(n):
             for j in range(i, n):
-                hess[i, j] = (f(x + ee[i, :] + ee[j, :]) - g[i] - g[j] + f_x) / hess[j, i]
+                hess[i, j] = (f(x + eee[i, :] + eee[j, :]) - g[i] - g[j] + f_x) / hess[j, i]
                 hess[j, i] = hess[i, j]
         return hess
 
@@ -761,6 +761,7 @@ class LogHessianRule(LogRule):
 
     @property
     def order(self):
+        """The order of the error term in the Taylor approximation used"""
         return dict(backward=1, forward=1).get(self.method, 2)
 
     @order.setter

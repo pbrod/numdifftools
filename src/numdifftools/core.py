@@ -13,7 +13,7 @@ from __future__ import division, print_function
 from collections import namedtuple
 
 import numpy as np
-from numdifftools.extrapolation import Richardson, dea3, convolve  # @UnusedImport
+from numdifftools.extrapolation import Richardson, dea3  # @UnusedImport
 from numdifftools.step_generators import MaxStepGenerator, MinStepGenerator
 from numdifftools.limits import _Limit
 from numdifftools.finite_difference import (LogRule,
@@ -35,7 +35,7 @@ def _assert(cond, msg):
         raise ValueError(msg)
 
 
-_cmn_doc = """
+_CMN_DOC = """
     Calculate %(derivative)s with finite difference approximation
 
     Parameters
@@ -113,7 +113,7 @@ _cmn_doc = """
 
 class Derivative(_Limit):
 
-    __doc__ = _cmn_doc % dict(
+    __doc__ = _CMN_DOC % dict(
         derivative='n-th derivative',
         extra_parameter="""
     order : int, optional
@@ -225,23 +225,24 @@ class Derivative(_Limit):
         else:
             self._derivative = self._derivative_nonzero_order
 
-    def _derivative_zero_order(self, xi, args, kwds):
-        steps = [np.zeros_like(xi)]
-        results = [self.fun(xi, *args, **kwds)]
+    def _derivative_zero_order(self, x_i, args, kwds):
+        steps = [np.zeros_like(x_i)]
+        results = [self.fun(x_i, *args, **kwds)]
         self.set_richardson_rule(2, 0)
         return self._vstack(results, steps), results[0]
 
-    def _derivative_nonzero_order(self, xi, args, kwds):
+    def _derivative_nonzero_order(self, x_i, args, kwds):
         diff, f = self._get_functions(args, kwds)
-        steps, step_ratio = self._get_steps(xi)
-        fxi = self._eval_first(f, xi)
-        results = [diff(f, fxi, xi, h) for h in steps]
+        steps, step_ratio = self._get_steps(x_i)
+        fxi = self._eval_first(f, x_i)
+        results = [diff(f, fxi, x_i, h) for h in steps]
 
         self.set_richardson_rule(step_ratio, self.richardson_terms)
 
         return self.fd_rule.apply(results, steps, step_ratio), fxi
 
     def set_richardson_rule(self, step_ratio, num_terms=2):
+        """Set Richardson exptrapolation options"""
         order = self.method_order
         step = self.fd_rule.richardson_step
         self.richardson = Richardson(step_ratio=step_ratio,
@@ -257,11 +258,11 @@ class Derivative(_Limit):
 
         return self.fd_rule.diff, export_fun
 
-    def _get_steps(self, xi):
+    def _get_steps(self, x_i):
         method, n, order = self.method, self.n, self.method_order
         # pylint: disable=no-member
-        step_gen = self.step.step_generator_function(xi, method, n, order)
-        return [step for step in step_gen()], step_gen.step_ratio
+        step_gen = self.step.step_generator_function(x_i, method, n, order)
+        return list(step_gen()), step_gen.step_ratio
 
     def _raise_error_if_any_is_complex(self, x, f_x):
         msg = ('The {} step derivative method does only work on a real valued analytic '
@@ -282,12 +283,12 @@ class Derivative(_Limit):
         return 0.0
 
     def __call__(self, x, *args, **kwds):
-        xi = np.asarray(x)
+        x_i = np.asarray(x)
         with np.errstate(divide='ignore', invalid='ignore'):
-            results, fxi = self._derivative(xi, args, kwds)
+            results, f_xi = self._derivative(x_i, args, kwds)
             derivative, info = self._extrapolate(*results)
         if self.full_output:
-            return derivative, self.info(fxi, *info)
+            return derivative, self.info(f_xi, *info)
         return derivative
 
 
@@ -342,7 +343,7 @@ def directionaldiff(f, x0, vec, **options):
 
 class Jacobian(Derivative):
 
-    __doc__ = _cmn_doc % dict(
+    __doc__ = _CMN_DOC % dict(
         derivative='Jacobian',
         extra_parameter="""
     order : int, optional
@@ -431,7 +432,7 @@ class Jacobian(Derivative):
 
 class Gradient(Jacobian):
 
-    __doc__ = _cmn_doc % dict(
+    __doc__ = _CMN_DOC % dict(
         derivative='Gradient',
         extra_parameter="""
     order : int, optional
@@ -493,7 +494,7 @@ class Gradient(Jacobian):
 
 class Hessdiag(Derivative):
 
-    __doc__ = _cmn_doc % dict(
+    __doc__ = _CMN_DOC % dict(
         derivative='Hessian diagonal',
         extra_parameter="""order : int, optional
         defines the order of the error term in the Taylor approximation used.
@@ -538,7 +539,7 @@ class Hessdiag(Derivative):
 
 class Hessian(Hessdiag):
 
-    __doc__ = _cmn_doc % dict(
+    __doc__ = _CMN_DOC % dict(
         derivative='Hessian',
         extra_parameter="",
         returns=r"""

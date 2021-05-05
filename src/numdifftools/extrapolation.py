@@ -25,7 +25,7 @@ def convolve(sequence, rule, **kwds):
     dtype = np.result_type(float, np.ravel(sequence)[0])
     seq = np.asarray(sequence, dtype=dtype)
     if np.iscomplexobj(seq):
-        return (convolve1d(seq.real, rule, **kwds) + 1j * convolve1d(seq.imag, rule, **kwds))
+        return convolve1d(seq.real, rule, **kwds) + 1j * convolve1d(seq.imag, rule, **kwds)
     return convolve1d(seq, rule, **kwds)
 
 
@@ -85,6 +85,7 @@ class Dea(object):
 
     @property
     def limexp(self):
+        """Maximum number of elements the epsilon table data."""
         return self._limexp
 
     @limexp.setter
@@ -106,42 +107,42 @@ class Dea(object):
         newelm = n // 2
         epstab[n] = _HUGE
         old_n = n
-        k1 = n
+        k_1 = n
         all_converged = False
         for i in range(newelm):
-            res = epstab[k1+2]
-            e0 = epstab[k1-2]
-            e1 = epstab[k1-1]
-            e2 = res
-            delta2 = e2 - e1
-            delta3 = e1 - e0
+            res = epstab[k_1+2]
+            e_0 = epstab[k_1-2]
+            e_1 = epstab[k_1-1]
+            e_2 = res
+            delta2 = e_2 - e_1
+            delta3 = e_1 - e_0
             err2 = abs(delta2)
             err3 = abs(delta3)
-            e1abs = abs(e1)
-            tol2 = max(abs(e2), e1abs) * _EPS
-            tol3 = max(e1abs, abs(e0)) * _EPS
+            e1abs = abs(e_1)
+            tol2 = max(abs(e_2), e1abs) * _EPS
+            tol3 = max(e1abs, abs(e_0)) * _EPS
             all_converged = not (err2 > tol2 or err3 > tol3)
             if all_converged:
-                # if e0, e1 and e2 are equal to within machine accuracy, convergence is assumed.
+                # if e_0, e_1 and e_2 are equal to within machine accuracy, convergence is assumed.
                 result = res
                 abserr = err2 + err3
 
                 # ***jump out of do-loop
                 # go to 100
                 break
-            e3 = epstab[k1]
-            epstab[k1] = e1
-            delta1 = e1-e3
+            e_3 = epstab[k_1]
+            epstab[k_1] = e_1
+            delta1 = e_1 - e_3
             err1 = abs(delta1)
-            tol1 = max(e1abs, abs(e3)) * _EPS
+            tol1 = max(e1abs, abs(e_3)) * _EPS
 
             # if two elements are very close to each other, omit
             #  a part of the table by adjusting the value of n
 
             any_converged = err1 <= tol1 or err2 <= tol2 or err3 <= tol3
             if not any_converged:  # go to 20
-                ss = 1.0 / delta1 + 1.0 / delta2 - 1.0 / delta3
-                epsinf = abs(ss*e1)
+                sss = 1.0 / delta1 + 1.0 / delta2 - 1.0 / delta3
+                epsinf = abs(sss*e_1)
 
                 # If irregular behaviour in the table is detected, omit a
                 # part of the table adjusting the value of n.
@@ -154,11 +155,11 @@ class Dea(object):
                 break
 
             #  compute a new element and eventually adjust the value of result.
-            res = e1 + 1.0/ss
-            epstab[k1] = res
-            k1 = k1 - 2
-            error = err2 + abs(res-e2) + err3
-            if not (error > abserr):
+            res = e_1 + 1.0/sss
+            epstab[k_1] = res
+            k_1 = k_1 - 2
+            error = err2 + abs(res-e_2) + err3
+            if not error > abserr:
                 abserr = error
                 result = res
             # 40 continue
@@ -166,7 +167,7 @@ class Dea(object):
         # 50
         if not all_converged:
             #      shift the table.
-            if (n == limexp-1):
+            if n == limexp - 1:
                 n = limexp - 2  # 2*(limexp//2) - 1
             self._shift_table(epstab, n, newelm, old_n)
             if nres > 1:
@@ -373,13 +374,13 @@ def max_abs(a, b):
     return np.maximum(np.abs(a), np.abs(b))
 
 
-def dea3(v0, v1, v2, symmetric=False):
+def dea3(v_0, v_1, v_2, symmetric=False):
     """
     Extrapolate a slowly convergent sequence using Shanks transformations.
 
     Parameters
     ----------
-    v0, v1, v2 : array-like
+    v_0, v_1, v_2 : array-like
         3 values of a convergent sequence to extrapolate
 
     Returns
@@ -433,7 +434,7 @@ def dea3(v0, v1, v2, symmetric=False):
     ..  [3] http://www.netlib.org/quadpack/
     ..  [4] https://mathworld.wolfram.com/WynnsEpsilonMethod.html
     """
-    e_0, e_1, e_2 = np.atleast_1d(v0, v1, v2)
+    e_0, e_1, e_2 = np.atleast_1d(v_0, v_1, v_2)
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")  # ignore division by zero and overflow
         delta2, delta1 = e_2 - e_1, e_1 - e_0
@@ -521,6 +522,7 @@ class Richardson(object):
         return r_mat
 
     def rule(self, sequence_length=None):
+        """Returns extrapolation rule."""
         if sequence_length is None:
             sequence_length = self.num_terms + 1
         num_terms = min(self.num_terms, sequence_length - 1)
@@ -559,6 +561,7 @@ class Richardson(object):
         return abserr
 
     def extrapolate(self, sequence, steps):
+        """Extrapolate sequence"""
         return self.__call__(sequence, steps)
 
     def __call__(self, sequence, steps):
@@ -566,9 +569,9 @@ class Richardson(object):
         rule = self.rule(num_steps)
         n_r = rule.size - 1
         m = num_steps - n_r
-        mm = min(num_steps, m + 1)
+        k = min(num_steps, m + 1)
         new_sequence = convolve(sequence, rule[::-1], axis=0, origin=n_r // 2)
-        abserr = self._estimate_error(new_sequence[:mm], sequence, steps, rule)
+        abserr = self._estimate_error(new_sequence[:k], sequence, steps, rule)
         return new_sequence[:m], abserr[:m], steps[:m]
 
 
