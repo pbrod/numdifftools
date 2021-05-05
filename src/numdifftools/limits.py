@@ -28,8 +28,7 @@ class CStepGenerator(MinStepGenerator):
     Generates a sequence of steps
 
     where
-        steps = base_step * step_nom *
-                (exp(1j*dtheta) * step_ratio) ** (i + offset)
+        steps = base_step * step_nom * (exp(1j*dtheta) * step_ratio) ** (i + offset)
     for i = 0, 1, ..., num_steps-1
 
     Parameters
@@ -41,32 +40,30 @@ class CStepGenerator(MinStepGenerator):
     num_steps : scalar integer, optional,
         defines number of steps generated.
         If None the value is 2 * int(round(16.0/log(abs(step_ratio)))) + 1
-    step_nom :  default maximum(log(1+|x|), 1)
-        Nominal step where x is supplied at runtime through the __call__
-        method.
+    step_nom :  default maximum(log(exp(1)+|x|), 1)
+        Nominal step where x is supplied at runtime through the __call__ method.
     offset : real scalar, optional, default 0
         offset to the base step
-    use_exact_steps : boolean
-        If true make sure exact steps are generated
+    use_exact_steps : boolean, default True.
+        If true make sure exact steps are generated.
     scale : real scalar, default 1.2
         scale used in base step.
-    path : 'spiral' or 'radial'
-        Specifies the type of path to take the limit along.
-    dtheta: real scalar
-        If the path is spiral it will follow an exponential spiral into the
+    path : 'radial' or 'spiral'
+        Specifies the type of path to take the limit along. Default 'radial'.
+    dtheta: real scalar, default pi/8
+        If the path is 'spiral' it will follow an exponential spiral into the
         limit, with angular steps at dtheta radians.
 
     """
 
-    def __init__(self, base_step=None, step_ratio=4.0, num_steps=None,
-                 step_nom=None, offset=0, scale=1.2, use_exact_steps=True,
-                 path='radial', dtheta=np.pi / 8, **kwds):
-        self.path = path
-        self.dtheta = dtheta
+    def __init__(self, base_step=None, step_ratio=4.0, num_steps=None, step_nom=None,
+                 offset=0, scale=1.2, **options):
+        self.path = options.pop('path', 'radial')
+        self.dtheta = options.pop('dtheta', np.pi / 8)
         super(CStepGenerator,
               self).__init__(base_step=base_step, step_ratio=step_ratio,
                              num_steps=num_steps, step_nom=step_nom, offset=offset, scale=scale,
-                             use_exact_steps=use_exact_steps, **kwds)
+                             **options)
         self._check_path()
 
     def _check_path(self):
