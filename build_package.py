@@ -16,7 +16,6 @@ import re
 import shutil
 import subprocess
 import importlib
-import click
 
 
 ROOT = os.path.abspath(os.path.dirname(__file__))
@@ -99,29 +98,31 @@ def call_subprocess(cmd_opts):
     print("***********************************************\n")
 
 
-@click.command(context_settings=dict(help_option_names=['-h', '--help']))
-@click.argument("version")
-def build_main(version):
-    """Build and update {} version, documentation and package.
-
-    The script remove the previous built binaries and generated documentation
-    before it generate the documentation and build the binaries
-    and finally check the built binaries.
-    """.format(PACKAGE_NAME)
-    remove_previous_build()
-    set_package(version)
-    update_license()
-    update_readme()
-
-    for cmd in ['docs', 'latexpdf', 'egg_info', 'sdist', 'bdist_wheel']:
-        if cmd == 'latexpdf':
-            with ChangeDir('./docs'):
-                call_subprocess(["make.bat", cmd])
-        else:
-            call_subprocess(["python", "setup.py", cmd])
-
-    call_subprocess(["twine", "check", "dist/*"])
-
-
 if __name__ == "__main__":
+    import click
+
+    @click.command(context_settings=dict(help_option_names=['-h', '--help']))
+    @click.argument("version")
+    def build_main(version):
+        """Build and update {} version, documentation and package.
+
+        The script remove the previous built binaries and generated documentation
+        before it generate the documentation and build the binaries
+        and finally check the built binaries.
+        """.format(PACKAGE_NAME)
+        remove_previous_build()
+        set_package(version)
+        update_license()
+        update_readme()
+
+        for cmd in ['docs', 'latexpdf', 'egg_info', 'sdist', 'bdist_wheel']:
+            if cmd == 'latexpdf':
+                with ChangeDir('./docs'):
+                    call_subprocess(["make.bat", cmd])
+            else:
+                call_subprocess(["python", "setup.py", cmd])
+
+        call_subprocess(["twine", "check", "dist/*"])
+
+
     build_main()
