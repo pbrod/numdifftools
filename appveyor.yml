@@ -41,6 +41,7 @@ init:
 
 install:
   - "set PATH=%MINICONDA%;%MINICONDA%\\Scripts;%PATH%"
+  - '"%MINICONDA%\Scripts\activate.bat"'
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
   - conda info -a
