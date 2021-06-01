@@ -2,6 +2,137 @@
 Changelog
 =========
 
+Per A Brodtkorb (90):
+      * Replaced python 3.5 with 3.9 in .travis.yml 
+      * Removed python 3.5 from appveyor.yml 
+      * Added bibtex_bibfiles = ... to docs/conf.py 
+      * Fixed doctest failures in   
+          - docs/src/numerical/derivest.rst
+          - docs/tutorials/getting_started.rst
+          - numdifftools.core.py
+          - numdifftools.limits.py
+          - numdifftools.nd_algopy.py
+          - numdifftools.nd_scipy.py 
+          - numdifftools.nd_statsmodels.py
+      * Insulated import of click in a if __name__ =='__main__' clause.
+      * Added activate to appveyor.yml
+      * Added https://mathworld.wolfram.com/WynnsEpsilonMethod.html reference
+         for the Epsilon algorithm in extrapolation.py. 
+      * Disabled the restriction that n must be one in LogJacobianRule 
+      * Added complex_even and central_even methods to the JacobianDifferenceFunctions
+      * Updated documentation of Derivative in core.py
+      * Updated documentation of Richardson.
+      * Removed obsolete tests from test_nd_scipy.py 
+      * Fixed a bug in TestJacobian.test_scalar_to_vector in test_nd_scipy.py for method="complex'
+      * Refactored code from core.py to finite_difference.py 
+      * Added LogJacobianRule, LogHessdiagRule, LogHessianRule to finite_difference.py 
+      * Fixed a bug in Richardson._estimate_error: Complex rule resulted wrongly in complex error values.
+      * Added netlib.org/quadpack reference.
+      * Updated Dea to conform with Quadpack 
+      * Replaced reference to Brezinski with refs to Quadpack.
+      * Reduced cyclomatic complexity in Dea in extrapolation.py 
+      * Removed commented out code in profile_numdifftools.py
+      * Updated pycodestyle ignore section in setup.cfg
+      * Removed commented out code in run_benchmark.py Made get_nominal_step continous as function of x
+      * Made datetime call python 2.7 compatible in run_benchmark.py
+      * Simplified the Derivative._step_generator function in core.py. 
+      * Made plots generated from run_benchmark.py prettier. 
+      * step_ratio in the step generators by default 2 for n=1 and 1.6 otherwise in step_generators.py
+      * Fixed failing doctests in core.py and nd_statsmodels.py
+      * Added doctests to setup.cfg.
+      * Reordered imports in test_example_functions.py
+      * Fixed .travis.yml so that he file paths in coverage.xml is discoverable
+         under the sonar.sources folder. The problem is that SonarQube is
+         analysing the checked-out source code (in src/numdifftools) but the
+         actual unit tests and coverage.py is run against the installed code (in
+         build/lib/numdifftools). Thus the absolute files paths to the installed
+      * Removed commented code from test_numdifftools.py
+      * Run only coverage xml when python version is 3.7
+      * Updated .travis.yml Removed commented out code from extrapolation.py and nd_statsmodels.py
+      * Finalized the moved of XXXDifferencdFunctions from core.py to finite_difference.py pep8
+      * Added missing docstring for default_scale function in step_generators.py. 
+      * Removed unused import of itertools in _find_default_scale.py.
+      * Changed default scale from 1.35 to 1.06 for complex/multicomplex methods when n=1
+      * Added richardson_demo to extrapolation.py Simplified EpsAlg class in extrapolation.py
+      * Corrected a small error for dea3: Now dea3 and Dea(limexp=3) gives the same result!
+      * Added python 3.8 to appveyor.yml Added python 3.9 to setup.cfg
+      * Fixed reference to how-to/index
+      * Added doctest configuration to docs.conf.py
+      * Fixes issue #50 by adding function value f(x) to the info.f_value.
+      * Updated README.rst
+      * Added @UnusedVariable here and there.
+      * Silence warnings in Hessian by adding __init__ that set the correct order given the method. 
+      * Updated the Richardson._r_matrix method to generate complex matrix when step_ratio is complex. 
+      * Fixed profile_hessian in profile_numdifftools.py so it works again. 
+      * Added with np.errstate(all='ignore') to test_derivative_on_sinh and
+         test_scalar_to_vector in test_nd_algopy.py to silence warnings.
+      * Changed citation style to alpha.
+      * Replaced bibliography.rst with refs1.bib and zreferences.rst 
+      * Removed badges for latex
+      * Changed sonar addon token
+      * Added CC_TEST_REPORTER_ID
+      * Fixed a typo in docs/numdifftools.rst
+      * Added docs/make.bat 
+      * Removed python 2.7 from .travis.yml
+      * Moved test_requires from setup.cfg to setup.py 
+      * Added Latex to setup.py
+      * Changed default radius to 0.0059 which appears to cause less failures in Taylor in fornberg.py.
+      * Updated MANIFEST.in
+      * Fixes issue #49 : Dimension of Jacobian of vector valued function (length n) with scalar input should be n X 1
+      * Updated build_package.py
+      * Attempt to silence divide by zero and invalid warnings.
+      * Fix issue#52: Gradient tries to apply squeeze to the output tuple
+         containing both the result and the full_output object.
+      * Made docstring a rawdocstring since it contains slashes. 
+      * Added "# pylint: disable=unused-argument" in appropriate places.
+      * Fix issue#52: Gradient tries to apply squeeze to the output tuple
+         containing both the result and the full_output object.
+      * API change: replaced "python setup.py doctests" with "python setup.py doctest"
+      * Removed unused imports 
+      * Fixed a bug in test_low_order_derivative_on_example_functions:  Same variable (i) was
+         used both in the outer and inner loop.
+      * Updated badge for pypi and documentation of fornberg.py
+      * Fixed failing tests.
+      * Updated docs + added a test
+      * Added  "python -m pip install --upgrade pytest" to appveyor.yml due to a package conflict on python2.7 32 bit
+      * Added - "python -m pip install --upgrade setuptools" in appveyor.yml to avoid build error.
+      * Try  "python setup.py bdist_wheel" and "pip install numdifftools --find-links=dist" in appveyor.yml
+      * Put qoutes on "python -m pip install --upgrade pip" in appveyor.yml
+      * Changed "python setup.py install" to   
+         - python setup.py bdist_wheel"
+         - pip install numdifftools --find-links=dist
+      * Added "pip install --upgrade pip" to appveyor.yml
+      * Updated the detailed package documentation.
+      * Added missing pytest-pep8 to install
+      * Updated badge + appveyor.yml
+
+Per A. Brodtkorb (19):
+      * ongoing work to harmonize the the output from approx_fprime and
+         approx_fprime_cs
+      * Added Taylor class to nd_algopy.py Fixed a bug in
+         _get_best_taylor_coefficient in fornberg.py
+      * Updated references Added test_mod_c function to test_multicomplex.py
+      * Fixed a typo.
+      * Removed --strict-markers
+      * Fixed issue #39 TypeError: unsupported operand type(s) for /: 'float'
+         and 'Bicomplex'
+      * Fixed a typo in the documentation. Closing issue #51
+      * Added separate test for nd_scipy.
+      * added skip on tests if LineProfiler is not installed.
+      * Removed obsolete centered argument from call to approx_hess1 + pep8
+      * Move Jacobian._increment method to _JacobianDifferenceFunctions
+      * step_nom was unused in CStepGenerator.__init__ Added pytest.markers.slow
+         in to setup.cfg
+      * Made two tests more forgiving in order to avoid failure on travis.
+         Renamed nominal_step and base_step to get_nominal_step and
+         get_base_step, respectively.
+      * Removed obsolete import of example from hypothesis
+      * Updated testing
+      * Updated coverage call: coverage run -m py.test src/numdifftools/tests
+      * Delete obsolete conftest.py
+      * Added test for issue#52
+      * Fix for issue#52
+
 Version 0.9.39 Jun 10, 2019
 ===========================
 
