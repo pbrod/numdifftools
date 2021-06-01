@@ -241,6 +241,7 @@ class Gradient(_Derivative):
     """, example="""
     Examples
     --------
+    >>> import numpy as np
     >>> import numdifftools.nd_algopy as nda
     >>> fun = lambda x: np.sum(x**2)
     >>> df = nda.Gradient(fun, method='reverse')
@@ -301,6 +302,7 @@ class Jacobian(Gradient):
     """, example="""
     Examples
     --------
+    >>> import numpy as np
     >>> import numdifftools.nd_algopy as nda
 
     #(nonlinear least squares)
@@ -382,6 +384,7 @@ class Hessian(_Derivative):
     """, extra_note='', example="""
     Examples
     --------
+    >>> import numpy as np
     >>> import numdifftools.nd_algopy as nda
 
     # Rosenbrock function, minimized at [1,1]
@@ -446,6 +449,7 @@ class Hessdiag(Hessian):
     """, extra_note='', example="""
     Examples
     --------
+    >>> import numpy as np
     >>> import numdifftools.nd_algopy as nda
 
     # Rosenbrock function, minimized at [1,1]
@@ -523,13 +527,11 @@ def directionaldiff(f, x0, vec, **options):
     compute the directional derivative in the direction [1 2]
 
     >>> import numpy as np
-    >>> import numdifftools as nd
+    >>> import numdifftools.nd_algopy as nda
     >>> vec = np.r_[1, 2]
     >>> rosen = lambda x: (1-x[0])**2 + 105*(x[1]-x[0]**2)**2
-    >>> dd, info = nd.directionaldiff(rosen, [1, 1], vec, full_output=True)
+    >>> dd = nda.directionaldiff(rosen, [1, 1], vec)
     >>> np.allclose(dd, 0)
-    True
-    >>> np.abs(info.error_estimate)<1e-14
     True
 
     See also
@@ -569,8 +571,8 @@ class Taylor(object):
     --------
     Compute the first 6 taylor coefficients 1 + 2*z + 3*z**2 expanded round  z0 = 0:
 
-    >>> import numdifftools.nd_algopy as nda
     >>> import numpy as np
+    >>> import numdifftools.nd_algopy as nda
     >>> c = nda.Taylor(lambda x: 1+2*x+3*x**2, n=6)(z0=0)
     >>> np.allclose(c, [1, 2, 3, 0, 0, 0])
     True

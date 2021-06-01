@@ -239,18 +239,19 @@ The linear extrapolant for this interval halving scheme as :math:`\delta \to 0` 
 
 Since I've always been a big fan of convincing myself that something will work before I proceed too far, lets try this out in Python. Consider the function :math:`e^x`. Generate a pair of approximations to :math:`f'(0)`, once at :math:`\delta` of 0.1, and the second approximation at :math:`1/2` that value. Recall that :math:`\frac{d(e^x)}{dx} = e^x`, so at x = 0, the derivative should be exactly 1. How well will we do?
 
-   >>> from numpy import exp, allclose
+   >>> import numpy as np
+   >>> from numpy import exp
    >>> f = exp
    >>> dx = 0.1
    >>> df1 = (f(dx) - f(0))/dx
-   >>> allclose(df1, 1.05170918075648)
+   >>> np.allclose(df1, 1.05170918075648)
    True
 
    >>> df2 = (f(dx/2) - f(0))/(dx/2)
-   >>> allclose(df2, 1.02542192752048)
+   >>> np.allclose(df2, 1.02542192752048)
    True
 
-   >>> allclose(2*df2 - df1, 0.999134674284488)
+   >>> np.allclose(2*df2 - df1, 0.999134674284488)
    True
 
 
@@ -264,23 +265,23 @@ The Richardson extrapolant in :eq:`16` assumed a linear process, with a specific
 
 A quick test in Python yields much better results yet.
 
-    >>> from numpy import exp, allclose
+    >>> from numpy import exp
     >>> f = exp
     >>> dx = 0.1
 
     >>> df1 = (f(dx) - f(0))/dx
-    >>> allclose(df1,  1.05170918075648)
+    >>> np.allclose(df1,  1.05170918075648)
     True
 
     >>> df2 = (f(dx/2) - f(0))/(dx/2)
-    >>> allclose(df2, 1.02542192752048)
+    >>> np.allclose(df2, 1.02542192752048)
     True
 
     >>> df3 = (f(dx/4) - f(0))/(dx/4)
-    >>> allclose(df3, 1.01260482097715)
+    >>> np.allclose(df3, 1.01260482097715)
     True
 
-    >>> allclose(1./3*df1 - 2*df2 + 8./3*df3, 1.00000539448361) 
+    >>> np.allclose(1./3*df1 - 2*df2 + 8./3*df3, 1.00000539448361) 
     True
 
 Again, Derivative uses the appropriate multiple term Richardson extrapolants for all derivatives of :math:`f` up to any order [3]_. This, combined with the use of high order approximations for the derivatives, allows the use of quite large step sizes. See [LynessMoler1966]_ and [LynessMoler1969]_. How to compute the multiple term Richardson extrapolants will be elaborated further in the next section.
@@ -355,7 +356,7 @@ We can view the Richardson extrapolation step as a polynomial curve fit in the s
 A neat trick to compute the statistical uncertainty in the estimate of our desired derivative is to use statistical methodology for that error estimate. While I do appreciate that there is nothing truly statistical or stochastic in this estimate, the approach still works nicely, providing a very reasonable estimate in practice. A three term Richardson-like extrapolant, then evaluated at four distinct values for :math:`\delta`, will yield an estimate of the standard error of the constant term, with one spare degree of freedom. The uncertainty is then derived by multiplying that standard error by the appropriate percentile from the Students-t distribution.
 
    >>> import scipy.stats as ss
-   >>> allclose(ss.t.cdf(12.7062047361747, 1), 0.975)
+   >>> np.allclose(ss.t.cdf(12.7062047361747, 1), 0.975)
    True
 
 This critical level will yield a two-sided confidence interval of 95 percent.
@@ -363,14 +364,14 @@ This critical level will yield a two-sided confidence interval of 95 percent.
 These error estimates are also of value in a different sense. Since they are efficiently generated at all the different scales, the particular spacing which yields the minimum predicted error is chosen as the best derivative estimate. This has been shown to work consistently well. A spacing too large tends to have large errors of approximation due to the finite difference schemes used. But a too small spacing is bad also, in that we see a significant amplification of least significant fit errors in the approximation. A middle value generally seems to yield quite good results. For example, Derivative will estimate the derivative of :math:`e^x` automatically. As we see, the final overall spacing used was 0.0078125.
 
     >>> import numdifftools as nd
-    >>> from numpy import exp, allclose
+    >>> from numpy import exp
     >>> f = nd.Derivative(exp, full_output=True)
     >>> val, info = f(1)
-    >>> allclose(val, 2.71828183)
+    >>> np.allclose(val, 2.71828183)
     True       
-    >>> allclose(info.error_estimate, 6.927791673660977e-14)
+    >>> np.allclose(info.error_estimate, 6.927791673660977e-14)
     True
-    >>> allclose(info.final_step, 0.0078125)
+    >>> np.allclose(info.final_step, 0.0078125)
     True
 
 
@@ -378,22 +379,22 @@ However, if we force the step size to be artificially large, then approximation 
 
     >>> f = nd.Derivative(exp, step=1, full_output=True) 
     >>> val, info = f(1)
-    >>> allclose(val, 3.19452805)
+    >>> np.allclose(val, 3.19452805)
     True
-    >>> allclose(val-exp(1), 0.47624622)
+    >>> np.allclose(val-exp(1), 0.47624622)
     True
-    >>> allclose(info.final_step, 1)
+    >>> np.allclose(info.final_step, 1)
     True
 
 And if the step size is forced to be too small, then we see noise dominate the problem.
 
    >>> f = nd.Derivative(exp, step=1e-10, full_output=True)
    >>> val, info = f(1)
-   >>> allclose(val, 2.71828093)
+   >>> np.allclose(val, 2.71828093)
    True
-   >>> allclose(val - exp(1), -8.97648138e-07)
+   >>> np.allclose(val - exp(1), -8.97648138e-07)
    True
-   >>> allclose(info.final_step, 1.0000000e-10)
+   >>> np.allclose(info.final_step, 1.0000000e-10)
    True
 
 
@@ -407,30 +408,30 @@ How does numdifftools.Derivative work in action? A simple nonlinear function wit
 
    >>> f = nd.Derivative(exp, full_output=True)
    >>> val, info = f(0)
-   >>> allclose(val, 1)
+   >>> np.allclose(val, 1)
    True
 
-   >>> allclose(info.error_estimate, 5.28466160e-14)
+   >>> np.allclose(info.error_estimate, 5.28466160e-14)
    True
 
 A second simple example comes from trig functions. The first four derivatives of the sine function, evaluated at :math:`x = 0`, should be respectively :math:`[cos(0), -sin(0), -cos(0), sin(0)]`, or :math:`[1,0,-1,0]`.
 
-    >>> from numpy import sin, allclose
+    >>> from numpy import sin
     >>> import numdifftools as nd
     >>> df = nd.Derivative(sin, n=1)
-    >>> allclose(df(0), 1.)
+    >>> np.allclose(df(0), 1.)
     True
 
     >>> ddf = nd.Derivative(sin, n=2)
-    >>> allclose(ddf(0), 0.)
+    >>> np.allclose(ddf(0), 0.)
     True
 
     >>> dddf = nd.Derivative(sin, n=3)
-    >>> allclose(dddf(0), -1.)
+    >>> np.allclose(dddf(0), -1.)
     True
 
     >>> ddddf = nd.Derivative(sin, n=4)
-    >>> allclose(ddddf(0), 0.)
+    >>> np.allclose(ddddf(0), 0.)
     True
 
 
@@ -456,7 +457,7 @@ Gradient of the Rosenbrock function at [1,1], the global minimizer
 
 The gradient should be zero (within floating point noise)
 
-    >>> allclose(grad, 0)
+    >>> np.allclose(grad, 0)
     True
 
 The Hessian matrix at the minimizer should be positive definite
@@ -465,20 +466,20 @@ The Hessian matrix at the minimizer should be positive definite
 The eigenvalues of H should be positive
 
     >>> li, U = np.linalg.eig(H)
-    >>> li>0
-    array([ True,  True], dtype=bool)
+    >>> np.all(li>0)
+    True
 
 
 Gradient estimation of a function of 5 variables
     >>> f = lambda x: np.sum(x**2)
     >>> grad = nd.Gradient(f)(np.r_[1, 2, 3, 4, 5])
-    >>> allclose(grad, [  2.,   4.,   6.,   8.,  10.])
+    >>> np.allclose(grad, [  2.,   4.,   6.,   8.,  10.])
     True
 
 Simple Hessian matrix of a problem with 3 independent variables
     >>> f = lambda x: x[0] + x[1]**2 + x[2]**3
     >>> H = nd.Hessian(f)([1, 2, 3])
-    >>> allclose(H, np.diag([0, 2, 18]))
+    >>> np.allclose(H, np.diag([0, 2, 18]))
     True
 
 A semi-definite Hessian matrix
@@ -486,8 +487,8 @@ A semi-definite Hessian matrix
 
 one of these eigenvalues will be zero (approximately)
 
-    >>> np.abs(np.linalg.eig(H)[0]) < 1e-12
-    array([ True, False], dtype=bool)
+    >>> [abs(val) < 1e-12 for val in np.linalg.eig(H)[0]]
+    [True, False]
 
 
 Directional derivatives 
@@ -501,7 +502,7 @@ The directional derivative will be the dot product of the gradient with the (uni
 
 This should be zero. 
 
-    >>> allclose(directional_diff, 0)
+    >>> np.allclose(directional_diff, 0)
     True
 
  
@@ -510,7 +511,7 @@ Ok, its a trivial test case, but it easy to compute the directional derivative a
     >>> v2 = np.r_[1, -1]/np.sqrt(2)
     >>> x2 = [2, 3]
     >>> directionaldiff = np.dot(nd.Gradient(rosen)(x2), v2)
-    >>> allclose(directionaldiff, 743.87633380824832)
+    >>> np.allclose(directionaldiff, 743.87633380824832)
     True
 
 There is a convenience function :math:`nd.directionaldiff` that also takes care of the direction normalization:
@@ -528,7 +529,7 @@ Jacobian matrix of a scalar function is just the gradient
 
     >>> jac = nd.Jacobian(rosen)([2, 3])
     >>> grad = nd.Gradient(rosen)([2, 3])
-    >>> allclose(jac, grad)
+    >>> np.allclose(jac, grad)
     True
 
 Jacobian matrix of a linear system will reduce to the design matrix
@@ -541,7 +542,7 @@ Jacobian matrix of a linear system will reduce to the design matrix
 
 This should be essentially zero at any location x
 
-    >>> allclose(jac - A, 0)
+    >>> np.allclose(jac - A, 0)
     True
 
 The jacobian matrix of a nonlinear transformation of variables evaluated at some

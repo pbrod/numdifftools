@@ -79,6 +79,9 @@ extensions = ['sphinx.ext.autodoc',
               'sphinxcontrib.bibtex'
              ]
 
+bibtex_bibfiles = ['appendix/refs1.bib']
+bibtex_default_style = 'alpha'
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 

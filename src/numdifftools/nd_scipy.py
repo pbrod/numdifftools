@@ -32,6 +32,7 @@ class Jacobian(_Common):
 
     Examples
     --------
+    >>> import numpy as np
     >>> import numdifftools.nd_scipy as nd
 
     #(nonlinear least squares)

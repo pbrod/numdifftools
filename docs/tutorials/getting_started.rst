@@ -10,33 +10,35 @@ The derivative
 
 How does numdifftools.Derivative work in action? A simple nonlinear function with a well known derivative is :math:`e^x`. At :math:`x = 0`, the derivative should be 1.
 
-   >>> import numdifftools as nd
-   >>> f = nd.Derivative(exp, full_output=True)
-   >>> val, info = f(0)
-   >>> allclose(val, 1)
-   True
+    >>> import numpy as np
+    >>> from numpy import exp
+    >>> import numdifftools as nd
+    >>> f = nd.Derivative(exp, full_output=True)
+    >>> val, info = f(0)
+    >>> np.allclose(val, 1)
+    True
 
-   >>> allclose(info.error_estimate, 5.28466160e-14)
-   True
+    >>> np.allclose(info.error_estimate, 5.28466160e-14)
+    True
 
 A second simple example comes from trig functions. The first four derivatives of the sine function, evaluated at :math:`x = 0`, should be respectively :math:`[cos(0), -sin(0), -cos(0), sin(0)]`, or :math:`[1,0,-1,0]`.
 
-    >>> from numpy import sin, allclose
+    >>> from numpy import sin
     >>> import numdifftools as nd
     >>> df = nd.Derivative(sin, n=1)
-    >>> allclose(df(0), 1.)
+    >>> np.allclose(df(0), 1.)
     True
 
     >>> ddf = nd.Derivative(sin, n=2)
-    >>> allclose(ddf(0), 0.)
+    >>> np.allclose(ddf(0), 0.)
     True
 
     >>> dddf = nd.Derivative(sin, n=3)
-    >>> allclose(dddf(0), -1.)
+    >>> np.allclose(dddf(0), -1.)
     True
 
     >>> ddddf = nd.Derivative(sin, n=4)
-    >>> allclose(ddddf(0), 0.)
+    >>> np.allclose(ddddf(0), 0.)
     True
 
 
@@ -78,7 +80,7 @@ Gradient of the Rosenbrock function at [1,1], the global minimizer
 
 The gradient should be zero (within floating point noise)
 
-    >>> allclose(grad, 0)
+    >>> np.allclose(grad, 0)
     True
 
 The Hessian matrix at the minimizer should be positive definite
@@ -87,20 +89,20 @@ The Hessian matrix at the minimizer should be positive definite
 The eigenvalues of H should be positive
 
     >>> li, U = np.linalg.eig(H)
-    >>> li>0
-    array([ True,  True], dtype=bool)
+    >>> [ val>0 for val in li]
+    [True,  True]
 
 
 Gradient estimation of a function of 5 variables
     >>> f = lambda x: np.sum(x**2)
     >>> grad = nd.Gradient(f)(np.r_[1, 2, 3, 4, 5])
-    >>> allclose(grad, [  2.,   4.,   6.,   8.,  10.])
+    >>> np.allclose(grad, [  2.,   4.,   6.,   8.,  10.])
     True
 
 Simple Hessian matrix of a problem with 3 independent variables
     >>> f = lambda x: x[0] + x[1]**2 + x[2]**3
     >>> H = nd.Hessian(f)([1, 2, 3])
-    >>> allclose(H, np.diag([0, 2, 18]))
+    >>> np.allclose(H, np.diag([0, 2, 18]))
     True
 
 A semi-definite Hessian matrix
@@ -108,8 +110,8 @@ A semi-definite Hessian matrix
 
 one of these eigenvalues will be zero (approximately)
 
-    >>> np.abs(np.linalg.eig(H)[0]) < 1e-12
-    array([ True, False], dtype=bool)
+    >>> [abs(val) < 1e-12 for val in np.linalg.eig(H)[0]]
+    [True, False]
 
 
 Directional derivatives 
@@ -123,7 +125,7 @@ The directional derivative will be the dot product of the gradient with the (uni
 
 This should be zero. 
 
-    >>> allclose(directional_diff, 0)
+    >>> np.allclose(directional_diff, 0)
     True
 
  
@@ -132,7 +134,7 @@ Ok, its a trivial test case, but it easy to compute the directional derivative a
     >>> v2 = np.r_[1, -1]/np.sqrt(2)
     >>> x2 = [2, 3]
     >>> directionaldiff = np.dot(nd.Gradient(rosen)(x2), v2)
-    >>> allclose(directionaldiff, 743.87633380824832)
+    >>> np.allclose(directionaldiff, 743.87633380824832)
     True
 
 There is a convenience function :math:`nd.directionaldiff` that also takes care of the direction normalization:
@@ -150,7 +152,7 @@ Jacobian matrix of a scalar function is just the gradient
 
     >>> jac = nd.Jacobian(rosen)([2, 3])
     >>> grad = nd.Gradient(rosen)([2, 3])
-    >>> allclose(jac, grad)
+    >>> np.allclose(jac, grad)
     True
 
 Jacobian matrix of a linear system will reduce to the design matrix
@@ -163,7 +165,7 @@ Jacobian matrix of a linear system will reduce to the design matrix
 
 This should be essentially zero at any location x
 
-    >>> allclose(jac - A, 0)
+    >>> np.allclose(jac - A, 0)
     True
 
 The jacobian matrix of a nonlinear transformation of variables evaluated at some

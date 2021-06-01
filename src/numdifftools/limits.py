@@ -475,6 +475,7 @@ class Residue(Limit):
     --------
     A first order pole at z = 0
 
+    >>> import numpy as np
     >>> from numdifftools.limits import Residue
     >>> def f(z): return -1./(np.expm1(2*z))
     >>> res_f, info = Residue(f, full_output=True)(0)

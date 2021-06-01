@@ -366,6 +366,7 @@ class Jacobian(Derivative):
     """, example="""
     Examples
     --------
+    >>> import numpy as np
     >>> import numdifftools as nd
 
     #(nonlinear least squares)
@@ -415,13 +416,13 @@ class Jacobian(Derivative):
         one = np.ones_like(fxi)
         return [np.array([one * h[i] for i in range(n)]) for h in steps]
 
-    def _derivative_nonzero_order(self, xi, args, kwds):
+    def _derivative_nonzero_order(self, x_i, args, kwds):
         diff, f = self._get_functions(args, kwds)
-        steps, step_ratio = self._get_steps(xi)
-        fxi = f(xi)
-        results = [diff(f, fxi, xi, h) for h in steps]
+        steps, step_ratio = self._get_steps(x_i)
+        fxi = f(x_i)
+        results = [diff(f, fxi, x_i, h) for h in steps]
 
-        steps2 = self._expand_steps(steps, xi, fxi)
+        steps2 = self._expand_steps(steps, x_i, fxi)
 
         self.set_richardson_rule(step_ratio, self.richardson_terms)
         return self.fd_rule.apply(results, steps2, step_ratio), fxi
