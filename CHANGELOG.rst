@@ -51,7 +51,7 @@ Per A Brodtkorb (109):
       * Removed commented code from test_numdifftools.py
       * Run only coverage xml when python version is 3.7
       * Updated .travis.yml Removed commented out code from extrapolation.py and nd_statsmodels.py
-      * Finalized the moved of XXXDifferencdFunctions from core.py to finite_difference.py pep8
+      * Finalized the moved of XXXDifferencdFunctions from core.py to finite_difference.py
       * Added missing docstring for default_scale function in step_generators.py. 
       * Removed unused import of itertools in _find_default_scale.py.
       * Changed default scale from 1.35 to 1.06 for complex/multicomplex methods when n=1
@@ -324,7 +324,7 @@ Per A Brodtkorb (79):
       * Smaller start radius for Fornberg method
       * Simplified "n" and "order" properties
       * Simplified default_scale
-      * Removed unecessary parenthesis and code. pep8
+      * Removed unecessary parenthesis and code.
       * Fixed a bug in Dea + small refactorings.
       * Added test for EpsAlg
       * Avoid mutable default args and prefer static methods over instance-meth.
