@@ -45,7 +45,7 @@ def update_readme():
 {1}
 """.format(PACKAGE_NAME, '='*len(PACKAGE_NAME)))
 
-    readme_txt.replace('.. only:: html', '')
+    readme_txt = readme_txt.replace('.. only:: html', '')
     filename = os.path.join(ROOT, "README.rst")
     with open(filename, "w") as fid:
         fid.write(readme_txt)
