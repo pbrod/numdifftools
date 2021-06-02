@@ -4,13 +4,11 @@
 Setup file for numdifftools.
 
 Usage:
-Run all tests:
-  python setup.py test
+Run doctests on documentation:
   python setup.py doctest
 
 Build documentation
   python setup.py docs
-  python setup.py latex
 
 Build
   python setup.py bdist_wininst
@@ -97,26 +95,6 @@ class Doctest(Command):
         sph.build()
 
 
-class Latex(Command):
-    description = 'Run latex with Sphinx'
-    user_options = []
-
-    def initialize_options(self):
-        pass
-
-    def finalize_options(self):
-        pass
-
-    def run(self):
-        from sphinx.application import Sphinx
-        sph = Sphinx('./docs',  # source directory
-                     './docs',  # directory containing conf.py
-                     './docs/_build/latex',  # output directory
-                     './docs/_build/doctrees',  # doctree directory
-                     'latex')  # finally, specify the latex builder
-        sph.build()
-
-
 def setup_package():
     version = find_version(os.path.join(ROOT, 'src', PACKAGE_NAME, "__init__.py"))
     print("Version: {}".format(version))
@@ -139,8 +117,7 @@ def setup_package():
                        'matplotlib',
                        'line_profiler'
                        ],
-        cmdclass={'doctest': Doctest,
-                  'latex': Latex},
+        cmdclass={'doctest': Doctest},
     )
 
 
