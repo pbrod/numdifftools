@@ -3,7 +3,7 @@
 numdifftools
 ============
 
-.. only:: html
+
 
     |pkg_img| |tests_img| |tests2_img| |docs_img| |health_img| |coverage_img| |versions_img| |downloads_img|
 
@@ -224,7 +224,7 @@ References
 
 .. [NAG] *NAG Library*. NAG Fortran Library Document: D04AAF
 
-.. only:: html
+
 
     .. |pkg_img| image:: https://badge.fury.io/py/numdifftools.svg
         :target: https://badge.fury.io/py/numdifftools
