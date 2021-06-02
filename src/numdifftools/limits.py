@@ -506,8 +506,8 @@ class Residue(Limit):
         super(Residue, self).__init__(f, step=step, method=method, order=order,
                                       full_output=full_output, **options)
 
-    def _fun(self, z, dz, args, kwds):
-        return self.fun(z + dz, *args, **kwds) * (dz ** self.pole_order)
+    def _fun(self, z, d_z, args, kwds):
+        return self.fun(z + d_z, *args, **kwds) * (d_z ** self.pole_order)
 
     def __call__(self, x, *args, **kwds):
         return self.limit(x, *args, **kwds)
