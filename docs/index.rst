@@ -5,7 +5,7 @@ Welcome to the numdifftools' documentation!
     |pkg_img| |tests_img| |tests2_img| |docs_img| |health_img| |coverage_img| |versions_img| |downloads_img|
 
 
-This is the documentation of **Numdifftools** version |version| released |today|.
+This is the documentation of **Numdifftools** version |release| released |today|.
 
 Bleeding edge available at: https://github.com/pbrod/numdifftools.
 
