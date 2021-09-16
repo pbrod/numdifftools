@@ -48,11 +48,10 @@ before_install:
   - source activate condaenv
 # Install packages
 install:
-  - conda install python=$TRAVIS_PYTHON_VERSION numpy scipy pytest statsmodels algopy pyqt matplotlib coverage pytest-cov pytest-pep8 line_profiler cython
+  - conda install python=$TRAVIS_PYTHON_VERSION numpy scipy pytest statsmodels algopy pyqt matplotlib coverage pytest-cov pytest-pep8 line_profiler cython hypothesis
   - pip install setuptools    
 # codeclimate reporter is only compatible with Coverage.py versions >=4.0,<4.4.
   - pip install codecov
-  - pip install hypothesis
   - python setup.py install
 #  - conda build conda_recipe
 #  - conda install numdifftools --use-local
