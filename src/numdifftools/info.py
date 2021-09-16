@@ -228,8 +228,8 @@ References
     .. |pkg_img| image:: https://badge.fury.io/py/numdifftools.svg
         :target: https://badge.fury.io/py/numdifftools
 
-    .. |tests_img| image:: https://travis-ci.com/pbrod/numdifftools.svg?branch=master
-        :target: https://travis-ci.com/pbrod/numdifftools
+    .. |tests_img| image:: https://app.travis-ci.com/pbrod/numdifftools.svg?branch=master
+        :target: https://app.travis-ci.com/pbrod/numdifftools
 
     .. |tests2_img| image:: https://ci.appveyor.com/api/projects/status/qeoegaocw41lkarv/branch/master?svg=true
         :target: https://ci.appveyor.com/project/pbrod/numdifftools
