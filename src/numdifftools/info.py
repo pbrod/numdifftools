@@ -226,13 +226,13 @@ References
 .. only:: html
 
     .. |pkg_img| image:: https://badge.fury.io/py/numdifftools.svg
-        :target: https://badge.fury.io/py/numdifftools
+       :target: https://badge.fury.io/py/numdifftools
 
     .. |tests_img| image:: https://app.travis-ci.com/pbrod/numdifftools.svg?branch=master
-        :target: https://app.travis-ci.com/pbrod/numdifftools
+       :target: https://app.travis-ci.com/pbrod/numdifftools
 
     .. |tests2_img| image:: https://ci.appveyor.com/api/projects/status/qeoegaocw41lkarv/branch/master?svg=true
-        :target: https://ci.appveyor.com/project/pbrod/numdifftools
+       :target: https://ci.appveyor.com/project/pbrod/numdifftools
 
     .. |health_img| image:: https://api.codeclimate.com/v1/badges/698996d1ec94028ec223/maintainability.svg
        :target: https://codeclimate.com/github/pbrod/numdifftools/maintainability
@@ -245,11 +245,12 @@ References
     .. |versions_img| image:: https://img.shields.io/pypi/pyversions/numdifftools.svg
        :target: https://github.com/pbrod/numdifftools
 
-    .. |downloads_img| image:: https://img.shields.io/pypi/dm/numdifftools.svg
+    .. |downloads_img| image:: https://pepy.tech/badge/numdifftools/month
+       :target: https://pepy.tech/project/numdifftools
        :alt: PyPI - Downloads
 
     .. |docs_img| image:: https://readthedocs.org/projects/numdifftools/badge/?svg=true
-        :target: http://numdifftools.readthedocs.org/en/stable/
-        :alt: Documentation
+       :target: http://numdifftools.readthedocs.org/en/stable/
+       :alt: Documentation
 
 """
