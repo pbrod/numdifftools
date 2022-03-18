@@ -165,8 +165,7 @@ class _Limit(object):
         """
         try:
             median = np.nanmedian(der, axis=0)
-            p75 = np.nanpercentile(der, 75, axis=0)
-            p25 = np.nanpercentile(der, 25, axis=0)
+            p25, p75 = np.nanpercentile(der, [25, 75], axis=0)
             iqr = np.abs(p75 - p25)
         except ValueError as msg:
             warnings.warn(str(msg))
