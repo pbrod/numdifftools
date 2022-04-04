@@ -164,8 +164,11 @@ class _Limit(object):
         trimming factor is defined as a parameter.
         """
         try:
-            median = np.nanmedian(der, axis=0)
-            p25, p75 = np.nanpercentile(der, [25, 75], axis=0)
+            if np.any(np.isnan(der)):
+                p25, median, p75 = np.nanpercentile(der, [25,50, 75], axis=0) 
+            else:
+                p25, median, p75 = np.percentile(der, [25,50, 75], axis=0)
+
             iqr = np.abs(p75 - p25)
         except ValueError as msg:
             warnings.warn(str(msg))
