@@ -123,4 +123,5 @@ def setup_package():
 
 if __name__ == "__main__":
     # sys.argv.append('docs')
+    # sys.argv.append('bdist_wininst')
     setup_package()
