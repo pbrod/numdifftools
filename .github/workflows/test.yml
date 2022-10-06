@@ -5,7 +5,7 @@ on:
   pull_request:
 
 jobs:
-  pytest:
+  test:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -31,6 +31,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install wheel
+          pip install pytest pytest-cov line_profiler hypothesis matplotlib
           pip install .
 
       - name: Run tests
