@@ -2,31 +2,15 @@ build: off
 
 environment:
   matrix:
-    - PYTHON_VERSION: 2.7
-      MINICONDA: C:\Miniconda
-      PYTHON_ARCH: "32"
-    - PYTHON_VERSION: 2.7
-      MINICONDA: C:\Miniconda-x64
-      PYTHON_ARCH: "64"
-    - PYTHON_VERSION: 3.6
-      MINICONDA: C:\Miniconda36
-      PYTHON_ARCH: "32"
-    - PYTHON_VERSION: 3.6
-      MINICONDA: C:\Miniconda36-x64
-      PYTHON_ARCH: "64"
     - PYTHON_VERSION: 3.7
       MINICONDA: C:\Miniconda37
       PYTHON_ARCH: "32"
     - PYTHON_VERSION: 3.7
       MINICONDA: C:\Miniconda37-x64
       PYTHON_ARCH: "64"
-#    - PYTHON_VERSION: 3.8
-#      MINICONDA: C:\Miniconda38-x64
-#      PYTHON_ARCH: "64"
-#    - PYTHON_VERSION: 3.9
-#      MINICONDA: C:\Miniconda39-x64
-#      PYTHON_ARCH: "64"
-
+    - PYTHON_VERSION: 3.8
+      MINICONDA: C:\Miniconda38-x64
+      PYTHON_ARCH: "64"
 
 
 
