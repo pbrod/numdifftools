@@ -1,4 +1,4 @@
-from __future__ import division, print_function
+from __future__ import absolute_import, division, print_function
 from scipy.optimize._numdiff import approx_derivative
 from scipy.optimize import approx_fprime
 import numpy as np

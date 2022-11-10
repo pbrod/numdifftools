@@ -1,16 +1,16 @@
 """Test functions for numdifftools module"""
-from __future__ import print_function
+from __future__ import absolute_import, print_function
 
-from hypothesis import given, example, note, settings, strategies as st
-from numpy.testing import assert_allclose  # @UnresolvedImport
 import pytest
+import numpy as np
+from numpy.testing import assert_allclose  # @UnresolvedImport
+from hypothesis import given, example, note, settings, strategies as st
 
 import numdifftools.core as nd
 import numdifftools.nd_statsmodels as nds
 from numdifftools.step_generators import default_scale
 from numdifftools.testing import rosen
 from numdifftools.tests.hamiltonian import run_hamiltonian
-import numpy as np
 
 
 class TestRichardson(object):

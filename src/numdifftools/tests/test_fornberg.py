@@ -1,13 +1,14 @@
 from __future__ import absolute_import, print_function
 
-from hypothesis import given, note, settings, strategies as st  #, reproduce_failure
+import numpy as np
 from numpy.testing import assert_allclose  # @UnresolvedImport
+
+from hypothesis import given, note, settings, strategies as st  #, reproduce_failure
 
 from numdifftools.example_functions import function_names, get_function
 from numdifftools.fornberg import (fd_weights, fd_weights_all, derivative,
                                    fd_derivative,
                                    CENTRAL_WEIGHTS_AND_POINTS)
-import numpy as np
 
 # @reproduce_failure('5.36.1', b'AAJRcYUpZHQ=')
 # @reproduce_failure('4.32.2', b'AAJRcYUpZHQ=')

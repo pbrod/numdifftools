@@ -2,11 +2,11 @@
 """"""
 from __future__ import absolute_import, division
 
-from hypothesis import given, strategies as st
-from numpy.testing import assert_allclose
 import pytest
 
 import numpy as np
+from numpy.testing import assert_allclose  # @UnresolvedImport
+from hypothesis import given, strategies as st
 
 try:
     import scipy

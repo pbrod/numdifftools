@@ -89,7 +89,7 @@ n=9, scale=12.9
 n=10, scale=14.200000000000001
 
 """
-from __future__ import division, print_function
+from __future__ import absolute_import, division, print_function
 from numdifftools.example_functions import get_function, function_names
 from numdifftools import Derivative
 from numdifftools.step_generators import default_scale, MinStepGenerator, MaxStepGenerator

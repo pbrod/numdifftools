@@ -5,7 +5,7 @@ See also:
 https://www.pythoncentral.io/measure-time-in-python-time-time-vs-time-clock/
 """
 
-from __future__ import print_function
+from __future__ import absolute_import, print_function
 import inspect
 import cProfile
 from functools import wraps

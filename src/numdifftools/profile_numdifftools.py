@@ -2,7 +2,7 @@
 This script profile different parts of numdifftools.
 
 """
-from __future__ import print_function
+from __future__ import absolute_import, print_function
 import numpy as np
 import numdifftools as nd  # numdifftools.nd_statsmodels as nd
 from numdifftools.profiletools import do_profile

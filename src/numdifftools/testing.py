@@ -3,7 +3,7 @@ Created on Apr 4, 2016
 
 @author: pab
 """
-from __future__ import print_function
+from __future__ import absolute_import, print_function
 import sys
 import contextlib
 import inspect

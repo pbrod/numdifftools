@@ -3,7 +3,7 @@ Created on 17. mai 2015
 
 @author: pab
 """
-from __future__ import division
+from __future__ import absolute_import, division
 import numpy as np
 import scipy.special as special
 from numpy import (cos, sin, tan, cosh, sinh, tanh,
