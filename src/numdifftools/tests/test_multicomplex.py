@@ -8,7 +8,7 @@ from numdifftools.example_functions import get_function
 import numpy as np
 from numpy.testing import assert_allclose, assert_array_equal  # @UnresolvedImport
 
-EPS = np.MachAr().eps
+EPS = np.finfo(float).eps
 
 
 def _default_base_step(x, scale):

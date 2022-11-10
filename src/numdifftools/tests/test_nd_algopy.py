@@ -3,7 +3,7 @@
 from __future__ import absolute_import, division
 
 from hypothesis import given, example, strategies as st
-from numpy.testing import assert_allclose
+from numpy.testing import assert_allclose  # @UnresolvedImport
 import pytest
 
 from numdifftools.testing import rosen

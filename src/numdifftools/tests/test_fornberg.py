@@ -1,7 +1,7 @@
-from __future__ import print_function
+from __future__ import absolute_import, print_function
 
-from hypothesis import given, note, settings, strategies as st, reproduce_failure
-from numpy.testing.utils import assert_allclose
+from hypothesis import given, note, settings, strategies as st  #, reproduce_failure
+from numpy.testing import assert_allclose  # @UnresolvedImport
 
 from numdifftools.example_functions import function_names, get_function
 from numdifftools.fornberg import (fd_weights, fd_weights_all, derivative,
