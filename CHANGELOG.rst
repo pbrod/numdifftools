@@ -2,8 +2,8 @@
 Changelog
 =========
       
-Version 0.9.41 Nov 2, 2022
-==========================
+Version 0.9.41 Nov 10, 2022
+===========================
 Fabian Joswig (5):
       * ci: execute test action only on push to master and on pull requests.
       * ci: test requirements added to ci workflow.
@@ -19,8 +19,17 @@ Jonas Eschle (6):
       * Update .travis.yml
       * Update to Python310
 
-Per A Brodtkorb (10):
-      * commented out code
+Per A Brodtkorb (19):
+      * Commented out deprecated pep8ignore and pep8maxlinelength in setup.cfg
+      * Fixed issue #59: numpy deprecation warning on machar.tiny
+      * Deleted obsolete travis_install.sh 
+      * Replaced deprecated `np.MachAr().eps` (NumPy 1.22) with np.finfo(float).eps in test_multicomplex.py
+      
+      * Added requirements.tests.txt 
+      * Updated .github/workflows/test.yml to use requirements.tests.txt
+      * Removed obsolete .travis.yml and appveyor.yml. 
+      * Github-actions are now used instead. 
+      * Replaced appveyor badge and travis badge with github-actions badge in README.rst, info.py and index.rst
       * Removed python 2.7 from classifiers in setup.cfg
       * Updated .travis.yml
       * Fixed doctest so they don't crash on travis: Replaced "# doctest + SKIP" with "# doctest: +SKIP" in docstrings.

@@ -1,7 +1,7 @@
 """
 Finite difference methods module.
 """
-from __future__ import division, print_function
+from __future__ import absolute_import, division, print_function
 import warnings
 import numpy as np
 from numpy import linalg

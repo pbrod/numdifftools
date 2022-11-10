@@ -5,7 +5,7 @@ from .core import *
 from . import extrapolation, limits, step_generators
 
 
-__version__ = "0.9.41rc1"
+__version__ = "0.9.41"
 
 
 def test(*options):
