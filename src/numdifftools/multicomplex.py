@@ -29,10 +29,11 @@ Adriaen Verheyleweghen, (2014)
 Project report, NTNU
 
 """
-from __future__ import division
+from __future__ import absolute_import, division
 import numpy as np
 
-_TINY = np.finfo(float).tiny
+_tiny_name = 'tiny' if np.__version__ < '1.22' else 'smallest_normal'
+_TINY = getattr(np.finfo(float), _tiny_name)
 
 
 def c_atan2(x, y):

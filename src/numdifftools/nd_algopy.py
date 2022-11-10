@@ -52,7 +52,7 @@ https://en.wikipedia.org/wiki/Automatic_differentiation
 
 https://pythonhosted.org/algopy/index.html
 """
-from __future__ import division
+from __future__ import absolute_import, division
 
 from collections import namedtuple
 
@@ -65,7 +65,7 @@ except ImportError:
     UTPM = algopy = None
 
 
-EPS = np.MachAr().eps
+EPS = np.finfo(float).eps
 
 _cmn_doc = """
     Calculate %(derivative)s with Algorithmic Differentiation method

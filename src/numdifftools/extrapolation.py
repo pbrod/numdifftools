@@ -3,16 +3,17 @@ Created on 28. aug. 2015
 
 @author: pab
 """
-from __future__ import division, print_function
+from __future__ import absolute_import, division, print_function
 import warnings
 import numpy as np
 from scipy import linalg
 from scipy.ndimage import convolve1d
 
-EPS = np.finfo(float).eps
-_EPS = EPS
-_TINY = np.finfo(float).tiny
-_HUGE = np.finfo(float).max
+FINFO = np.finfo(float)
+_EPS = EPS = FINFO.eps
+_tiny_name = 'tiny' if np.__version__ < '1.22' else 'smallest_normal'
+_TINY = getattr(FINFO, _tiny_name)
+_HUGE = FINFO.max
 
 
 def _assert(cond, msg):
