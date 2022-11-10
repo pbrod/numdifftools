@@ -3,5 +3,6 @@ statsmodels>=0.6
 hypothesis>=3.6
 pytest
 pytest-cov
-line_profiler 
-hypothesis matplotlib
+line_profiler
+hypothesis
+matplotlib

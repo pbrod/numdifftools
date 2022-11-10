@@ -1,7 +1,46 @@
 =========
 Changelog
 =========
+      
+Version 0.9.41 Nov 2, 2022
+==========================
+Fabian Joswig (5):
+      * ci: execute test action only on push to master and on pull requests.
+      * ci: test requirements added to ci workflow.
+      * ci: first version of github actions ci added.
+      * fix: import from from scipy.ndimage.filters replaced by from scipy.ndimage
+      * fix: np.info(float).machar.tiny replaced by np.info(float).tiny
 
+Jonas Eschle (6):
+      * Drop Python 3.6
+      * Remove Python 2.7, 3.6 from appveyor CI
+      * Update .travis.yml
+      * Update setup.cfg
+      * Update .travis.yml
+      * Update to Python310
+
+Per A Brodtkorb (10):
+      * commented out code
+      * Removed python 2.7 from classifiers in setup.cfg
+      * Updated .travis.yml
+      * Fixed doctest so they don't crash on travis: Replaced "# doctest + SKIP" with "# doctest: +SKIP" in docstrings.
+      * Updated download badge in README.rst and info.py
+      * Updated test_img in README.rst
+      * Updated tests_img path for travis.
+      * Added "# doctest + SKIP" to doctest string in info.py
+      * Replaced "version|" with "release|" in docs/index.rst
+      * Added matplotlib to requirements.txt Removed failing python 3.8 from appveyor.yml
+
+Per A. Brodtkorb (4):
+      * Merge pull request #65 from fjosw/feat/github_actions_ci
+      * Merge pull request #66 from jonas-eschle/patch-1
+      * Merge pull request #60 from peendebak/performance/percentile
+      * Merge pull request #63 from fjosw/feat/numpy_deprecation
+
+Pieter Eendebak (2):
+      * workaround for known issue with np.nanpercentile
+      * improve performance by combining percentile calculations
+      
 Version 0.9.40 Jun 2, 2021
 ==========================
 
@@ -309,9 +348,9 @@ Per A Brodtkorb (79):
       * Renamed bicomplex to Bicomplex
       * Simplified example_functions.py
       * Moved MinStepGenerator, MaxStepGeneretor and MinMaxStepGenerator to step_generators.py
-		* Unified the step generators
-		* Moved step_generator tests to test_step_generators.py
-		* Major simplification of step_generators.py
+         - Unified the step generators
+         - Moved step_generator tests to test_step_generators.py
+         - Major simplification of step_generators.py
       * Removed duplicated code + pep8
       * Moved fornberg_weights to fornberg.py + added taylor and derivative
       * Fixed print statement
@@ -514,7 +553,7 @@ pbrod (47):
          * Added bicomplex class for testing the complex step second derivative.
          * Added fornberg_weights_all for computing optimal finite difference rules in a stable way.
          * Added higher order complex step derivative methods.
-      
+
 
 
 Version 0.7.7, December 18, 2014
