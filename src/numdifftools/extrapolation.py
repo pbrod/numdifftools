@@ -7,7 +7,7 @@ from __future__ import division, print_function
 import warnings
 import numpy as np
 from scipy import linalg
-from scipy.ndimage.filters import convolve1d
+from scipy.ndimage import convolve1d
 
 EPS = np.finfo(float).eps
 _EPS = EPS

@@ -32,7 +32,7 @@ Project report, NTNU
 from __future__ import division
 import numpy as np
 
-_TINY = np.finfo(float).machar.tiny
+_TINY = np.finfo(float).tiny
 
 
 def c_atan2(x, y):
