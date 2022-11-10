@@ -10,24 +10,14 @@ requirements:
   build:
     - python
     - setuptools
-    - setuptools_scm
-    - pyscaffold
-    - six
     - numpy >=1.9
     - scipy >=0.8
-    - algopy >=0.4    [not py36]
-    - statsmodels
 
   run:
     - python
     - setuptools
-    - setuptools_scm
-    - pyscaffold
-    - six
     - numpy >=1.9
     - scipy >=0.8
-    - algopy >=0.4    [not py36]
-    - statsmodels
 
 test:
   imports:
@@ -41,6 +31,8 @@ test:
     - line_profiler
     - hypothesis
     - matplotlib
+    - algopy >=0.4    [not py36]
+    - statsmodels
 
 
 about:

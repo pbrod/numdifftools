@@ -2,7 +2,7 @@ Welcome to the numdifftools' documentation!
 ===========================================
 .. only:: html
 
-    |pkg_img| |tests_img| |tests2_img| |docs_img| |health_img| |coverage_img| |versions_img| |downloads_img|
+    |pkg_img| |tests_img| |docs_img| |health_img| |coverage_img| |versions_img| |downloads_img|
 
 
 This is the documentation of **Numdifftools** version |release| released |today|.
@@ -41,12 +41,8 @@ Official releases are available at: http://pypi.python.org/pypi/Numdifftools.
     .. |pkg_img| image:: https://badge.fury.io/py/numdifftools.svg
         :target: https://badge.fury.io/py/numdifftools
 
-    .. |tests_img| image:: https://travis-ci.org/pbrod/numdifftools.svg?branch=master
-        :target: https://travis-ci.org/pbrod/numdifftools
-
-    .. |tests2_img| image:: https://ci.appveyor.com/api/projects/status/qeoegaocw41lkarv/branch/master?svg=true
-        :target: https://ci.appveyor.com/project/pbrod/numdifftools
-
+    .. |tests_img| image:: https://github.com/pbrod/numdifftools/actions/workflows/test.yml/badge.svg
+       :target: https://github.com/pbrod/numdifftools/actions/workflows/test.yml
 
     .. |health_img| image:: https://api.codeclimate.com/v1/badges/698996d1ec94028ec223/maintainability.svg
         :target: https://codeclimate.com/github/pbrod/numdifftools/maintainability

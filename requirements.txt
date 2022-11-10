@@ -3,6 +3,3 @@
 # Remember to also add them in setup.cfg but unpinned.
 numpy>=1.9
 scipy>=0.8
-algopy>=0.4
-statsmodels>=0.6
-matplotlib

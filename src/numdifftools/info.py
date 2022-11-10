@@ -4,7 +4,7 @@ Introduction to numdifftools
 
 .. only:: html
 
-    |pkg_img| |tests_img| |tests2_img| |docs_img| |health_img| |coverage_img| |versions_img| |downloads_img|
+    |pkg_img| |tests_img| |docs_img| |health_img| |coverage_img| |versions_img| |downloads_img|
 
 
 The numdifftools library is a suite of tools written in `_Python <http://www.python.org/>`_
@@ -228,11 +228,8 @@ References
     .. |pkg_img| image:: https://badge.fury.io/py/numdifftools.svg
        :target: https://badge.fury.io/py/numdifftools
 
-    .. |tests_img| image:: https://app.travis-ci.com/pbrod/numdifftools.svg?branch=master
-       :target: https://app.travis-ci.com/pbrod/numdifftools
-
-    .. |tests2_img| image:: https://ci.appveyor.com/api/projects/status/qeoegaocw41lkarv/branch/master?svg=true
-       :target: https://ci.appveyor.com/project/pbrod/numdifftools
+    .. |tests_img| image:: https://github.com/pbrod/numdifftools/actions/workflows/test.yml/badge.svg
+       :target: https://github.com/pbrod/numdifftools/actions/workflows/test.yml
 
     .. |health_img| image:: https://api.codeclimate.com/v1/badges/698996d1ec94028ec223/maintainability.svg
        :target: https://codeclimate.com/github/pbrod/numdifftools/maintainability

@@ -7,16 +7,23 @@ statsmodels.numdiff.
 
 from __future__ import division, print_function
 from functools import partial
-from statsmodels.tools.numdiff import (  # approx_fprime,
-    # approx_fprime_cs,
-    # approx_hess, # same as approx_hess3
-    approx_hess1,
-    approx_hess2,
-    approx_hess3,
-    approx_hess_cs,
-    _get_epsilon)
-import numpy as np
 import warnings
+
+import numpy as np
+
+try:
+    from statsmodels.tools.numdiff import (  # approx_fprime,
+        # approx_fprime_cs,
+        # approx_hess, # same as approx_hess3
+        approx_hess1,
+        approx_hess2,
+        approx_hess3,
+        approx_hess_cs,
+        _get_epsilon)
+except ImportError:
+    approx_hess1=approx_hess2=approx_hess3=approx_hess_cs=_get_epsilon=None
+
+
 _EPS = np.finfo(float).eps
 
 
