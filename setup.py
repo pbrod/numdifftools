@@ -17,12 +17,12 @@ Build
 
 Recommended build
   git pull origin
-  git shortlog v0.9.20..HEAD -w80 --format="* %s" --reverse > log.txt
+  git shortlog v0.9.40..HEAD -w80 --format="* %s" --reverse > log.txt
 # update CHANGELOG.rst with info from log.txt
 # update numdifftools.info (this file will be the generated README.rst)
-  python build_package.py 0.10.0rc0
+  python build_package.py 0.9.42rc0
   git commit
-  git tag v0.10.0rc0 master
+  git tag v0.9.42rc0 master
   git push --tags
 
 PyPi upload:
