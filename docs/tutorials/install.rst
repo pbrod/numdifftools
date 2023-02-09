@@ -75,7 +75,7 @@ To test if the toolbox is working correctly paste the following in an interactiv
 
 .. parsed-literal::
 
-    nd.test('--doctest-module')
+    nd.test('--doctest-modules')
 
 
 If the result show no errors, you now have installed a fully functional toolbox.
