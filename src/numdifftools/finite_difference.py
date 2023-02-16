@@ -245,14 +245,17 @@ class HessianDifferenceFunctions(object):
 
         Eq 10 in Ridout (2009).
         """
-        n = len(x)
+        n = len(x)                  # Number of variables
+        s = np.array(f_x).shape     # Shape of function result
         eee = np.diag(h)
-        hess = 2. * np.outer(h, h)
+        dtype = np.result_type(f_x, float)  # make sure it is at least float64
+        hess = np.empty(s + (n, n), dtype=dtype)
+        sss = 2. * np.outer(h, h)
         for i in range(n):
             for j in range(i, n):
-                hess[i, j] = (f(x + 1j * eee[i] + eee[j])
-                              - f(x + 1j * eee[i] - eee[j])).imag / hess[j, i]
-                hess[j, i] = hess[i, j]
+                hess[..., i, j] = (f(x + 1j * eee[i] + eee[j])
+                                   - f(x + 1j * eee[i] - eee[j])).imag / sss[j, i]
+                hess[..., j, i] = hess[..., i, j]
         return hess
 
     @staticmethod
@@ -260,72 +263,78 @@ class HessianDifferenceFunctions(object):
         """Calculate Hessian with Bicomplex-step derivative approximation"""
         n = len(x)
         eee = np.diag(h)
-        hess = np.outer(h, h)
+        s = np.array(f_x).shape     # Shape of function result
+        dtype = np.result_type(f_x, float)  # make sure it is at least float64
+        hess = np.empty(s + (n, n), dtype=dtype)
+        sss = np.outer(h, h)
         cmplx_wrap = Bicomplex.__array_wrap__
         for i in range(n):
             for j in range(i, n):
                 zph = Bicomplex(x + 1j * eee[i, :], eee[j, :])
-                hess[i, j] = cmplx_wrap(f(zph)).imag12 / hess[j, i]
-                hess[j, i] = hess[i, j]
+                hess[..., i, j] = cmplx_wrap(f(zph)).imag12 / sss[j, i]
+                hess[..., j, i] = hess[..., i, j]
         return hess
 
     @staticmethod
     def _central_even(f, f_x, x, h):
         """Eq 9 in Ridout (2009)."""
-        n = len(x)
+        n = len(x)                  # Number of variables
+        s = np.array(f_x).shape     # Shape of function result
         eee = np.diag(h)
         dtype = np.result_type(f_x, float)  # make sure it is at least float64
-        hess = np.empty((n, n), dtype=dtype)
-        np.outer(h, h, out=hess)
+        hess = np.empty(s + (n, n), dtype=dtype)
+        sss = np.outer(h, h)
         for i in range(n):
             e_i = eee[i, :]
-            hess[i, i] = (f(x + 2 * e_i) - 2 * f_x + f(x - 2 * e_i)) / (4. * hess[i, i])
+            hess[..., i, i] = (f(x + 2 * e_i) - 2 * f_x + f(x - 2 * e_i)) / (4. * sss[i, i])
             for j in range(i + 1, n):
                 e_j = eee[j, :]
-                hess[i, j] = (f(x + e_i + e_j) - f(x + e_i - e_j)
-                              - f(x - e_i + e_j) + f(x - e_i - e_j)) / (4. * hess[j, i])
-                hess[j, i] = hess[i, j]
+                hess[..., i, j] = (f(x + e_i + e_j) - f(x + e_i - e_j)
+                                   - f(x - e_i + e_j) + f(x - e_i - e_j)) / (4. * sss[j, i])
+                hess[..., j, i] = hess[..., i, j]
         return hess
 
     @staticmethod
     def _central2(f, f_x, x, h):
         """Eq. 8 in Ridout (2009)"""
-        n = len(x)
+        n = len(x)                  # Number of variables
+        s = np.array(f_x).shape     # Shape of function result
         eee = np.diag(h)
         dtype = np.result_type(f_x, float)
-        f_xpe = np.empty(n, dtype=dtype)
-        f_xme = np.empty(n, dtype=dtype)
+        f_xpe = np.empty(s + (n,), dtype=dtype)
+        f_xme = np.empty(s + (n,), dtype=dtype)
         for i in range(n):
-            f_xpe[i] = f(x + eee[i])
-            f_xme[i] = f(x - eee[i])
+            f_xpe[..., i] = f(x + eee[i])
+            f_xme[..., i] = f(x - eee[i])
 
-        hess = np.empty((n, n), dtype=dtype)
-        np.outer(h, h, out=hess)
+        hess = np.empty(s + (n, n), dtype=dtype)
+        sss = np.outer(h, h)
         for i in range(n):
             for j in range(i, n):
-                hess[i, j] = (f(x + eee[i, :] + eee[j, :])
-                              + f(x - eee[i, :] - eee[j, :])
-                              - f_xpe[i] - f_xpe[j] + f_x
-                              - f_xme[i] - f_xme[j] + f_x) / (2 * hess[j, i])
-                hess[j, i] = hess[i, j]
+                hess[..., i, j] = (f(x + eee[i, :] + eee[j, :])
+                                   + f(x - eee[i, :] - eee[j, :])
+                                   - f_xpe[..., i] - f_xpe[..., j] + f_x
+                                   - f_xme[..., i] - f_xme[..., j] + f_x) / (2 * sss[j, i])
+                hess[..., j, i] = hess[..., i, j]
         return hess
 
     @staticmethod
     def _forward(f, f_x, x, h):
         """Eq. 7 in Ridout (2009)"""
-        n = len(x)
+        n = len(x)                  # Number of variables
+        s = np.array(f_x).shape     # Shape of function result
         eee = np.diag(h)
         dtype = np.result_type(f_x, float)
-        g = np.empty(n, dtype=dtype)
+        g = np.empty(s + (n,), dtype=dtype)
         for i in range(n):
-            g[i] = f(x + eee[i, :])
+            g[..., i] = f(x + eee[i, :])
 
-        hess = np.empty((n, n), dtype=dtype)
-        np.outer(h, h, out=hess)
+        hess = np.empty(s + (n, n), dtype=dtype)
+        sss = np.outer(h, h)
         for i in range(n):
             for j in range(i, n):
-                hess[i, j] = (f(x + eee[i, :] + eee[j, :]) - g[i] - g[j] + f_x) / hess[j, i]
-                hess[j, i] = hess[i, j]
+                hess[..., i, j] = (f(x + eee[i, :] + eee[j, :]) - g[..., i] - g[..., j] + f_x) / sss[j, i]
+                hess[..., j, i] = hess[..., i, j]
         return hess
 
     @staticmethod
