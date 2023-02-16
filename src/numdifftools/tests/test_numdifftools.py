@@ -621,3 +621,64 @@ class TestHessian(object):
                 # print(method, (h_val-np.array(htrue)))
                 assert_allclose(h_val, htrue)
                 assert _info.f_value == 1
+
+    @staticmethod
+    def test_on_scalar_function():
+
+        def fun(xyz):
+            x, y, z = xyz[0], xyz[1], xyz[2]
+            return x * y * z + np.exp(x) * y
+        
+        def ddfun(xyz):
+            x, y, z = xyz[0], xyz[1], xyz[2]
+            return np.array([
+                [np.exp(x) * y, np.exp(x) + z, y],
+                [np.exp(x) + z, 0, x],
+                [y, x, 0]]).squeeze()
+
+        for method in ['complex', 'central', 'forward', 'backward']:
+            h_fun = nd.Hessian(fun, method=method)
+            x = [3., 5., 7.]
+            a, b = ddfun(x), h_fun(x)
+            assert_allclose(a, b, atol=1e-4)
+
+    @staticmethod
+    def test_on_vector_valued_function():
+
+        def fun(xy):
+            x = np.atleast_1d(xy[0])
+            y = np.atleast_1d(xy[1])
+            f0 = np.cos(x * y)
+            f1 = np.sin(x * y)
+            return np.array([f0, f1]).squeeze()
+
+        def ddfun(xy):
+            x = np.atleast_1d(xy[0])
+            y = np.atleast_1d(xy[1])
+            
+            ddfdxdx0 = - y * y * np.cos(x * y)
+            ddfdxdx1 = - y * y * np.sin(x * y)
+
+            ddfdydy0 = - x * x * np.cos(x * y)
+            ddfdydy1 = - x * x * np.sin(x * y)
+
+            ddfdxdy0 = -x * y * np.cos(x * y) - np.sin(x * y)
+            ddfdxdy1 = np.cos(x * y) - x * y * np.sin(x * y)
+            
+            return np.array([
+                [[ddfdxdx0, ddfdxdy0],
+                 [ddfdxdy0, ddfdydy0]],
+                [[ddfdxdx1, ddfdxdy1],
+                 [ddfdxdy1, ddfdydy1]]]).squeeze()
+
+        for method in [
+                'complex',
+                'central',
+                'central2',
+                'forward',
+                'backward'
+                ]:
+            h_fun = nd.Hessian(fun, method=method)
+            x = [3., 5.]
+            a, b = ddfun(x), h_fun(x)
+            assert_allclose(a, b, atol=1e-4)
