@@ -111,7 +111,7 @@ is the name of the environment you wish to delete.
 
 .. parsed-literal::
 
-    conda remove -n yourenvname -all
+    conda remove -n yourenvname --all
 
 
 Related info.
