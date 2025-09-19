@@ -163,9 +163,14 @@ class _Limit(object):
         direction is probably wild enough here. The actual
         trimming factor is defined as a parameter.
         """
+        if np.iscomplexobj(der):
+            return np.sqrt(
+                _Limit._add_error_to_outliers(np.real(der), trim_fact)**2
+                + _Limit._add_error_to_outliers(np.imag(der), trim_fact)**2
+            )
         try:
             if np.any(np.isnan(der)):
-                p25, median, p75 = np.nanpercentile(der, [25,50, 75], axis=0) 
+                p25, median, p75 = np.nanpercentile(der, [25,50, 75], axis=0)
             else:
                 p25, median, p75 = np.percentile(der, [25,50, 75], axis=0)
 
