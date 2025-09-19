@@ -377,28 +377,29 @@ def max_abs(a, b):
 
 def dea3(v_0, v_1, v_2, symmetric=False):
     """
-    Extrapolate a slowly convergent sequence using Shanks transformations.
+    Extrapolates a slowly convergent sequence using Shanks transformations.
 
     Parameters
     ----------
     v_0, v_1, v_2 : array-like
-        3 values of a convergent sequence to extrapolate
+        Three consecutive values of a convergent sequence to extrapolate.
+    symmetric : bool, optional
+        If True, returns a sequence with symmetric error estimates.
+        Defaults to False.
 
     Returns
     -------
     result : array-like
-        extrapolated value
+        The extrapolated value(s).
     abserr : array-like
-        absolute error estimate
+        The estimated absolute error(s).
 
     Notes
     -----
-    DEA3 attempts to extrapolate nonlinearly by Shanks transformations to a
-    better estimate of the sequence's limiting value based on only three values.
-    The epsilon algorithm of P. Wynn, see [1]_, is used to perform the
-    non-linear Shanks transformations. The routine is a vectorized translation
-    of the DQELG function found in the QUADPACK fortran library for LIMEXP=3,
-    see [2]_ and [3]_.
+    DEA3 uses nonlinear Shanks transformations based on three values to
+    extrapolate to a better estimate of the sequence's limit. It is a vectorized
+    translation of the DQELG function from the QUADPACK Fortran library.
+    for LIMEXP=3, see [2]_ and [3]_.
 
     Examples
     --------
@@ -436,18 +437,32 @@ def dea3(v_0, v_1, v_2, symmetric=False):
     ..  [4] https://mathworld.wolfram.com/WynnsEpsilonMethod.html
     """
     e_0, e_1, e_2 = np.atleast_1d(v_0, v_1, v_2)
+
     with warnings.catch_warnings():
-        warnings.simplefilter("ignore")  # ignore division by zero and overflow
+        warnings.simplefilter("ignore", category=RuntimeWarning)  # ignore division by zero
         delta2, delta1 = e_2 - e_1, e_1 - e_0
+
+        # Calculate absolute errors and tolerances
         err2, err1 = np.abs(delta2), np.abs(delta1)
         tol2, tol1 = max_abs(e_2, e_1) * _EPS, max_abs(e_1, e_0) * _EPS
+
+        # Avoid division by zero
         delta1[err1 < _TINY] = _TINY
-        delta2[err2 < _TINY] = _TINY  # avoid division by zero and overflow
-        sss = 1.0 / delta2 - 1.0 / delta1 + _TINY
-        smalle2 = abs(sss * e_1) <= 1.0e-4
-        converged = (err1 <= tol1) | (err2 <= tol2) | smalle2
-        result = np.where(converged, e_2 * 1.0, e_1 + 1.0 / sss)
-    abserr = err1 + err2 + np.where(converged, tol2 * 10, np.abs(result - e_2))
+        delta2[err2 < _TINY] = _TINY
+        # The core Shanks transformation logic: 1 / (1/delta2 - 1/delta1)
+        s_inv_diff = 1.0 / delta2 - 1.0 / delta1
+
+        # Check for convergence based on different criteria
+        relative_error_small = abs(s_inv_diff * e_1) <= 1.0e-4
+        converged = (err1 <= tol1) | (err2 <= tol2) | relative_error_small
+
+        # Apply the transformation only where not converged
+        result = np.where(converged, e_2, e_1 + 1.0 / s_inv_diff)
+
+        # Estimate the error, using a conservative approach where convergence is met
+        abserr_term = np.where(converged, tol2 * 10, np.abs(result - e_2))
+        abserr = err1 + err2 + abserr_term
+
     if symmetric and len(result) > 1:
         return result[:-1], abserr[1:]
     return result, abserr
