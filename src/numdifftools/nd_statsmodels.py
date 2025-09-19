@@ -21,10 +21,16 @@ try:
         approx_hess_cs,
         _get_epsilon)
 except ImportError:
-    approx_hess1=approx_hess2=approx_hess3=approx_hess_cs=_get_epsilon=None
+    approx_hess1 = approx_hess2 = approx_hess3 = approx_hess_cs = _get_epsilon = None
 
 
 _EPS = np.finfo(float).eps
+
+
+def _transpose(grad, ndim):
+    axes = list(range(ndim))
+    axes[:2] = axes[1::-1]
+    return np.transpose(grad, axes=axes)
 
 
 def approx_fprime(x, f, epsilon=None, args=(), kwargs=None, centered=True):
@@ -81,9 +87,7 @@ def approx_fprime(x, f, epsilon=None, args=(), kwargs=None, centered=True):
             grad[k, :] = (f(*(x + ei,) + args, **kwargs) -
                           f(*(x - ei,) + args, **kwargs)) / (2 * epsilon[k])
             ei[k] = 0.0
-    axes = list(range(grad.ndim))
-    axes[:2] = axes[1::-1]
-    return np.transpose(grad, axes=axes)
+    return _transpose(grad, grad.ndim)
 
 
 def _approx_fprime_backward(x, f, epsilon=None, args=(), kwargs=None):
@@ -130,13 +134,13 @@ def approx_fprime_cs(x, f, epsilon=None, args=(), kwargs=None):
     x = np.atleast_1d(x)  # .ravel()
     n = len(x)
     epsilon = _get_epsilon(x, 1, epsilon, n)
-    increments = np.identity(n) * 1j * epsilon
-    # TODO: see if this can be vectorized, but usually dim is small
-    partials = [f(x+ih, *args, **kwargs).imag / epsilon[i]
-                for i, ih in enumerate(increments)]
-    axes = list(range(partials[0].ndim+1))
-    axes[:2] = axes[1::-1]
-    return np.transpose(partials, axes=axes)
+    ei = np.zeros(np.shape(x), complex)
+    grad = []
+    for k in range(n):
+        ei[k] = 1j*epsilon[k]
+        grad.append(np.atleast_1d(f(x + ei, *args, **kwargs).imag)/epsilon[k])
+        ei[k] = 0.0
+    return _transpose(grad, grad[0].ndim+1)
 
 
 def _approx_hess1_backward(x, f, epsilon=None, args=(), kwargs=None):

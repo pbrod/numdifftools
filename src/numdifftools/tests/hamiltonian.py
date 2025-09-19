@@ -72,17 +72,23 @@ class ClassicalHamiltonian(object):
         return normal_modes
 
 
-def run_hamiltonian(hessian, verbose=True):
+def run_hamiltonian(hessian, verbose=True, full_output=True):
     c = ClassicalHamiltonian()
 
     xopt = optimize.fmin(c.potential, c.initialposition(), xtol=1e-10)
 
     hessian.fun = c.potential
-    hessian.full_output = True
+    hessian.full_output = full_output
 
-    h, info = hessian(xopt)
     true_h = np.array([[5.23748385e-12, -2.61873829e-12],
                        [-2.61873829e-12, 5.23748385e-12]])
+    if full_output:
+        h, info = hessian(xopt)
+        error = info.error_estimate
+    else:
+        h = hessian(xopt)
+        error = np.abs(h-true_h)
+
     eigenvalues = linalg.eigvals(h)
     normal_modes = c.normal_modes(eigenvalues)
 
@@ -93,8 +99,9 @@ def run_hamiltonian(hessian, verbose=True):
         print(xopt)
         print('h', h)
         print('h-true_h', np.abs(h - true_h))
-        print('error_estimate', info.error_estimate)
+        print('error_estimate', error)
 
         print('eigenvalues', eigenvalues)
         print('normal_modes', normal_modes)
-    return h, info.error_estimate, true_h
+
+    return h, error, true_h

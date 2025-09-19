@@ -7,7 +7,6 @@ from numpy.testing import assert_allclose  # @UnresolvedImport
 from hypothesis import given, example, note, settings, strategies as st
 
 import numdifftools.core as nd
-import numdifftools.nd_statsmodels as nds
 from numdifftools.step_generators import default_scale
 from numdifftools.testing import rosen
 from numdifftools.tests.hamiltonian import run_hamiltonian
@@ -300,11 +299,6 @@ class TestJacobian(object):
         truth = np.array([[1.], [2 * val], [3 * val ** 2]])
         for method in ['multicomplex', 'complex', 'central', 'forward', 'backward']:
             j0, info = nd.Jacobian(fun, method=method, full_output=True)(val)
-            if method != "multicomplex":
-                j00 = nds.Jacobian(fun, method=method)(val)
-                error = np.abs(j00 - truth)
-                note('statsmodel: method={}, error={}'.format(method, error))
-                assert_allclose(j00, truth, rtol=1e-3, atol=1e-6)
             error = np.abs(j0 - truth)
             note('method={}, error={}, error_est={}'.format(method, error, info.error_estimate))
             assert_allclose(j0, truth, rtol=1e-3, atol=1e-6)
@@ -327,8 +321,6 @@ class TestJacobian(object):
 
         def fun(c):
             return (c[0] + c[1] * np.exp(c[2] * xdata) - ydata) ** 2
-
-        # _j_0 = nds.approx_fprime([1, 2, 0.75], fun)
 
         for method in ['complex', 'central', 'forward', 'backward']:
             for order in [2, 4]:
@@ -369,10 +361,14 @@ class TestJacobian(object):
         assert_allclose(jaca([3, 4]), dfun([3, 4]))
 
         v0 = jaca([[1, 2], [3, 4]])
-        print(v0)
-        assert_allclose(v0,
-                        dfun([[1, 2],
-                              [3, 4]]))
+        # print(v0)
+        tval0 = dfun([[1, 2], [3, 4]])
+        print(tval0)
+        assert_allclose(tval0, [[[2., 4.],
+                                 [6., 8.]],
+                                [[3., 12.],
+                                 [27., 48.]]])
+        assert_allclose(v0, tval0)
 
         x = np.array([(1, 2, 3, 4),
                       (5, 6, 7, 8)], dtype=float)
@@ -385,10 +381,8 @@ class TestJacobian(object):
                                 [10., 12., 14., 16.]],
                                [[3., 12., 27., 48.],
                                 [75., 108., 147., 192.]]])
-        v0 = nds.approx_fprime(x, fun)
         val = jaca(x)
         assert_allclose(val, tval)
-        assert_allclose(v0, tval)
 
     @staticmethod
     def test_issue_25():
@@ -401,11 +395,6 @@ class TestJacobian(object):
 
         dg_dx = nd.Jacobian(g_fun)
         x = np.array([1., 2.])
-        v0 = nds.approx_fprime(x, g_fun)
-        assert_allclose(v0, [[[1., 0.],
-                              [0., 1.]],
-                             [[1., 0.],
-                              [0., 1.]]])
 
         dg = dg_dx(x)
         assert_allclose(dg, [[[1., 0.],
@@ -425,7 +414,6 @@ class TestJacobian(object):
                [3., 24.],
                [2., 20.]]]
         assert_allclose(jfun3(x), tv)
-        assert_allclose(nds.approx_fprime(x, fun3), tv)
 
     @staticmethod
     @pytest.mark.slow
@@ -628,7 +616,7 @@ class TestHessian(object):
         def fun(xyz):
             x, y, z = xyz[0], xyz[1], xyz[2]
             return x * y * z + np.exp(x) * y
-        
+
         def ddfun(xyz):
             x, y, z = xyz[0], xyz[1], xyz[2]
             return np.array([
@@ -655,7 +643,7 @@ class TestHessian(object):
         def ddfun(xy):
             x = np.atleast_1d(xy[0])
             y = np.atleast_1d(xy[1])
-            
+
             ddfdxdx0 = - y * y * np.cos(x * y)
             ddfdxdx1 = - y * y * np.sin(x * y)
 
@@ -664,7 +652,7 @@ class TestHessian(object):
 
             ddfdxdy0 = -x * y * np.cos(x * y) - np.sin(x * y)
             ddfdxdy1 = np.cos(x * y) - x * y * np.sin(x * y)
-            
+
             return np.array([
                 [[ddfdxdx0, ddfdxdy0],
                  [ddfdxdy0, ddfdydy0]],

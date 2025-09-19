@@ -242,7 +242,7 @@ class Derivative(_Limit):
         return self.fd_rule.apply(results, steps, step_ratio), fxi
 
     def set_richardson_rule(self, step_ratio, num_terms=2):
-        """Set Richardson exptrapolation options"""
+        """Set Richardson extrapolation options"""
         order = self.method_order
         step = self.fd_rule.richardson_step
         self.richardson = Richardson(step_ratio=step_ratio,
