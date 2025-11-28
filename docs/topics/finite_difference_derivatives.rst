@@ -25,7 +25,10 @@ Surely you recall the traditional definition of a derivative, in terms of a limi
     f'(x) = \lim_{\delta \to 0}{\frac{f(x+\delta) - f(x)}{\delta}}
     :label: 1
 
-For small :math:`\delta`, the limit approaches :math:`f'(x)`. This is a one-sided approximation for the derivative. For a fixed value of :math:`\delta`, this is also known as a finite difference approximation (a forward difference.) Other approximations for the derivative are also available. We will see the origin of these approximations in the Taylor series expansion of a function :math:`f(x)` around some point :math:`x_0`.
+For small :math:`\delta`, the limit approaches :math:`f'(x)`. This is a one-sided approximation for the derivative.
+For a fixed value of :math:`\delta`, this is also known as a finite difference approximation (a forward difference.) 
+Other approximations for the derivative are also available. We will see the origin of these approximations in the
+Taylor series expansion of a function :math:`f(x)` around some point :math:`x_0`.
 
 .. math::
     f(x_0+\delta) &= f(x_0) + \delta f'(x_0) + \frac{\delta^2}{2} f''(x_0) + \frac{\delta^3}{6} f^{(3)}(x_0) + \\

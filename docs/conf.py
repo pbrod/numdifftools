@@ -19,7 +19,11 @@ from datetime import datetime
 CURRENT_YEAR = datetime.now().year
 START_YEAR = 2009
 
-DEV_YEARS = '{}'.format(START_YEAR) if START_YEAR == CURRENT_YEAR else '{}-{}'.format(START_YEAR, CURRENT_YEAR)
+DEV_YEARS = (
+    "{}".format(START_YEAR)
+    if START_YEAR == CURRENT_YEAR
+    else "{}-{}".format(START_YEAR, CURRENT_YEAR)
+)
 # General information about the project.
 
 
@@ -30,7 +34,7 @@ organizations = ''
 copyright = ", ".join((DEV_YEARS, author))
 
 __location__ = os.path.abspath(os.path.dirname(__file__))
-SOURCE_PATH = os.path.join(os.path.dirname(__location__), 'src')
+SOURCE_PATH = os.path.join(os.path.dirname(__location__), "src")
 sys.path.insert(0, SOURCE_PATH)
 
 # -- Run sphinx-apidoc ------------------------------------------------------
@@ -42,18 +46,17 @@ sys.path.insert(0, SOURCE_PATH)
 # Additionally it helps us to avoid running apidoc manually
 
 #
-#from sphinx import apidoc
+# from sphinx import apidoc
 #
-#output_dir = os.path.join(__location__, "api")
-#module_dir = os.path.join(__location__, "../src", PACKAGE_NAME)
-#try:
-#    shutil.rmtree(output_dir)
-#except FileNotFoundError:
-#    pass
-#cmd_line_template = "sphinx-apidoc -f -o {outputdir} {moduledir}"
-#cmd_line = cmd_line_template.format(outputdir=output_dir, moduledir=module_dir)
-#apidoc.main(cmd_line.split(" "))
-
+# output_dir = os.path.join(__location__, "api")
+# module_dir = os.path.join(__location__, "../src", PACKAGE_NAME)
+# try:
+#     shutil.rmtree(output_dir)
+# except FileNotFoundError:
+#     pass
+# cmd_line_template = "sphinx-apidoc -f -o {outputdir} {moduledir}"
+# cmd_line = cmd_line_template.format(outputdir=output_dir, moduledir=module_dir)
+# apidoc.main(cmd_line.split(" "))
 
 
 # -- General configuration ------------------------------------------------
@@ -65,19 +68,20 @@ sys.path.insert(0, SOURCE_PATH)
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc',
-              'sphinx.ext.doctest',
-              'sphinx.ext.intersphinx',
-              'sphinx.ext.todo',
-              'sphinx.ext.autosummary',
-              'sphinx.ext.viewcode',
-              'sphinx.ext.coverage',
-              'sphinx.ext.ifconfig',
-              'sphinx.ext.mathjax',
-              #'sphinx.ext.imgmath',
-              'numpydoc',
-              'sphinxcontrib.bibtex'
-             ]
+extensions = [
+    "sphinx.ext.autodoc",
+    "sphinx.ext.doctest",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.todo",
+    "sphinx.ext.autosummary",
+    "sphinx.ext.viewcode",
+    "sphinx.ext.coverage",
+    "sphinx.ext.ifconfig",
+    "sphinx.ext.mathjax",
+    #"sphinx.ext.imgmath",
+    "numpydoc",
+    "sphinxcontrib.bibtex"
+]
 
 bibtex_bibfiles = ['appendix/refs1.bib']
 bibtex_default_style = 'alpha'

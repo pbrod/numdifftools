@@ -9,9 +9,12 @@ The general problem of differentiation of a function typically pops up in three 
 
 -  Compute numerical derivatives of a analytically supplied function.
 
-Clearly the first member of this list is the domain of the symbolic toolbox SymPy, or some set of symbolic tools. Numerical differentiation of a function defined by data points can be achieved with the function gradient, or perhaps by differentiation of a curve fit to the data, perhaps to an interpolating spline or a least squares spline fit.
+Clearly the first member of this list is the domain of the symbolic toolbox SymPy, or some set of symbolic tools. 
+Numerical differentiation of a function defined by data points can be achieved with the function gradient, or 
+perhaps by differentiation of a curve fit to the data, perhaps to an interpolating spline or a least squares spline fit.
 
-The third class of differentiation problems is where Numdifftools is valuable. This document will describe the methods used in Numdifftools and in particular the Derivative class.
+The third class of differentiation problems is where Numdifftools is valuable. This document will describe the methods 
+used in Numdifftools and in particular the Derivative class.
 
 
 Numerical differentiation of a general function of one variable
@@ -23,7 +26,10 @@ Surely you recall the traditional definition of a derivative, in terms of a limi
     f'(x) = \lim_{\delta \to 0}{\frac{f(x+\delta) - f(x)}{\delta}}
     :label: 1
 
-For small :math:`\delta`, the limit approaches :math:`f'(x)`. This is a one-sided approximation for the derivative. For a fixed value of :math:`\delta`, this is also known as a finite difference approximation (a forward difference.) Other approximations for the derivative are also available. We will see the origin of these approximations in the Taylor series expansion of a function :math:`f(x)` around some point :math:`x_0`.
+For small :math:`\delta`, the limit approaches :math:`f'(x)`. This is a one-sided approximation for the derivative. 
+For a fixed value of :math:`\delta`, this is also known as a finite difference approximation (a forward difference.) 
+Other approximations for the derivative are also available. We will see the origin of these approximations in the 
+Taylor series expansion of a function :math:`f(x)` around some point :math:`x_0`.
 
 .. math::
     f(x_0+\delta) &= f(x_0) + \delta f'(x_0) + \frac{\delta^2}{2} f''(x_0) + \frac{\delta^3}{6} f^{(3)}(x_0) + \\
@@ -38,7 +44,10 @@ Truncate the series in :eq:`2` to the first three terms, divide by :math:`\delta
     f'(x_0) = \frac{f(x_0+\delta) - f(x_0)}{\delta} - \frac{\delta}{2} f''(x_0) - \frac{\delta^2}{6} f'''(x_0) + ...
     :label: 3
 
-When :math:`\delta` is small, :math:`\delta^2` and any higher powers are vanishingly small. So we tend to ignore those higher powers, and describe the approximation in :eq:`3` as a first order approximation since the error in this approximation approaches zero at the same rate as the first power of :math:`\delta`.  [1]_ The values of :math:`f''(x_0)` and :math:`f'''(x_0)`, while unknown to us, are fixed constants as :math:`\delta` varies.
+When :math:`\delta` is small, :math:`\delta^2` and any higher powers are vanishingly small. So we tend to ignore 
+those higher powers, and describe the approximation in :eq:`3` as a first order approximation since the error in 
+this approximation approaches zero at the same rate as the first power of :math:`\delta`.  [1]_ The values of 
+:math:`f''(x_0)` and :math:`f'''(x_0)`, while unknown to us, are fixed constants as :math:`\delta` varies.
 
 Higher order approximations arise in the same fashion. The central difference :eq:`4` is a second order approximation.
 
@@ -50,14 +59,21 @@ Higher order approximations arise in the same fashion. The central difference :e
 Unequally spaced finite difference rules
 ########################################
 
-While most finite difference rules used to differentiate a function will use equally spaced points, this fails to be appropriate when one does not know the final spacing. Adaptive quadrature rules can succeed by subdividing each sub-interval as necessary. But an adaptive differentiation scheme must work differently, since differentiation is a point estimate. Derivative generates a sequence of sample points that follow a log spacing away from the point in question, then it uses a single rule (generated on the fly) to estimate the desired derivative. Because the points are log spaced, the same rule applies at any scale, with only a scale factor applied.
+While most finite difference rules used to differentiate a function will use equally spaced points, this fails to 
+be appropriate when one does not know the final spacing. Adaptive quadrature rules can succeed by subdividing each 
+sub-interval as necessary. But an adaptive differentiation scheme must work differently, since differentiation is 
+a point estimate. Derivative generates a sequence of sample points that follow a log spacing away from the point 
+in question, then it uses a single rule (generated on the fly) to estimate the desired derivative. Because the points 
+are log spaced, the same rule applies at any scale, with only a scale factor applied.
 
 
 Odd and even transformations of a function
 ##########################################
 .. index:: odd transformation
 
-Returning to the Taylor series expansion of :math:`f(x)` around some point :math:`x_0`, an even function  [2]_ around :math:`x_0` must have all the odd order derivatives vanish at :math:`x_0`. An odd function has all its even derivatives vanish from its expansion. Consider the derived functions :math:`f_{odd}(x)` and :math:`f_{even}(x)`.
+Returning to the Taylor series expansion of :math:`f(x)` around some point :math:`x_0`, an even function  [2]_ 
+around :math:`x_0` must have all the odd order derivatives vanish at :math:`x_0`. An odd function has all its 
+even derivatives vanish from its expansion. Consider the derived functions :math:`f_{odd}(x)` and :math:`f_{even}(x)`.
 
 .. math::
     f_{odd}(x) = \frac{f(x_0 + x) - f(x_0 - x )}{2}
@@ -73,7 +89,8 @@ The Taylor series expansion of :math:`f_{odd}(x)` around zero has the useful pro
     f_{odd}(\delta) = \delta f'(x_0) + \frac{\delta^3}{6} f^{(3)}(x_0) + \frac{\delta^5}{120} f^{(5)}(x_0) + \frac{\delta^7}{5040} f^{(7)}(x_0) +...
     :label: 7
 
-Likewise, the Taylor series expansion of :math:`f_{even}(x)` has no odd order terms or a constant term, but other even order terms that are identical to :math:`f(x)`.
+Likewise, the Taylor series expansion of :math:`f_{even}(x)` has no odd order terms or a constant term, but other 
+even order terms that are identical to :math:`f(x)`.
 
 .. index:: even transformation
 
@@ -82,7 +99,10 @@ Likewise, the Taylor series expansion of :math:`f_{even}(x)` has no odd order te
     :label: 8
 
 
-The point of these transformations is we can rather simply generate a higher order approximation for any odd order derivatives of :math:`f(x)` by working with :math:`f_{odd}(x)`. Even order derivatives of :math:`f(x)` are similarly generated from :math:`f_{even}(x)`. For example, a second order approximation for :math:`f'(x_0)` is trivially written in :eq:`9` as a function of :math:`\delta`.
+The point of these transformations is we can rather simply generate a higher order approximation for any odd order 
+derivatives of :math:`f(x)` by working with :math:`f_{odd}(x)`. Even order derivatives of :math:`f(x)` are similarly 
+generated from :math:`f_{even}(x)`. For example, a second order approximation for :math:`f'(x_0)` is trivially 
+written in :eq:`9` as a function of :math:`\delta`.
 
 .. math::
     f'(x_0; \delta) = \frac{f_{odd}(\delta)}{\delta} - \frac{\delta^2}{6} f^{(3)}(x_0)
@@ -102,7 +122,7 @@ Again, the next non-zero term :eq:`11` in that expansion has a higher power of :
 
 Derivative uses similar approximations for all derivatives of :math:`f` up to any order. Of course, it is not always possible for evaluation of a function on both sides of a point, as central difference rules will require. In these cases, you can specify forward or backward difference rules as appropriate. You can also specify to use the complex step derivative, which we will outline in the next section.
 
-Complex step derivative
+Complex-Step derivative
 #######################
 The derivation of the complex-step derivative approximation is accomplished by replacing :math:`\delta` in :Eq:`2` 
 with a complex step :math:`i h`:
@@ -158,11 +178,11 @@ This approximation is still subject to difference errors, but the error associat
 See [LaiCrassidisCheng2005]_ and [Ridout2009]_ for more details.
 The complex-step derivative in numdifftools.Derivative has truncation error 
 :math:`O(\delta^4)` for both odd and even order derivatives for :math:`n>1`. For :math:`n=1`
-the truncation error is on the order of :math:`O(\delta^2)`, so
-truncation error can be eliminated by choosing steps to be very small.  The first order complex-step derivative avoids the problem of
-round-off error with small steps because there is no subtraction. However,
-the function to differentiate needs to be analytic. This method does not work if it does
-not support complex numbers or involves non-analytic functions such as
+the truncation error is on the order of :math:`O(\delta^2)`, so truncation error can be 
+eliminated by choosing steps to be very small.  The first order complex-step derivative 
+avoids the problem of round-off error with small steps because there is no subtraction. 
+However, the function to differentiate needs to be analytic. This method does not work 
+if it does not support complex numbers or involves non-analytic functions such as
 e.g.: abs, max, min. For this reason the `central` method is the default method.
     
 
@@ -610,5 +630,5 @@ References
    symmetry, wherein :math:`f(x) = -f(-x)`.
 
 .. [3] For practical purposes the maximum order of the derivative is between 4 and 10
-	depending on the function to differentiate and also the method used
-	in the approximation.
+    depending on the function to differentiate and also the method used
+    in the approximation.
