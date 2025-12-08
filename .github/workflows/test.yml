@@ -1,41 +1,135 @@
-name: test
+# .github/workflows/ci.yml
+# This workflow runs Continous Integration (CI) including tests and linting.
+# for a variety of Python versions
+# For more information see: 
+# https://py-pkgs.org/08-ci-cd
+# https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+
+name: CI - Tests
 
 on:
   push:
-    branches:
-      - master
   pull_request:
+  schedule:
+    # Runs Monday through Friday at 02:00 UTC
+    - cron: '0 2 * * 1-5'
 
 jobs:
-  test:
+  ci:
     runs-on: ${{ matrix.os }}
+
+    # Ensure matplotlib uses a non-interactive backend on all runners
+    env:
+      MPLBACKEND: Agg
+      # Use github.workspace (available during workflow evaluation) so MPLCONFIGDIR is valid at parse time
+      MPLCONFIGDIR: ${{ github.workspace }}/.matplotlib
+
     strategy:
-      fail-fast: false
       matrix:
-        os: [ubuntu-latest]
-        python-version: ["3.7", "3.8", "3.9", "3.10"]
+        python_version: ["3.14", "3.13", "3.12", "3.11", "3.10"]
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+        # Exclude/Include logic for 3.14 (allow failure for future Python version)
+        exclude:
+          - python_version: "3.14"
+            os: ubuntu-latest
+          - python_version: "3.14"
+            os: macos-latest
+          - python_version: "3.14"
+            os: windows-latest
+
         include:
-          - os: macos-latest
-            python-version: 3.9
-          - os: windows-latest
-            python-version: 3.9
+          # Re-add 3.14 combos but mark them as allow_failure: true
+          - python_version: "3.14"
+            os: ubuntu-latest
+            allow_failure: true
+          - python_version: "3.14"
+            os: macos-latest
+            allow_failure: true
+          - python_version: "3.14"
+            os: windows-latest
+            allow_failure: true
+
+      fail-fast: false
+
+    # Apply the matrix value to the entire job; default to false if matrix.allow_failure is not set
+    continue-on-error: ${{ matrix.allow_failure || false }}
 
     steps:
-      - name: Checkout source
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
-      - name: Setup python
-        uses: actions/setup-python@v2
+      # If we're testing with Python 3.14, use a dedicated lockfile (pdm.lock314) by copying it
+      # over pdm.lock before any dependency install or cache key evaluation that reads pdm.lock.
+      - name: Use pdm.lock314 (linux/mac)
+        if: matrix.python_version == '3.14' && matrix.os != 'windows-latest'
+        run: |
+          if [ -f pdm.lock314 ]; then
+            echo "Using pdm.lock314 for python 3.14"
+            cp pdm.lock314 pdm.lock
+          else
+            echo "pdm.lock314 not found; falling back to pdm.lock"
+          fi
+        shell: bash
+
+      - name: Use pdm.lock314 (windows)
+        if: matrix.python_version == '3.14' && matrix.os == 'windows-latest'
+        shell: powershell
+        run: |
+          if (Test-Path pdm.lock314) {
+            Write-Host "Using pdm.lock314 for python 3.14"
+            Copy-Item pdm.lock314 -Destination pdm.lock -Force
+          } else {
+            Write-Host "pdm.lock314 not found; falling back to pdm.lock"
+          }
+
+      # Caching step for speed (runs after potential copy so cache key includes chosen pdm.lock)
+      - name: Set up PDM cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pdm
+            .venv
+          key: ${{ runner.os }}-pdm-${{ matrix.python_version }}-${{ hashFiles('pyproject.toml', 'pdm.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pdm-${{ matrix.python_version }}-
+
+      - name: Set up PDM
+        uses: pdm-project/setup-pdm@v4
+        with:
+          python-version: ${{ matrix.python_version }}
+
+      - name: Install dependencies
+        run: pdm install -dG test
+
+      - name: Run Tests
+        run: pdm run pytest
+
+  coverage:
+    needs: ci
+    # Running coverage only on push to the "master" branch
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.13"]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of Sonar analysis
+      - name: Set up PDM
+        uses: pdm-project/setup-pdm@v4
         with:
           python-version: ${{ matrix.python-version }}
-
-      - name: Install
+      - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install wheel
-          pip install -r requirements.txt
-          pip install -r requirements.tests.txt
-          pip install .
+          pdm install -dG test
+      - name: Run Tests and report to CodeCov  
+        run: |
+            pdm run pytest
 
-      - name: Run tests
-        run: python conda_recipe/run_test.py
+      # See: https://martinheinz.dev/blog/69 "Ultimate CI Pipeline for All of Your Python Projects"
+      - name: Use Codecov to track coverage
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage.xml    # coverage report
