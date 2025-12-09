@@ -2,6 +2,10 @@ import numpy as np
 from numpy.testing import assert_allclose, assert_array_almost_equal  # @UnresolvedImport
 
 from numdifftools.extrapolation import Dea, EpsAlg, Richardson, dea3
+try:
+    from numpy import trapezoid as trapz
+except ImportError:
+    from numpy import trapz
 
 
 class TestRichardson(object):
@@ -103,7 +107,7 @@ class TestExtrapolation(object):
         h = np.zeros(n)
         for k in np.arange(n):
             x = np.linspace(0, np.pi / 2.0, 2 ** (k + 5) + 1)
-            e_i[k] = np.trapz(np.sin(x), x)
+            e_i[k] = trapz(np.sin(x), x)
             h[k] = x[1]
         self.e_i = e_i
         self.h = h
