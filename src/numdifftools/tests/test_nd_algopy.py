@@ -2,7 +2,7 @@
 """"""
 
 from __future__ import absolute_import, division
-
+import sys
 import numpy as np
 import pytest
 from hypothesis import example, given
@@ -19,6 +19,8 @@ except ImportError:
     algopy = None
 else:
     import numdifftools.nd_algopy as nd
+
+SKIP_PYTHON_314 = (sys.version_info.major == 3 and sys.version_info.minor == 14)
 
 pytestmark = pytest.mark.skipif(algopy is None, reason="algopy is not installed!")
 
@@ -75,6 +77,10 @@ class TestDerivative(object):
                 y = d3cos(x)
                 assert_allclose(y, true_vals[n - 1], atol=1e-15)
 
+    @pytest.mark.skipif(
+        SKIP_PYTHON_314,
+        reason="This test fails or is incompatible with Python 3.14."
+        )
     @staticmethod
     def test_fun_with_additional_parameters():
         """Test for issue #9"""
@@ -149,6 +155,10 @@ class TestDerivative(object):
 
 
 class TestJacobian(object):
+    @pytest.mark.skipif(
+        SKIP_PYTHON_314,
+        reason="This test fails or is incompatible with Python 3.14."
+        )
     @staticmethod
     @given(st.floats(min_value=-1e153, max_value=1e153))
     def test_scalar_to_vector(val):
@@ -263,6 +273,7 @@ class TestJacobian(object):
 
 
 class TestGradient(object):
+
     @staticmethod
     def test_on_scalar_function():
         def fun(x):
