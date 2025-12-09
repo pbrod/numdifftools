@@ -236,9 +236,8 @@ References
        :target: https://codeclimate.com/github/pbrod/numdifftools/maintainability
        :alt: Maintainability
 
-    .. |coverage_img| image:: https://api.codeclimate.com/v1/badges/698996d1ec94028ec223/test_coverage.svg
-       :target: https://codeclimate.com/github/pbrod/numdifftools/test_coverage
-       :alt: Test Coverage
+    .. |coverage_img| image:: https://codecov.io/gh/pbrod/numdifftools/branch/master/graph/badge.svg
+       :target: https://codecov.io/gh/pbrod/numdifftools
 
     .. |versions_img| image:: https://img.shields.io/pypi/pyversions/numdifftools.svg
        :target: https://github.com/pbrod/numdifftools
