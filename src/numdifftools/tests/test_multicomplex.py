@@ -3,21 +3,22 @@ Created on 22. apr. 2015
 
 @author: pab
 """
-from numdifftools.multicomplex import Bicomplex
-from numdifftools.example_functions import get_function
+
 import numpy as np
 from numpy.testing import assert_allclose, assert_array_equal  # @UnresolvedImport
+
+from numdifftools.example_functions import get_function
+from numdifftools.multicomplex import Bicomplex
 
 EPS = np.finfo(float).eps
 
 
 def _default_base_step(x, scale):
-    h = (10 * EPS) ** (1. / scale) * np.maximum(np.log1p(np.abs(x)), 0.1)
+    h = (10 * EPS) ** (1.0 / scale) * np.maximum(np.log1p(np.abs(x)), 0.1)
     return h
 
 
 class TestBicomplex(object):
-
     def test_init(self):
         z = Bicomplex(1, 2)
         assert z.z1 == 1
@@ -42,7 +43,7 @@ class TestBicomplex(object):
         shape = (3, 3)
         t = np.arange(9).reshape(shape)
         z = Bicomplex(t, 2 * t)
-        assert_array_equal(z.norm(), np.sqrt(5 * t ** 2))
+        assert_array_equal(z.norm(), np.sqrt(5 * t**2))
 
         z = Bicomplex(1, 2)
         assert z.norm() == np.sqrt(5)
@@ -54,9 +55,7 @@ class TestBicomplex(object):
         z = Bicomplex(t, 2 * t)
         z2 = Bicomplex(1, 2)
         val = z < z2
-        truth = [[True, False, False],
-                 [False, False, False],
-                 [False, False, False]]
+        truth = [[True, False, False], [False, False, False], [False, False, False]]
         assert_array_equal(val, truth)
 
     @staticmethod
@@ -66,9 +65,7 @@ class TestBicomplex(object):
         z = Bicomplex(t, 2 * t)
         z2 = Bicomplex(1, 2)
         val = z <= z2
-        truth = [[True, True, False],
-                 [False, False, False],
-                 [False, False, False]]
+        truth = [[True, True, False], [False, False, False], [False, False, False]]
         assert_array_equal(val, truth)
 
     @staticmethod
@@ -78,9 +75,7 @@ class TestBicomplex(object):
         z = Bicomplex(t, 2 * t)
         z2 = Bicomplex(1, 2)
         val = z >= z2
-        truth = [[False, True, True],
-                 [True, True, True],
-                 [True, True, True]]
+        truth = [[False, True, True], [True, True, True], [True, True, True]]
         assert_array_equal(val, truth)
 
     @staticmethod
@@ -90,9 +85,7 @@ class TestBicomplex(object):
         z = Bicomplex(t, 2 * t)
         z2 = Bicomplex(1, 2)
         val = z > z2
-        truth = [[False, False, True],
-                 [True, True, True],
-                 [True, True, True]]
+        truth = [[False, False, True], [True, True, True], [True, True, True]]
         assert_array_equal(val, truth)
 
     @staticmethod
@@ -102,9 +95,7 @@ class TestBicomplex(object):
         z = Bicomplex(t, 2 * t)
         z2 = Bicomplex(1, 2)
         val = z == z2
-        truth = np.array([[False, True, False],
-                          [False, False, False],
-                          [False, False, False]], dtype=bool)
+        truth = np.array([[False, True, False], [False, False, False], [False, False, False]], dtype=bool)
         assert_array_equal(val, truth)
 
     def test_conjugate(self):
@@ -193,7 +184,7 @@ class TestBicomplex(object):
     @staticmethod
     def test_pow():
         z1 = Bicomplex(1, 2)
-        z2 = z1 ** 2
+        z2 = z1**2
         z3 = z1 * z1
         assert_allclose(z2.z1, z1.z1 * z1.z1 - z1.z2 * z1.z2)
         assert_allclose(z2.z2, z1.z1 * z1.z2 + z1.z2 * z1.z1)
@@ -203,7 +194,7 @@ class TestBicomplex(object):
         z1 = Bicomplex(z1=-1j, z2=-1 - 0j)
 
         z2 = z1 * z1
-        z3 = z1 ** 2
+        z3 = z1**2
         assert_allclose(z2.z1, z1.z1 * z1.z1 - z1.z2 * z1.z2)
         assert_allclose(z2.z2, z1.z1 * z1.z2 + z1.z2 * z1.z1)
         assert_allclose(z3.z1, z1.z1 * z1.z1 - z1.z2 * z1.z2)
@@ -214,7 +205,7 @@ class TestBicomplex(object):
         z1 = Bicomplex(1, 2)
         z2 = Bicomplex(3, 4)
         z3 = z1 / z2
-        z4 = z1 * (z2 ** -1)
+        z4 = z1 * (z2**-1)
         assert_allclose(z3.z1, z4.z1)
         assert_allclose(z3.z2, z4.z2)
 
@@ -225,7 +216,7 @@ class TestBicomplex(object):
 
         z2 = Bicomplex(3, 4)
         z3 = 1 / z2
-        z4 = (z2**-1)
+        z4 = z2**-1
         z5 = 1.0 / z2
         assert_array_equal(z3.z1, z4.z1)
         assert_array_equal(z3.z2, z4.z2)
@@ -236,7 +227,7 @@ class TestBicomplex(object):
     @staticmethod
     def test_rpow():
         z2 = Bicomplex(3, 4)
-        z3 = 2. ** z2
+        z3 = 2.0**z2
         z4 = np.exp(z2 * np.log(2))
         assert_allclose(z3.z1, z4.z1)
         assert_allclose(z3.z2, z4.z2)
@@ -274,7 +265,7 @@ class TestBicomplex(object):
 
         z3 = Bicomplex(0.1, np.linspace(0, np.pi, 5))
         z4 = z3.mod_c()
-        trueval = np.sqrt(z3*z3.conjugate())
+        trueval = np.sqrt(z3 * z3.conjugate())
         assert_allclose(z4, np.sqrt(z3.z1**2 + z3.z2**2))
         assert_allclose(z4, trueval.z1)
 
@@ -299,7 +290,7 @@ class TestBicomplex(object):
         der1 = np.cos(Bicomplex(x + h * 1j, 0)).imag1 / h
         assert_allclose(der1, -np.sin(x))
         h *= 100
-        der2 = np.cos(Bicomplex(x + h * 1j, h)).imag12 / h ** 2
+        der2 = np.cos(Bicomplex(x + h * 1j, h)).imag12 / h**2
         assert_allclose(der2, -np.cos(x))
 
     @staticmethod
@@ -307,20 +298,20 @@ class TestBicomplex(object):
         x = np.linspace(0.001, 5, 6)
         h = 1e-15
         der1 = np.log(Bicomplex(x + h * 1j, 0)).imag1 / h
-        assert_allclose(der1, 1. / x)
-        der2 = np.log(Bicomplex(x + h * 1j, h)).imag12 / h ** 2
-        assert_allclose(der2, -1. / x ** 2)
+        assert_allclose(der1, 1.0 / x)
+        der2 = np.log(Bicomplex(x + h * 1j, h)).imag12 / h**2
+        assert_allclose(der2, -1.0 / x**2)
 
     @staticmethod
     def test_der_arccos():
         x = np.linspace(-0.98, 0.98, 5)
         h = 1e-8
         der1 = np.arccos(Bicomplex(x + h * 1j, 0)).imag1 / h
-        assert_allclose(der1, -1. / np.sqrt(1 - x ** 2))
+        assert_allclose(der1, -1.0 / np.sqrt(1 - x**2))
 
         h = (_default_base_step(x, scale=2.5) + 1) - 1
-        der2 = np.arccos(Bicomplex(x + h * 1j, h)).imag12 / h ** 2
-        true_der2 = -x / (1 - x ** 2) ** (3. / 2)
+        der2 = np.arccos(Bicomplex(x + h * 1j, h)).imag12 / h**2
+        true_der2 = -x / (1 - x**2) ** (3.0 / 2)
         assert_allclose(der2, true_der2, atol=1e-5)
 
     @staticmethod
@@ -328,11 +319,11 @@ class TestBicomplex(object):
         x = np.linspace(1.2, 5, 5)
         h = 1e-8
         der1 = np.arccosh(Bicomplex(x + h * 1j, 0)).imag1 / h
-        assert_allclose(der1, 1. / np.sqrt(x ** 2 - 1))
+        assert_allclose(der1, 1.0 / np.sqrt(x**2 - 1))
 
         h = (_default_base_step(x, scale=2.5) + 1) - 1
-        der2 = np.arccosh(Bicomplex(x + h * 1j, h)).imag12 / h ** 2
-        true_der2 = -x / (x ** 2 - 1) ** (3. / 2)
+        der2 = np.arccosh(Bicomplex(x + h * 1j, h)).imag12 / h**2
+        true_der2 = -x / (x**2 - 1) ** (3.0 / 2)
         assert_allclose(der2, true_der2, atol=1e-5)
 
     @staticmethod
@@ -341,7 +332,7 @@ class TestBicomplex(object):
         h = 1e-8
         der1 = abs(Bicomplex(x + h * 1j, 0)).imag1 / h
         assert_allclose(der1, np.where(x < 0, -1, 1))
-        der2 = abs(Bicomplex(x + h * 1j, h)).imag12 / h ** 2
+        der2 = abs(Bicomplex(x + h * 1j, h)).imag12 / h**2
         assert_allclose(der2, 0, atol=1e-6)
 
     @staticmethod
@@ -349,10 +340,10 @@ class TestBicomplex(object):
         x = np.linspace(0, 2, 5)
         h = 1e-8
         der1 = np.arctan(Bicomplex(x + h * 1j, 0)).imag1 / h
-        assert_allclose(der1, 1. / (1 + x ** 2))
+        assert_allclose(der1, 1.0 / (1 + x**2))
 
-        der2 = Bicomplex(x + h * 1j, h).arctan().imag12 / h ** 2
-        assert_allclose(der2, -2 * x / (1 + x ** 2) ** 2)
+        der2 = Bicomplex(x + h * 1j, h).arctan().imag12 / h**2
+        assert_allclose(der2, -2 * x / (1 + x**2) ** 2)
 
 
 def _test_first_derivative(name):
@@ -362,7 +353,7 @@ def _test_first_derivative(name):
 
     der = f(Bicomplex(x + h * 1j, 0)).imag1 / h
     der_true = df(x)
-    assert_allclose(der, der_true, err_msg='{0!s}'.format(name))
+    assert_allclose(der, der_true, err_msg="{0!s}".format(name))
 
 
 def _test_second_derivative(name):
@@ -371,19 +362,36 @@ def _test_second_derivative(name):
 
     f, df = get_function(name, n=2)
 
-    der = f(Bicomplex(x + h * 1j, h)).imag12 / h ** 2
+    der = f(Bicomplex(x + h * 1j, h)).imag12 / h**2
     der_true = df(x)
-    assert_allclose(der, der_true, err_msg='{0!s}'.format(name))
+    assert_allclose(der, der_true, err_msg="{0!s}".format(name))
 
 
-_function_names = ['cos', 'sin', 'tan', 'arccos', 'arcsin', 'arctan', 'cosh',
-                   'sinh', 'tanh', 'exp', 'log', 'exp2', 'square', 'sqrt',
-                   'log1p', 'expm1', 'log10', 'log2', 'arcsinh',
-                   'arctanh']
+_function_names = [
+    "cos",
+    "sin",
+    "tan",
+    "arccos",
+    "arcsin",
+    "arctan",
+    "cosh",
+    "sinh",
+    "tanh",
+    "exp",
+    "log",
+    "exp2",
+    "square",
+    "sqrt",
+    "log1p",
+    "expm1",
+    "log10",
+    "log2",
+    "arcsinh",
+    "arctanh",
+]
 
 
 class TestDerivative(object):
-
     @staticmethod
     def test_all_first_derivatives():
         for name in _function_names:

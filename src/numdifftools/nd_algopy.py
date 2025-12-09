@@ -52,12 +52,14 @@ https://en.wikipedia.org/wiki/Automatic_differentiation
 
 https://pythonhosted.org/algopy/index.html
 """
+
 from __future__ import absolute_import, division
 
 from collections import namedtuple
 
-from scipy import special
 import numpy as np
+from scipy import special
+
 try:
     import algopy
     from algopy import UTPM
@@ -115,12 +117,11 @@ _cmn_doc = """
 
 
 class _Derivative(object):
-
     """Base class"""
 
-    info = namedtuple('info', ['error_estimate', 'final_step', 'index'])
+    info = namedtuple("info", ["error_estimate", "final_step", "index"])
 
-    def __init__(self, fun, n=1, method='forward', full_output=False):
+    def __init__(self, fun, n=1, method="forward", full_output=False):
         self.fun = fun
         self.method = method
         self.n = n
@@ -152,7 +153,7 @@ class _Derivative(object):
     def _get_function(self):
         if self.n == 0:
             return self.fun
-        name = '_' + dict(backward='reverse').get(self.method, self.method)
+        name = "_" + {"backward": "reverse"}.get(self.method, self.method)
         return getattr(self, name)
 
     def __call__(self, x, *args, **kwds):
@@ -165,18 +166,19 @@ class _Derivative(object):
 
 
 class Derivative(_Derivative):
-
-    __doc__ = _cmn_doc % dict(
-        derivative='n-th derivative',
-        extra_parameter="""
+    __doc__ = _cmn_doc % {
+        "derivative": "n-th derivative",
+        "extra_parameter": """
     n: int, optional
         Order of the derivative.""",
-        extra_note="", returns="""
+        "extra_note": "",
+        "returns": """
     Returns
     -------
     der: ndarray
        array of derivatives
-    """, example="""
+    """,
+        "example": """
     Examples
     --------
     # 1'st and 2'nd derivative of exp(x), at x == 1
@@ -196,14 +198,16 @@ class Derivative(_Derivative):
     >>> fd3 = nda.Derivative(fun)
     >>> np.allclose(fd3([0,1]), [ 0.,  7.])
     True
-    """, see_also="""
+    """,
+        "see_also": """
     See also
     --------
     Gradient,
     Hessdiag,
     Hessian,
     Jacobian
-    """)
+    """,
+    }
 
     def _forward(self, x, *args, **kwds):
         x0 = np.asarray(x)
@@ -219,8 +223,7 @@ class Derivative(_Derivative):
 
     def _reverse(self, x, *args, **kwds):
         if self.n != 1:
-            raise NotImplementedError('Derivative reverse not implemented'
-                                      ' for n>1')
+            raise NotImplementedError("Derivative reverse not implemented for n>1")
 
         c_graph = self.computational_graph(np.asarray(1), *args, **kwds)
         shape0 = x.shape
@@ -229,16 +232,17 @@ class Derivative(_Derivative):
 
 
 class Gradient(_Derivative):
-
-    __doc__ = _cmn_doc % dict(
-        derivative='Gradient',
-        extra_parameter="",
-        extra_note="", returns="""
+    __doc__ = _cmn_doc % {
+        "derivative": "Gradient",
+        "extra_parameter": "",
+        "extra_note": "",
+        "returns": """
     Returns
     -------
     grad: array
         gradient
-    """, example="""
+    """,
+        "example": """
     Examples
     --------
     >>> import numpy as np
@@ -267,14 +271,16 @@ class Gradient(_Derivative):
     >>> np.allclose(grad3, [ 0.,  0.])
     True
 
-    """, see_also="""
+    """,
+        "see_also": """
     See also
     --------
     Derivative
     Jacobian,
     Hessdiag,
     Hessian,
-    """)
+    """,
+    }
 
     def _forward(self, x, *args, **kwds):
         # forward mode without building the computational graph
@@ -284,22 +290,22 @@ class Gradient(_Derivative):
         return UTPM.extract_jacobian(y)
 
     def _reverse(self, x, *args, **kwds):
-
         c_graph = self.computational_graph(x, *args, **kwds)
         return c_graph.gradient(x)
 
 
 class Jacobian(Gradient):
-
-    __doc__ = _cmn_doc % dict(
-        derivative='Jacobian',
-        extra_parameter="",
-        extra_note="", returns="""
+    __doc__ = _cmn_doc % {
+        "derivative": "Jacobian",
+        "extra_parameter": "",
+        "extra_note": "",
+        "returns": """
     Returns
     -------
     jacob: array
         Jacobian
-    """, example="""
+    """,
+        "example": """
     Examples
     --------
     >>> import numpy as np
@@ -353,14 +359,16 @@ class Jacobian(Gradient):
     ...              [[6.,    0.,    3.,    0.,    2.,    0.],
     ...               [0.,   30.,    0.,   24.,    0.,   20.]]])
     True
-    """, see_also="""
+    """,
+        "see_also": """
     See also
     --------
     Derivative
     Gradient,
     Hessdiag,
     Hessian,
-    """)
+    """,
+    }
 
     def _forward(self, x, *args, **kwds):
         return np.atleast_2d(super(Jacobian, self)._forward(x, *args, **kwds))
@@ -372,16 +380,17 @@ class Jacobian(Gradient):
 
 
 class Hessian(_Derivative):
-
-    __doc__ = _cmn_doc % dict(
-        derivative='Hessian',
-        extra_parameter="",
-        returns="""
+    __doc__ = _cmn_doc % {
+        "derivative": "Hessian",
+        "extra_parameter": "",
+        "returns": """
     Returns
     -------
     hess : ndarray
        array of partial second derivatives, Hessian
-    """, extra_note='', example="""
+    """,
+        "extra_note": "",
+        "example": """
     Examples
     --------
     >>> import numpy as np
@@ -411,18 +420,19 @@ class Hessian(_Derivative):
     >>> np.allclose(h3, [[-1.,  1.],
     ...                  [ 1., -1.]])
     True
-    """, see_also="""
+    """,
+        "see_also": """
     See also
     --------
     Derivative
     Gradient,
     Jacobian,
     Hessdiag,
-    """)
+    """,
+    }
 
-    def __init__(self, f, method='forward', full_output=False):
-        super(Hessian, self).__init__(f, n=2, method=method,
-                                      full_output=full_output)
+    def __init__(self, f, method="forward", full_output=False):
+        super(Hessian, self).__init__(f, n=2, method=method, full_output=full_output)
 
     def _forward(self, x, *args, **kwds):
         x = np.atleast_1d(x)
@@ -437,16 +447,17 @@ class Hessian(_Derivative):
 
 
 class Hessdiag(Hessian):
-
-    __doc__ = _cmn_doc % dict(
-        derivative='Hessian diagonal',
-        extra_parameter="",
-        returns="""
+    __doc__ = _cmn_doc % {
+        "derivative": "Hessian diagonal",
+        "extra_parameter": "",
+        "returns": """
     Returns
     -------
     hessdiag : ndarray
        Hessian diagonal array of partial second order derivatives.
-    """, extra_note='', example="""
+    """,
+        "extra_note": "",
+        "example": """
     Examples
     --------
     >>> import numpy as np
@@ -474,14 +485,16 @@ class Hessdiag(Hessian):
     >>> np.allclose(h3, [-1., -1.])
     True
 
-    """, see_also="""
+    """,
+        "see_also": """
     See also
     --------
     Derivative
     Gradient,
     Jacobian,
     Hessian,
-    """)
+    """,
+    }
 
     def _forward(self, x, *args, **kwds):
         d, n = 2 + 1, x.size
@@ -542,14 +555,13 @@ def directionaldiff(f, x0, vec, **options):
     x0 = np.asarray(x0)
     vec = np.asarray(vec)
     if x0.size != vec.size:
-        raise ValueError('vec and x0 must be the same shapes')
+        raise ValueError("vec and x0 must be the same shapes")
 
     vec = np.reshape(vec / np.linalg.norm(vec.ravel()), x0.shape)
     return Derivative(lambda t: f(x0 + t * vec), **options)(0)
 
 
 class Taylor(object):
-
     """
     Return Taylor coefficients of function using algorithmic differentiation
 
@@ -595,6 +607,7 @@ class Taylor(object):
         return coefs
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from numdifftools.testing import test_docstrings
+
     test_docstrings()

@@ -3,15 +3,23 @@ Created on 28. aug. 2015
 
 @author: pab
 """
+
 from __future__ import absolute_import, division, print_function
+
 import warnings
+
 import numpy as np
 from scipy import linalg
 from scipy.ndimage import convolve1d
 
+try:
+    from numpy import trapezoid as trapz
+except ImportError:
+    from numpy import trapz
+
 FINFO = np.finfo(float)
 _EPS = EPS = FINFO.eps
-_tiny_name = 'tiny' if np.__version__ < '1.22' else 'smallest_normal'
+_tiny_name = "tiny" if np.__version__ < "1.22" else "smallest_normal"
 _TINY = getattr(FINFO, _tiny_name)
 _HUGE = FINFO.max
 
@@ -79,6 +87,7 @@ class Dea(object):
     ..  [3] http://www.netlib.org/quadpack/
     ..  [4] https://mathworld.wolfram.com/WynnsEpsilonMethod.html
     """
+
     def __init__(self, limexp=50):
         self.limexp = limexp
         self._n = 0
@@ -92,28 +101,27 @@ class Dea(object):
     @limexp.setter
     def limexp(self, limexp):
         n = 2 * (limexp // 2) + 1
-        _assert(n >= 3, 'LIMEXP IS LESS THAN 3')
+        _assert(n >= 3, "LIMEXP IS LESS THAN 3")
         self.epstab = np.zeros(n + 5)
         self._limexp = n
 
-    def _dea(self,  epstab, n):
-
+    def _dea(self, epstab, n):
         res3la = epstab[-3:]
         nres = self._nres
 
         abserr = _HUGE
         result = epstab[n]
         limexp = self.limexp
-        epstab[n+2] = epstab[n]
+        epstab[n + 2] = epstab[n]
         newelm = n // 2
         epstab[n] = _HUGE
         old_n = n
         k_1 = n
         all_converged = False
         for i in range(newelm):
-            res = epstab[k_1+2]
-            e_0 = epstab[k_1-2]
-            e_1 = epstab[k_1-1]
+            res = epstab[k_1 + 2]
+            e_0 = epstab[k_1 - 2]
+            e_1 = epstab[k_1 - 1]
             e_2 = res
             delta2 = e_2 - e_1
             delta3 = e_1 - e_0
@@ -143,23 +151,23 @@ class Dea(object):
             any_converged = err1 <= tol1 or err2 <= tol2 or err3 <= tol3
             if not any_converged:  # go to 20
                 sss = 1.0 / delta1 + 1.0 / delta2 - 1.0 / delta3
-                epsinf = abs(sss*e_1)
+                epsinf = abs(sss * e_1)
 
                 # If irregular behaviour in the table is detected, omit a
                 # part of the table adjusting the value of n.
                 any_converged = epsinf <= 1e-4
 
             if any_converged:
-                n = 2*i
+                n = 2 * i
                 # ***jump out of do-loop
                 # go to 50
                 break
 
             #  compute a new element and eventually adjust the value of result.
-            res = e_1 + 1.0/sss
+            res = e_1 + 1.0 / sss
             epstab[k_1] = res
             k_1 = k_1 - 2
-            error = err2 + abs(res-e_2) + err3
+            error = err2 + abs(res - e_2) + err3
             if not error > abserr:
                 abserr = error
                 result = res
@@ -176,7 +184,7 @@ class Dea(object):
 
             self._update_res3la(res3la, result, nres)
         # 100
-        abserr = max(abserr, 5.0*_EPS*abs(result))
+        abserr = max(abserr, 5.0 * _EPS * abs(result))
         self._nres += 1
         return result, abserr, n
 
@@ -184,11 +192,11 @@ class Dea(object):
     def _shift_table(epstab, n, newelm, old_n):
         i_0 = old_n % 2  # 1 if ((old_n // 2) * 2 == old_n - 1) else 0
         i_n = 2 * newelm + 2
-        epstab[i_0:i_n:2] = epstab[i_0 + 2:i_n + 2:2]
+        epstab[i_0:i_n:2] = epstab[i_0 + 2 : i_n + 2 : 2]
 
         if old_n != n:
             i_n = old_n - n
-            epstab[:n + 1] = epstab[i_n:i_n + n + 1]
+            epstab[: n + 1] = epstab[i_n : i_n + n + 1]
         return epstab
 
     @staticmethod
@@ -200,7 +208,6 @@ class Dea(object):
             res3la[nres] = result
 
     def __call__(self, s_value):
-
         epstab = self.epstab
 
         result = s_value
@@ -220,7 +227,6 @@ class Dea(object):
 
 
 class EpsAlg(object):
-
     """
     Extrapolate a slowly convergent sequence using Shanks transformation.
 
@@ -244,7 +250,6 @@ class EpsAlg(object):
         self.epstab = []
 
     def __call__(self, s_n):
-
         epstab = self.epstab
         n = len(epstab)
         epstab.append(s_n)
@@ -257,7 +262,7 @@ class EpsAlg(object):
                 aux2 = epstab[i - 1]
                 delta = epstab[i] - aux2
                 if np.abs(delta) <= 1.0e-60:
-                    epstab[i - 1] = 1.0e+60
+                    epstab[i - 1] = 1.0e60
                 else:
                     epstab[i - 1] = aux1 + 1.0 / delta
             estlim = epstab[n % 2]
@@ -283,17 +288,17 @@ def richardson_demo():
     """
 
     def linfun(i):
-        return np.linspace(0, np.pi / 2., 2 ** i + 1)
+        return np.linspace(0, np.pi / 2.0, 2**i + 1)
 
     n = 10
     e_i = []
     h = []
 
-    print('NO. PANELS      TRAP. APPROX          APPROX W/R            abserr')
-    txt = '{0:5d} {1:20.8f}  {2:20.8f}  {3:20.8f}'
+    print("NO. PANELS      TRAP. APPROX          APPROX W/R            abserr")
+    txt = "{0:5d} {1:20.8f}  {2:20.8f}  {3:20.8f}"
     for k in np.arange(n):
         x = linfun(k)
-        val = np.trapz(np.sin(x), x)
+        val = trapz(np.sin(x), x)
         h.append(x[1])
         e_i.append(val)
         vale, _err0, _step = Richardson(step=1, order=1)(np.array(e_i), np.array(h))
@@ -320,11 +325,11 @@ def epsalg_demo():
     """
 
     def linfun(i):
-        return np.linspace(0, np.pi / 2., 2 ** i + 1)
+        return np.linspace(0, np.pi / 2.0, 2**i + 1)
 
     dea = EpsAlg()
-    print('NO. PANELS      TRAP. APPROX          APPROX W/EA           abserr')
-    txt = '{0:5d} {1:20.8f}  {2:20.8f}  {3:20.8f}'
+    print("NO. PANELS      TRAP. APPROX          APPROX W/EA           abserr")
+    txt = "{0:5d} {1:20.8f}  {2:20.8f}  {3:20.8f}"
     for k in np.arange(10):
         x = linfun(k)
         val = np.trapz(np.sin(x), x)
@@ -353,11 +358,11 @@ def dea_demo():
     """
 
     def linfun(i):
-        return np.linspace(0, np.pi / 2., 2 ** i + 1)
+        return np.linspace(0, np.pi / 2.0, 2**i + 1)
 
     dea = Dea(limexp=6)
-    print('NO. PANELS      TRAP. APPROX          APPROX W/EA           abserr')
-    txt = '{0:5d} {1:20.8f}  {2:20.8f}  {3:20.8f}'
+    print("NO. PANELS      TRAP. APPROX          APPROX W/EA           abserr")
+    txt = "{0:5d} {1:20.8f}  {2:20.8f}  {3:20.8f}"
     vals = []
     num_panels = []
     for k in np.arange(12):
@@ -365,7 +370,7 @@ def dea_demo():
         val = np.trapz(np.sin(x), x)
         vals.append(val)
         num_panels.append(len(x) - 1)
-    for k, val in zip(num_panels, vals):
+    for k, val in zip(num_panels, vals, strict=False):
         vale, err = dea(val)
         print(txt.format(k, val, vale, err))
 
@@ -411,14 +416,14 @@ def dea3(v_0, v_1, v_2, symmetric=False):
     >>> linfun = lambda i : np.linspace(0, np.pi/2., 2**(i+5)+1)
     >>> for k in np.arange(3):
     ...    x = linfun(k)
-    ...    Ei[k] = np.trapz(np.sin(x),x)
+    ...    Ei[k] = trapz(np.sin(x),x)
     >>> [En, err] = nd.dea3(Ei[0], Ei[1], Ei[2])
     >>> truErr = np.abs(En-1.)
-    >>> np.all(truErr < err)
+    >>> bool(np.all(truErr < err))
     True
     >>> np.allclose(En, 1)
     True
-    >>> np.all(np.abs(Ei-1)<1e-3)
+    >>> bool(np.all(np.abs(Ei-1)<1e-3))
     True
 
     See also
@@ -469,7 +474,6 @@ def dea3(v_0, v_1, v_2, symmetric=False):
 
 
 class Richardson(object):
-
     """
     Extrapolates a sequence with Richardsons method
 
@@ -511,12 +515,12 @@ class Richardson(object):
     >>> for k in np.arange(n):
     ...    x = linfun(k)
     ...    h[k] = x[1]
-    ...    Ei[k] = np.trapz(np.sin(x),x)
+    ...    Ei[k] = trapz(np.sin(x),x)
     >>> En, err, step = nd.Richardson(step=1, order=1)(Ei, h)
     >>> truErr = np.abs(En-1.)
-    >>> np.all(truErr < err)
+    >>> bool(np.all(truErr < err))
     True
-    >>> np.all(np.abs(Ei-1)<1e-3)
+    >>> bool(np.all(np.abs(Ei-1)<1e-3))
     True
     >>> np.allclose(En, 1)
     True
@@ -530,8 +534,7 @@ class Richardson(object):
 
     @staticmethod
     def _r_matrix(step_ratio, step, num_terms, order):
-
-        i, j = np.ogrid[0:num_terms + 1, 0:num_terms]
+        i, j = np.ogrid[0 : num_terms + 1, 0:num_terms]
         dtype = np.result_type(step_ratio, step, float)
         r_mat = np.ones((num_terms + 1, num_terms + 1), dtype=dtype)
         r_mat[:, 1:] = (1.0 / step_ratio) ** (i * (step * j + order))
@@ -552,7 +555,7 @@ class Richardson(object):
         m = new_sequence.shape[0]
         m_old = old_sequence.shape[0]
         cov1 = np.sum(np.abs(rule) ** 2)  # 1 spare dof
-        fact = np.maximum(12.7062047361747 * np.sqrt(cov1), EPS * 10.)
+        fact = np.maximum(12.7062047361747 * np.sqrt(cov1), EPS * 10.0)
         if m_old < 2:
             return (np.abs(new_sequence) * EPS + steps) * fact
         if m < 2:
@@ -560,20 +563,18 @@ class Richardson(object):
             tol = max_abs(old_sequence[:-1], old_sequence[1:]) * fact
             err = np.abs(delta)
             converged = err <= tol
-            abserr = (err[-m:] +
-                      np.where(converged[-m:], tol[-m:] * 10,
-                               abs(new_sequence - old_sequence[-m:]) * fact))
+            abserr = err[-m:] + np.where(
+                converged[-m:], tol[-m:] * 10, abs(new_sequence - old_sequence[-m:]) * fact
+            )
             return abserr
-#         if m_old>2:
-#             res, abserr = dea3(old_sequence[:-2], old_sequence[1:-1],
-#                               old_sequence[2:] )
-#             return abserr[-m:] * fact
+        #         if m_old>2:
+        #             res, abserr = dea3(old_sequence[:-2], old_sequence[1:-1],
+        #                               old_sequence[2:] )
+        #             return abserr[-m:] * fact
         err = np.abs(np.diff(new_sequence, axis=0)) * fact
         tol = max_abs(new_sequence[1:], new_sequence[:-1]) * EPS * fact
         converged = err <= tol
-        abserr = err + np.where(converged, tol * 10,
-                                abs(new_sequence[:-1] -
-                                    old_sequence[-m + 1:]) * fact)
+        abserr = err + np.where(converged, tol * 10, abs(new_sequence[:-1] - old_sequence[-m + 1 :]) * fact)
         return abserr
 
     def extrapolate(self, sequence, steps):
@@ -591,6 +592,7 @@ class Richardson(object):
         return new_sequence[:m], abserr[:m], steps[:m]
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from numdifftools.testing import test_docstrings
+
     test_docstrings(__file__)

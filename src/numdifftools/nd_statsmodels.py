@@ -6,20 +6,22 @@ statsmodels.numdiff.
 """
 
 from __future__ import absolute_import, division, print_function
-from functools import partial
+
 import warnings
+from functools import partial
 
 import numpy as np
 
 try:
     from statsmodels.tools.numdiff import (  # approx_fprime,
+        _get_epsilon,
         # approx_fprime_cs,
         # approx_hess, # same as approx_hess3
         approx_hess1,
         approx_hess2,
         approx_hess3,
         approx_hess_cs,
-        _get_epsilon)
+    )
 except ImportError:
     approx_hess1 = approx_hess2 = approx_hess3 = approx_hess_cs = _get_epsilon = None
 
@@ -81,11 +83,10 @@ def approx_fprime(x, f, epsilon=None, args=(), kwargs=None, centered=True):
             grad[k, :] = (f(*(x + ei,) + args, **kwargs) - f0) / epsilon[k]
             ei[k] = 0.0
     else:
-        epsilon = _get_epsilon(x, 3, epsilon, n) / 2.
+        epsilon = _get_epsilon(x, 3, epsilon, n) / 2.0
         for k in range(n):
             ei[k] = epsilon[k]
-            grad[k, :] = (f(*(x + ei,) + args, **kwargs) -
-                          f(*(x - ei,) + args, **kwargs)) / (2 * epsilon[k])
+            grad[k, :] = (f(*(x + ei,) + args, **kwargs) - f(*(x - ei,) + args, **kwargs)) / (2 * epsilon[k])
             ei[k] = 0.0
     return _transpose(grad, grad.ndim)
 
@@ -93,12 +94,12 @@ def approx_fprime(x, f, epsilon=None, args=(), kwargs=None, centered=True):
 def _approx_fprime_backward(x, f, epsilon=None, args=(), kwargs=None):
     x = np.atleast_1d(x)  # .ravel()
     n = len(x)
-    epsilon = - np.abs(_get_epsilon(x, 2, epsilon, n))
+    epsilon = -np.abs(_get_epsilon(x, 2, epsilon, n))
     return approx_fprime(x, f, epsilon, args, kwargs, centered=False)
 
 
 def approx_fprime_cs(x, f, epsilon=None, args=(), kwargs=None):
-    '''
+    """
     Calculate gradient or Jacobian with complex step derivative approximation
 
     Parameters
@@ -126,7 +127,7 @@ def approx_fprime_cs(x, f, epsilon=None, args=(), kwargs=None):
     truncation error can be eliminated by choosing epsilon to be very small.
     The complex-step derivative avoids the problem of round-off error with
     small epsilon because there is no subtraction.
-    '''
+    """
     # From Guilherme P. de Freitas, numpy mailing list
     # May 04 2010 thread "Improvement of performance"
     # http://mail.scipy.org/pipermail/numpy-discussion/2010-May/050250.html
@@ -137,21 +138,21 @@ def approx_fprime_cs(x, f, epsilon=None, args=(), kwargs=None):
     ei = np.zeros(np.shape(x), complex)
     grad = []
     for k in range(n):
-        ei[k] = 1j*epsilon[k]
-        grad.append(np.atleast_1d(f(x + ei, *args, **kwargs).imag)/epsilon[k])
+        ei[k] = 1j * epsilon[k]
+        grad.append(np.atleast_1d(f(x + ei, *args, **kwargs).imag) / epsilon[k])
         ei[k] = 0.0
-    return _transpose(grad, grad[0].ndim+1)
+    return _transpose(grad, grad[0].ndim + 1)
 
 
 def _approx_hess1_backward(x, f, epsilon=None, args=(), kwargs=None):
     n = len(x)
     kwargs = {} if kwargs is None else kwargs
-    epsilon = - np.abs(_get_epsilon(x, 3, epsilon, n))
+    epsilon = -np.abs(_get_epsilon(x, 3, epsilon, n))
     return approx_hess1(x, f, epsilon, args, kwargs)
 
 
 class _Common(object):
-    def __init__(self, fun, step=None, method='central', order=None):
+    def __init__(self, fun, step=None, method="central", order=None):
         self.fun = fun
         self.step = step
         self.method = method
@@ -162,7 +163,7 @@ class _Common(object):
 
     @property
     def order(self):
-        return dict(forward=1, backward=1).get(self.method, 2)
+        return {"forward": 1, "backward": 1}.get(self.method, 2)
 
     @order.setter
     def order(self, order):
@@ -170,8 +171,8 @@ class _Common(object):
             return
         valid_order = self.order
         if order != valid_order:
-            msg = 'Can not change order to {}! The only valid order is {} for method={}.'
-            warnings.warn(msg.format(order, valid_order, self.method))
+            msg = "Can not change order to {}! The only valid order is {} for method={}."
+            warnings.warn(msg.format(order, valid_order, self.method), stacklevel=2)
 
     @property
     def method(self):
@@ -184,8 +185,8 @@ class _Common(object):
         if callable_:
             self._derivative_nonzero_order = callable_
         else:
-            warnings.warn('{} is an illegal method! Setting method="central"'.format(method))
-            self.method = 'central'
+            warnings.warn('{} is an illegal method! Setting method="central"'.format(method), stacklevel=2)
+            self.method = "central"
 
     def __call__(self, x, *args, **kwds):
         return self._derivative_nonzero_order(np.atleast_1d(x), self.fun, self.step, args, kwds)
@@ -232,13 +233,16 @@ class Hessian(_Common):
     --------
     Jacobian, Gradient
     """
+
     n = property(fget=lambda cls: 2)
 
-    _callables = dict(complex=approx_hess_cs,
-                      forward=approx_hess1,
-                      backward=_approx_hess1_backward,
-                      central=approx_hess3,
-                      central2=approx_hess2)
+    _callables = {
+        "complex": approx_hess_cs,
+        "forward": approx_hess1,
+        "backward": _approx_hess1_backward,
+        "central": approx_hess3,
+        "central2": approx_hess2,
+    }
 
 
 class Jacobian(_Common):
@@ -294,10 +298,13 @@ class Jacobian(_Common):
     ...              [   2.,   20.]]])
     True
     """
-    _callables = dict(complex=approx_fprime_cs,
-                      central=partial(approx_fprime, centered=True),
-                      forward=partial(approx_fprime, centered=False),
-                      backward=_approx_fprime_backward)
+
+    _callables = {
+        "complex": approx_fprime_cs,
+        "central": partial(approx_fprime, centered=True),
+        "forward": partial(approx_fprime, centered=False),
+        "backward": _approx_fprime_backward,
+    }
 
 
 class Gradient(Jacobian):
@@ -350,12 +357,12 @@ class Gradient(Jacobian):
     """
 
     def __call__(self, x, *args, **kwds):
-        return super(Gradient, self).__call__(np.atleast_1d(x).ravel(),
-                                              *args, **kwds).squeeze()
+        return super(Gradient, self).__call__(np.atleast_1d(x).ravel(), *args, **kwds).squeeze()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from numdifftools.testing import test_docstrings
+
     test_docstrings(__file__)
 #     print(np.log(_EPS)/np.log(1e-6))
 #     print(_EPS**(1./2.5))

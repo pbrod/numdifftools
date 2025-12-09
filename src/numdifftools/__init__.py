@@ -1,11 +1,37 @@
 from __future__ import absolute_import
 
-from .info import __doc__
-from .core import *
 from . import extrapolation, limits, step_generators
-
+from .core import (
+    Derivative,
+    Gradient,
+    Hessdiag,
+    Hessian,
+    Jacobian,
+    MaxStepGenerator,
+    MinStepGenerator,
+    Richardson,
+    dea3,
+    directionaldiff,
+)
+from .info import __doc__ as __doc__
 
 __version__ = "0.9.41"
+
+__all__ = (
+    "Derivative",
+    "Gradient",
+    "Hessian",
+    "Hessdiag",
+    "Jacobian",
+    "MaxStepGenerator",
+    "MinStepGenerator",
+    "Richardson",
+    "dea3",
+    "directionaldiff",
+    "extrapolation",
+    "limits",
+    "step_generators",
+)
 
 
 def test(*options):
@@ -39,4 +65,5 @@ def test(*options):
     """
 
     import pytest
-    return pytest.main(['--pyargs', 'numdifftools'] + list(options))
+
+    return pytest.main(["--pyargs", "numdifftools"] + list(options))

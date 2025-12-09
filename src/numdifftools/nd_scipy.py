@@ -1,12 +1,11 @@
 from __future__ import absolute_import, division, print_function
-from scipy.optimize._numdiff import approx_derivative
-from scipy.optimize import approx_fprime
+
 import numpy as np
+from scipy.optimize._numdiff import approx_derivative
 
 
 class _Common(object):
-    def __init__(self, fun, step=None, method='central', order=2,
-                 bounds=(-np.inf, np.inf), sparsity=None):
+    def __init__(self, fun, step=None, method="central", order=2, bounds=(-np.inf, np.inf), sparsity=None):
         self.fun = fun
         self.step = step
         self.method = method
@@ -74,10 +73,17 @@ class Jacobian(_Common):
 
     def __call__(self, x, *args, **kwds):
         x = np.atleast_1d(x)
-        method = dict(complex='cs', central='3-point', forward='2-point',
-                      backward='2-point')[self.method]
-        options = dict(method=method, rel_step=self.step, args=args,
-                       kwargs=kwds, bounds=self.bounds, sparsity=self.sparsity)
+        method = {"complex": "cs", "central": "3-point", "forward": "2-point", "backward": "2-point"}[
+            self.method
+        ]
+        options = {
+            "method": method,
+            "rel_step": self.step,
+            "args": args,
+            "kwargs": kwds,
+            "bounds": self.bounds,
+            "sparsity": self.sparsity,
+        }
 
         grad = approx_derivative(self.fun, x, **options)
 
@@ -134,10 +140,10 @@ class Gradient(Jacobian):
     """
 
     def __call__(self, x, *args, **kwds):
-        return super(Gradient, self).__call__(np.atleast_1d(x).ravel(),
-                                              *args, **kwds).squeeze()
+        return super(Gradient, self).__call__(np.atleast_1d(x).ravel(), *args, **kwds).squeeze()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from numdifftools.testing import test_docstrings
+
     test_docstrings(__file__)

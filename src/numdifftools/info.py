@@ -1,3 +1,4 @@
+# ruff: noqa
 """
 Introduction to numdifftools
 ============================

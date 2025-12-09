@@ -3,51 +3,61 @@ Created on 28. aug. 2015
 
 @author: pab
 """
+
 from __future__ import absolute_import, division, print_function
 
 import numpy as np
-from numpy.testing import assert_array_almost_equal, assert_allclose  # @UnresolvedImport
-from numdifftools.limits import Limit, Residue, CStepGenerator
-from numdifftools.step_generators import make_exact
+from numpy.testing import assert_allclose, assert_array_almost_equal  # @UnresolvedImport
+
 from numdifftools.extrapolation import EPS
+from numdifftools.limits import CStepGenerator, Limit, Residue
+from numdifftools.step_generators import make_exact
 
 
 class TestCStepGenerator(object):
-
     @staticmethod
     def test_default_generator():
         step_gen = CStepGenerator(num_steps=8)
-        h = np.array([h for h in step_gen(0)])
+        h = np.array(list(step_gen(0)))
         print(h)
-        desired = np.array([[1.47701940e-09, 3.69254849e-10, 9.23137122e-11,
-                            2.30784281e-11, 5.76960701e-12, 1.44240175e-12,
-                            3.60600438e-13, 9.01501096e-14]])
+        desired = np.array(
+            [
+                [
+                    1.47701940e-09,
+                    3.69254849e-10,
+                    9.23137122e-11,
+                    2.30784281e-11,
+                    5.76960701e-12,
+                    1.44240175e-12,
+                    3.60600438e-13,
+                    9.01501096e-14,
+                ]
+            ]
+        )
 
         assert_array_almost_equal((h - desired) / desired, 0)
 
     @staticmethod
     def test_default_base_step():
         step_gen = CStepGenerator(num_steps=1, offset=0)
-        h = [h for h in step_gen(0)]
-        desired = make_exact(EPS ** (1. / 1.2))
+        h = list(step_gen(0))
+        desired = make_exact(EPS ** (1.0 / 1.2))
         assert_array_almost_equal((h[0] - desired) / desired, 0)
 
     @staticmethod
     def test_fixed_base_step():
         desired = 0.1
         step_gen = CStepGenerator(base_step=desired, num_steps=1, scale=2, offset=0)
-        h = [h for h in step_gen(0)]
+        h = list(step_gen(0))
         assert_array_almost_equal((h[0] - desired) / desired, 0)
 
 
 class TestLimit(object):
-
     def test_sinx_div_x(self):
-
         def fun(x):
             return np.sin(x) / x
 
-        for path in ['radial', 'spiral']:
+        for path in ["radial", "spiral"]:
             lim_f = Limit(fun, path=path, full_output=True)
 
             x = np.arange(-10, 10) / np.pi
@@ -66,7 +76,6 @@ class TestLimit(object):
         assert err.error_estimate < 1e-14
 
     def test_residue_1_div_1_minus_exp_x(self):
-
         def fun(z):
             return -z / (np.expm1(2 * z))
 
@@ -76,11 +85,12 @@ class TestLimit(object):
         assert err.error_estimate < 1e-14
 
     def test_difficult_limit(self):
-
         def fun(x):
-            return (x * np.exp(x) - np.expm1(x)) / x ** 2
+            return (x * np.exp(x) - np.expm1(x)) / x**2
 
-        for path in ['radial', ]:
+        for path in [
+            "radial",
+        ]:
             lim, err = Limit(fun, path=path, full_output=True)(0)
             assert_allclose(lim, 0.5)
 
@@ -88,9 +98,7 @@ class TestLimit(object):
 
 
 class TestResidue(object):
-
     def test_residue_1_div_1_minus_exp_x(self):
-
         def fun(z):
             return -1.0 / (np.expm1(2 * z))
 
@@ -100,7 +108,6 @@ class TestResidue(object):
         assert err.error_estimate < 1e-14
 
     def test_residue_1_div_sin_x2(self):
-
         def fun(z):
             return 1.0 / np.sin(z) ** 2
 

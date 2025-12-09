@@ -6,17 +6,17 @@ https://www.pythoncentral.io/measure-time-in-python-time-time-vs-time-clock/
 """
 
 from __future__ import absolute_import, print_function
-import inspect
+
 import cProfile
+import inspect
+import warnings
 from functools import wraps
 from timeit import default_timer as timer
-import warnings
-
 
 try:
     from line_profiler import LineProfiler
 
-    def _add_all_class_methods(profiler, cls, except_=''):
+    def _add_all_class_methods(profiler, cls, except_=""):
         for k, v in inspect.getmembers(cls, inspect.ismethod):
             if k != except_:
                 profiler.add_function(v)
@@ -52,40 +52,44 @@ try:
         --------
         do_cprofile, test_do_profile
         """
-        def inner(func):
 
+        def inner(func):
             def profiled_func(*args, **kwargs):
                 try:
                     profiler = LineProfiler()
                     profiler.add_function(func)
                     if follow_all_methods:
                         cls = args[0]  # class instance
-                        _add_all_class_methods(profiler, cls,
-                                               except_=func.__name__)
+                        _add_all_class_methods(profiler, cls, except_=func.__name__)
                     for f in follow:
                         _add_function_or_classmethod(profiler, f, args)
                     profiler.enable_by_count()
                     return func(*args, **kwargs)
                 finally:
                     profiler.print_stats()
+
             return profiled_func
+
         return inner
 
 except ImportError as error:
     LineProfiler = None
-    warnings.warn(str(error))
+    warnings.warn(str(error), stacklevel=2)
 
     def do_profile(follow=(), follow_all_methods=False):
         "Helpful if you accidentally leave in production!"
+
         def inner(func):
             def nothing(*args, **kwargs):
                 return func(*args, **kwargs)
+
             return nothing
+
         return inner
 
 
 def timefun(fun):
-    """ Timing decorator
+    """Timing decorator
 
     Timers require you to do some digging. Start wrapping a few of the higher level
     functions and confirm where the bottleneck is, then drill down into that function,
@@ -104,6 +108,7 @@ def timefun(fun):
     more time placing and replacing boilerplate code than you will fixing the problem!
 
     """
+
     @wraps(fun)
     def measure_time(*args, **kwargs):
         t1 = timer()
@@ -111,16 +116,17 @@ def timefun(fun):
         t2 = timer()
         print("@timefun:" + fun.__name__ + " took " + str(t2 - t1) + " seconds")
         return result
+
     return measure_time
 
 
-class TimeWith():
+class TimeWith:
     """
     Timing context manager
 
     """
 
-    def __init__(self, name=''):
+    def __init__(self, name=""):
         self.name = name
         self.start = timer()
 
@@ -128,17 +134,20 @@ class TimeWith():
     def elapsed(self):
         return timer() - self.start
 
-    def checkpoint(self, name=''):
-        print('{timer} {checkpoint} took {elapsed} seconds'.format(timer=self.name,
-                                                                   checkpoint=name,
-                                                                   elapsed=self.elapsed,
-                                                                   ).strip())
+    def checkpoint(self, name=""):
+        print(
+            "{timer} {checkpoint} took {elapsed} seconds".format(
+                timer=self.name,
+                checkpoint=name,
+                elapsed=self.elapsed,
+            ).strip()
+        )
 
     def __enter__(self):
         return self
 
     def __exit__(self, type, value, traceback):
-        self.checkpoint('finished')
+        self.checkpoint("finished")
 
 
 def do_cprofile(func):
@@ -165,6 +174,7 @@ def do_cprofile(func):
     --------
     do_profile, test_do_profile
     """
+
     def profiled_func(*args, **kwargs):
         profile = cProfile.Profile()
         try:
@@ -174,4 +184,5 @@ def do_cprofile(func):
             return result
         finally:
             profile.print_stats()
+
     return profiled_func

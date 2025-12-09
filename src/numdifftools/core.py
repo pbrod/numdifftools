@@ -10,22 +10,33 @@ Licence:     New BSD
 """
 
 from __future__ import absolute_import, division, print_function
+
 from collections import namedtuple
 
 import numpy as np
+
 from numdifftools.extrapolation import Richardson, dea3  # @UnusedImport
-from numdifftools.step_generators import MaxStepGenerator, MinStepGenerator
+from numdifftools.finite_difference import (
+    LogHessdiagRule,
+    LogHessianRule,
+    LogJacobianRule,
+    LogRule,
+)
 from numdifftools.limits import _Limit
-from numdifftools.finite_difference import (LogRule,
-                                            LogHessdiagRule,
-                                            LogHessianRule,
-                                            LogJacobianRule,
-                                            )
+from numdifftools.step_generators import MaxStepGenerator, MinStepGenerator
 
-
-__all__ = ('dea3', 'Derivative', 'Jacobian', 'Gradient', 'Hessian', 'Hessdiag',
-           'MinStepGenerator', 'MaxStepGenerator', 'Richardson',
-           'directionaldiff')
+__all__ = (
+    "dea3",
+    "Derivative",
+    "Jacobian",
+    "Gradient",
+    "Hessian",
+    "Hessdiag",
+    "MinStepGenerator",
+    "MaxStepGenerator",
+    "Richardson",
+    "directionaldiff",
+)
 FD_RULES = {}
 _SQRT_J = (1j + 1.0) / np.sqrt(2.0)  # = 1j**0.5
 
@@ -112,25 +123,26 @@ _CMN_DOC = """
 
 
 class Derivative(_Limit):
-
-    __doc__ = _CMN_DOC % dict(
-        derivative='n-th derivative',
-        extra_parameter="""
+    __doc__ = _CMN_DOC % {
+        "derivative": "n-th derivative",
+        "extra_parameter": """
     order : int, optional
         defines the order of the error term in the Taylor approximation used.
         For 'central' and 'complex' methods, it must be an even number.
     n : int, optional
         Order of the derivative.""",
-        extra_note="""
+        "extra_note": """
     Higher order approximation methods will generally be more accurate, but may
     also suffer more from numerical problems. First order methods is usually
     not recommended.
-    """, returns="""
+    """,
+        "returns": """
     Returns
     -------
     der : ndarray
        array of derivatives
-    """, example="""
+    """,
+        "example": """
     Examples
     --------
     >>> import numpy as np
@@ -155,25 +167,27 @@ class Derivative(_Limit):
     >>> ddf = nd.Derivative(f, n=2)
     >>> np.allclose(ddf(1), 8)
     True
-    """, see_also="""
+    """,
+        "see_also": """
     See also
     --------
     Gradient,
     Hessian
-    """)
+    """,
+    }
 
     _fd_rule = LogRule
-    info = namedtuple('info', ['f_value', 'error_estimate', 'final_step', 'index'])
+    info = namedtuple("info", ["f_value", "error_estimate", "final_step", "index"])
 
-    def __init__(self, fun, step=None, method='central', order=2, n=1, **options):
-        self.richardson_terms = options.pop('richardson_terms', 2)
-        self.full_output = options.pop('full_output', False)
+    def __init__(self, fun, step=None, method="central", order=2, n=1, **options):
+        self.richardson_terms = options.pop("richardson_terms", 2)
+        self.full_output = options.pop("full_output", False)
 
         self.fun = fun
 
         self.fd_rule = self._fd_rule(n=n, method=method, order=order)
 
-        super(Derivative, self).__init__(step=step,  **options)
+        super(Derivative, self).__init__(step=step, **options)
         self._set_derivative()
 
     @property
@@ -210,13 +224,13 @@ class Derivative(_Limit):
         return self.fd_rule.method_order
 
     def _step_generator(self, step, options):
-        if hasattr(step, '__call__'):
+        if callable(step):
             return step
 
-        if step is None and self.method not in ['complex', 'multicomplex']:
+        if step is None and self.method not in ["complex", "multicomplex"]:
             return MaxStepGenerator(**options)
-        if 'step_nom' not in options and step is not None:
-            options['step_nom'] = 1.0
+        if "step_nom" not in options and step is not None:
+            options["step_nom"] = 1.0
         return MinStepGenerator(base_step=step, **options)
 
     def _set_derivative(self):
@@ -245,12 +259,9 @@ class Derivative(_Limit):
         """Set Richardson extrapolation options"""
         order = self.method_order
         step = self.fd_rule.richardson_step
-        self.richardson = Richardson(step_ratio=step_ratio,
-                                     step=step, order=order,
-                                     num_terms=num_terms)
+        self.richardson = Richardson(step_ratio=step_ratio, step=step, order=order, num_terms=num_terms)
 
     def _get_functions(self, args, kwds):
-
         fun = self.fun
 
         def export_fun(x):
@@ -265,16 +276,16 @@ class Derivative(_Limit):
         return list(step_gen()), step_gen.step_ratio
 
     def _raise_error_if_any_is_complex(self, x, f_x):
-        msg = ('The {} step derivative method does only work on a real valued analytic '
-               'function of a real variable!'.format(self.method))
-        _assert(not np.any(np.iscomplex(x)),
-                msg + ' But a complex variable was given!')
+        msg = (
+            "The {} step derivative method does only work on a real valued analytic "
+            "function of a real variable!".format(self.method)
+        )
+        _assert(not np.any(np.iscomplex(x)), msg + " But a complex variable was given!")
 
-        _assert(not np.any(np.iscomplex(f_x)),
-                msg + ' But the function given is complex valued!')
+        _assert(not np.any(np.iscomplex(f_x)), msg + " But the function given is complex valued!")
 
     def _eval_first(self, f, x):
-        if self.method in ['complex', 'multicomplex']:
+        if self.method in ["complex", "multicomplex"]:
             f_x = f(x)
             self._raise_error_if_any_is_complex(x, f_x)
             return f_x
@@ -284,7 +295,7 @@ class Derivative(_Limit):
 
     def __call__(self, x, *args, **kwds):
         x_i = np.asarray(x)
-        with np.errstate(divide='ignore', invalid='ignore'):
+        with np.errstate(divide="ignore", invalid="ignore"):
             results, f_xi = self._derivative(x_i, args, kwds)
             derivative, info = self._extrapolate(*results)
         if self.full_output:
@@ -326,7 +337,7 @@ def directionaldiff(f, x0, vec, **options):
     >>> dd, info = nd.directionaldiff(rosen, [1, 1], vec, full_output=True)
     >>> np.allclose(dd, 0)
     True
-    >>> np.abs(info.error_estimate)<1e-14
+    >>> bool(np.abs(info.error_estimate)<1e-14)
     True
 
     See also
@@ -336,25 +347,25 @@ def directionaldiff(f, x0, vec, **options):
     """
     x0 = np.asarray(x0)
     vec = np.asarray(vec)
-    _assert(x0.size == vec.size, 'vec and x0 must be the same shapes')
+    _assert(x0.size == vec.size, "vec and x0 must be the same shapes")
     vec = np.reshape(vec / np.linalg.norm(vec.ravel()), x0.shape)
     return Derivative(lambda t: f(x0 + t * vec), **options)(0)
 
 
 class Jacobian(Derivative):
-
-    __doc__ = _CMN_DOC % dict(
-        derivative='Jacobian',
-        extra_parameter="""
+    __doc__ = _CMN_DOC % {
+        "derivative": "Jacobian",
+        "extra_parameter": """
     order : int, optional
         defines the order of the error term in the Taylor approximation used.
         For 'central' and 'complex' methods, it must be an even number.""",
-        returns="""
+        "returns": """
     Returns
     -------
     jacob : array
         Jacobian
-    """, extra_note="""
+    """,
+        "extra_note": """
     Higher order approximation methods will generally be more accurate, but may
     also suffer more from numerical problems. First order methods is usually
     not recommended.
@@ -363,7 +374,8 @@ class Jacobian(Derivative):
     by fun (e.g., with a value for each observation), it returns a 3d array
     with the Jacobian of each observation with shape xk x nobs x xk. I.e.,
     the Jacobian of the first observation would be [:, 0, :]
-    """, example="""
+    """,
+        "example": """
     Examples
     --------
     >>> import numpy as np
@@ -397,14 +409,16 @@ class Jacobian(Derivative):
     >>> np.allclose(jfun3(np.array([[1.,2.,3.]]).T), [[[18.], [9.], [12.]], [[6.], [3.], [2.]]])
     True
 
-    """, see_also="""
+    """,
+        "see_also": """
     See also
     --------
     Derivative, Hessian, Gradient
-    """)
+    """,
+    }
 
-#     n = property(fget=lambda cls: 1,
-#                  fset=lambda cls, val: cls._set_derivative())  # @UnusedVariable
+    #     n = property(fget=lambda cls: 1,
+    #                  fset=lambda cls, val: cls._set_derivative())  # @UnusedVariable
 
     _fd_rule = LogJacobianRule
 
@@ -432,26 +446,27 @@ class Jacobian(Derivative):
 
 
 class Gradient(Jacobian):
-
-    __doc__ = _CMN_DOC % dict(
-        derivative='Gradient',
-        extra_parameter="""
+    __doc__ = _CMN_DOC % {
+        "derivative": "Gradient",
+        "extra_parameter": """
     order : int, optional
         defines the order of the error term in the Taylor approximation used.
         For 'central' and 'complex' methods, it must be an even number.""",
-        returns="""
+        "returns": """
     Returns
     -------
     grad : array
         gradient
-    """, extra_note="""
+    """,
+        "extra_note": """
     Higher order approximation methods will generally be more accurate, but may
     also suffer more from numerical problems. First order methods is usually
     not recommended.
 
     If x0 is an n x m array, then fun is assumed to be a function of n * m
     variables.
-    """, example="""
+    """,
+        "example": """
     Examples
     --------
     >>> import numpy as np
@@ -480,11 +495,13 @@ class Gradient(Jacobian):
     >>> grad_rosen = nd.Gradient(rosen)
     >>> df_dx, df_dy = grad_rosen([x, y])
     >>> np.allclose([df_dx, df_dy], [0, 0])
-    True""", see_also="""
+    True""",
+        "see_also": """
     See also
     --------
     Derivative, Hessian, Jacobian
-    """)
+    """,
+    }
 
     def __call__(self, x, *args, **kwds):
         result = super(Gradient, self).__call__(np.atleast_1d(x).ravel(), *args, **kwds)
@@ -494,22 +511,23 @@ class Gradient(Jacobian):
 
 
 class Hessdiag(Derivative):
-
-    __doc__ = _CMN_DOC % dict(
-        derivative='Hessian diagonal',
-        extra_parameter="""order : int, optional
+    __doc__ = _CMN_DOC % {
+        "derivative": "Hessian diagonal",
+        "extra_parameter": """order : int, optional
         defines the order of the error term in the Taylor approximation used.
         For 'central' and 'complex' methods, it must be an even number.""",
-        returns="""
+        "returns": """
     Returns
     -------
     hessdiag : array
         hessian diagonal
-    """, extra_note="""
+    """,
+        "extra_note": """
     Higher order approximation methods will generally be more accurate, but may
     also suffer more from numerical problems. First order methods is usually
     not recommended.
-    """, example="""
+    """,
+        "example": """
     Examples
     --------
     >>> import numpy as np
@@ -520,18 +538,20 @@ class Hessdiag(Derivative):
     >>> np.allclose(hd, [0.,   2.,  18.])
     True
 
-    >>> np.all(info.error_estimate < 1e-11)
+    >>> bool(np.all(info.error_estimate < 1e-11))
     True
-    """, see_also="""
+    """,
+        "see_also": """
     See also
     --------
     Derivative, Hessian, Jacobian, Gradient
-    """)
+    """,
+    }
 
     _fd_rule = LogHessdiagRule
 
-    def __init__(self, f, step=None, method='central', order=2, **options):
-        options.pop('n', None)
+    def __init__(self, f, step=None, method="central", order=2, **options):
+        options.pop("n", None)
         super(Hessdiag, self).__init__(f, step=step, method=method, n=2, order=order, **options)
 
     def __call__(self, x, *args, **kwds):
@@ -539,16 +559,16 @@ class Hessdiag(Derivative):
 
 
 class Hessian(Hessdiag):
-
-    __doc__ = _CMN_DOC % dict(
-        derivative='Hessian',
-        extra_parameter="",
-        returns=r"""
+    __doc__ = _CMN_DOC % {
+        "derivative": "Hessian",
+        "extra_parameter": "",
+        "returns": r"""
     Returns
     -------
     hess : ndarray
        array of partial second derivatives, Hessian
-    """, extra_note=r"""
+    """,
+        "extra_note": r"""
     Computes the Hessian according to method as:
     'forward' :eq:`7`, 'central' :eq:`9` and 'complex' :eq:`10`:
 
@@ -569,7 +589,8 @@ class Hessian(Hessdiag):
 
     where :math:`e_j` is a vector with element :math:`j` is one and the rest
     are zero and :math:`d_j` is a scalar spacing :math:`steps_j`.
-    """, example="""
+    """,
+        "example": """
     Examples
     --------
     >>> import numpy as np
@@ -592,20 +613,23 @@ class Hessian(Hessdiag):
     >>> h2 = Hfun2([0, 0])
     >>> h2
     array([[-1.,  1.],
-           [ 1., -1.]])""", see_also="""
+           [ 1., -1.]])""",
+        "see_also": """
     See also
     --------
     Derivative, Hessian
-    """)
+    """,
+    }
 
     _fd_rule = LogHessianRule
 
-    def __init__(self, f, step=None, method='central', order=None, **options):
+    def __init__(self, f, step=None, method="central", order=None, **options):
         if order is None:
-            order = dict(backward=1, forward=1).get(method, 2)
+            order = {"backward": 1, "forward": 1}.get(method, 2)
         super(Hessian, self).__init__(f, step=step, method=method, order=order, **options)
 
 
 if __name__ == "__main__":
     from numdifftools.testing import test_docstrings
+
     test_docstrings(__file__)

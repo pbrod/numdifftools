@@ -1,10 +1,12 @@
 """Test functions for numdifftools module"""
+
 from __future__ import absolute_import, print_function
 
-import pytest
 import numpy as np
+import pytest
+from hypothesis import example, given, note, settings
+from hypothesis import strategies as st
 from numpy.testing import assert_allclose  # @UnresolvedImport
-from hypothesis import given, example, note, settings, strategies as st
 
 import numdifftools.core as nd
 from numdifftools.step_generators import default_scale
@@ -13,35 +15,37 @@ from numdifftools.tests.hamiltonian import run_hamiltonian
 
 
 class TestRichardson(object):
-
     @staticmethod
     def test_central_forward_backward():
-        central = {(1, 1): [-0.33333333, 1.33333333],
-                   (1, 2): [-0.33333333, 1.33333333],
-                   (1, 3): [-0.33333333, 1.33333333],
-                   (1, 4): [-0.06666667, 1.06666667],
-                   (1, 5): [-0.06666667, 1.06666667],
-                   (1, 6): [-0.01587302, 1.01587302],
-                   (2, 1): [0.02222222, -0.44444444, 1.42222222],
-                   (2, 2): [0.02222222, -0.44444444, 1.42222222],
-                   (2, 3): [0.02222222, -0.44444444, 1.42222222],
-                   (2, 4): [1.05820106e-03, -8.46560847e-02, 1.08359788e+00],
-                   (2, 5): [1.05820106e-03, -8.46560847e-02, 1.08359788e+00],
-                   (2, 6): [6.22471211e-05, -1.99190787e-02, 1.01985683e+00]}
-        forward = {(1, 1): [-1., 2.],
-                   (1, 2): [-0.33333333, 1.33333333],
-                   (1, 3): [-0.14285714, 1.14285714],
-                   (1, 4): [-0.06666667, 1.06666667],
-                   (1, 5): [-0.03225806, 1.03225806],
-                   (1, 6): [-0.01587302, 1.01587302],
-                   (2, 1): [0.33333333, -2., 2.66666667],
-                   (2, 2): [0.04761905, -0.57142857, 1.52380952],
-                   (2, 3): [0.00952381, -0.22857143, 1.21904762],
-                   (2, 4): [0.00215054, -0.10322581, 1.10107527],
-                   (2, 5): [5.12032770e-04, -4.91551459e-02, 1.04864311e+00],
-                   (2, 6): [1.24984377e-04, -2.39970004e-02, 1.02387202e+00]}
-        true_vals = {'central': central, 'forward': forward,
-                     'backward': forward}
+        central = {
+            (1, 1): [-0.33333333, 1.33333333],
+            (1, 2): [-0.33333333, 1.33333333],
+            (1, 3): [-0.33333333, 1.33333333],
+            (1, 4): [-0.06666667, 1.06666667],
+            (1, 5): [-0.06666667, 1.06666667],
+            (1, 6): [-0.01587302, 1.01587302],
+            (2, 1): [0.02222222, -0.44444444, 1.42222222],
+            (2, 2): [0.02222222, -0.44444444, 1.42222222],
+            (2, 3): [0.02222222, -0.44444444, 1.42222222],
+            (2, 4): [1.05820106e-03, -8.46560847e-02, 1.08359788e00],
+            (2, 5): [1.05820106e-03, -8.46560847e-02, 1.08359788e00],
+            (2, 6): [6.22471211e-05, -1.99190787e-02, 1.01985683e00],
+        }
+        forward = {
+            (1, 1): [-1.0, 2.0],
+            (1, 2): [-0.33333333, 1.33333333],
+            (1, 3): [-0.14285714, 1.14285714],
+            (1, 4): [-0.06666667, 1.06666667],
+            (1, 5): [-0.03225806, 1.03225806],
+            (1, 6): [-0.01587302, 1.01587302],
+            (2, 1): [0.33333333, -2.0, 2.66666667],
+            (2, 2): [0.04761905, -0.57142857, 1.52380952],
+            (2, 3): [0.00952381, -0.22857143, 1.21904762],
+            (2, 4): [0.00215054, -0.10322581, 1.10107527],
+            (2, 5): [5.12032770e-04, -4.91551459e-02, 1.04864311e00],
+            (2, 6): [1.24984377e-04, -2.39970004e-02, 1.02387202e00],
+        }
+        true_vals = {"central": central, "forward": forward, "backward": forward}
 
         for method in true_vals:
             truth = true_vals[method]
@@ -55,17 +59,12 @@ class TestRichardson(object):
     @staticmethod
     def test_complex():
         truth = {
-            (1, 2, 8): [9.576480164718605e-07, -0.004167684167715291,
-                        1.004166726519699],
-            (4, 2, 2): [0.0002614379084968331, -0.07111111111111235,
-                        1.070849673202616],
-            (1, 2, 4): [0.0002614379084968331, -0.07111111111111235,
-                        1.070849673202616],
+            (1, 2, 8): [9.576480164718605e-07, -0.004167684167715291, 1.004166726519699],
+            (4, 2, 2): [0.0002614379084968331, -0.07111111111111235, 1.070849673202616],
+            (1, 2, 4): [0.0002614379084968331, -0.07111111111111235, 1.070849673202616],
             (4, 1, 8): [-0.0039215686274510775, 1.0039215686274505],
-            (2, 2, 4): [0.0002614379084968331, -0.07111111111111235,
-                        1.070849673202616],
-            (4, 2, 8): [9.576480164718605e-07, -0.004167684167715291,
-                        1.004166726519699],
+            (2, 2, 4): [0.0002614379084968331, -0.07111111111111235, 1.070849673202616],
+            (4, 2, 8): [9.576480164718605e-07, -0.004167684167715291, 1.004166726519699],
             (3, 1, 8): [-0.0039215686274510775, 1.0039215686274505],
             (4, 1, 2): [-0.06666666666666654, 1.0666666666666664],
             (3, 1, 6): [-0.06666666666666654, 1.0666666666666664],
@@ -74,54 +73,38 @@ class TestRichardson(object):
             (4, 1, 4): [-0.06666666666666654, 1.0666666666666664],
             (3, 1, 4): [-0.06666666666666654, 1.0666666666666664],
             (2, 1, 4): [-0.06666666666666654, 1.0666666666666664],
-            (3, 2, 2): [0.0002614379084968331, -0.07111111111111235,
-                        1.070849673202616],
-            (2, 2, 8): [9.576480164718605e-07, -0.004167684167715291,
-                        1.004166726519699],
+            (3, 2, 2): [0.0002614379084968331, -0.07111111111111235, 1.070849673202616],
+            (2, 2, 8): [9.576480164718605e-07, -0.004167684167715291, 1.004166726519699],
             (2, 1, 6): [-0.06666666666666654, 1.0666666666666664],
             (3, 1, 2): [-0.06666666666666654, 1.0666666666666664],
             (4, 1, 6): [-0.06666666666666654, 1.0666666666666664],
             (1, 1, 6): [-0.06666666666666654, 1.0666666666666664],
-            (1, 2, 2): [0.022222222222222185, -0.444444444444444,
-                        1.4222222222222216],
-            (3, 2, 6): [0.0002614379084968331, -0.07111111111111235,
-                        1.070849673202616],
+            (1, 2, 2): [0.022222222222222185, -0.444444444444444, 1.4222222222222216],
+            (3, 2, 6): [0.0002614379084968331, -0.07111111111111235, 1.070849673202616],
             (1, 1, 4): [-0.06666666666666654, 1.0666666666666664],
             (2, 1, 2): [-0.06666666666666654, 1.0666666666666664],
-            (4, 2, 4): [0.0002614379084968331, -0.07111111111111235,
-                        1.070849673202616],
-            (3, 2, 4): [0.0002614379084968331, -0.07111111111111235,
-                        1.070849673202616],
-            (2, 2, 2): [0.0002614379084968331, -0.07111111111111235,
-                        1.070849673202616],
-            (1, 2, 6): [0.0002614379084968331, -0.07111111111111235,
-                        1.070849673202616],
-            (4, 2, 6): [0.0002614379084968331, -0.07111111111111235,
-                        1.070849673202616],
+            (4, 2, 4): [0.0002614379084968331, -0.07111111111111235, 1.070849673202616],
+            (3, 2, 4): [0.0002614379084968331, -0.07111111111111235, 1.070849673202616],
+            (2, 2, 2): [0.0002614379084968331, -0.07111111111111235, 1.070849673202616],
+            (1, 2, 6): [0.0002614379084968331, -0.07111111111111235, 1.070849673202616],
+            (4, 2, 6): [0.0002614379084968331, -0.07111111111111235, 1.070849673202616],
             (1, 1, 2): [-0.33333333333333304, 1.333333333333333],
-            (3, 2, 8): [9.576480164718605e-07, -0.004167684167715291,
-                        1.004166726519699],
-            (2, 2, 6): [0.0002614379084968331, -0.07111111111111235,
-                        1.070849673202616]}
+            (3, 2, 8): [9.576480164718605e-07, -0.004167684167715291, 1.004166726519699],
+            (2, 2, 6): [0.0002614379084968331, -0.07111111111111235, 1.070849673202616],
+        }
 
         for n in [1, 2, 3, 4]:
             for num_terms in [1, 2]:
                 for order in range(2, 9, 2):
-                    d = nd.Derivative(np.exp, n=n, method='complex',
-                                      order=order)
+                    d = nd.Derivative(np.exp, n=n, method="complex", order=order)
                     d.set_richardson_rule(step_ratio=2.0, num_terms=num_terms)
                     rule = d.richardson.rule()
 
-                    msg = "n={0}, num_terms={1}, order={2}".format(n,
-                                                                   num_terms,
-                                                                   order)
-                    assert_allclose(rule,
-                                    truth[(n, num_terms, order)],
-                                    err_msg=msg)
+                    msg = "n={0}, num_terms={1}, order={2}".format(n, num_terms, order)
+                    assert_allclose(rule, truth[(n, num_terms, order)], err_msg=msg)
 
 
 class TestDerivative(object):
-
     @staticmethod
     def test_directional_diff():
         v = [1, -1]
@@ -131,7 +114,6 @@ class TestDerivative(object):
         assert_allclose(directional_diff, 743.87633380824832)
 
     def test_infinite_functions(self):
-
         def finf(x):
             return np.inf * np.ones_like(x)
 
@@ -145,23 +127,22 @@ class TestDerivative(object):
     @staticmethod
     def test_high_order_derivative_cos():
         true_vals = (0.0, -1.0, 0.0, 1.0, 0.0, -1.0, 0.0)
-        methods = ['complex', 'multicomplex', 'central', 'forward', 'backward']
+        methods = ["complex", "multicomplex", "central", "forward", "backward"]
         for method in methods:
-            n_max = dict(multicomplex=2, central=6).get(method, 5)
+            n_max = {"multicomplex": 2, "central": 6}.get(method, 5)
             for n in range(0, n_max + 1):
                 true_val = true_vals[n]
                 for order in range(2, 9, 2):
-                    d3cos = nd.Derivative(np.cos, n=n, order=order,
-                                          method=method, full_output=True)
+                    d3cos = nd.Derivative(np.cos, n=n, order=order, method=method, full_output=True)
                     y, _info = d3cos(np.pi / 2.0)
                     # _error = np.abs(y - true_val)
-#                 small = error <= info.error_estimate
-#                 if not small:
-#                     small = error < 10**(-12 + n)
-#                 if not small:
-#                     print('method=%s, n=%d, order=%d' % (method, n, order))
-#                     print(error, info.error_estimate)
-#                 self.assertTrue(small)
+                    #                 small = error <= info.error_estimate
+                    #                 if not small:
+                    #                     small = error < 10**(-12 + n)
+                    #                 if not small:
+                    #                     print('method=%s, n=%d, order=%d' % (method, n, order))
+                    #                     print(error, info.error_estimate)
+                    #                 self.assertTrue(small)
                     assert_allclose(y, true_val, atol=1e-4)
         # self.assert_(False)
 
@@ -172,34 +153,34 @@ class TestDerivative(object):
     @example(8.9428143931508)
     @example(2.2204460492503134e-14)
     def test_derivative_of_cos_x(x):
-        note('x = {}'.format(x))
-        msg = 'order = {}, error = {}, err_est = {}'
+        note("x = {}".format(x))
+        msg = "order = {}, error = {}, err_est = {}"
         true_vals = (-np.sin(x), -np.cos(x), np.sin(x), np.cos(x)) * 2
-        for method in ['complex', 'central', 'forward', 'backward']:
-            note('method = {}'.format(method))
-            n_max = dict(complex=7, central=6).get(method, 4)
+        for method in ["complex", "central", "forward", "backward"]:
+            note("method = {}".format(method))
+            n_max = {"complex": 7, "central": 6}.get(method, 4)
             for n in range(1, n_max + 1):
                 true_val = true_vals[n - 1]
-                start, stop, step = dict(central=(2, 7, 2),
-                                         complex=(2, 3, 1)).get(method,
-                                                                (1, 5, 1))
-                note('n = {}, true_val = {}'.format(n, true_val))
+                start, stop, step = {"central": (2, 7, 2), "complex": (2, 3, 1)}.get(method, (1, 5, 1))
+                note("n = {}, true_val = {}".format(n, true_val))
                 for order in range(start, stop, step):
-                    d3cos = nd.Derivative(np.cos, n=n, order=order,
-                                          method=method, full_output=True)
+                    d3cos = nd.Derivative(np.cos, n=n, order=order, method=method, full_output=True)
                     y, _info = d3cos(x)
                     _error = np.abs(y - true_val)
                     aerr = 100 * _info.error_estimate + 1e-14
-#                     if aerr < 1e-14 and np.abs(true_val) < 1e-3:
-#                         aerr = 1e-8
+                    #                     if aerr < 1e-14 and np.abs(true_val) < 1e-3:
+                    #                         aerr = 1e-8
                     note(msg.format(order, _error, _info.error_estimate))
                     assert_allclose(y, true_val, rtol=1e-6, atol=aerr)
                     # assert_allclose(y, true_val, rtol=4)
 
     @staticmethod
     def test_default_scale():
-        for method, scale in zip(['complex', 'central', 'forward', 'backward', 'multicomplex'],
-                                 [1.06, 2.5, 2.5, 2.5, 1.06]):
+        for method, scale in zip(
+            ["complex", "central", "forward", "backward", "multicomplex"],
+            [1.06, 2.5, 2.5, 2.5, 1.06],
+            strict=False,
+        ):
             assert_allclose(scale, default_scale(method, n=1))
 
     @staticmethod
@@ -209,7 +190,7 @@ class TestDerivative(object):
         def func(x, a, b=1):
             return b * a * x * x * x
 
-        methods = ['forward', 'backward', 'central', 'complex', 'multicomplex']
+        methods = ["forward", "backward", "central", "complex", "multicomplex"]
         dfuns = [nd.Gradient, nd.Derivative, nd.Jacobian, nd.Hessdiag, nd.Hessian]
         truths = {nd.Hessdiag: 12, nd.Hessian: 12}
         for dfun in dfuns:
@@ -224,13 +205,12 @@ class TestDerivative(object):
 
     @staticmethod
     def test_derivative_with_step_options():
-
         def func(x, a, b=1):
             return b * a * x * x * x
 
-        methods = ['forward', 'backward', 'central', 'complex', 'multicomplex']
+        methods = ["forward", "backward", "central", "complex", "multicomplex"]
         dfuns = [nd.Gradient, nd.Derivative, nd.Jacobian, nd.Hessdiag, nd.Hessian]
-        step_options = dict(num_extrap=5)
+        step_options = {"num_extrap": 5}
         for dfun in dfuns:
             for method in methods:
                 df = dfun(func, method=method, **step_options)
@@ -248,9 +228,9 @@ class TestDerivative(object):
         shape = (3, 2)
         x = np.ones(shape) * 2
         dx = dcube(x)
-        assert_allclose(list(dx.shape), list(shape), err_msg='Shape mismatch')
-        txt = 'First differing element %d\n value = %g,\n true value = %g'
-        for i, (val, tval) in enumerate(zip(dx.ravel(), (3 * x ** 2).ravel())):
+        assert_allclose(list(dx.shape), list(shape), err_msg="Shape mismatch")
+        txt = "First differing element %d\n value = %g,\n true value = %g"
+        for i, (val, tval) in enumerate(zip(dx.ravel(), (3 * x**2).ravel(), strict=False)):
             assert_allclose(val, tval, rtol=1e-8, err_msg=txt % (i, val, tval))
 
     @staticmethod
@@ -264,55 +244,52 @@ class TestDerivative(object):
         # Evaluate the indicated (default = first)
         # derivative at multiple points
         dsin = nd.Derivative(np.sin)
-        x = np.linspace(0, 2. * np.pi, 13)
+        x = np.linspace(0, 2.0 * np.pi, 13)
         y = dsin(x)
         assert_allclose(y, np.cos(x), atol=1e-8)
 
     def test_backward_derivative_on_sinh(self):
         # Compute the derivative of a function using a backward difference
         # scheme.  A backward scheme will only look below x0.
-        dsinh = nd.Derivative(np.sinh, method='backward')
+        dsinh = nd.Derivative(np.sinh, method="backward")
         assert_allclose(dsinh(0.0), np.cosh(0.0))
 
     def test_central_and_forward_derivative_on_log(self):
         # Although a central rule may put some samples in the wrong places, it
         # may still succeed
         epsilon = nd.MinStepGenerator(num_steps=15, offset=0, step_ratio=2)
-        dlog = nd.Derivative(np.log, method='central', step=epsilon)
+        dlog = nd.Derivative(np.log, method="central", step=epsilon)
         x = 0.001
         assert_allclose(dlog(x), 1.0 / x)
 
         # But forcing the use of a one-sided rule may be smart anyway
-        dlog = nd.Derivative(np.log, method='forward', step=epsilon)
+        dlog = nd.Derivative(np.log, method="forward", step=epsilon)
         assert_allclose(dlog(x), 1 / x)
 
 
 class TestJacobian(object):
-
     @staticmethod
     @given(st.floats(min_value=-1000, max_value=1000))
     def test_scalar_to_vector(val):
-
         def fun(x):
-            return np.array([x, x ** 2, x ** 3]).ravel()
+            return np.array([x, x**2, x**3]).ravel()
 
-        truth = np.array([[1.], [2 * val], [3 * val ** 2]])
-        for method in ['multicomplex', 'complex', 'central', 'forward', 'backward']:
+        truth = np.array([[1.0], [2 * val], [3 * val**2]])
+        for method in ["multicomplex", "complex", "central", "forward", "backward"]:
             j0, info = nd.Jacobian(fun, method=method, full_output=True)(val)
             error = np.abs(j0 - truth)
-            note('method={}, error={}, error_est={}'.format(method, error, info.error_estimate))
+            note("method={}, error={}, error_est={}".format(method, error, info.error_estimate))
             assert_allclose(j0, truth, rtol=1e-3, atol=1e-6)
 
     @staticmethod
     def test_on_scalar_function():
-
         def fun(x):
             return x[0] * x[1] * x[2] + np.exp(x[0]) * x[1]
 
-        for method in ['complex', 'central', 'forward', 'backward']:
+        for method in ["complex", "central", "forward", "backward"]:
             j_fun = nd.Jacobian(fun, method=method)
-            x = j_fun([3., 5., 7.])
-            assert_allclose(x, [[135.42768462, 41.08553692, 15.]])
+            x = j_fun([3.0, 5.0, 7.0])
+            assert_allclose(x, [[135.42768462, 41.08553692, 15.0]])
 
     @staticmethod
     def test_on_vector_valued_function():
@@ -322,7 +299,7 @@ class TestJacobian(object):
         def fun(c):
             return (c[0] + c[1] * np.exp(c[2] * xdata) - ydata) ** 2
 
-        for method in ['complex', 'central', 'forward', 'backward']:
+        for method in ["complex", "central", "forward", "backward"]:
             for order in [2, 4]:
                 j_fun = nd.Jacobian(fun, method=method, order=order)
                 j_val = j_fun([1, 2, 0.75])  # should be numerically zero
@@ -330,7 +307,6 @@ class TestJacobian(object):
 
     @staticmethod
     def test_on_matrix_valued_function():
-
         def fun(x):
             x = np.atleast_1d(x)
             f0 = x[0] ** 2 + x[1] ** 2
@@ -353,10 +329,8 @@ class TestJacobian(object):
             return np.array([df0, df1]).squeeze()
 
         jaca = nd.Jacobian(fun)
-        assert_allclose(jaca([1, 2]), [[2., 4.],
-                                       [3., 12.]])
-        assert_allclose(jaca([3, 4]), [[6., 8.],
-                                       [27., 48.]])
+        assert_allclose(jaca([1, 2]), [[2.0, 4.0], [3.0, 12.0]])
+        assert_allclose(jaca([3, 4]), [[6.0, 8.0], [27.0, 48.0]])
         assert_allclose(jaca([1, 2]), dfun([1, 2]))
         assert_allclose(jaca([3, 4]), dfun([3, 4]))
 
@@ -364,29 +338,26 @@ class TestJacobian(object):
         # print(v0)
         tval0 = dfun([[1, 2], [3, 4]])
         print(tval0)
-        assert_allclose(tval0, [[[2., 4.],
-                                 [6., 8.]],
-                                [[3., 12.],
-                                 [27., 48.]]])
+        assert_allclose(tval0, [[[2.0, 4.0], [6.0, 8.0]], [[3.0, 12.0], [27.0, 48.0]]])
         assert_allclose(v0, tval0)
 
-        x = np.array([(1, 2, 3, 4),
-                      (5, 6, 7, 8)], dtype=float)
+        x = np.array([(1, 2, 3, 4), (5, 6, 7, 8)], dtype=float)
 
         y = fun(x)
-        assert_allclose(y, [[26., 40., 58., 80.],
-                            [126., 224., 370., 576.]])
+        assert_allclose(y, [[26.0, 40.0, 58.0, 80.0], [126.0, 224.0, 370.0, 576.0]])
         tval = dfun(x)
-        assert_allclose(tval, [[[2., 4., 6., 8.],
-                                [10., 12., 14., 16.]],
-                               [[3., 12., 27., 48.],
-                                [75., 108., 147., 192.]]])
+        assert_allclose(
+            tval,
+            [
+                [[2.0, 4.0, 6.0, 8.0], [10.0, 12.0, 14.0, 16.0]],
+                [[3.0, 12.0, 27.0, 48.0], [75.0, 108.0, 147.0, 192.0]],
+            ],
+        )
         val = jaca(x)
         assert_allclose(val, tval)
 
     @staticmethod
     def test_issue_25():
-
         def g_fun(x):
             out = np.zeros((2, 2))
             out[0] = x
@@ -394,25 +365,17 @@ class TestJacobian(object):
             return out
 
         dg_dx = nd.Jacobian(g_fun)
-        x = np.array([1., 2.])
+        x = np.array([1.0, 2.0])
 
         dg = dg_dx(x)
-        assert_allclose(dg, [[[1., 0.],
-                              [0., 1.]],
-                             [[1., 0.],
-                              [0., 1.]]])
+        assert_allclose(dg, [[[1.0, 0.0], [0.0, 1.0]], [[1.0, 0.0], [0.0, 1.0]]])
 
         def fun3(x):
             return np.vstack((x[0] * x[1] * x[2] ** 2, x[0] * x[1] * x[2]))
 
         jfun3 = nd.Jacobian(fun3)
-        x = np.array([[1., 2., 3.], [4., 5., 6.]]).T
-        tv = [[[18., 180.],
-               [9., 144.],
-               [12., 240.]],
-              [[6., 30.],
-               [3., 24.],
-               [2., 20.]]]
+        x = np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]]).T
+        tv = [[[18.0, 180.0], [9.0, 144.0], [12.0, 240.0]], [[6.0, 30.0], [3.0, 24.0], [2.0, 20.0]]]
         assert_allclose(jfun3(x), tv)
 
     @staticmethod
@@ -421,9 +384,8 @@ class TestJacobian(object):
         """Test for memory-error"""
         n = 500
         x = np.ones(n)
-        for method in ['complex', 'central', 'forward', 'backward']:
-            assert_allclose(nd.Jacobian(lambda x: x ** 2, method=method)(x),
-                            2 * np.diag(np.ones(n)))
+        for method in ["complex", "central", "forward", "backward"]:
+            assert_allclose(nd.Jacobian(lambda x: x**2, method=method)(x), 2 * np.diag(np.ones(n)))
 
     @staticmethod
     @pytest.mark.slow
@@ -431,12 +393,11 @@ class TestJacobian(object):
         """Test for memory-error"""
         n = 1000
         x = np.ones(n)
-        assert_allclose(nd.Jacobian(lambda x: x ** 2, method='complex')(x),
-                        2 * np.diag(np.ones(n)))
+        assert_allclose(nd.Jacobian(lambda x: x**2, method="complex")(x), 2 * np.diag(np.ones(n)))
 
     @staticmethod
     def test_jacobian_fulloutput():
-        """test """
+        """test"""
         res, info = nd.Jacobian(lambda x, y: x + y, full_output=True)(1, 3)
         assert_allclose(res, 1)
         assert info.error_estimate < 1e-13
@@ -446,13 +407,12 @@ class TestJacobian(object):
 
 
 class TestGradient(object):
-
     @staticmethod
     def test_issue_39():
         """
         Test that checks float/Bicomplex works
         """
-        fun = nd.Gradient(lambda x: 1.0/(np.exp(x[0]) + np.cos(x[1]) + 10), method="multicomplex")
+        fun = nd.Gradient(lambda x: 1.0 / (np.exp(x[0]) + np.cos(x[1]) + 10), method="multicomplex")
         assert_allclose(fun([1.0, 2.0]), [-0.017961123762187736, 0.0060082083648822])
 
     @staticmethod
@@ -481,13 +441,12 @@ class TestGradient(object):
 
     @staticmethod
     def test_gradient():
-
         def fun(x):
-            return np.sum(x ** 2)
+            return np.sum(x**2)
 
-        dtrue = [2., 4., 6.]
+        dtrue = [2.0, 4.0, 6.0]
 
-        for method in ['multicomplex', 'complex', 'central', 'backward', 'forward']:
+        for method in ["multicomplex", "complex", "central", "backward", "forward"]:
             for order in [2, 4]:
                 dfun = nd.Gradient(fun, method=method, order=order)
                 d = dfun([1, 2, 3])
@@ -495,7 +454,6 @@ class TestGradient(object):
 
 
 class TestHessdiag(object):
-
     @staticmethod
     def _fun(x):
         return x[0] + x[1] ** 2 + x[2] ** 3
@@ -505,15 +463,11 @@ class TestHessdiag(object):
         return 0, 2, 6 * x[2]
 
     def test_complex(self):
-
-        htrue = np.array([0., 2., 18.])
-        method = 'complex'
+        htrue = np.array([0.0, 2.0, 18.0])
+        method = "complex"
         for num_steps in range(3, 7, 1):
-            steps = nd.MinStepGenerator(num_steps=num_steps,
-                                        use_exact_steps=True,
-                                        step_ratio=2.0, offset=4)
-            h_fun = nd.Hessdiag(self._fun, step=steps, method=method,
-                                full_output=True)
+            steps = nd.MinStepGenerator(num_steps=num_steps, use_exact_steps=True, step_ratio=2.0, offset=4)
+            h_fun = nd.Hessdiag(self._fun, step=steps, method=method, full_output=True)
             h_val, _info = h_fun([1, 2, 3])
 
             assert_allclose(h_val, htrue)
@@ -528,45 +482,37 @@ class TestHessdiag(object):
     @example((0.0, 19.945812226807096, 54.11322414875562))
     def test_fixed_step(self, vals):
         htrue = self._hfun(vals)
-        methods = ['central2', 'central', 'multicomplex', 'complex', 'forward', 'backward']
+        methods = ["central2", "central", "multicomplex", "complex", "forward", "backward"]
         for order in range(2, 7, 2):
-            steps = nd.MinStepGenerator(num_steps=order + 1,
-                                        use_exact_steps=True,
-                                        step_ratio=3., offset=0)
-            note('order = {}'.format(order))
+            steps = nd.MinStepGenerator(num_steps=order + 1, use_exact_steps=True, step_ratio=3.0, offset=0)
+            note("order = {}".format(order))
             for method in methods:
-                h_fun = nd.Hessdiag(self._fun, step=steps, method=method,
-                                    order=order, full_output=True)
+                h_fun = nd.Hessdiag(self._fun, step=steps, method=method, order=order, full_output=True)
                 h_val, _info = h_fun(vals)
                 _error = np.abs(h_val - htrue)
-                note('error = {}, error_est = {}'.format(_error,
-                                                         _info.error_estimate))
+                note("error = {}, error_est = {}".format(_error, _info.error_estimate))
                 assert_allclose(h_val, htrue, rtol=1e-5, atol=100 * max(_info.error_estimate))
 
     def test_default_step(self):
-        htrue = np.array([0., 2., 18.])
-        methods = ['central2', 'central', 'multicomplex', 'complex', 'forward',
-                   'backward']
+        htrue = np.array([0.0, 2.0, 18.0])
+        methods = ["central2", "central", "multicomplex", "complex", "forward", "backward"]
         for order in range(2, 7, 2):
             for method in methods:
-                h_fun = nd.Hessdiag(self._fun, method=method, order=order,
-                                    full_output=True)
+                h_fun = nd.Hessdiag(self._fun, method=method, order=order, full_output=True)
                 h_val, _info = h_fun([1, 2, 3])
                 tol = min(1e-8, _info.error_estimate.max())
                 assert_allclose(h_val, htrue, atol=tol)
 
 
 class TestHessian(object):
-
     def test_run_hamiltonian(self):
         # Important to restrict the step in order to avoid the
         # discontinutiy at x=[0,0] of the hamiltonian
 
-        for method in ['central', 'complex']:
+        for method in ["central", "complex"]:
             step = nd.MaxStepGenerator(base_step=1e-4)
             hessian = nd.Hessian(None, step=step, method=method)
-            h, _error_estimate, true_h = run_hamiltonian(hessian,
-                                                         verbose=False)
+            h, _error_estimate, true_h = run_hamiltonian(hessian, verbose=False)
             assert (np.abs((h - true_h) / true_h) < 1e-4).all()
 
     def test_complex_hessian_issue_35(self):
@@ -575,20 +521,18 @@ class TestHessian(object):
         def foo(x):
             return 1j * np.inner(x, x)
 
-        for method in ['multicomplex', 'complex', 'central', 'central2', 'forward', 'backward']:
+        for method in ["multicomplex", "complex", "central", "central2", "forward", "backward"]:
             for offset in [0, 1j]:  # testing real and complex argument
                 print(method)
                 x = np.random.randn(3) + offset
                 hessn = nd.Hessian(foo, method=method)
-                if method.endswith('complex'):
+                if method.endswith("complex"):
                     with pytest.raises(ValueError):
                         hessn(x)
                 else:
                     val = hessn(x)
 
-                    assert_allclose(val, [[2j, 0j, 0j],
-                                          [0j, 2j, 0j],
-                                          [0j, 0j, 2j]], atol=1e-11)
+                    assert_allclose(val, [[2j, 0j, 0j], [0j, 2j, 0j], [0j, 0j, 2j]], atol=1e-11)
 
     @staticmethod
     def test_hessian_cos_x_y_at_0_0():
@@ -597,14 +541,12 @@ class TestHessian(object):
         def fun(xy):
             return np.cos(xy[0] - xy[1])
 
-        htrue = [[-1., 1.],
-                 [1., -1.]]
-        methods = ['multicomplex', 'complex', 'central', 'central2', 'forward', 'backward']
+        htrue = [[-1.0, 1.0], [1.0, -1.0]]
+        methods = ["multicomplex", "complex", "central", "central2", "forward", "backward"]
         for num_steps in [10, 1]:
             step = nd.MinStepGenerator(num_steps=num_steps)
             for method in methods:
-                h_fun = nd.Hessian(fun, method=method, step=step,
-                                   full_output=True)
+                h_fun = nd.Hessian(fun, method=method, step=step, full_output=True)
                 h_val, _info = h_fun([0, 0])
                 # print(method, (h_val-np.array(htrue)))
                 assert_allclose(h_val, htrue)
@@ -612,27 +554,22 @@ class TestHessian(object):
 
     @staticmethod
     def test_on_scalar_function():
-
         def fun(xyz):
             x, y, z = xyz[0], xyz[1], xyz[2]
             return x * y * z + np.exp(x) * y
 
         def ddfun(xyz):
             x, y, z = xyz[0], xyz[1], xyz[2]
-            return np.array([
-                [np.exp(x) * y, np.exp(x) + z, y],
-                [np.exp(x) + z, 0, x],
-                [y, x, 0]]).squeeze()
+            return np.array([[np.exp(x) * y, np.exp(x) + z, y], [np.exp(x) + z, 0, x], [y, x, 0]]).squeeze()
 
-        for method in ['complex', 'central', 'forward', 'backward']:
+        for method in ["complex", "central", "forward", "backward"]:
             h_fun = nd.Hessian(fun, method=method)
-            x = [3., 5., 7.]
+            x = [3.0, 5.0, 7.0]
             a, b = ddfun(x), h_fun(x)
             assert_allclose(a, b, atol=1e-4)
 
     @staticmethod
     def test_on_vector_valued_function():
-
         def fun(xy):
             x = np.atleast_1d(xy[0])
             y = np.atleast_1d(xy[1])
@@ -644,29 +581,21 @@ class TestHessian(object):
             x = np.atleast_1d(xy[0])
             y = np.atleast_1d(xy[1])
 
-            ddfdxdx0 = - y * y * np.cos(x * y)
-            ddfdxdx1 = - y * y * np.sin(x * y)
+            ddfdxdx0 = -y * y * np.cos(x * y)
+            ddfdxdx1 = -y * y * np.sin(x * y)
 
-            ddfdydy0 = - x * x * np.cos(x * y)
-            ddfdydy1 = - x * x * np.sin(x * y)
+            ddfdydy0 = -x * x * np.cos(x * y)
+            ddfdydy1 = -x * x * np.sin(x * y)
 
             ddfdxdy0 = -x * y * np.cos(x * y) - np.sin(x * y)
             ddfdxdy1 = np.cos(x * y) - x * y * np.sin(x * y)
 
-            return np.array([
-                [[ddfdxdx0, ddfdxdy0],
-                 [ddfdxdy0, ddfdydy0]],
-                [[ddfdxdx1, ddfdxdy1],
-                 [ddfdxdy1, ddfdydy1]]]).squeeze()
+            return np.array(
+                [[[ddfdxdx0, ddfdxdy0], [ddfdxdy0, ddfdydy0]], [[ddfdxdx1, ddfdxdy1], [ddfdxdy1, ddfdydy1]]]
+            ).squeeze()
 
-        for method in [
-                'complex',
-                'central',
-                'central2',
-                'forward',
-                'backward'
-                ]:
+        for method in ["complex", "central", "central2", "forward", "backward"]:
             h_fun = nd.Hessian(fun, method=method)
-            x = [3., 5.]
+            x = [3.0, 5.0]
             a, b = ddfun(x), h_fun(x)
             assert_allclose(a, b, atol=1e-4)

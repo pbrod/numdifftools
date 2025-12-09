@@ -1,15 +1,27 @@
 """
 Step generators module
 """
+
 from __future__ import absolute_import, division
+
 from collections import namedtuple
+
 import numpy as np
+
 from numdifftools.extrapolation import EPS
 
-_STATE = namedtuple('State', ['x', 'method', 'n', 'order'])
-__all__ = ('one_step', 'make_exact', 'get_nominal_step', 'get_base_step',
-           'default_scale', 'MinStepGenerator', 'MaxStepGenerator',
-           'BasicMaxStepGenerator', 'BasicMinStepGenerator')
+_STATE = namedtuple("State", ["x", "method", "n", "order"])
+__all__ = (
+    "one_step",
+    "make_exact",
+    "get_nominal_step",
+    "get_base_step",
+    "default_scale",
+    "MinStepGenerator",
+    "MaxStepGenerator",
+    "BasicMaxStepGenerator",
+    "BasicMinStepGenerator",
+)
 
 
 def make_exact(h):
@@ -30,27 +42,36 @@ def get_nominal_step(x=None):
 
 def get_base_step(scale):
     """Return base_step = EPS ** (1. / scale)"""
-    return EPS ** (1. / scale)
+    return EPS ** (1.0 / scale)
 
 
-def default_scale(method='forward', n=1, order=2):
+def default_scale(method="forward", n=1, order=2):
     """Returns good scale for MinStepGenerator"""
     high_order = int(n > 1 or order >= 4)
     order2 = max(order // 2 - 1, 0)
     n_4 = n // 4
     n_mod_4 = n % 4
-    c = ([n_4 * (10 + 1.5 * int(n > 10)),
-          3.65 + n_4 * (5 + 1.5 ** n_4),
-          3.65 + n_4 * (5 + 1.7 ** n_4),
-          7.30 + n_4 * (5 + 2.1 ** n_4)][n_mod_4]) if high_order else 0
+    c = (
+        (
+            [
+                n_4 * (10 + 1.5 * int(n > 10)),
+                3.65 + n_4 * (5 + 1.5**n_4),
+                3.65 + n_4 * (5 + 1.7**n_4),
+                7.30 + n_4 * (5 + 2.1**n_4),
+            ][n_mod_4]
+        )
+        if high_order
+        else 0
+    )
 
-    return (dict(multicomplex=1.06, complex=1.06 + c).get(method, 2.5) +
-            int(n - 1) * dict(multicomplex=0, complex=0.0).get(method, 1.3) +
-            order2 * dict(central=3, forward=2, backward=2).get(method, 0))
+    return (
+        {"multicomplex": 1.06, "complex": 1.06 + c}.get(method, 2.5)
+        + int(n - 1) * {"multicomplex": 0, "complex": 0.0}.get(method, 1.3)
+        + order2 * {"central": 3, "forward": 2, "backward": 2}.get(method, 0)
+    )
 
 
 class BasicMaxStepGenerator(object):
-
     """
     Generates a sequence of steps of decreasing magnitude
 
@@ -102,7 +123,6 @@ class BasicMaxStepGenerator(object):
 
 
 class BasicMinStepGenerator(BasicMaxStepGenerator):
-
     """
     Generates a sequence of steps of decreasing magnitude
 
@@ -138,7 +158,6 @@ class BasicMinStepGenerator(BasicMaxStepGenerator):
 
 
 class MinStepGenerator(object):
-
     """
     Generates a sequence of steps
 
@@ -175,8 +194,18 @@ class MinStepGenerator(object):
 
     _step_generator = BasicMinStepGenerator
 
-    def __init__(self, base_step=None, step_ratio=None, num_steps=None, step_nom=None,
-                 offset=0, num_extrap=0, use_exact_steps=True, check_num_steps=True, scale=None):
+    def __init__(
+        self,
+        base_step=None,
+        step_ratio=None,
+        num_steps=None,
+        step_nom=None,
+        offset=0,
+        num_extrap=0,
+        use_exact_steps=True,
+        check_num_steps=True,
+        scale=None,
+    ):
         self.base_step = base_step
         self.step_nom = step_nom
         self.num_steps = num_steps
@@ -187,12 +216,12 @@ class MinStepGenerator(object):
         self.use_exact_steps = use_exact_steps
         self.scale = scale
 
-        self._state = _STATE(x=np.asarray(1), method='forward', n=1, order=2)
+        self._state = _STATE(x=np.asarray(1), method="forward", n=1, order=2)
 
     def __repr__(self):
         class_name = self.__class__.__name__
-        kwds = ['{0!s}={1!s}'.format(name, str(getattr(self, name))) for name in self.__dict__]
-        return """{0!s}({1!s})""".format(class_name, ','.join(kwds))
+        kwds = ["{0!s}={1!s}".format(name, str(getattr(self, name))) for name in self.__dict__]
+        return """{0!s}({1!s})""".format(class_name, ",".join(kwds))
 
     @property
     def scale(self):
@@ -220,10 +249,7 @@ class MinStepGenerator(object):
     @staticmethod
     def _num_step_divisor(method, n, order):
         complex_divisior = 4 if (n > 1 or order >= 4) else 2
-        return dict(central=2,
-                    central2=2,
-                    complex=complex_divisior,
-                    multicomplex=2).get(method, 1)
+        return {"central": 2, "central2": 2, "complex": complex_divisior, "multicomplex": 2}.get(method, 1)
 
     @property
     def min_num_steps(self):
@@ -272,25 +298,23 @@ class MinStepGenerator(object):
     def step_nom(self, step_nom):
         self._step_nom = step_nom
 
-    def step_generator_function(self, x, method='forward', n=1, order=2):
+    def step_generator_function(self, x, method="forward", n=1, order=2):
         """Step generator function"""
         self._state = _STATE(np.asarray(x), method, n, order)
         base_step, step_ratio = self.base_step * self.step_nom, self.step_ratio
         if self.use_exact_steps:
             base_step = make_exact(base_step)
             step_ratio = make_exact(step_ratio)
-        return self._step_generator(base_step=base_step,
-                                    step_ratio=step_ratio,
-                                    num_steps=self.num_steps,
-                                    offset=self.offset)
+        return self._step_generator(
+            base_step=base_step, step_ratio=step_ratio, num_steps=self.num_steps, offset=self.offset
+        )
 
-    def __call__(self, x, method='forward', n=1, order=2):
+    def __call__(self, x, method="forward", n=1, order=2):
         step_generator = self.step_generator_function(x, method, n, order)
         return step_generator()
 
 
 class MaxStepGenerator(MinStepGenerator):
-
     """
     Generates a sequence of steps
 
@@ -327,19 +351,34 @@ class MaxStepGenerator(MinStepGenerator):
 
     _step_generator = BasicMaxStepGenerator
 
-    def __init__(self, base_step=2.0, step_ratio=None, num_steps=15,
-                 step_nom=None, offset=0, num_extrap=9,
-                 use_exact_steps=False, check_num_steps=True, scale=500):
-        super(MaxStepGenerator,
-              self).__init__(base_step=base_step, step_ratio=step_ratio,
-                             num_steps=num_steps, step_nom=step_nom,
-                             offset=offset, num_extrap=num_extrap,
-                             use_exact_steps=use_exact_steps,
-                             check_num_steps=check_num_steps, scale=scale)
+    def __init__(
+        self,
+        base_step=2.0,
+        step_ratio=None,
+        num_steps=15,
+        step_nom=None,
+        offset=0,
+        num_extrap=9,
+        use_exact_steps=False,
+        check_num_steps=True,
+        scale=500,
+    ):
+        super(MaxStepGenerator, self).__init__(
+            base_step=base_step,
+            step_ratio=step_ratio,
+            num_steps=num_steps,
+            step_nom=step_nom,
+            offset=offset,
+            num_extrap=num_extrap,
+            use_exact_steps=use_exact_steps,
+            check_num_steps=check_num_steps,
+            scale=scale,
+        )
 
 
 one_step = MinStepGenerator(num_steps=1, scale=None, step_nom=None)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from numdifftools.testing import test_docstrings
+
     test_docstrings()

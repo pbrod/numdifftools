@@ -1,28 +1,26 @@
 from __future__ import absolute_import, division
+
 from collections import namedtuple
+
 import numpy as np
 from scipy.special import factorial
+
 from numdifftools.extrapolation import EPS, dea3
 from numdifftools.limits import _Limit
 
-_INFO = namedtuple('info', ['error_estimate',
-                            'degenerate',
-                            'final_radius',
-                            'function_count',
-                            'iterations', 'failed'])
+_INFO = namedtuple(
+    "info", ["error_estimate", "degenerate", "final_radius", "function_count", "iterations", "failed"]
+)
 CENTRAL_WEIGHTS_AND_POINTS = {
-    (1, 3): (np.array([-1., 0, 1]) / 2.0, np.arange(-1, 2)),
-    (1, 5): (np.array([1., -8, 0, 8, -1]) / 12.0, np.arange(-2, 3)),
-    (1, 7): (np.array([-1., 9, -45, 0, 45, -9, 1]) / 60.0, np.arange(-3, 4)),
-    (1, 9): (np.array([3., -32, 168, -672, 0, 672, -168, 32, -3]) / 840.0,
-             np.arange(-4, 5)),
-    (2, 3): (np.array([1., -2.0, 1]), np.arange(-1, 2)),
-    (2, 5): (np.array([-1., 16, -30, 16, -1]) / 12.0, np.arange(-2, 3)),
-    (2, 7): (np.array([2., -27, 270, -490, 270, -27, 2]) / 180.0,
-             np.arange(-3, 4)),
-    (2, 9): (np.array([-9., 128, -1008, 8064, -14350,
-                       8064, -1008, 128, -9]) / 5040.0,
-             np.arange(-4, 5))}
+    (1, 3): (np.array([-1.0, 0, 1]) / 2.0, np.arange(-1, 2)),
+    (1, 5): (np.array([1.0, -8, 0, 8, -1]) / 12.0, np.arange(-2, 3)),
+    (1, 7): (np.array([-1.0, 9, -45, 0, 45, -9, 1]) / 60.0, np.arange(-3, 4)),
+    (1, 9): (np.array([3.0, -32, 168, -672, 0, 672, -168, 32, -3]) / 840.0, np.arange(-4, 5)),
+    (2, 3): (np.array([1.0, -2.0, 1]), np.arange(-1, 2)),
+    (2, 5): (np.array([-1.0, 16, -30, 16, -1]) / 12.0, np.arange(-2, 3)),
+    (2, 7): (np.array([2.0, -27, 270, -490, 270, -27, 2]) / 180.0, np.arange(-3, 4)),
+    (2, 9): (np.array([-9.0, 128, -1008, 8064, -14350, 8064, -1008, 128, -9]) / 5040.0, np.arange(-4, 5)),
+}
 
 
 def _assert(cond, msg):
@@ -68,7 +66,7 @@ def fd_weights_all(x, x0=0, n=1):
     http://www.scholarpedia.org/article/Finite_difference_method
     """
     m = len(x)
-    _assert(n < m, 'len(x) must be larger than n')
+    _assert(n < m, "len(x) must be larger than n")
 
     weights = np.zeros((m, n + 1))
     _fd_weights_all(weights, x, x0, n)
@@ -160,8 +158,8 @@ def fd_derivative(fx, x, n=1, m=2):
     fd_weights
     """
     num_x = len(x)
-    _assert(n < num_x, 'len(x) must be larger than n')
-    _assert(num_x == len(fx), 'len(x) must be equal len(fx)')
+    _assert(n < num_x, "len(x) must be larger than n")
+    _assert(num_x == len(fx), "len(x) must be equal len(fx)")
 
     du = np.zeros_like(fx)
 
@@ -174,8 +172,7 @@ def fd_derivative(fx, x, n=1, m=2):
 
     # interior points
     for i in range(mm, num_x - mm):
-        du[i] = np.dot(fd_weights(x[i - mm:i + mm + 1], x0=x[i], n=n),
-                       fx[i - mm:i + mm + 1])
+        du[i] = np.dot(fd_weights(x[i - mm : i + mm + 1], x0=x[i], n=n), fx[i - mm : i + mm + 1])
 
     return du
 
@@ -236,7 +233,7 @@ def _num_taylor_coefficients(n):
          128 if  51 < n <= 103
          256 if 103 < n <= 192
     """
-    _assert(n < 193, 'Number of derivatives too large.  Must be less than 193')
+    _assert(n < 193, "Number of derivatives too large.  Must be less than 193")
     correction = np.array([0, 0, 1, 3, 4, 7])[_get_logn(n)]
     log2n = _get_logn(n - correction)
     m = 2 ** (log2n + 3)
@@ -244,7 +241,7 @@ def _num_taylor_coefficients(n):
 
 
 def richardson_parameter(vals, k):
-    c = np.real((vals[k - 1] - vals[k - 2]) / (vals[k] - vals[k - 1])) - 1.
+    c = np.real((vals[k - 1] - vals[k - 2]) / (vals[k] - vals[k - 1])) - 1.0
     # The lower bound 0.07 admits the singularity x.^-0.9
     c = np.maximum(c, 0.07)
     return -c
@@ -269,8 +266,7 @@ def _extrapolate(bs, rs, m):
         extrap0.append(richardson(bs, k=k, c=1.0 - (rs[k - 1] / rs[k]) ** m))
 
     for k in range(1, nk - 1):
-        extrap.append(richardson(extrap0, k=k,
-                                 c=1.0 - (rs[k - 1] / rs[k + 1]) ** m))
+        extrap.append(richardson(extrap0, k=k, c=1.0 - (rs[k - 1] / rs[k + 1]) ** m))
     return extrap
 
 
@@ -306,7 +302,6 @@ def _check_fft(m1, m2, check_degenerate=True):
 
 
 class Taylor(object):
-
     """
     Return Taylor coefficients of complex analytic function using FFT
 
@@ -376,7 +371,7 @@ class Taylor(object):
     >>> c, info = ndf.Taylor(lambda x: 1./(1-x), n=6, full_output=True)(z0=0)
     >>> np.allclose(c, np.ones(8))
     True
-    >>> np.all(info.error_estimate < 1e-9)
+    >>> bool(np.all(info.error_estimate < 1e-9))
     True
     >>> (info.function_count, info.iterations, info.failed) == (136, 17, False)
     True
@@ -391,9 +386,9 @@ class Taylor(object):
 
     def __init__(self, fun, n=1, r=0.0059, num_extrap=3, step_ratio=1.6, **kwds):
         self.fun = fun
-        self.max_iter = kwds.pop('max_iter', 30)
-        self.min_iter = kwds.pop('min_iter', self.max_iter // 2)
-        self.full_output = kwds.pop('full_output', False)
+        self.max_iter = kwds.pop("max_iter", 30)
+        self.min_iter = kwds.pop("min_iter", self.max_iter // 2)
+        self.full_output = kwds.pop("full_output", False)
         self.n = n
         self.r = r
         self.num_extrap = num_extrap
@@ -420,8 +415,8 @@ class Taylor(object):
     def _get_m1_m2(self, bn, m):
         # If not degenerate, check for geometric progression in the FFT:
         bnc = bn / self._crat
-        m1 = np.max(np.abs(bnc[:m // 2]))
-        m2 = np.max(np.abs(bnc[m // 2:]))
+        m1 = np.max(np.abs(bnc[: m // 2]))
+        m2 = np.max(np.abs(bnc[m // 2 :]))
         return m1, m2
 
     def _check_convergence(self, i, z0, r, m, bn):
@@ -482,8 +477,9 @@ class Taylor(object):
         coefs, errors = _get_best_taylor_coefficients(bs, rs, m, lambda: self._get_max_m1m2(bn, m))
         if self.full_output:
             failed = not converged
-            info = _INFO(errors, self._degenerate, final_radius=r,
-                         function_count=i * m, iterations=i, failed=failed)
+            info = _INFO(
+                errors, self._degenerate, final_radius=r, function_count=i * m, iterations=i, failed=failed
+            )
             return coefs, info
         return coefs
 
@@ -558,7 +554,7 @@ def taylor(fun, z0=0, n=1, r=0.0059, num_extrap=3, step_ratio=1.6, **kwds):
     >>> c, info = ndf.taylor(lambda x: 1./(1-x), z0=0, n=6, full_output=True)
     >>> np.allclose(c, np.ones(8))
     True
-    >>> np.all(info.error_estimate < 1e-9)
+    >>> bool(np.all(info.error_estimate < 1e-9))
     True
     >>> (info.function_count, info.iterations, info.failed) == (136, 17, False)
     True
@@ -650,7 +646,7 @@ def derivative(fun, z0, n=1, **kwds):
     >>> c, info = ndf.derivative(fun, z0=0, n=6, full_output=True)
     >>> np.allclose(c, [1, 1, 2, 6, 24, 120, 720, 5040])
     True
-    >>> np.all(info.error_estimate < 1e-9*c.real)
+    >>> bool(np.all(info.error_estimate < 1e-9*c.real))
     True
     >>> (info.function_count, info.iterations, info.failed) == (136, 17, False)
     True
@@ -667,13 +663,14 @@ def derivative(fun, z0, n=1, **kwds):
     # convert taylor series --> actual derivatives.
     m = _num_taylor_coefficients(n)
     fact = factorial(np.arange(m))
-    if kwds.get('full_output'):
+    if kwds.get("full_output"):
         coefs, info_ = result
         info = _INFO(info_.error_estimate * fact, *info_[1:])
         return coefs * fact, info
     return result * fact
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from numdifftools.testing import test_docstrings
+
     test_docstrings()

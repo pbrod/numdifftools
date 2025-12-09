@@ -1,11 +1,15 @@
 """
 Finite difference methods module.
 """
+
 from __future__ import absolute_import, division, print_function
+
 import warnings
+
 import numpy as np
 from numpy import linalg
 from scipy import special
+
 from numdifftools.extrapolation import convolve
 from numdifftools.multicomplex import Bicomplex
 
@@ -51,6 +55,7 @@ class DifferenceFunctions(object):
     -----
     The d
     """
+
     # pylint: disable=unused-argument
     @staticmethod
     def _central_even(f, f_x0i, x0i, h):
@@ -75,7 +80,7 @@ class DifferenceFunctions(object):
     @staticmethod
     def _complex_odd(f, f_x, x, h):
         i_h = h * _SQRT_J
-        return ((_SQRT_J / 2.) * (f(x + i_h) - f(x - i_h))).imag
+        return ((_SQRT_J / 2.0) * (f(x + i_h) - f(x - i_h))).imag
 
     @staticmethod
     def _complex_odd_higher(f, f_x, x, h):
@@ -105,6 +110,7 @@ class DifferenceFunctions(object):
 
 class JacobianDifferenceFunctions(object):
     """Class defining Jacobian difference functions"""
+
     # pylint: disable=unused-argument
     @staticmethod
     def increments(n, h):
@@ -150,14 +156,14 @@ class JacobianDifferenceFunctions(object):
         n = len(x)
         j_1 = _SQRT_J
         steps = JacobianDifferenceFunctions.increments(n, h)
-        return np.array([(f(x + j_1*ih) + f(x - j_1*ih)).imag for ih in steps])
+        return np.array([(f(x + j_1 * ih) + f(x - j_1 * ih)).imag for ih in steps])
 
     @staticmethod
     def _complex_odd(f, f_x, x, h):
         n = len(x)
         j_1 = _SQRT_J
         steps = JacobianDifferenceFunctions.increments(n, h)
-        return np.array([((j_1 / 2.) * (f(x + j_1 * ih) - f(x - j_1 * ih))).imag for ih in steps])
+        return np.array([((j_1 / 2.0) * (f(x + j_1 * ih) - f(x - j_1 * ih))).imag for ih in steps])
 
     @staticmethod
     def _multicomplex(f, f_x, x, h):
@@ -176,15 +182,17 @@ class HessdiagDifferenceFunctions(object):
     Ridout, M.S. (2009) Statistical applications of the complex-step method
         of numerical differentiation. The American Statistician, 63, 66-74
     """
+
     # pylint: disable=unused-argument
     @staticmethod
     def _central2(f, f_x, x, h):
         """Eq. 8 in Ridout (2009)."""
         n = len(x)
         increments = np.identity(n) * h
-        partials = [(f(x + 2 * hi) + f(x - 2 * hi)
-                     + 2 * f_x - 2 * f(x + hi) - 2 * f(x - hi)) / 4.0
-                    for hi in increments]
+        partials = [
+            (f(x + 2 * hi) + f(x - 2 * hi) + 2 * f_x - 2 * f(x + hi) - 2 * f(x - hi)) / 4.0
+            for hi in increments
+        ]
         return np.array(partials)
 
     @staticmethod
@@ -214,8 +222,7 @@ class HessdiagDifferenceFunctions(object):
         n = len(x)
         increments = np.identity(n) * h
         cmplx_wrap = Bicomplex.__array_wrap__
-        partials = [cmplx_wrap(f(Bicomplex(x + 1j * hi, hi))).imag12
-                    for hi in increments]
+        partials = [cmplx_wrap(f(Bicomplex(x + 1j * hi, hi))).imag12 for hi in increments]
         return np.array(partials)
 
     @staticmethod
@@ -235,6 +242,7 @@ class HessianDifferenceFunctions(object):
     "Statistical applications of the complex-step method of numerical differentiation",
     The American Statistician, 63, 66-74
     """
+
     # pylint: disable=unused-argument
     @staticmethod
     def _complex_even(f, f_x, x, h):
@@ -245,16 +253,15 @@ class HessianDifferenceFunctions(object):
 
         Eq 10 in Ridout (2009).
         """
-        n = len(x)                  # Number of variables
-        s = np.array(f_x).shape     # Shape of function result
+        n = len(x)  # Number of variables
+        s = np.array(f_x).shape  # Shape of function result
         eee = np.diag(h)
         dtype = np.result_type(f_x, float)  # make sure it is at least float64
         hess = np.empty(s + (n, n), dtype=dtype)
-        sss = 2. * np.outer(h, h)
+        sss = 2.0 * np.outer(h, h)
         for i in range(n):
             for j in range(i, n):
-                hess[..., i, j] = (f(x + 1j * eee[i] + eee[j])
-                                   - f(x + 1j * eee[i] - eee[j])).imag / sss[j, i]
+                hess[..., i, j] = (f(x + 1j * eee[i] + eee[j]) - f(x + 1j * eee[i] - eee[j])).imag / sss[j, i]
                 hess[..., j, i] = hess[..., i, j]
         return hess
 
@@ -263,7 +270,7 @@ class HessianDifferenceFunctions(object):
         """Calculate Hessian with Bicomplex-step derivative approximation"""
         n = len(x)
         eee = np.diag(h)
-        s = np.array(f_x).shape     # Shape of function result
+        s = np.array(f_x).shape  # Shape of function result
         dtype = np.result_type(f_x, float)  # make sure it is at least float64
         hess = np.empty(s + (n, n), dtype=dtype)
         sss = np.outer(h, h)
@@ -278,27 +285,28 @@ class HessianDifferenceFunctions(object):
     @staticmethod
     def _central_even(f, f_x, x, h):
         """Eq 9 in Ridout (2009)."""
-        n = len(x)                  # Number of variables
-        s = np.array(f_x).shape     # Shape of function result
+        n = len(x)  # Number of variables
+        s = np.array(f_x).shape  # Shape of function result
         eee = np.diag(h)
         dtype = np.result_type(f_x, float)  # make sure it is at least float64
         hess = np.empty(s + (n, n), dtype=dtype)
         sss = np.outer(h, h)
         for i in range(n):
             e_i = eee[i, :]
-            hess[..., i, i] = (f(x + 2 * e_i) - 2 * f_x + f(x - 2 * e_i)) / (4. * sss[i, i])
+            hess[..., i, i] = (f(x + 2 * e_i) - 2 * f_x + f(x - 2 * e_i)) / (4.0 * sss[i, i])
             for j in range(i + 1, n):
                 e_j = eee[j, :]
-                hess[..., i, j] = (f(x + e_i + e_j) - f(x + e_i - e_j)
-                                   - f(x - e_i + e_j) + f(x - e_i - e_j)) / (4. * sss[j, i])
+                hess[..., i, j] = (
+                    f(x + e_i + e_j) - f(x + e_i - e_j) - f(x - e_i + e_j) + f(x - e_i - e_j)
+                ) / (4.0 * sss[j, i])
                 hess[..., j, i] = hess[..., i, j]
         return hess
 
     @staticmethod
     def _central2(f, f_x, x, h):
         """Eq. 8 in Ridout (2009)"""
-        n = len(x)                  # Number of variables
-        s = np.array(f_x).shape     # Shape of function result
+        n = len(x)  # Number of variables
+        s = np.array(f_x).shape  # Shape of function result
         eee = np.diag(h)
         dtype = np.result_type(f_x, float)
         f_xpe = np.empty(s + (n,), dtype=dtype)
@@ -311,18 +319,24 @@ class HessianDifferenceFunctions(object):
         sss = np.outer(h, h)
         for i in range(n):
             for j in range(i, n):
-                hess[..., i, j] = (f(x + eee[i, :] + eee[j, :])
-                                   + f(x - eee[i, :] - eee[j, :])
-                                   - f_xpe[..., i] - f_xpe[..., j] + f_x
-                                   - f_xme[..., i] - f_xme[..., j] + f_x) / (2 * sss[j, i])
+                hess[..., i, j] = (
+                    f(x + eee[i, :] + eee[j, :])
+                    + f(x - eee[i, :] - eee[j, :])
+                    - f_xpe[..., i]
+                    - f_xpe[..., j]
+                    + f_x
+                    - f_xme[..., i]
+                    - f_xme[..., j]
+                    + f_x
+                ) / (2 * sss[j, i])
                 hess[..., j, i] = hess[..., i, j]
         return hess
 
     @staticmethod
     def _forward(f, f_x, x, h):
         """Eq. 7 in Ridout (2009)"""
-        n = len(x)                  # Number of variables
-        s = np.array(f_x).shape     # Shape of function result
+        n = len(x)  # Number of variables
+        s = np.array(f_x).shape  # Shape of function result
         eee = np.diag(h)
         dtype = np.result_type(f_x, float)
         g = np.empty(s + (n,), dtype=dtype)
@@ -391,14 +405,15 @@ class LogRule(object):
     True
 
     """
+
     _difference_functions = DifferenceFunctions()
 
-    def __init__(self, n=1, method='central', order=2):
+    def __init__(self, n=1, method="central", order=2):
         self.n = n
         self.method = method
         self.order = order
 
-# --- properties ---
+    # --- properties ---
 
     @property
     def _odd_derivative(self):
@@ -420,22 +435,22 @@ class LogRule(object):
     def eval_first_condition(self):
         """True if f(x0) needs to be evaluated given the differentiation method."""
         even_derivative = self._even_derivative
-        return ((even_derivative and self.method in ('central', 'central2')) or
-                self.method in ['forward', 'backward'] or
-                self.method == 'complex' and self._derivative_mod_four_is_zero)
+        return (
+            (even_derivative and self.method in ("central", "central2"))
+            or self.method in ["forward", "backward"]
+            or self.method == "complex"
+            and self._derivative_mod_four_is_zero
+        )
 
     @property
     def _complex_high_order(self):
-        return self.method == 'complex' and (self.n > 1 or self.order >= 4)
+        return self.method == "complex" and (self.n > 1 or self.order >= 4)
 
     @property
     def richardson_step(self):
         """The step between exponents in the error polynomial of the Richardson extrapolation."""
         complex_step = 4 if self._complex_high_order else 2
-        return dict(central=2,
-                    central2=2,
-                    complex=complex_step,
-                    multicomplex=2).get(self.method, 1)
+        return {"central": 2, "central2": 2, "complex": complex_step, "multicomplex": 2}.get(self.method, 1)
 
     @property
     def method_order(self):
@@ -448,15 +463,17 @@ class LogRule(object):
     def _parity_complex(self, order, method_order):
         if self.n == 1 and method_order < 4:
             return (order % 2) + 1
-        return (3
-                + 2 * int(self._odd_derivative)
-                + int(self._derivative_mod_four_is_three)
-                + int(self._derivative_mod_four_is_zero))
+        return (
+            3
+            + 2 * int(self._odd_derivative)
+            + int(self._derivative_mod_four_is_three)
+            + int(self._derivative_mod_four_is_zero)
+        )
 
     def _parity(self, method, order, method_order):
-        if method.startswith('central'):
+        if method.startswith("central"):
             return (order % 2) + 1
-        if method == 'complex':
+        if method == "complex":
             return self._parity_complex(order, method_order)
         return 0
 
@@ -480,8 +497,7 @@ class LogRule(object):
         nterms : scalar, integer
             number of terms
         """
-        _assert(0 <= parity <= 6,
-                'Parity must be 0, 1, 2, 3, 4, 5 or 6! ({0:d})'.format(parity))
+        _assert(0 <= parity <= 6, "Parity must be 0, 1, 2, 3, 4, 5 or 6! ({0:d})".format(parity))
         step = [1, 2, 2, 4, 4, 4, 4][parity]
         inv_sr = 1.0 / step_ratio
         offset = [1, 1, 2, 2, 4, 1, 3][parity]
@@ -492,36 +508,39 @@ class LogRule(object):
 
     @property
     def _flip_fd_rule(self):
-        return ((self._even_derivative and (self.method == 'backward'))
-                or (self.method == 'complex' and (self.n % 8 in [3, 4, 5, 6])))
+        return (self._even_derivative and (self.method == "backward")) or (
+            self.method == "complex" and (self.n % 8 in [3, 4, 5, 6])
+        )
 
     @property
     def _multicomplex_middle_name(self):
-        if self.method == 'multicomplex' and self.n > 1:
-            _assert(self.n <= 2, 'Multicomplex method only support first '
-                    'and second order derivatives.')
-            return '2'
-        return ''
+        if self.method == "multicomplex" and self.n > 1:
+            _assert(self.n <= 2, "Multicomplex method only support first and second order derivatives.")
+            return "2"
+        return ""
 
     def _get_middle_name(self):
-        if self._even_derivative and self.method in ('central', 'complex'):
-            return '_even'
+        if self._even_derivative and self.method in ("central", "complex"):
+            return "_even"
         if self._complex_high_order and self._odd_derivative:
-            return '_odd'
+            return "_odd"
         return self._multicomplex_middle_name
 
     def _get_last_name(self):
-        last = ''
-        if (self.method == 'complex' and self._derivative_mod_four_is_zero or
-                self._complex_high_order and
-                self._derivative_mod_four_is_three):
-            last = '_higher'
+        last = ""
+        if (
+            self.method == "complex"
+            and self._derivative_mod_four_is_zero
+            or self._complex_high_order
+            and self._derivative_mod_four_is_three
+        ):
+            last = "_higher"
         return last
 
     @property
     def diff(self):
         "The difference function"
-        first = '_{0!s}'.format(self.method)
+        first = "_{0!s}".format(self.method)
         middle = self._get_middle_name()
         last = self._get_last_name()
         name = first + middle + last
@@ -549,7 +568,7 @@ class LogRule(object):
         method
         """
         method = self.method
-        if method in ('multicomplex',) or self.n == 0:
+        if method in ("multicomplex",) or self.n == 0:
             return np.ones((1,))
         step_ratio = make_exact(step_ratio)
         order, method_order = self.n - 1, self.method_order
@@ -573,8 +592,7 @@ class LogRule(object):
         f_del = np.vstack([np.ravel(r) for r in sequence])
         one = np.ones(original_shape)
         h = np.vstack([np.ravel(one * step) for step in steps])
-        _assert(f_del.size == h.size, 'fun did not return data of correct '
-                'size (it must be vectorized)')
+        _assert(f_del.size == h.size, "fun did not return data of correct size (it must be vectorized)")
         return f_del, h, original_shape
 
     def apply(self, sequence, steps, step_ratio=2.0):
@@ -609,12 +627,15 @@ class LogRule(object):
 
         num_steps = h.shape[0]
         n_r = fd_rule.size - 1
-        _assert(n_r < num_steps, 'num_steps ({0:d}) must  be larger than '
-                '({1:d}) n + order - 1 = {2:d} + {3:d} -1'
-                ' ({4:s})'.format(num_steps, n_r + 1, self.n, self.order, self.method))
+        _assert(
+            n_r < num_steps,
+            "num_steps ({0:d}) must  be larger than ({1:d}) n + order - 1 = {2:d} + {3:d} -1 ({4:s})".format(
+                num_steps, n_r + 1, self.n, self.order, self.method
+            ),
+        )
         f_diff = convolve(f_del, fd_rule[::-1], axis=0, origin=n_r // 2)
 
-        der_init = f_diff / (h ** self.n)
+        der_init = f_diff / (h**self.n)
         num_steps = max(num_steps - n_r, 1)
         return der_init[:num_steps], h[:num_steps]
 
@@ -668,6 +689,7 @@ class LogJacobianRule(LogRule):
     True
 
     """
+
     _difference_functions = JacobianDifferenceFunctions()
 
     # n = property(fget=lambda cls: 1, fset=lambda cls, n: None)
@@ -691,8 +713,7 @@ class LogJacobianRule(LogRule):
 
             f_del = np.vstack([np.atleast_1d(r).transpose(axes).ravel() for r in sequence])
             h = np.vstack([np.atleast_1d(r).transpose(axes).ravel() for r in steps])
-        _assert(f_del.size == h.size, 'fun did not return data of correct '
-                'size (it must be vectorized)')
+        _assert(f_del.size == h.size, "fun did not return data of correct size (it must be vectorized)")
         return f_del, h, self._atleast_2d(original_shape, ndim)
 
 
@@ -746,6 +767,7 @@ class LogHessdiagRule(LogRule):
     True
 
     """
+
     _difference_functions = HessdiagDifferenceFunctions()
 
     n = property(fget=lambda cls: 2, fset=lambda cls, n: None)
@@ -764,6 +786,7 @@ class LogHessianRule(LogRule):
         defines the order of the error term in the Taylor approximation used.
         For 'central' and 'complex' methods, it must be an even number.
     """
+
     _difference_functions = HessianDifferenceFunctions()
 
     n = property(fget=lambda cls: 2, fset=lambda cls, unused_n: None)
@@ -771,15 +794,15 @@ class LogHessianRule(LogRule):
     @property
     def order(self):
         """The order of the error term in the Taylor approximation used"""
-        return dict(backward=1, forward=1).get(self.method, 2)
+        return {"backward": 1, "forward": 1}.get(self.method, 2)
 
     @order.setter
     def order(self, order):
         valid_order = self.order
 
         if order is not None and order != valid_order:
-            msg = 'Can not change order to {}! The only valid order is {} for method={}.'
-            warnings.warn(msg.format(order, valid_order, self.method))
+            msg = "Can not change order to {}! The only valid order is {} for method={}."
+            warnings.warn(msg.format(order, valid_order, self.method), stacklevel=2)
 
     @property
     def _complex_high_order(self):
@@ -801,6 +824,7 @@ class LogHessianRule(LogRule):
         return f_del, h, original_shape
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from numdifftools.testing import test_docstrings
+
     test_docstrings()

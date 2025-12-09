@@ -1,11 +1,13 @@
-'''
+"""
 Created on Jun 25, 2016
 
 @author: pab
-'''
+"""
+
 import numpy as np
 from numpy import pi, r_, sqrt
 from scipy import constants, linalg, optimize
+
 from numdifftools.multicomplex import c_abs
 
 
@@ -27,9 +29,9 @@ class ClassicalHamiltonian(object):
 
     def __init__(self):
         self.n = 2
-        f = 1000000      # f is a scalar, it's the trap frequency
+        f = 1000000  # f is a scalar, it's the trap frequency
         self.w = 2 * pi * f
-        self.C = (4 * pi * constants.epsilon_0) ** (-1) * constants.e ** 2
+        self.C = (4 * pi * constants.epsilon_0) ** (-1) * constants.e**2
         # C is a scalar, it's the I
         self.m = 39.96 * 1.66e-27
 
@@ -48,17 +50,17 @@ class ClassicalHamiltonian(object):
         m = self.m
 
         # First we consider the potential of the harmonic oscillator
-        v_x = 0.5 * m * (w ** 2) * sum(x ** 2)
+        v_x = 0.5 * m * (w**2) * sum(x**2)
         # then we add the coulomb interaction:
         for i, xi in enumerate(x):
-            for xj in x[i + 1:]:
+            for xj in x[i + 1 :]:
                 v_x += C / (c_abs(xi - xj))
         return v_x
 
     def initialposition(self):
         """Defines initial position as an estimate for the minimize process."""
         n = self.n
-        x_0 = r_[-(n - 1) / 2:(n - 1) / 2:n * 1j]
+        x_0 = r_[-(n - 1) / 2 : (n - 1) / 2 : n * 1j]
         return x_0
 
     def normal_modes(self, eigenvalues):
@@ -80,14 +82,13 @@ def run_hamiltonian(hessian, verbose=True, full_output=True):
     hessian.fun = c.potential
     hessian.full_output = full_output
 
-    true_h = np.array([[5.23748385e-12, -2.61873829e-12],
-                       [-2.61873829e-12, 5.23748385e-12]])
+    true_h = np.array([[5.23748385e-12, -2.61873829e-12], [-2.61873829e-12, 5.23748385e-12]])
     if full_output:
         h, info = hessian(xopt)
         error = info.error_estimate
     else:
         h = hessian(xopt)
-        error = np.abs(h-true_h)
+        error = np.abs(h - true_h)
 
     eigenvalues = linalg.eigvals(h)
     normal_modes = c.normal_modes(eigenvalues)
@@ -97,11 +98,11 @@ def run_hamiltonian(hessian, verbose=True, full_output=True):
         print(c.potential([-0.5, 0.0]))
         print(c.potential([0.0, 0.0]))
         print(xopt)
-        print('h', h)
-        print('h-true_h', np.abs(h - true_h))
-        print('error_estimate', error)
+        print("h", h)
+        print("h-true_h", np.abs(h - true_h))
+        print("error_estimate", error)
 
-        print('eigenvalues', eigenvalues)
-        print('normal_modes', normal_modes)
+        print("eigenvalues", eigenvalues)
+        print("normal_modes", normal_modes)
 
     return h, error, true_h

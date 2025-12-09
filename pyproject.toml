@@ -1,4 +1,5 @@
 # See https://jooyal.com/posts/2025/coding/using-pdm-in-python/
+# 
 #Recommended build on master branch
 # git pull origin
 # pdm check-style
@@ -6,7 +7,7 @@
 # pdm check-types 
 # pdm run pytest
 # pdm append-changelog  # Manually edit CHANGELOG.md to make sure it looks OK.
-# Run nvector._info (this file will generate readme.txt) and update README.rst
+# Run numdifftools._info (this file will generate readme.txt) and update README.rst
 # git commit
 # pdm bump pre-release --pre alpha # creates 0.1.1a1 from 0.1.0
 # pdm bump pre-release --pre beta # creates 0.1.1.b1 from 0.1.1a1
@@ -95,6 +96,7 @@ lock_macos = "pdm lock -L pdm_macos.lock --python 3.13 --strategy no_direct_mini
 format = "ruff format ./src/"  # format code
 check-style = "ruff check ./src/"  # check code style
 check-types = "mypy ./src/"  # check types
+test = {cmd = "pytest", env = {"MPLBACKEND" = "Agg"}}
 
 show-next-version = "git-cliff --bumped-version"  # calculate and print the next semantic version to stdout:
 show-next-changelog = "git-cliff"
@@ -203,8 +205,13 @@ convention = "numpy"
 docstring-code-line-length = 100
 
 [tool.pytest.ini_options]
+# Register all custom markers here.
+markers = [
+    "slow: marks tests as slow (time-consuming)",
+    "benchmark: marks tests used for benchmarking",
+]
 doctest_optionflags = ["NORMALIZE_WHITESPACE", "IGNORE_EXCEPTION_DETAIL",  "ELLIPSIS"]
-addopts = "-rsxXf --doctest-modules --cov=numdifftools --cov-report=xml --ruff --mypy" #--ruff-format
+addopts = "-rsxXf --doctest-modules --cov=numdifftools --cov-report=xml" #--ruff-format  --mypy  --ruff
 testpaths = [
     "src"
 ]

@@ -8,13 +8,17 @@ Release: 1.0
 Release date: 5/23/2008
 
 """
+
 from __future__ import absolute_import, division, print_function
+
+import warnings
 from collections import namedtuple
 from functools import partial
-import warnings
+
 import numpy as np
-from numdifftools.step_generators import MinStepGenerator
+
 from numdifftools.extrapolation import Richardson, dea3
+from numdifftools.step_generators import MinStepGenerator
 
 
 def _assert(cond, msg):
@@ -23,7 +27,6 @@ def _assert(cond, msg):
 
 
 class CStepGenerator(MinStepGenerator):
-
     """
     Generates a sequence of steps
 
@@ -56,18 +59,24 @@ class CStepGenerator(MinStepGenerator):
 
     """
 
-    def __init__(self, base_step=None, step_ratio=4.0, num_steps=None, step_nom=None,
-                 offset=0, scale=1.2, **options):
-        self.path = options.pop('path', 'radial')
-        self.dtheta = options.pop('dtheta', np.pi / 8)
-        super(CStepGenerator,
-              self).__init__(base_step=base_step, step_ratio=step_ratio,
-                             num_steps=num_steps, step_nom=step_nom, offset=offset, scale=scale,
-                             **options)
+    def __init__(
+        self, base_step=None, step_ratio=4.0, num_steps=None, step_nom=None, offset=0, scale=1.2, **options
+    ):
+        self.path = options.pop("path", "radial")
+        self.dtheta = options.pop("dtheta", np.pi / 8)
+        super(CStepGenerator, self).__init__(
+            base_step=base_step,
+            step_ratio=step_ratio,
+            num_steps=num_steps,
+            step_nom=step_nom,
+            offset=offset,
+            scale=scale,
+            **options,
+        )
         self._check_path()
 
     def _check_path(self):
-        _assert(self.path in ['spiral', 'radial'], 'Invalid Path: {}'.format(str(self.path)))
+        _assert(self.path in ["spiral", "radial"], "Invalid Path: {}".format(str(self.path)))
 
     @property
     def step_ratio(self):
@@ -85,7 +94,7 @@ class CStepGenerator(MinStepGenerator):
     @property
     def dtheta(self):
         """Angular steps in radians used for the exponential spiral path."""
-        radial_path = self.path[0].lower() == 'r'
+        radial_path = self.path[0].lower() == "r"
         return 0 if radial_path else self._dtheta
 
     @dtheta.setter
@@ -105,13 +114,11 @@ class CStepGenerator(MinStepGenerator):
 
 
 class _Limit(object):
-
     """Common methods and member variables"""
 
-    info = namedtuple('info', ['error_estimate', 'final_step', 'index'])
+    info = namedtuple("info", ["error_estimate", "final_step", "index"])
 
     def __init__(self, step=None, **options):
-
         self.step = step, options
 
         self.richardson = Richardson(step_ratio=1.6, step=1, order=1, num_terms=2)
@@ -125,7 +132,7 @@ class _Limit(object):
 
     @staticmethod
     def _step_generator(step, options):
-        if hasattr(step, '__call__'):
+        if callable(step):
             return step
         step_nom = None if step is None else 1
         return CStepGenerator(base_step=step, step_nom=step_nom, **options)
@@ -147,7 +154,7 @@ class _Limit(object):
             arg_mins = np.nanargmin(errors, axis=0)
             min_errors = np.nanmin(errors, axis=0)
         except ValueError as msg:
-            warnings.warn(str(msg))
+            warnings.warn(str(msg), stacklevel=2)
             return np.arange(shape[1])
 
         for i, min_error in enumerate(min_errors):
@@ -165,24 +172,24 @@ class _Limit(object):
         """
         if np.iscomplexobj(der):
             return np.sqrt(
-                _Limit._add_error_to_outliers(np.real(der), trim_fact)**2
-                + _Limit._add_error_to_outliers(np.imag(der), trim_fact)**2
+                _Limit._add_error_to_outliers(np.real(der), trim_fact) ** 2
+                + _Limit._add_error_to_outliers(np.imag(der), trim_fact) ** 2
             )
         try:
             if np.any(np.isnan(der)):
-                p25, median, p75 = np.nanpercentile(der, [25,50, 75], axis=0)
+                p25, median, p75 = np.nanpercentile(der, [25, 50, 75], axis=0)
             else:
-                p25, median, p75 = np.percentile(der, [25,50, 75], axis=0)
+                p25, median, p75 = np.percentile(der, [25, 50, 75], axis=0)
 
             iqr = np.abs(p75 - p25)
         except ValueError as msg:
-            warnings.warn(str(msg))
+            warnings.warn(str(msg), stacklevel=2)
             return 0 * der
 
         a_median = np.abs(median)
-        outliers = (((abs(der) < (a_median / trim_fact)) +
-                    (abs(der) > (a_median * trim_fact))) * (a_median > 1e-8) +
-                    ((der < p25 - 1.5 * iqr) + (p75 + 1.5 * iqr < der)))
+        outliers = ((abs(der) < (a_median / trim_fact)) + (abs(der) > (a_median * trim_fact))) * (
+            a_median > 1e-8
+        ) + ((der < p25 - 1.5 * iqr) + (p75 + 1.5 * iqr < der))
         errors = outliers * np.abs(der - median)
         return errors
 
@@ -217,13 +224,11 @@ class _Limit(object):
         f_del = np.vstack([np.ravel(r) for r in sequence])
         one = np.ones(original_shape)
         h = np.vstack([np.ravel(one * step) for step in steps])
-        _assert(f_del.size == h.size, 'fun did not return data of correct '
-                'size (it must be vectorized)')
+        _assert(f_del.size == h.size, "fun did not return data of correct size (it must be vectorized)")
         return f_del, h, original_shape
 
 
 class Limit(_Limit):
-
     """
     Compute limit of a function at a given point
 
@@ -305,7 +310,7 @@ class Limit(_Limit):
     >>> lim_g0, err = Limit(g, full_output=True)(0)
     >>> np.allclose(lim_g0, -1)
     True
-    >>> err.error_estimate < 1e-14
+    >>> bool(err.error_estimate < 1e-14)
     True
 
     Compute the residue at a first order pole at z = 0
@@ -317,7 +322,7 @@ class Limit(_Limit):
     >>> lim_h0, err = Limit(h, full_output=True)(0)
     >>> np.allclose(lim_h0, -0.5)
     True
-    >>> err.error_estimate < 1e-14
+    >>> bool(err.error_estimate < 1e-14)
     True
 
     Compute the residue of function 1./sin(z)**2 at z = 0.
@@ -328,7 +333,7 @@ class Limit(_Limit):
     >>> lim_gpi, err = Limit(g, full_output=True)(0)
     >>> np.allclose(lim_gpi, 1)
     True
-    >>> err.error_estimate < 1e-14
+    >>> bool(err.error_estimate < 1e-14)
     True
 
     A more difficult limit is one where there is significant
@@ -340,20 +345,20 @@ class Limit(_Limit):
     >>> lim_k0,err = Limit(k, full_output=True)(0)
     >>> np.allclose(lim_k0, 0.5)
     True
-    >>> err.error_estimate < 1.0e-8
+    >>> bool(err.error_estimate < 1.0e-8)
     True
 
     >>> def h(x): return  (x-np.sin(x))/x**3
     >>> lim_h0, err = Limit(h, full_output=True)(0)
     >>> np.allclose(lim_h0, 1./6)
     True
-    >>> err.error_estimate < 1e-8
+    >>> bool(err.error_estimate < 1e-8)
     True
 
     """
 
-    def __init__(self, fun, step=None, method='above', order=4, full_output=False, **options):
-        super(Limit, self).__init__(step=step,  **options)
+    def __init__(self, fun, step=None, method="above", order=4, full_output=False, **options):
+        super(Limit, self).__init__(step=step, **options)
         self.fun = fun
         self.method = method
         self.order = order
@@ -366,11 +371,10 @@ class Limit(_Limit):
         return list(self.step(x_i))  # pylint: disable=not-callable
 
     def _set_richardson_rule(self, step_ratio, num_terms=2):
-        self.richardson = Richardson(step_ratio=step_ratio, step=1, order=1,
-                                     num_terms=num_terms)
+        self.richardson = Richardson(step_ratio=step_ratio, step=1, order=1, num_terms=num_terms)
 
     def _lim(self, f, z):
-        sign = dict(forward=1, above=1, backward=-1, below=-1)[self.method]
+        sign = {"forward": 1, "above": 1, "backward": -1, "below": -1}[self.method]
         steps = [sign * step for step in self.step(z)]  # pylint: disable=not-callable
         # pylint: disable=no-member
         self._set_richardson_rule(self.step.step_ratio, self.order + 1)
@@ -408,7 +412,7 @@ class Limit(_Limit):
     def __call__(self, x, *args, **kwds):
         z = np.asarray(x)
         f = partial(self._fun, args=args, kwds=kwds)
-        with np.errstate(divide='ignore', invalid='ignore'):
+        with np.errstate(divide="ignore", invalid="ignore"):
             f_z = f(z, 0)
             f_z, info = self._call_lim(f_z, z, f)
 
@@ -418,7 +422,6 @@ class Limit(_Limit):
 
 
 class Residue(Limit):
-
     """
     Compute residue of a function at a given point
 
@@ -488,7 +491,7 @@ class Residue(Limit):
     >>> res_f, info = Residue(f, full_output=True)(0)
     >>> np.allclose(res_f, -0.5)
     True
-    >>> info.error_estimate < 1e-14
+    >>> bool(info.error_estimate < 1e-14)
     True
 
     A second order pole around z = 0 and z = pi
@@ -496,30 +499,31 @@ class Residue(Limit):
     >>> res_h, info = Residue(h, full_output=True, pole_order=2)([0, np.pi])
     >>> np.allclose(res_h, 1)
     True
-    >>> (info.error_estimate < 1e-10).all()
+    >>> bool((info.error_estimate < 1e-10).all())
     True
 
     """
 
-    def __init__(self, f, step=None, method='above', order=None, pole_order=1,
-                 full_output=False, **options):
+    def __init__(self, f, step=None, method="above", order=None, pole_order=1, full_output=False, **options):
         if order is None:
             # MethodOrder will always = pole_order + 2
             order = pole_order + 2
 
-        _assert(pole_order < order, 'order must be at least pole_order+1.')
+        _assert(pole_order < order, "order must be at least pole_order+1.")
         self.pole_order = pole_order
 
-        super(Residue, self).__init__(f, step=step, method=method, order=order,
-                                      full_output=full_output, **options)
+        super(Residue, self).__init__(
+            f, step=step, method=method, order=order, full_output=full_output, **options
+        )
 
     def _fun(self, z, d_z, args, kwds):
-        return self.fun(z + d_z, *args, **kwds) * (d_z ** self.pole_order)
+        return self.fun(z + d_z, *args, **kwds) * (d_z**self.pole_order)
 
     def __call__(self, x, *args, **kwds):
         return self.limit(x, *args, **kwds)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from numdifftools.testing import test_docstrings
+
     test_docstrings(__file__)

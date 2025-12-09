@@ -29,17 +29,19 @@ Adriaen Verheyleweghen, (2014)
 Project report, NTNU
 
 """
+
 from __future__ import absolute_import, division
+
 import numpy as np
 
-_tiny_name = 'tiny' if np.__version__ < '1.22' else 'smallest_normal'
+_tiny_name = "tiny" if np.__version__ < "1.22" else "smallest_normal"
 _TINY = getattr(np.finfo(float), _tiny_name)
 
 
 def c_atan2(x, y):
     a, b = np.real(x), np.imag(x)
     c, d = np.real(y), np.imag(y)
-    return np.arctan2(a, c) + 1j * (c * b - a * d) / (a ** 2 + c ** 2)
+    return np.arctan2(a, c) + 1j * (c * b - a * d) / (a**2 + c**2)
 
 
 def c_max(x, y):
@@ -57,14 +59,14 @@ def c_abs(z):
 
 
 class Bicomplex(object):
-
     """
     BICOMPLEX(z1, z2)
 
     Creates an instance of a Bicomplex object.
     zeta = z1 + j*z2, where z1 and z2 are complex numbers.
     """
-    __slots__ = ('z1', 'z2')
+
+    __slots__ = ("z1", "z2")
 
     def __init__(self, z1, z2, dtype=np.complex128):
         z1, z2 = np.broadcast_arrays(z1, z2)
@@ -87,7 +89,7 @@ class Bicomplex(object):
 
     def norm(self):
         z1, z2 = self.z1, self.z2
-        return np.sqrt(z1.real ** 2 + z2.real ** 2 + z1.imag ** 2 + z2.imag ** 2)
+        return np.sqrt(z1.real**2 + z2.real**2 + z1.imag**2 + z2.imag**2)
 
     @property
     def real(self):
@@ -112,8 +114,7 @@ class Bicomplex(object):
     @staticmethod
     def asarray(other):
         z1, z2 = other.z1, other.z2
-        return np.vstack((np.hstack((z1, -z2)),
-                          np.hstack((z2, z1))))
+        return np.vstack((np.hstack((z1, -z2)), np.hstack((z2, z1))))
 
     @staticmethod
     def _coerce(other):
@@ -125,13 +126,13 @@ class Bicomplex(object):
     def mat2bicomp(arr):
         shape = np.array(arr.shape)
         shape[:2] = shape[:2] // 2
-        z1 = arr[:shape[0]]
-        z2 = arr[shape[0]:]
+        z1 = arr[: shape[0]]
+        z2 = arr[shape[0] :]
         slices = tuple([slice(None, None, 1)] + [slice(n) for n in shape[1:]])
         return Bicomplex(z1[slices], z2[slices])
 
     @staticmethod
-    def __array_wrap__(result):
+    def __array_wrap__(result, context=None, return_scalar=False):
         if isinstance(result, Bicomplex):
             return result
         shape = result.shape
@@ -142,8 +143,7 @@ class Bicomplex(object):
 
     def __repr__(self):
         name = self.__class__.__name__
-        return """{0!s}(z1={1!s}, z2={2!s})""".format(name, str(self.z1),
-                                                      str(self.z2))
+        return """{0!s}(z1={1!s}, z2={2!s})""".format(name, str(self.z1), str(self.z2))
 
     def __lt__(self, other):
         other = self._coerce(other)
@@ -170,7 +170,7 @@ class Bicomplex(object):
 
     def __setitem__(self, index, value):
         value = self._coerce(value)
-        if isinstance(index, str) and index in {'z1', 'z2'}:
+        if isinstance(index, str) and index in {"z1", "z2"}:
             setattr(self, index, value)
         else:
             self.z1[index] = value.z1
@@ -197,21 +197,20 @@ class Bicomplex(object):
 
     def __div__(self, other):  # python 2
         """elementwise division"""
-        return self * other ** -1  # np.exp(-np.log(other))
+        return self * other**-1  # np.exp(-np.log(other))
 
     __truediv__ = __div__  # python 3
 
     def __rdiv__(self, other):  # python 2
         """elementwise division"""
-        return other * self ** -1
+        return other * self**-1
 
     __rtruediv__ = __rdiv__  # python3
 
     def __mul__(self, other):
         """elementwise multiplication"""
         other = self._coerce(other)
-        return Bicomplex(self.z1 * other.z1 - self.z2 * other.z2,
-                         self.z1 * other.z2 + self.z2 * other.z1)
+        return Bicomplex(self.z1 * other.z1 - self.z2 * other.z2, self.z1 * other.z2 + self.z2 * other.z1)
 
     def _pow_singular(self, other):
         z1, z2 = self.z1, self.z2
@@ -273,10 +272,10 @@ class Bicomplex(object):
         return self.cos() / self.sin()
 
     def sec(self):
-        return 1. / self.cos()
+        return 1.0 / self.cos()
 
     def csc(self):
-        return 1. / self.sin()
+        return 1.0 / self.sin()
 
     def cosh(self):
         z1 = np.cosh(self.z1) * np.cos(self.z2)
@@ -295,10 +294,10 @@ class Bicomplex(object):
         return self.cosh() / self.sinh()
 
     def sech(self):
-        return 1. / self.cosh()
+        return 1.0 / self.cosh()
 
     def csch(self):
-        return 1. / self.sinh()
+        return 1.0 / self.sinh()
 
     def exp2(self):
         return np.exp(self * np.log(2))
@@ -325,22 +324,22 @@ class Bicomplex(object):
 
     def log(self):
         mod_c = self.mod_c()
-#         if (mod_c == 0).any():
-#             raise ValueError('mod_c is zero -> number not invertable!')
+        #         if (mod_c == 0).any():
+        #             raise ValueError('mod_c is zero -> number not invertable!')
         return Bicomplex(np.log(mod_c + _TINY), self.arg_c())
 
-#     def _log_m(self, m=0):
-#         return np.log(self.mod_c() + _TINY) + 1j * \
-#             (self.arg_c() + 2 * m * np.pi)
-#
-#     def _log_mn(self, m=0, n=0):
-#         arg_c = self.arg_c()
-#         log_m = np.log(self.mod_c() + _TINY) + 1j * (2 * m * np.pi)
-#         return Bicomplex(log_m, arg_c + 2 * n * np.pi)
+    #     def _log_m(self, m=0):
+    #         return np.log(self.mod_c() + _TINY) + 1j * \
+    #             (self.arg_c() + 2 * m * np.pi)
+    #
+    #     def _log_mn(self, m=0, n=0):
+    #         arg_c = self.arg_c()
+    #         log_m = np.log(self.mod_c() + _TINY) + 1j * (2 * m * np.pi)
+    #         return Bicomplex(log_m, arg_c + 2 * n * np.pi)
 
     def arcsin(self):
         J = Bicomplex(0, 1)
-        return -J * ((J * self + (1 - self ** 2) ** 0.5).log())
+        return -J * ((J * self + (1 - self**2) ** 0.5).log())
 
     def arccos(self):
         return np.pi / 2 - self.arcsin()
@@ -352,10 +351,10 @@ class Bicomplex(object):
         return Bicomplex(tmp.z1, tmp.z2)
 
     def arccosh(self):
-        return (self + (self ** 2 - 1) ** 0.5).log()
+        return (self + (self**2 - 1) ** 0.5).log()
 
     def arcsinh(self):
-        return (self + (self ** 2 + 1) ** 0.5).log()
+        return (self + (self**2 + 1) ** 0.5).log()
 
     def arctanh(self):
         return 0.5 * (((1 + self) / (1 - self)).log())
