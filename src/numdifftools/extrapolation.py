@@ -332,7 +332,7 @@ def epsalg_demo():
     txt = "{0:5d} {1:20.8f}  {2:20.8f}  {3:20.8f}"
     for k in np.arange(10):
         x = linfun(k)
-        val = np.trapz(np.sin(x), x)
+        val = trapz(np.sin(x), x)
         vale = dea(val)
         err = np.abs(1.0 - vale)
         print(txt.format(len(x) - 1, val, vale, err))
@@ -367,7 +367,7 @@ def dea_demo():
     num_panels = []
     for k in np.arange(12):
         x = linfun(k)
-        val = np.trapz(np.sin(x), x)
+        val = trapz(np.sin(x), x)
         vals.append(val)
         num_panels.append(len(x) - 1)
     for k, val in zip(num_panels, vals, strict=False):

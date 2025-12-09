@@ -210,7 +210,7 @@ class Derivative(_Derivative):
     }
 
     def _forward(self, x, *args, **kwds):
-        x0 = np.asarray(x)
+        x0 = np.array(x)
         shape = x0.shape
         P = 1
         x = UTPM(np.zeros((self.n + 1, P) + shape))
