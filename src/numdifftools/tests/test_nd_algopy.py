@@ -2,7 +2,9 @@
 """"""
 
 from __future__ import absolute_import, division
+
 import sys
+
 import numpy as np
 import pytest
 from hypothesis import example, given

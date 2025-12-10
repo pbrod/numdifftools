@@ -5,8 +5,7 @@
 -   ci: execute test action only on push to master and on pull requests.
 -   ci: test requirements added to ci workflow.
 -   ci: first version of github actions ci added.
--   fix: import from from scipy.ndimage.filters replaced by from
-    scipy.ndimage
+-   fix: import from from scipy.ndimage.filters replaced by from scipy.ndimage
 -   fix: np.info(float).machar.tiny replaced by np.info(float).tiny
 -   Drop Python 3.6
 -   Remove Python 2.7, 3.6 from appveyor CI
@@ -14,8 +13,7 @@
 -   Update setup.cfg
 -   Update .travis.yml
 -   Update to Python310
--   Commented out deprecated pep8ignore and pep8maxlinelength in
-    setup.cfg
+-   Commented out deprecated pep8ignore and pep8maxlinelength in setup.cfg
 -   Fixed issue #59: numpy deprecation warning on machar.tiny
 -   Deleted obsolete travis_install.sh
 -   Replaced deprecated [np.MachAr().eps]{.title-ref} (NumPy 1.22)
@@ -41,7 +39,6 @@
 -   Merge pull request #66 from jonas-eschle/patch-1
 -   Merge pull request #60 from peendebak/performance/percentile
 -   Merge pull request #63 from fjosw/feat/numpy_deprecation
-
 -   workaround for known issue with np.nanpercentile
 -   improve performance by combining percentile calculations
 
@@ -51,17 +48,14 @@
 -   Removed python 3.5 from appveyor.yml
 -   Added bibtex_bibfiles = \... to docs/conf.py
 -   Fixed doctest failures in
-
-    :   -   docs/src/numerical/derivest.rst
-        -   docs/tutorials/getting_started.rst
-        -   numdifftools.core.py
-        -   numdifftools.limits.py
-        -   numdifftools.nd_algopy.py
-        -   numdifftools.nd_scipy.py
-        -   numdifftools.nd_statsmodels.py
-
--   Insulated import of click in a if \_\_name\_\_
-    ==\'\_\_main\_\_\' clause.
+    -   docs/src/numerical/derivest.rst
+    -   docs/tutorials/getting_started.rst
+    -   numdifftools.core.py
+    -   numdifftools.limits.py
+    -   numdifftools.nd_algopy.py
+    -   numdifftools.nd_scipy.py
+    -   numdifftools.nd_statsmodels.py
+-   Insulated import of click in a if \_\_name\_\_ ==\'\_\_main\_\_\' clause.
 -   Added activate to appveyor.yml
 -   Added <https://mathworld.wolfram.com/WynnsEpsilonMethod.html>
     reference for the Epsilon algorithm in extrapolation.py.
@@ -151,8 +145,7 @@
 -   Fix issue#52: Gradient tries to apply squeeze to the output
     tuple containing both the result and the full_output object.
 -   Made docstring a rawdocstring since it contains slashes.
--   Added \"\# pylint: disable=unused-argument\" in appropriate
-    places.
+-   Added \"\# pylint: disable=unused-argument\" in appropriate places.
 -   API change: replaced \"python setup.py doctests\" with \"python
     setup.py doctest\"
 -   Removed unused imports
@@ -167,11 +160,10 @@
     appveyor.yml to avoid build error.
 -   Try \"python setup.py bdist_wheel\" and \"pip install
     numdifftools \--find-links=dist\" in appveyor.yml
--   Put qoutes on \"python -m pip install \--upgrade pip\" in
-    appveyor.yml
+-   Put qoutes on \"python -m pip install \--upgrade pip\" in appveyor.yml
 -   Changed \"python setup.py install\" to
-    :   -   python setup.py bdist_wheel\"
-        -   pip install numdifftools \--find-links=dist
+    -   python setup.py bdist_wheel\"
+    -   pip install numdifftools \--find-links=dist
 -   Added \"pip install \--upgrade pip\" to appveyor.yml
 -   Updated the detailed package documentation.
 -   Added missing pytest-pep8 to install
@@ -189,8 +181,7 @@
 -   Fixed a typo in the documentation. Closing issue #51
 -   Added separate test for nd_scipy.
 -   added skip on tests if LineProfiler is not installed.
--   Removed obsolete centered argument from call to approx_hess1 +
-    pep8
+-   Removed obsolete centered argument from call to approx_hess1 + pep8
 -   Move Jacobian.\_increment method to \_JacobianDifferenceFunctions
 -   step_nom was unused in CStepGenerator.\_\_init\_\_ Added
     pytest.markers.slow in to setup.cfg
@@ -213,7 +204,6 @@
 
 -   MAINT: special.factorial instead of misc.factorial
 -   include LICENSE.txt in distributions
-
 -   Adjusted runtime for hypothesis tests to avoid failure and fixed
     pep8 failures.
 -   Fixed a bug in setup.cfg
@@ -343,10 +333,8 @@
 -   Merge branch \'master\' of
     <https://github.com/pbrod/numdifftools>
 -   Updated link to the documentation.
-
 -   Avoid RuntimeWarning in \_get_logn
 -   Allow fd_derivative to take complex valued functions
-
 -   doc: added nd.directionaldiff example
 
 
@@ -385,87 +373,45 @@
 
 -   Fix ReadTheDocs link as mentioned in #21
 -   Added test for MinMaxStepgenerator
-
 -   Removed obsolete docs from core.py
-
 -   Updated appveyor.yml
-
 -   Fixed sign in inverse matrix
-
 -   Simplified code
-
 -   Added appveyor badge + synchronised info.py with README.rst.
-
 -   Removed plot in help header
-
 -   Added Programming Language :: Python :: 3.5
-
 -   Simplified code
-
 -   Renamed bicomplex to Bicomplex
-
 -   Simplified example_functions.py
-
--   
-
-    Moved MinStepGenerator, MaxStepGeneretor and MinMaxStepGenerator to step_generators.py
-
-    :   -   Unified the step generators
-        -   Moved step_generator tests to test_step_generators.py
-        -   Major simplification of step_generators.py
-
+-   Moved MinStepGenerator, MaxStepGeneretor and MinMaxStepGenerator to step_generators.py
+    -   Unified the step generators
+    -   Moved step_generator tests to test_step_generators.py
+    -   Major simplification of step_generators.py
 -   Removed duplicated code + pep8
-
--   Moved fornberg_weights to fornberg.py + added taylor and
-    derivative
-
+-   Moved fornberg_weights to fornberg.py + added taylor and derivative
 -   Fixed print statement
-
 -   Replace xrange with range
-
 -   Added examples + made computation more robust.
-
 -   Made \'backward\' and alias for \'reverse\' in nd_algopy.py
-
 -   Expanded the tests + added test_docstrings to testing.py
-
 -   Replace string interpolation with format()
-
 -   Removed obsolete parameter
-
 -   Smaller start radius for Fornberg method
-
 -   Simplified \"n\" and \"order\" properties
-
 -   Simplified default_scale
-
 -   Removed unecessary parenthesis and code.
-
 -   Fixed a bug in Dea + small refactorings.
-
 -   Added test for EpsAlg
-
--   Avoid mutable default args and prefer static methods over
-    instance-meth.
-
+-   Avoid mutable default args and prefer static methods over instance-meth.
 -   Refactored to reduce cyclomatic complexity
-
 -   Changed some instance methods to static methods
-
 -   Renamed non-pythonic variable names
-
 -   Turned on xvfb (X Virtual Framebuffer) to imitate a display.
-
 -   Added extra test for Jacobian
-
 -   Replace lambda function with a def
-
 -   Removed unused import
-
 -   Added test for epsalg
-
 -   Fixed test_scalar_to_vector
-
 -   Updated test_docstrings
 
 
@@ -474,7 +420,6 @@
 
 -   Migrated [%]{.title-ref} string formating
 -   Migrated [%]{.title-ref} string formating
-
 -   Updated README.rst + setup.cfg
 -   Replaced instance methods with static methods +pep8
 -   Merge branch \'master\' of
@@ -493,10 +438,8 @@
 -   exclude tests from testclimate
 -   Renamed test_functions.py to example_functions.py Added
     test_example_functions.py
-
 -   Merge pull request #17 from pbrod/autofix/wrapped2_to3_fix
 -   Merge pull request #18 from pbrod/autofix/wrapped2_to3_fix-0
-
 -   updated conf.py
 -   added numpydoc>=0.5, sphinx_rtd_theme>=0.1.7 to setup_requires
     if sphinx
@@ -516,8 +459,7 @@
 -   Moved rosen function into numdifftools.testing.py
 -   updated import of rosen function from numdifftools.testing
 -   Simplified code + pep8 + added TestResidue
--   Updated readme.rst and replaced string interpolation with
-    format()
+-   Updated readme.rst and replaced string interpolation with format()
 -   Cleaned Dea class + pep8
 -   Updated references for Wynn extrapolation method.
 
@@ -617,20 +559,18 @@
 ## [0.9.1] - 2015-08-20
 
 -   Fix Sphinx build
-
--   Total remake of numdifftools with slightly different call syntax.
-
-    :   -   Can compute derivatives of order up to 10-14 depending
-            on function and method used.
-        -   Updated documentation and tests accordingly.
-        -   Fixed a bug in dea3.
-        -   Added StepsGenerator as an replacement for the adaptive
-            option.
-        -   Added bicomplex class for testing the complex step
-            second derivative.
-        -   Added fornberg_weights_all for computing optimal finite
-            difference rules in a stable way.
-        -   Added higher order complex step derivative methods.
+-   Total remake of numdifftools with slightly different call syntax:
+    -   Can compute derivatives of order up to 10-14 depending
+        on function and method used.
+    -   Updated documentation and tests accordingly.
+    -   Fixed a bug in dea3.
+    -   Added StepsGenerator as an replacement for the adaptive
+        option.
+    -   Added bicomplex class for testing the complex step
+        second derivative.
+    -   Added fornberg_weights_all for computing optimal finite
+        difference rules in a stable way.
+    -   Added higher order complex step derivative methods.
 
 
 ## [0.7.7] - 2014-12-18
