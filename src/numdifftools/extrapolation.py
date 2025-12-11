@@ -13,9 +13,9 @@ from scipy import linalg
 from scipy.ndimage import convolve1d
 
 try:
-    from numpy import trapezoid as trapz
+    from numpy import trapezoid
 except ImportError:
-    from numpy import trapz
+    from numpy import trapz as trapezoid
 
 FINFO = np.finfo(float)
 _EPS = EPS = FINFO.eps
@@ -298,7 +298,7 @@ def richardson_demo():
     txt = "{0:5d} {1:20.8f}  {2:20.8f}  {3:20.8f}"
     for k in np.arange(n):
         x = linfun(k)
-        val = trapz(np.sin(x), x)
+        val = trapezoid(np.sin(x), x)
         h.append(x[1])
         e_i.append(val)
         vale, _err0, _step = Richardson(step=1, order=1)(np.array(e_i), np.array(h))
@@ -332,7 +332,7 @@ def epsalg_demo():
     txt = "{0:5d} {1:20.8f}  {2:20.8f}  {3:20.8f}"
     for k in np.arange(10):
         x = linfun(k)
-        val = trapz(np.sin(x), x)
+        val = trapezoid(np.sin(x), x)
         vale = dea(val)
         err = np.abs(1.0 - vale)
         print(txt.format(len(x) - 1, val, vale, err))
@@ -367,7 +367,7 @@ def dea_demo():
     num_panels = []
     for k in np.arange(12):
         x = linfun(k)
-        val = trapz(np.sin(x), x)
+        val = trapezoid(np.sin(x), x)
         vals.append(val)
         num_panels.append(len(x) - 1)
     for k, val in zip(num_panels, vals, strict=False):
@@ -416,7 +416,7 @@ def dea3(v_0, v_1, v_2, symmetric=False):
     >>> linfun = lambda i : np.linspace(0, np.pi/2., 2**(i+5)+1)
     >>> for k in np.arange(3):
     ...    x = linfun(k)
-    ...    Ei[k] = trapz(np.sin(x),x)
+    ...    Ei[k] = np.trapezoid(np.sin(x),x)
     >>> [En, err] = nd.dea3(Ei[0], Ei[1], Ei[2])
     >>> truErr = np.abs(En-1.)
     >>> bool(np.all(truErr < err))
@@ -515,7 +515,7 @@ class Richardson(object):
     >>> for k in np.arange(n):
     ...    x = linfun(k)
     ...    h[k] = x[1]
-    ...    Ei[k] = trapz(np.sin(x),x)
+    ...    Ei[k] = np.trapezoid(np.sin(x),x)
     >>> En, err, step = nd.Richardson(step=1, order=1)(Ei, h)
     >>> truErr = np.abs(En-1.)
     >>> bool(np.all(truErr < err))

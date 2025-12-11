@@ -486,7 +486,7 @@ The Hessian matrix at the minimizer should be positive definite
 The eigenvalues of H should be positive
 
     >>> li, U = np.linalg.eig(H)
-    >>> np.all(li>0)
+    >>> bool(np.all(li>0))
     True
 
 
@@ -507,7 +507,7 @@ A semi-definite Hessian matrix
 
 one of these eigenvalues will be zero (approximately)
 
-    >>> [abs(val) < 1e-12 for val in np.linalg.eig(H)[0]]
+    >>> [bool(abs(val) < 1e-12) for val in np.linalg.eig(H)[0]]
     [True, False]
 
 
