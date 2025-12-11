@@ -55,14 +55,22 @@ Higher order approximations arise in the same fashion. The central difference :e
 Unequally spaced finite difference rules
 ########################################
 
-While most finite difference rules used to differentiate a function will use equally spaced points, this fails to be appropriate when one does not know the final spacing. Adaptive quadrature rules can succeed by subdividing each sub-interval as necessary. But an adaptive differentiation scheme must work differently, since differentiation is a point estimate. Derivative generates a sequence of sample points that follow a log spacing away from the point in question, then it uses a single rule (generated on the fly) to estimate the desired derivative. Because the points are log spaced, the same rule applies at any scale, with only a scale factor applied.
+While most finite difference rules used to differentiate a function will use equally spaced points, 
+this fails to be appropriate when one does not know the final spacing. Adaptive quadrature rules can 
+succeed by subdividing each sub-interval as necessary. But an adaptive differentiation scheme must 
+work differently, since differentiation is a point estimate. Derivative generates a sequence of sample 
+points that follow a log spacing away from the point in question, then it uses a single rule (generated on the fly) 
+to estimate the desired derivative. Because the points are log spaced, the same rule applies at any scale, 
+with only a scale factor applied.
 
 
 Odd and even transformations of a function
 ##########################################
 .. index:: odd transformation
 
-Returning to the Taylor series expansion of :math:`f(x)` around some point :math:`x_0`, an even function  [2]_ around :math:`x_0` must have all the odd order derivatives vanish at :math:`x_0`. An odd function has all its even derivatives vanish from its expansion. Consider the derived functions :math:`f_{odd}(x)` and :math:`f_{even}(x)`.
+Returning to the Taylor series expansion of :math:`f(x)` around some point :math:`x_0`, an even function  [2]_ around 
+:math:`x_0` must have all the odd order derivatives vanish at :math:`x_0`. An odd function has all its even derivatives 
+vanish from its expansion. Consider the derived functions :math:`f_{odd}(x)` and :math:`f_{even}(x)`.
 
 .. math::
     f_{odd}(x) = \frac{f(x_0 + x) - f(x_0 - x )}{2}
@@ -72,7 +80,8 @@ Returning to the Taylor series expansion of :math:`f(x)` around some point :math
     f_{even}(x) = \frac{f(x_0 + x) - 2f(x_0) + f(x_0 - x)}{2}
     :label: 6
 
-The Taylor series expansion of :math:`f_{odd}(x)` around zero has the useful property that we have killed off any even order terms, but the odd order terms are identical to :math:`f(x)`, as expanded around :math:`x_0`.
+The Taylor series expansion of :math:`f_{odd}(x)` around zero has the useful property that we have killed off any even order terms, 
+but the odd order terms are identical to :math:`f(x)`, as expanded around :math:`x_0`.
 
 .. math::
     f_{odd}(\delta) = \delta f'(x_0) + \frac{\delta^3}{6} f^{(3)}(x_0) + \frac{\delta^5}{120} f^{(5)}(x_0) + \frac{\delta^7}{5040} f^{(7)}(x_0) +...

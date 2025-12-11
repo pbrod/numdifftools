@@ -2,7 +2,7 @@ Welcome to the numdifftools' documentation!
 ===========================================
 .. only:: html
 
-    |pkg_img| |tests_img| |docs_img| |health_img| |coverage_img| |versions_img| |downloads_img|
+    |pkg_img| |tests_img| |docs_img| |quality_img| |coverage_img| |versions_img| |downloads_img|
 
 
 This is the documentation of **Numdifftools** version |release| released |today|.
@@ -42,14 +42,14 @@ Official releases are available at: http://pypi.python.org/pypi/Numdifftools.
         :target: https://badge.fury.io/py/numdifftools
 
     .. |tests_img| image:: https://github.com/pbrod/numdifftools/actions/workflows/test.yml/badge.svg
-       :target: https://github.com/pbrod/numdifftools/actions/workflows/test.yml
+        :target: https://github.com/pbrod/numdifftools/actions/workflows/test.yml
 
-    .. |health_img| image:: https://api.codeclimate.com/v1/badges/698996d1ec94028ec223/maintainability.svg
+    .. |quality_img| image:: https://api.codeclimate.com/v1/badges/698996d1ec94028ec223/maintainability.svg
         :target: https://codeclimate.com/github/pbrod/numdifftools/maintainability
         :alt: Maintainability
 
-    .. |coverage_img| image:: https://api.codeclimate.com/v1/badges/698996d1ec94028ec223/test_coverage.svg
-        :target: https://codeclimate.com/github/pbrod/numdifftools/test_coverage
+    .. |coverage_img| image:: https://codecov.io/gh/pbrod/numdifftools/branch/master/graph/badge.svg
+        :target: https://codecov.io/gh/pbrod/numdifftools
         :alt: Test Coverage
 
     .. |versions_img| image:: https://img.shields.io/pypi/pyversions/numdifftools.svg
