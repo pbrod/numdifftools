@@ -5,7 +5,7 @@
 groups = ["default", "all", "build", "plot", "sphinx", "test"]
 strategy = []
 lock_version = "4.5.0"
-content_hash = "sha256:ee0d5a0962bf895a192d8a3a8183e42bcfd1b097df6eb64766260cfde6d928e5"
+content_hash = "sha256:40d04951cef6b5b5166bad977265a08f93a019399a96a8f8c184073d0ec68395"
 
 [[metadata.targets]]
 requires_python = ">=3.10"
@@ -313,6 +313,19 @@ files = [
     {file = "charset_normalizer-3.4.4-cp314-cp314-win_arm64.whl", hash = "sha256:de00632ca48df9daf77a2c65a484531649261ec9f25489917f09e455cb09ddb2"},
     {file = "charset_normalizer-3.4.4-py3-none-any.whl", hash = "sha256:7a32c560861a02ff789ad905a2fe94e3f840803362c84fecf1851cb4cf3dc37f"},
     {file = "charset_normalizer-3.4.4.tar.gz", hash = "sha256:94537985111c35f28720e43603b8e7b43a6ecfb2ce1d3058bbe955b73404e21a"},
+]
+
+[[package]]
+name = "click"
+version = "8.3.1"
+requires_python = ">=3.10"
+summary = "Composable command line interface toolkit"
+dependencies = [
+    "colorama; platform_system == \"Windows\"",
+]
+files = [
+    {file = "click-8.3.1-py3-none-any.whl", hash = "sha256:981153a64e25f12d547d3426c367a4857371575ee7ad18df2a6183ab0545b2a6"},
+    {file = "click-8.3.1.tar.gz", hash = "sha256:12ff4785d337a1bb490bb7e9c2b1ee5da3112e94a8622f26a6c77f5d2fc6842a"},
 ]
 
 [[package]]

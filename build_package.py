@@ -74,19 +74,6 @@ def update_license():
         fid.write(LICENSE.__doc__)
 
 
-class ChangeDir:
-    """Context manager for changing the current working directory"""
-    def __init__(self, new_path):
-        self.new_path = new_path
-
-    def __enter__(self):
-        self.saved_path = os.getcwd()
-        os.chdir(self.new_path)
-
-    def __exit__(self, etype, value, traceback):
-        os.chdir(self.saved_path)
-
-
 def call_subprocess(cmd_opts):
     """Safe call to subprocess"""
     print("\n\n***********************************************")
@@ -101,9 +88,14 @@ def call_subprocess(cmd_opts):
 if __name__ == "__main__":
     import click
 
-    @click.command(context_settings=dict(help_option_names=['-h', '--help']))
+    @click.group(context_settings=dict(help_option_names=['-h', '--help']))
+    def cli():
+        """Main entry point for build and maintenance scripts."""
+        pass
+
+    @cli.command()
     @click.argument("version")
-    def build_main(version):
+    def build(version):
         """Build and update {} version, documentation and package.
 
         The script remove the previous built binaries and generated documentation
@@ -111,18 +103,22 @@ if __name__ == "__main__":
         and finally check the built binaries.
         """.format(PACKAGE_NAME)
         remove_previous_build()
+        
         set_package(version)
         update_license()
         update_readme()
+        call_subprocess(["pdm", "run", ""])
+        for cmd in ['doctest', 'docs-html', 'docs-latex', 'docs-pdf', 'build']:
+            call_subprocess(["pdm", "run", cmd])
 
-        for cmd in ['docs', 'latexpdf', 'egg_info', 'sdist', 'bdist_wheel']:
-            if cmd == 'latexpdf':
-                with ChangeDir('./docs'):
-                    call_subprocess(["make.bat", cmd])
-            else:
-                call_subprocess(["python", "setup.py", cmd])
+    @cli.command("update-readme") # Define the new command
+    def update_readme_cli():
+        """Update the README.rst file from the INFO module docstring."""
+        update_readme()
 
-        call_subprocess(["twine", "check", "dist/*"])
+    @cli.command("update-license") # Define the new command
+    def update_license_cli():
+        """Update the LICENSE.txt file from the LICENSE module docstring."""
+        update_license()
 
-
-    build_main()
+    cli()

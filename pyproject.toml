@@ -5,9 +5,12 @@
 # pdm check-style
 # pdm format
 # pdm check-types 
-# pdm run pytest
+# pdm run tests
+# pdm all-tests # runs all the above  
 # pdm append-changelog  # Manually edit CHANGELOG.md to make sure it looks OK.
-# Run numdifftools._info (this file will generate readme.txt) and update README.rst
+# pdm run update-readme # Update README.rst from numdifftools.info
+# pdm run update-license # Update LICENSE.txtt from numdifftools.license
+
 # git commit
 # pdm bump pre-release --pre alpha # creates 0.1.1a1 from 0.1.0
 # pdm bump pre-release --pre beta # creates 0.1.1.b1 from 0.1.1a1
@@ -85,24 +88,27 @@ source = "file"
 path = "src/numdifftools/__init__.py"
 
 [tool.pdm.scripts]
-build-docs-html = "sphinx-build -b html docs docs/_build/html -d docs/_build/doctrees"
-build-docs-latex = "sphinx-build -b latex docs docs/_build/latex -d docs/_build/doctrees"
-build-docs-pdf = "sphinx-build -b latexpdf docs docs/_build/latex -d docs/_build/doctrees"
-doctest = "sphinx-build -b doctest docs docs/_build/doctest -d docs/_build/doctrees"
-lock_py314 = "pdm lock -L pdm.lock314 --python 3.14 --strategy no_direct_minimal_versions -dG all"
-lock_win64 = "pdm lock -L pdm_windows.lock --python 3.13 --strategy no_direct_minimal_versions --platform windows -dG all"
-lock_linux = "pdm lock -L pdm_linux.lock --python 3.13 --strategy no_direct_minimal_versions --platform linux -dG all"
-lock_macos = "pdm lock -L pdm_macos.lock --python 3.13 --strategy no_direct_minimal_versions --platform macos -dG all"
+docs-html = "sphinx-build -b html docs docs/_build/html -d docs/_build/doctrees"
+docs-latex = "sphinx-build -b latex docs docs/_build/latex -d docs/_build/doctrees"
+docs-pdf = "sphinx-build -b latexpdf docs docs/_build/latex -d docs/_build/doctrees"
+docs-doctest = "sphinx-build -b doctest docs docs/_build/doctest -d docs/_build/doctrees"
+lock-py314 = "pdm lock -L pdm.lock314 --python 3.14 --strategy no_direct_minimal_versions -dG all"
+lock-win64 = "pdm lock -L pdm_windows.lock --python 3.13 --strategy no_direct_minimal_versions --platform windows -dG all"
+lock-linux = "pdm lock -L pdm_linux.lock --python 3.13 --strategy no_direct_minimal_versions --platform linux -dG all"
+lock-macos = "pdm lock -L pdm_macos.lock --python 3.13 --strategy no_direct_minimal_versions --platform macos -dG all"
 
 format = "ruff format ./src/"  # format code
 check-style = "ruff check ./src/"  # check code style
 check-types = "mypy ./src/"  # check types
-test = {cmd = "pytest", env = {"MPLBACKEND" = "Agg"}}
+tests = {cmd = "pytest", env = {"MPLBACKEND" = "Agg"}}
+all-tests = {composite = ["format", "check-style",  "test", "doctest"]}  # "check-types", 
 
 show-next-version = "git-cliff --bumped-version"  # calculate and print the next semantic version to stdout:
 show-next-changelog = "git-cliff"
 append-changelog = "git-cliff --unreleased --prepend CHANGELOG.md"  # prepend new entries to CHANGELOG.md without footer part
-
+update-license = "python build_package.py update-license"
+update-readme = "python build_package.py update-readme"
+prepare-release = {composite = ["update-license", "update-readme", "append-changelog"]}
 
 
 #[tool.pdm.scripts.check-commits]
@@ -115,6 +121,8 @@ build = [
     "spyder-kernels",    # If you want to use Spyder
     "git-cliff>=2.6.1",
     "pdm-bump>=0.9.8",
+    "click>=8.3.1",
+
 ]
 # semantic_release.commit-messages git-cliff
 # chore: Changes to the build process or auxiliary tools and libraries such as documentation generation

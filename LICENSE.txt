@@ -1,5 +1,5 @@
 
-Copyright (c) 2009-2022, Per A. Brodtkorb, John D'Errico
+Copyright (c) 2009-2025, Per A. Brodtkorb, John D'Errico
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
