@@ -4,6 +4,7 @@ scipy>=0.8
 algopy>=0.4
 statsmodels>=0.6
 hypothesis>=3.6
+matplotlib>=3.8.0
 myst_parser
 pytest
 sphinxcontrib-napoleon

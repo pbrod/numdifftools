@@ -2,10 +2,10 @@
 # It is not intended for manual editing.
 
 [metadata]
-groups = ["default", "all", "build", "plot", "sphinx", "test"]
+groups = ["default", "all", "build", "dev", "plot", "sphinx", "test"]
 strategy = []
 lock_version = "4.5.0"
-content_hash = "sha256:40d04951cef6b5b5166bad977265a08f93a019399a96a8f8c184073d0ec68395"
+content_hash = "sha256:0bb12dd1e656dab7af0cbc31ad918379dddaf11dd387f25ac9b77b5aef7d0ad5"
 
 [[metadata.targets]]
 requires_python = ">=3.10"

@@ -15,7 +15,7 @@ from .core import (
 )
 from .info import __doc__ as __doc__
 
-__version__ = "0.9.41"
+__version__ = "0.9.42"
 
 __all__ = (
     "Derivative",

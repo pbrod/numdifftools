@@ -83,6 +83,7 @@ distribution = true
 
 [tool.pdm.resolution]
 allow-prereleases = true
+
 [tool.pdm.version]
 source = "file"
 path = "src/numdifftools/__init__.py"
@@ -101,7 +102,7 @@ format = "ruff format ./src/"  # format code
 check-style = "ruff check ./src/"  # check code style
 check-types = "mypy ./src/"  # check types
 tests = {cmd = "pytest", env = {"MPLBACKEND" = "Agg"}}
-all-tests = {composite = ["format", "check-style",  "test", "doctest"]}  # "check-types", 
+all-tests = {composite = ["format", "check-style", "test", "doctest"]}  # "check-types", 
 
 show-next-version = "git-cliff --bumped-version"  # calculate and print the next semantic version to stdout:
 show-next-changelog = "git-cliff"
