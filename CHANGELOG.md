@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.9.42]
+
+### 🐛 Bug Fixes
+- Removed deprecated "cross_platform" from pdm.lock
+- Updated doctests.
+- Updated required modules for doc-generation.
+- Skip two tests not working on python=3.14 in test_nd_algopy.
+- Replaced trapz with trapezoid in test_extrapolation.py and extrapolation.py.
+- The function approx_fprime_cs now handles matrix valued functions correctly in nd_statsmodels.py.
+- _Limit._add_error_to_outliers method can now handle complex numbers.
+
+### 📚 Documentation
+- Updated configuration for docs generation.
+- Updated documentation of dea3.
+
+### ⚙️ Miscellaneous Tasks
+
+- Added .readthedocs.yml, cliff.toml, pyproject.toml.
+- Updated pyproject.toml and github workflows.
+- Calculate the Hessian of functions with n-D output.
+- Deleted obsolete files.
+- Added prepare-release script
+
 
 ## [0.9.41] - 2022-11-10
 -   ci: execute test action only on push to master and on pull requests.
