@@ -3,7 +3,7 @@
 
 [metadata]
 groups = ["default", "all", "build", "plot", "sphinx", "test"]
-strategy = ["cross_platform"]
+strategy = []
 lock_version = "4.5.0"
 content_hash = "sha256:ee0d5a0962bf895a192d8a3a8183e42bcfd1b097df6eb64766260cfde6d928e5"
 
