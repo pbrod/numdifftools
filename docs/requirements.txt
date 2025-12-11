@@ -1,9 +1,10 @@
 sphinx>=3.0.4
-numpydoc>=0.5
 sphinx_rtd_theme>=0.1.7
 scipy>=0.8
 algopy>=0.4
 statsmodels>=0.6
 hypothesis>=3.6
+myst_parser
 pytest
+sphinxcontrib-napoleon
 sphinxcontrib-bibtex
