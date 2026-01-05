@@ -232,8 +232,8 @@ References
     .. |tests_img| image:: https://github.com/pbrod/numdifftools/actions/workflows/test.yml/badge.svg
        :target: https://github.com/pbrod/numdifftools/actions/workflows/test.yml
 
-    .. |health_img| image:: https://api.codeclimate.com/v1/badges/698996d1ec94028ec223/maintainability.svg
-       :target: https://codeclimate.com/github/pbrod/numdifftools/maintainability
+    .. |health_img| image:: https://qlty.sh/gh/pbrod/projects/numdifftools/maintainability.svg
+       :target: https://qlty.sh/gh/pbrod/projects/numdifftools
        :alt: Maintainability
 
     .. |coverage_img| image:: https://codecov.io/gh/pbrod/numdifftools/branch/master/graph/badge.svg
