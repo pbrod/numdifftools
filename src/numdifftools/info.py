@@ -123,8 +123,6 @@ scipy.misc.derivative
 Documentation and code
 ======================
 
-Numdifftools works on Python 2.7+ and Python 3.0+.
-
 Official releases available at: http://pypi.python.org/pypi/numdifftools |pkg_img|
 
 Official documentation available at: http://numdifftools.readthedocs.io/en/latest/ |docs_img|
