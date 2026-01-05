@@ -9,7 +9,7 @@
 # pdm all-tests # runs all the above  
 # pdm append-changelog  # Manually edit CHANGELOG.md to make sure it looks OK.
 # pdm run update-readme # Update README.rst from numdifftools.info
-# pdm run update-license # Update LICENSE.txtt from numdifftools.license
+# pdm run update-license # Update LICENSE.txt from numdifftools.license
 
 # git commit
 # pdm bump pre-release --pre alpha # creates 0.1.1a1 from 0.1.0
@@ -67,7 +67,10 @@ classifiers = [
 [project.optional-dependencies]
 plot =["matplotlib>=3.8.0",
        ]
-
+tools = [
+    "algopy>=0.4",
+    "statsmodels>=0.6",
+]
 [project.urls]
 repository  = "https://github.com/pbrod/numdifftools/"
 documentation = "https://numdifftools.readthedocs.io/en/latest/"
@@ -102,7 +105,7 @@ format = "ruff format ./src/"  # format code
 check-style = "ruff check ./src/"  # check code style
 check-types = "mypy ./src/"  # check types
 tests = {cmd = "pytest", env = {"MPLBACKEND" = "Agg"}}
-all-tests = {composite = ["format", "check-style", "test", "doctest"]}  # "check-types", 
+all-tests = {composite = ["format", "check-style", "tests", "docs-doctest"]}  # "check-types", 
 
 show-next-version = "git-cliff --bumped-version"  # calculate and print the next semantic version to stdout:
 show-next-changelog = "git-cliff"
@@ -140,16 +143,14 @@ test = [
     "pytest",
     "pytest-cov",
     "pytest-pep8",
-    "algopy>=0.4",
-    "statsmodels>=0.6",
     "line_profiler",
     "hypothesis>=3.6",
-    "matplotlib>=3.8.0",
     "pytest-ruff>=0.4.1",
     "ruff>=0.0.47",
     # "gitlint>=0.19",
     "pytest-mypy>=0.10.3",
     "mypy>=1.11.2",
+    "numdifftools[plot,tools]",
 ]
 sphinx = [
     "sphinx>=1.3.1",
@@ -158,7 +159,16 @@ sphinx = [
     "sphinxcontrib-bibtex",
     "myst_parser",
 ]
-all = ["numdifftools[build,plot,test,sphinx]"]
+all = [
+     "numdifftools[plot,tools,build,test,sphinx]",
+
+]
+
+[tool.coverage.run]
+source = ["src/numdifftools"]
+
+[tool.coverage.report]
+xml_report = true
 
 [tool.mypy]
 strict = true
@@ -221,7 +231,7 @@ markers = [
     "benchmark: marks tests used for benchmarking",
 ]
 doctest_optionflags = ["NORMALIZE_WHITESPACE", "IGNORE_EXCEPTION_DETAIL",  "ELLIPSIS"]
-addopts = "-rsxXf --doctest-modules --cov=numdifftools --cov-report=xml" #--ruff-format  --mypy  --ruff
+addopts = "-rsxXf --doctest-modules" #--ruff-format  --mypy  --ruff
 testpaths = [
     "src"
 ]
