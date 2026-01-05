@@ -231,7 +231,7 @@ markers = [
     "benchmark: marks tests used for benchmarking",
 ]
 doctest_optionflags = ["NORMALIZE_WHITESPACE", "IGNORE_EXCEPTION_DETAIL",  "ELLIPSIS"]
-addopts = "-rsxXf --doctest-modules" #--ruff-format  --mypy  --ruff
+addopts = "-rsxXf --doctest-modules --cov=numdifftools --cov-report=xml" #--ruff-format  --mypy  --ruff
 testpaths = [
     "src"
 ]
