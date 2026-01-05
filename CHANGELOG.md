@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.9.42]
+## [0.9.42] - 2025-12-11
 
 ### 🐛 Bug Fixes
 - Removed deprecated "cross_platform" from pdm.lock

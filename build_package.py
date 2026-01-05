@@ -108,7 +108,7 @@ if __name__ == "__main__":
         update_license()
         update_readme()
         call_subprocess(["pdm", "run", ""])
-        for cmd in ['doctest', 'docs-html', 'docs-latex', 'docs-pdf', 'build']:
+        for cmd in ['docs-doctest', 'docs-html', 'docs-latex', 'docs-pdf', 'build']:
             call_subprocess(["pdm", "run", cmd])
 
     @cli.command("update-readme") # Define the new command
