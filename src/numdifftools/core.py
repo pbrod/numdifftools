@@ -424,8 +424,6 @@ class Jacobian(Derivative):
 
     @staticmethod
     def _expand_steps(steps, x_i, fxi):
-        if np.size(fxi) == 1:
-            return steps
         n = len(x_i)
         one = np.ones_like(fxi)
         return [np.array([one * h[i] for i in range(n)]) for h in steps]

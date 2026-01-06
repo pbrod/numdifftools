@@ -356,8 +356,17 @@ class TestJacobian(object):
         val = jaca(x)
         assert_allclose(val, tval)
 
+    def test_issue_68(self):
+        """Check that Jacobian does not fail for functions of shape (1,)"""
+        x = np.array([1., 2])
+        fun = lambda x: np.array([np.sum(x**2) - 1,])
+        jvalues = nd.Jacobian(fun)(x)
+        assert_allclose(jvalues, [[2., 4.]])
+
+
     @staticmethod
     def test_issue_25():
+        """Check size of Jacobian tensor"""
         def g_fun(x):
             out = np.zeros((2, 2))
             out[0] = x
@@ -397,7 +406,7 @@ class TestJacobian(object):
 
     @staticmethod
     def test_jacobian_fulloutput():
-        """test"""
+        """Check info output"""
         res, info = nd.Jacobian(lambda x, y: x + y, full_output=True)(1, 3)
         assert_allclose(res, 1)
         assert info.error_estimate < 1e-13
@@ -409,9 +418,7 @@ class TestJacobian(object):
 class TestGradient(object):
     @staticmethod
     def test_issue_39():
-        """
-        Test that checks float/Bicomplex works
-        """
+        """Check that float/Bicomplex works"""
         fun = nd.Gradient(lambda x: 1.0 / (np.exp(x[0]) + np.cos(x[1]) + 10), method="multicomplex")
         assert_allclose(fun([1.0, 2.0]), [-0.017961123762187736, 0.0060082083648822])
 
@@ -599,3 +606,14 @@ class TestHessian(object):
             x = [3.0, 5.0]
             a, b = ddfun(x), h_fun(x)
             assert_allclose(a, b, atol=1e-4)
+
+
+if __name__ == '__main__':
+    import numpy as np
+    import numdifftools as nd
+    x = np.array([1., 2])
+    fun2 = lambda x: np.array([np.sum(x**2) - 1, 0])
+    J2 = nd.Jacobian(fun2)(x)
+    fun = lambda x: np.array([np.sum(x**2) - 1,])
+    J1 = nd.Jacobian(fun)(x)
+    print(J1, J2)
