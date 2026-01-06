@@ -161,7 +161,7 @@ Later the package was extended with some of the functionality
 found in the statsmodels.tools.numdiff module written by Josef Perktold
 [JPerktold14]_ which is based on [Rid09]_.
 The implementation of bicomplex numbers is based on the matlab implementation
-described in the project report of [Ver14]_ which is based on [GLD12].
+described in the project report of [Ver14]_ which is based on [GLD12]_.
 For completeness the [For98]_  method for computing the weights and points in general
 finite difference formulas as well as the [For81]_ method for cumputing the
 taylor coefficients of complex analytic function using FFT, was added.
