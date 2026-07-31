@@ -106,7 +106,7 @@ jobs:
       - name: Use Codecov to track coverage
         if: matrix.python_version == '3.13' && matrix.os == 'ubuntu-latest'
         # See: https://martinheinz.dev/blog/69 "Ultimate CI Pipeline for All of Your Python Projects"
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v6
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./coverage.xml    # coverage report
+          slug: pbrod/numdifftools
