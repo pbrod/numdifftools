@@ -7,6 +7,9 @@
 
 name: CI - Tests
 
+permissions:
+  contents: read
+
 on:
   push:
   pull_request:
@@ -16,47 +19,27 @@ on:
 
 jobs:
   ci:
+    timeout-minutes: 30
     runs-on: ${{ matrix.os }}
 
     # Ensure matplotlib uses a non-interactive backend on all runners
     env:
       MPLBACKEND: Agg
-      # Use github.workspace (available during workflow evaluation) so MPLCONFIGDIR is valid at parse time
+      # Store matplotlib config inside the workspace to avoid permission issues
       MPLCONFIGDIR: ${{ github.workspace }}/.matplotlib
 
     strategy:
       matrix:
-        python_version: ["3.14", "3.13", "3.12", "3.11", "3.10"]
+        python_version: ["3.15", "3.14", "3.13", "3.12", "3.11", "3.10"]
         os: [ubuntu-latest, macos-latest, windows-latest]
-
-        # Exclude/Include logic for 3.14 (allow failure for future Python version)
-        exclude:
-          - python_version: "3.14"
-            os: ubuntu-latest
-          - python_version: "3.14"
-            os: macos-latest
-          - python_version: "3.14"
-            os: windows-latest
-
-        include:
-          # Re-add 3.14 combos but mark them as allow_failure: true
-          - python_version: "3.14"
-            os: ubuntu-latest
-            allow_failure: true
-          - python_version: "3.14"
-            os: macos-latest
-            allow_failure: true
-          - python_version: "3.14"
-            os: windows-latest
-            allow_failure: true
 
       fail-fast: false
 
-    # Apply the matrix value to the entire job; default to false if matrix.allow_failure is not set
-    continue-on-error: ${{ matrix.allow_failure || false }}
+    # Allow Python 3.15 jobs to fail without failing the workflow
+    continue-on-error: ${{ matrix.python_version == '3.15' }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       # If we're testing with Python 3.14, use a dedicated lockfile (pdm.lock314) by copying it
       # over pdm.lock before any dependency install or cache key evaluation that reads pdm.lock.
@@ -101,9 +84,9 @@ jobs:
       - name: Install dependencies
         run: pdm install -dG test
 
-      - name: Run Tests
+      - name: Run tests
         run: pdm run pytest
-      - name: Use Codecov to track coverage
+      - name: Upload coverage to Codecov
         if: matrix.python_version == '3.13' && matrix.os == 'ubuntu-latest'
         # See: https://martinheinz.dev/blog/69 "Ultimate CI Pipeline for All of Your Python Projects"
         uses: codecov/codecov-action@v6
