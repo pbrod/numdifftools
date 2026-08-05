@@ -17,7 +17,7 @@ else:
 pytestmark = pytest.mark.skipif(algopy is None, reason="algopy is not installed!")
 
 
-class TestExampleFunctions(object):
+class TestExampleFunctions:
     @staticmethod
     def test_high_order_derivative():
         x = 0.5

@@ -1,6 +1,5 @@
 """Test functions for numdifftools module"""
 
-from __future__ import absolute_import, print_function
 
 import numpy as np
 import pytest
@@ -14,7 +13,7 @@ from numdifftools.testing import rosen
 from numdifftools.tests.hamiltonian import run_hamiltonian
 
 
-class TestRichardson(object):
+class TestRichardson:
     @staticmethod
     def test_central_forward_backward():
         central = {
@@ -100,11 +99,11 @@ class TestRichardson(object):
                     d.set_richardson_rule(step_ratio=2.0, num_terms=num_terms)
                     rule = d.richardson.rule()
 
-                    msg = "n={0}, num_terms={1}, order={2}".format(n, num_terms, order)
+                    msg = f"n={n}, num_terms={num_terms}, order={order}"
                     assert_allclose(rule, truth[(n, num_terms, order)], err_msg=msg)
 
 
-class TestDerivative(object):
+class TestDerivative:
     @staticmethod
     def test_directional_diff():
         v = [1, -1]
@@ -153,16 +152,16 @@ class TestDerivative(object):
     @example(8.9428143931508)
     @example(2.2204460492503134e-14)
     def test_derivative_of_cos_x(x):
-        note("x = {}".format(x))
+        note(f"x = {x}")
         msg = "order = {}, error = {}, err_est = {}"
         true_vals = (-np.sin(x), -np.cos(x), np.sin(x), np.cos(x)) * 2
         for method in ["complex", "central", "forward", "backward"]:
-            note("method = {}".format(method))
+            note(f"method = {method}")
             n_max = {"complex": 7, "central": 6}.get(method, 4)
             for n in range(1, n_max + 1):
                 true_val = true_vals[n - 1]
                 start, stop, step = {"central": (2, 7, 2), "complex": (2, 3, 1)}.get(method, (1, 5, 1))
-                note("n = {}, true_val = {}".format(n, true_val))
+                note(f"n = {n}, true_val = {true_val}")
                 for order in range(start, stop, step):
                     d3cos = nd.Derivative(np.cos, n=n, order=order, method=method, full_output=True)
                     y, _info = d3cos(x)
@@ -267,7 +266,7 @@ class TestDerivative(object):
         assert_allclose(dlog(x), 1 / x)
 
 
-class TestJacobian(object):
+class TestJacobian:
     @staticmethod
     @given(st.floats(min_value=-1000, max_value=1000))
     def test_scalar_to_vector(val):
@@ -278,7 +277,7 @@ class TestJacobian(object):
         for method in ["multicomplex", "complex", "central", "forward", "backward"]:
             j0, info = nd.Jacobian(fun, method=method, full_output=True)(val)
             error = np.abs(j0 - truth)
-            note("method={}, error={}, error_est={}".format(method, error, info.error_estimate))
+            note(f"method={method}, error={error}, error_est={info.error_estimate}")
             assert_allclose(j0, truth, rtol=1e-3, atol=1e-6)
 
     @staticmethod
@@ -422,7 +421,7 @@ class TestJacobian(object):
         assert info.f_value == 4
 
 
-class TestGradient(object):
+class TestGradient:
     @staticmethod
     def test_issue_39():
         """Check that float/Bicomplex works"""
@@ -467,7 +466,7 @@ class TestGradient(object):
                 assert_allclose(d, dtrue)
 
 
-class TestHessdiag(object):
+class TestHessdiag:
     @staticmethod
     def _fun(x):
         return x[0] + x[1] ** 2 + x[2] ** 3
@@ -499,12 +498,12 @@ class TestHessdiag(object):
         methods = ["central2", "central", "multicomplex", "complex", "forward", "backward"]
         for order in range(2, 7, 2):
             steps = nd.MinStepGenerator(num_steps=order + 1, use_exact_steps=True, step_ratio=3.0, offset=0)
-            note("order = {}".format(order))
+            note(f"order = {order}")
             for method in methods:
                 h_fun = nd.Hessdiag(self._fun, step=steps, method=method, order=order, full_output=True)
                 h_val, _info = h_fun(vals)
                 _error = np.abs(h_val - htrue)
-                note("error = {}, error_est = {}".format(_error, _info.error_estimate))
+                note(f"error = {_error}, error_est = {_info.error_estimate}")
                 assert_allclose(h_val, htrue, rtol=1e-5, atol=100 * max(_info.error_estimate))
 
     def test_default_step(self):
@@ -518,7 +517,7 @@ class TestHessdiag(object):
                 assert_allclose(h_val, htrue, atol=tol)
 
 
-class TestHessian(object):
+class TestHessian:
     def test_run_hamiltonian(self):
         # Important to restrict the step in order to avoid the
         # discontinutiy at x=[0,0] of the hamiltonian

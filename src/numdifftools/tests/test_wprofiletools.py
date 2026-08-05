@@ -48,8 +48,7 @@ def _extract_do_cprofile_results(txt):
 
 
 def _get_number():
-    for x in range(50000):
-        yield x
+    yield from range(50000)
 
 
 def _expensive_function():
@@ -59,7 +58,7 @@ def _expensive_function():
     return i
 
 
-class ExpensiveClass4(object):
+class ExpensiveClass4:
     n = 5000
 
     def expensive_method4(self):
@@ -68,15 +67,14 @@ class ExpensiveClass4(object):
         return i
 
     def _get_number4(self):
-        for x in range(self.n):
-            yield x
+        yield from range(self.n)
 
 
 FIRST_LINE = "Line #      Hits         Time  Per Hit   % Time  Line Contents"
 
 
 # Tests
-class TestTimeFun(object):
+class TestTimeFun:
     def test_decorate_function(self):
         @timefun
         def expensive_function():
@@ -104,7 +102,7 @@ class TestTimeFun(object):
         assert time > 0
 
 
-class TestTimeWith(object):
+class TestTimeWith:
     def test_timing_with_context_manager(self):
         # prints something like:
         # fancy thing done with something took 0.582462072372 seconds
@@ -139,7 +137,7 @@ class TestTimeWith(object):
         assert out[0].startswith("fancy thing done with something took"), msg
 
 
-class TestDoCProfile(object):
+class TestDoCProfile:
     def test_on_function(self):
         @do_cprofile
         def expensive_function():
@@ -170,7 +168,7 @@ class TestDoCProfile(object):
 
 #  @pytest.mark.skip('Suspect this test fucks up coverage stats.')
 @pytest.mark.skipif(LineProfiler is None, reason="LineProfiler is not installed.")
-class TestDoProfile(object):
+class TestDoProfile:
     def test_on_function_and_follow_function(self):
         @do_profile(follow=[_get_number])
         def expensive_function():
@@ -192,7 +190,7 @@ class TestDoProfile(object):
         assert results[5][5].strip() == "@do_profile(follow=[_get_number])"
 
     def test_on_class_method_and_follow_function(self):
-        class ExpensiveClass1(object):
+        class ExpensiveClass1:
             @do_profile(follow=[_get_number])
             def expensive_method1(self):
                 for x in _get_number():
@@ -214,7 +212,7 @@ class TestDoProfile(object):
         assert results[5][5].strip() == "@do_profile(follow=[_get_number])", msg
 
     def test_on_class_method_and_follow_class_method(self):
-        class ExpensiveClass2(object):
+        class ExpensiveClass2:
             n = 5000
             """You can not put class method _get_number2 directly into follow
             instead you must pass its name as a string:
@@ -227,8 +225,7 @@ class TestDoProfile(object):
                 return i
 
             def _get_number2(self):
-                for x in range(self.n):
-                    yield x
+                yield from range(self.n)
 
         with capture_stdout_and_stderr() as out:
             ExpensiveClass2().expensive_method2()
@@ -245,7 +242,7 @@ class TestDoProfile(object):
         assert results[7][5].strip() == "def _get_number2(self):", msg
 
     def test_on_all_class_methods(self):
-        class ExpensiveClass3(object):
+        class ExpensiveClass3:
             n = 5000
             n2 = 50
             """Profile all methods of ExpensiveClass3"""
@@ -258,12 +255,10 @@ class TestDoProfile(object):
                 return i
 
             def _get_number3(self):
-                for x in range(self.n):
-                    yield x
+                yield from range(self.n)
 
             def _get_number32(self):
-                for x in range(self.n2):
-                    yield x
+                yield from range(self.n2)
 
         with capture_stdout_and_stderr() as out:
             ExpensiveClass3().expensive_method3()

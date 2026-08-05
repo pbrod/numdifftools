@@ -9,7 +9,6 @@ Copyright:   (c) pab 2008
 Licence:     New BSD
 """
 
-from __future__ import absolute_import, division, print_function
 
 from collections import namedtuple
 
@@ -187,7 +186,7 @@ class Derivative(_Limit):
 
         self.fd_rule = self._fd_rule(n=n, method=method, order=order)
 
-        super(Derivative, self).__init__(step=step, **options)
+        super().__init__(step=step, **options)
         self._set_derivative()
 
     @property
@@ -277,8 +276,8 @@ class Derivative(_Limit):
 
     def _raise_error_if_any_is_complex(self, x, f_x):
         msg = (
-            "The {} step derivative method does only work on a real valued analytic "
-            "function of a real variable!".format(self.method)
+            f"The {self.method} step derivative method does only work on a real valued analytic "
+            "function of a real variable!"
         )
         _assert(not np.any(np.iscomplex(x)), msg + " But a complex variable was given!")
 
@@ -440,7 +439,7 @@ class Jacobian(Derivative):
         return self.fd_rule.apply(results, steps2, step_ratio), fxi
 
     def __call__(self, x, *args, **kwds):
-        return super(Jacobian, self).__call__(np.atleast_1d(x), *args, **kwds)
+        return super().__call__(np.atleast_1d(x), *args, **kwds)
 
 
 class Gradient(Jacobian):
@@ -502,7 +501,7 @@ class Gradient(Jacobian):
     }
 
     def __call__(self, x, *args, **kwds):
-        result = super(Gradient, self).__call__(np.atleast_1d(x).ravel(), *args, **kwds)
+        result = super().__call__(np.atleast_1d(x).ravel(), *args, **kwds)
         if self.full_output:
             return result[0].squeeze(), result[1]
         return result.squeeze()
@@ -550,10 +549,10 @@ class Hessdiag(Derivative):
 
     def __init__(self, f, step=None, method="central", order=2, **options):
         options.pop("n", None)
-        super(Hessdiag, self).__init__(f, step=step, method=method, n=2, order=order, **options)
+        super().__init__(f, step=step, method=method, n=2, order=order, **options)
 
     def __call__(self, x, *args, **kwds):
-        return super(Hessdiag, self).__call__(np.atleast_1d(x), *args, **kwds)
+        return super().__call__(np.atleast_1d(x), *args, **kwds)
 
 
 class Hessian(Hessdiag):
@@ -624,7 +623,7 @@ class Hessian(Hessdiag):
     def __init__(self, f, step=None, method="central", order=None, **options):
         if order is None:
             order = {"backward": 1, "forward": 1}.get(method, 2)
-        super(Hessian, self).__init__(f, step=step, method=method, order=order, **options)
+        super().__init__(f, step=step, method=method, order=order, **options)
 
 
 if __name__ == "__main__":

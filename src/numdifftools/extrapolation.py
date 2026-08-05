@@ -4,7 +4,6 @@ Created on 28. aug. 2015
 @author: pab
 """
 
-from __future__ import absolute_import, division, print_function
 
 import warnings
 
@@ -38,7 +37,7 @@ def convolve(sequence, rule, **kwds):
     return convolve1d(seq, rule, **kwds)
 
 
-class Dea(object):
+class Dea:
     """
     Extrapolate a slowly convergent sequence using repeated Shanks transformations.
 
@@ -226,7 +225,7 @@ class Dea(object):
         return result, abserr
 
 
-class EpsAlg(object):
+class EpsAlg:
     """
     Extrapolate a slowly convergent sequence using Shanks transformation.
 
@@ -473,7 +472,7 @@ def dea3(v_0, v_1, v_2, symmetric=False):
     return result, abserr
 
 
-class Richardson(object):
+class Richardson:
     """
     Extrapolates a sequence with Richardsons method
 

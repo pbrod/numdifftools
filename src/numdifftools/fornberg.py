@@ -1,4 +1,3 @@
-from __future__ import absolute_import, division
 
 from collections import namedtuple
 
@@ -301,7 +300,7 @@ def _check_fft(m1, m2, check_degenerate=True):
     return degenerate, needs_smaller
 
 
-class Taylor(object):
+class Taylor:
     """
     Return Taylor coefficients of complex analytic function using FFT
 

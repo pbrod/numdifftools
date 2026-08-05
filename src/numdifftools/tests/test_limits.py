@@ -4,7 +4,6 @@ Created on 28. aug. 2015
 @author: pab
 """
 
-from __future__ import absolute_import, division, print_function
 
 import numpy as np
 from numpy.testing import assert_allclose, assert_array_almost_equal  # @UnresolvedImport
@@ -14,7 +13,7 @@ from numdifftools.limits import CStepGenerator, Limit, Residue
 from numdifftools.step_generators import make_exact
 
 
-class TestCStepGenerator(object):
+class TestCStepGenerator:
     @staticmethod
     def test_default_generator():
         step_gen = CStepGenerator(num_steps=8)
@@ -52,7 +51,7 @@ class TestCStepGenerator(object):
         assert_array_almost_equal((h[0] - desired) / desired, 0)
 
 
-class TestLimit(object):
+class TestLimit:
     def test_sinx_div_x(self):
         def fun(x):
             return np.sin(x) / x
@@ -97,7 +96,7 @@ class TestLimit(object):
             assert err.error_estimate < 1e-8
 
 
-class TestResidue(object):
+class TestResidue:
     def test_residue_1_div_1_minus_exp_x(self):
         def fun(z):
             return -1.0 / (np.expm1(2 * z))

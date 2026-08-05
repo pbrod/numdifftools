@@ -4,7 +4,6 @@ Created on Apr 4, 2016
 @author: pab
 """
 
-from __future__ import absolute_import, print_function
 
 import contextlib
 import inspect
@@ -34,7 +33,7 @@ def test_docstrings(name=""):
 
     if not name:
         name = inspect.stack()[1][1]
-    print("Testing docstrings in {}".format(name))
+    print(f"Testing docstrings in {name}")
     doctest.testmod(optionflags=doctest.NORMALIZE_WHITESPACE | doctest.ELLIPSIS)
 
 

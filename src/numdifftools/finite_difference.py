@@ -2,7 +2,6 @@
 Finite difference methods module.
 """
 
-from __future__ import absolute_import, division, print_function
 
 import warnings
 
@@ -47,7 +46,7 @@ def make_exact(h):
     return (h + 1.0) - 1.0
 
 
-class DifferenceFunctions(object):
+class DifferenceFunctions:
     """
     Class defining difference functions
 
@@ -108,7 +107,7 @@ class DifferenceFunctions(object):
         return Bicomplex.__array_wrap__(f(z)).imag12
 
 
-class JacobianDifferenceFunctions(object):
+class JacobianDifferenceFunctions:
     """Class defining Jacobian difference functions"""
 
     # pylint: disable=unused-argument
@@ -174,7 +173,7 @@ class JacobianDifferenceFunctions(object):
         return np.array(partials)
 
 
-class HessdiagDifferenceFunctions(object):
+class HessdiagDifferenceFunctions:
     """Class defining Hessdiag difference functions
 
     References
@@ -233,7 +232,7 @@ class HessdiagDifferenceFunctions(object):
         return np.array(partials)
 
 
-class HessianDifferenceFunctions(object):
+class HessianDifferenceFunctions:
     """Class defining Hessian difference functions
 
     References
@@ -356,7 +355,7 @@ class HessianDifferenceFunctions(object):
         return HessianDifferenceFunctions._forward(f, f_x, x, -h)
 
 
-class LogRule(object):
+class LogRule:
     """Log spaced finite difference rule class
 
     Parameters
@@ -497,7 +496,7 @@ class LogRule(object):
         nterms : scalar, integer
             number of terms
         """
-        _assert(0 <= parity <= 6, "Parity must be 0, 1, 2, 3, 4, 5 or 6! ({0:d})".format(parity))
+        _assert(0 <= parity <= 6, f"Parity must be 0, 1, 2, 3, 4, 5 or 6! ({parity:d})")
         step = [1, 2, 2, 4, 4, 4, 4][parity]
         inv_sr = 1.0 / step_ratio
         offset = [1, 1, 2, 2, 4, 1, 3][parity]
@@ -540,7 +539,7 @@ class LogRule(object):
     @property
     def diff(self):
         "The difference function"
-        first = "_{0!s}".format(self.method)
+        first = f"_{self.method!s}"
         middle = self._get_middle_name()
         last = self._get_last_name()
         name = first + middle + last
@@ -629,9 +628,7 @@ class LogRule(object):
         n_r = fd_rule.size - 1
         _assert(
             n_r < num_steps,
-            "num_steps ({0:d}) must  be larger than ({1:d}) n + order - 1 = {2:d} + {3:d} -1 ({4:s})".format(
-                num_steps, n_r + 1, self.n, self.order, self.method
-            ),
+            f"num_steps ({num_steps:d}) must  be larger than ({n_r + 1:d}) n + order - 1 = {self.n:d} + {self.order:d} -1 ({self.method:s})",
         )
         f_diff = convolve(f_del, fd_rule[::-1], axis=0, origin=n_r // 2)
 

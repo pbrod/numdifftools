@@ -11,7 +11,7 @@ from scipy import constants, linalg, optimize
 from numdifftools.multicomplex import c_abs
 
 
-class ClassicalHamiltonian(object):
+class ClassicalHamiltonian:
     """
     Hamiltonian
 

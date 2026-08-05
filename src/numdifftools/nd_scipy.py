@@ -1,10 +1,9 @@
-from __future__ import absolute_import, division, print_function
 
 import numpy as np
 from scipy.optimize._numdiff import approx_derivative
 
 
-class _Common(object):
+class _Common:
     def __init__(self, fun, step=None, method="central", order=2, bounds=(-np.inf, np.inf), sparsity=None):
         self.fun = fun
         self.step = step
@@ -140,7 +139,7 @@ class Gradient(Jacobian):
     """
 
     def __call__(self, x, *args, **kwds):
-        return super(Gradient, self).__call__(np.atleast_1d(x).ravel(), *args, **kwds).squeeze()
+        return super().__call__(np.atleast_1d(x).ravel(), *args, **kwds).squeeze()
 
 
 if __name__ == "__main__":

@@ -30,7 +30,6 @@ Project report, NTNU
 
 """
 
-from __future__ import absolute_import, division
 
 import numpy as np
 
@@ -58,7 +57,7 @@ def c_abs(z):
     return np.abs(z)
 
 
-class Bicomplex(object):
+class Bicomplex:
     """
     BICOMPLEX(z1, z2)
 
@@ -143,7 +142,7 @@ class Bicomplex(object):
 
     def __repr__(self):
         name = self.__class__.__name__
-        return """{0!s}(z1={1!s}, z2={2!s})""".format(name, str(self.z1), str(self.z2))
+        return f"""{name!s}(z1={str(self.z1)!s}, z2={str(self.z2)!s})"""
 
     def __lt__(self, other):
         other = self._coerce(other)

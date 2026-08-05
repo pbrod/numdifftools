@@ -9,7 +9,6 @@ Release date: 5/23/2008
 
 """
 
-from __future__ import absolute_import, division, print_function
 
 import warnings
 from collections import namedtuple
@@ -64,7 +63,7 @@ class CStepGenerator(MinStepGenerator):
     ):
         self.path = options.pop("path", "radial")
         self.dtheta = options.pop("dtheta", np.pi / 8)
-        super(CStepGenerator, self).__init__(
+        super().__init__(
             base_step=base_step,
             step_ratio=step_ratio,
             num_steps=num_steps,
@@ -76,7 +75,7 @@ class CStepGenerator(MinStepGenerator):
         self._check_path()
 
     def _check_path(self):
-        _assert(self.path in ["spiral", "radial"], "Invalid Path: {}".format(str(self.path)))
+        _assert(self.path in ["spiral", "radial"], f"Invalid Path: {str(self.path)}")
 
     @property
     def step_ratio(self):
@@ -113,7 +112,7 @@ class CStepGenerator(MinStepGenerator):
         self._num_steps = num_steps
 
 
-class _Limit(object):
+class _Limit:
     """Common methods and member variables"""
 
     info = namedtuple("info", ["error_estimate", "final_step", "index"])
@@ -358,7 +357,7 @@ class Limit(_Limit):
     """
 
     def __init__(self, fun, step=None, method="above", order=4, full_output=False, **options):
-        super(Limit, self).__init__(step=step, **options)
+        super().__init__(step=step, **options)
         self.fun = fun
         self.method = method
         self.order = order
@@ -512,7 +511,7 @@ class Residue(Limit):
         _assert(pole_order < order, "order must be at least pole_order+1.")
         self.pole_order = pole_order
 
-        super(Residue, self).__init__(
+        super().__init__(
             f, step=step, method=method, order=order, full_output=full_output, **options
         )
 

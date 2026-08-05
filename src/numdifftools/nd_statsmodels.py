@@ -5,7 +5,6 @@ This module provides an easy to use interface to derivatives calculated with
 statsmodels.numdiff.
 """
 
-from __future__ import absolute_import, division, print_function
 
 import warnings
 from functools import partial
@@ -151,7 +150,7 @@ def _approx_hess1_backward(x, f, epsilon=None, args=(), kwargs=None):
     return approx_hess1(x, f, epsilon, args, kwargs)
 
 
-class _Common(object):
+class _Common:
     def __init__(self, fun, step=None, method="central", order=None):
         self.fun = fun
         self.step = step
@@ -185,7 +184,7 @@ class _Common(object):
         if callable_:
             self._derivative_nonzero_order = callable_
         else:
-            warnings.warn('{} is an illegal method! Setting method="central"'.format(method), stacklevel=2)
+            warnings.warn(f'{method} is an illegal method! Setting method="central"', stacklevel=2)
             self.method = "central"
 
     def __call__(self, x, *args, **kwds):
@@ -357,7 +356,7 @@ class Gradient(Jacobian):
     """
 
     def __call__(self, x, *args, **kwds):
-        return super(Gradient, self).__call__(np.atleast_1d(x).ravel(), *args, **kwds).squeeze()
+        return super().__call__(np.atleast_1d(x).ravel(), *args, **kwds).squeeze()
 
 
 if __name__ == "__main__":

@@ -90,7 +90,6 @@ n=10, scale=14.200000000000001
 
 """
 
-from __future__ import absolute_import, division, print_function
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -156,22 +155,22 @@ def benchmark(x=0.0001, dfun=None, fd=None, name="", scales=None, show_plot=True
         plot_error(scales, relativ_errors, scale0, title, label=name)
 
     i = np.nanargmin(relativ_errors)
-    error = float("{:.3g}".format(relativ_errors[i]))
+    error = float(f"{relativ_errors[i]:.3g}")
     return {"n": n, "order": order, "method": method, "fun": name, "error": error, "scale": scales[i], "x": x}
 
 
 def _print_summary(method, order, x_values, scales):
     print(scales)
-    header = 'method="{}", order={}, x_values={}:'.format(method, order, str(x_values))
+    header = f'method="{method}", order={order}, x_values={str(x_values)}:'
     print(header)
     for n in scales:
         print(
-            "n={}, mean scale={:.2f}, median scale={:.2f}".format(n, np.mean(scales[n]), np.median(scales[n]))
+            f"n={n}, mean scale={np.mean(scales[n]):.2f}, median scale={np.median(scales[n]):.2f}"
         )
 
     print("Default scale with " + header)
     for n in scales:
-        print("n={}, scale={:.2f}".format(n, default_scale(method, n, order)))
+        print(f"n={n}, scale={default_scale(method, n, order):.2f}")
 
 
 def run_all_benchmarks(method="forward", order=4, x_values=(0.1, 0.5, 1.0, 5), n_max=11, show_plot=True):

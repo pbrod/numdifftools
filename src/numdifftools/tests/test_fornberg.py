@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function
 
 import numpy as np
 from hypothesis import given, note, settings  # , reproduce_failure
@@ -46,9 +45,7 @@ def test_high_order_derivative(x):
             except AssertionError as error:
                 print(n, name, y, vals[n], tval, info.iterations, aerr0, aerr)
                 note(
-                    "{}, {}, {}, {}, {}, {}, {}, {}".format(
-                        n, name, y, vals[n], tval, info.iterations, aerr0, aerr
-                    )
+                    f"{n}, {name}, {y}, {vals[n]}, {tval}, {info.iterations}, {aerr0}, {aerr}"
                 )
                 raise error
 
@@ -87,7 +84,7 @@ def test_fd_derivative():
         assert_allclose(df[:m], fx[:m], atol=1e-4)
 
 
-class ExampleFunctions(object):
+class ExampleFunctions:
     @staticmethod
     def fun0(z):
         return np.exp(z)
@@ -151,7 +148,7 @@ class ExampleFunctions(object):
 
 def test_low_order_derivative_on_example_functions():
     for j in range(15):
-        fun = getattr(ExampleFunctions, "fun{}".format(j))
+        fun = getattr(ExampleFunctions, f"fun{j}")
         der, info = derivative(fun, z0=0.0, r=0.06, n=10, max_iter=30, full_output=True, step_ratio=1.6)
         print(info)
         print("answer:")

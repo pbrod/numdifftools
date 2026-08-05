@@ -53,7 +53,6 @@ https://en.wikipedia.org/wiki/Automatic_differentiation
 https://pythonhosted.org/algopy/index.html
 """
 
-from __future__ import absolute_import, division
 
 from collections import namedtuple
 
@@ -116,7 +115,7 @@ _cmn_doc = """
     """
 
 
-class _Derivative(object):
+class _Derivative:
     """Base class"""
 
     info = namedtuple("info", ["error_estimate", "final_step", "index"])
@@ -371,7 +370,7 @@ class Jacobian(Gradient):
     }
 
     def _forward(self, x, *args, **kwds):
-        return np.atleast_2d(super(Jacobian, self)._forward(x, *args, **kwds))
+        return np.atleast_2d(super()._forward(x, *args, **kwds))
 
     def _reverse(self, x, *args, **kwds):
         x = np.atleast_1d(x)
@@ -432,7 +431,7 @@ class Hessian(_Derivative):
     }
 
     def __init__(self, f, method="forward", full_output=False):
-        super(Hessian, self).__init__(f, n=2, method=method, full_output=full_output)
+        super().__init__(f, n=2, method=method, full_output=full_output)
 
     def _forward(self, x, *args, **kwds):
         x = np.atleast_1d(x)
@@ -509,7 +508,7 @@ class Hessdiag(Hessian):
         return H
 
     def _reverse(self, x, *args, **kwds):
-        return np.diag(super(Hessdiag, self)._reverse(x, *args, **kwds))
+        return np.diag(super()._reverse(x, *args, **kwds))
 
 
 def directionaldiff(f, x0, vec, **options):
@@ -561,7 +560,7 @@ def directionaldiff(f, x0, vec, **options):
     return Derivative(lambda t: f(x0 + t * vec), **options)(0)
 
 
-class Taylor(object):
+class Taylor:
     """
     Return Taylor coefficients of function using algorithmic differentiation
 

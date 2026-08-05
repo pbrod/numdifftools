@@ -5,7 +5,6 @@ See also:
 https://www.pythoncentral.io/measure-time-in-python-time-time-vs-time-clock/
 """
 
-from __future__ import absolute_import, print_function
 
 import cProfile
 import inspect
@@ -136,11 +135,7 @@ class TimeWith:
 
     def checkpoint(self, name=""):
         print(
-            "{timer} {checkpoint} took {elapsed} seconds".format(
-                timer=self.name,
-                checkpoint=name,
-                elapsed=self.elapsed,
-            ).strip()
+            f"{self.name} {name} took {self.elapsed} seconds".strip()
         )
 
     def __enter__(self):

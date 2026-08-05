@@ -1,4 +1,3 @@
-from __future__ import absolute_import, print_function
 
 import timeit
 from collections import OrderedDict
@@ -21,7 +20,7 @@ else:
 from numdifftools.core import MaxStepGenerator, MinStepGenerator
 
 
-class BenchmarkFunction(object):
+class BenchmarkFunction:
     """Return 0.5 * np.dot(x**2, np.dot(A,x))"""
 
     def __init__(self, n):
@@ -148,9 +147,7 @@ def run_gradient_and_hessian_benchmarks(
 def main(problem_sizes=(4, 8, 16, 32, 64, 96)):
     fixed_step = MinStepGenerator(num_steps=1, use_exact_steps=True, offset=0)
     epsilon = MaxStepGenerator(num_steps=14, use_exact_steps=True, step_ratio=1.6, offset=0)
-    adaptiv_txt = "_adaptive_{0:d}_{1!s}_{2:d}".format(
-        epsilon.num_steps, str(epsilon.step_ratio), epsilon.offset
-    )
+    adaptiv_txt = f"_adaptive_{epsilon.num_steps:d}_{str(epsilon.step_ratio)!s}_{epsilon.offset:d}"
     gradient_funs = OrderedDict()
     hessian_funs = OrderedDict()
 

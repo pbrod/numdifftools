@@ -2,7 +2,6 @@
 Step generators module
 """
 
-from __future__ import absolute_import, division
 
 from collections import namedtuple
 
@@ -71,7 +70,7 @@ def default_scale(method="forward", n=1, order=2):
     )
 
 
-class BasicMaxStepGenerator(object):
+class BasicMaxStepGenerator:
     """
     Generates a sequence of steps of decreasing magnitude
 
@@ -157,7 +156,7 @@ class BasicMinStepGenerator(BasicMaxStepGenerator):
         return range(self.num_steps - 1, -1, -1)
 
 
-class MinStepGenerator(object):
+class MinStepGenerator:
     """
     Generates a sequence of steps
 
@@ -220,8 +219,8 @@ class MinStepGenerator(object):
 
     def __repr__(self):
         class_name = self.__class__.__name__
-        kwds = ["{0!s}={1!s}".format(name, str(getattr(self, name))) for name in self.__dict__]
-        return """{0!s}({1!s})""".format(class_name, ",".join(kwds))
+        kwds = [f"{name!s}={str(getattr(self, name))!s}" for name in self.__dict__]
+        return """{!s}({!s})""".format(class_name, ",".join(kwds))
 
     @property
     def scale(self):
@@ -363,7 +362,7 @@ class MaxStepGenerator(MinStepGenerator):
         check_num_steps=True,
         scale=500,
     ):
-        super(MaxStepGenerator, self).__init__(
+        super().__init__(
             base_step=base_step,
             step_ratio=step_ratio,
             num_steps=num_steps,
