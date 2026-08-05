@@ -1,30 +1,60 @@
 # See https://jooyal.com/posts/2025/coding/using-pdm-in-python/
-# 
-#Recommended build on master branch
-# git pull origin
-# pdm check-style
-# pdm format
-# pdm check-types 
-# pdm run tests
-# pdm all-tests # runs all the above  
-# pdm append-changelog  # Manually edit CHANGELOG.md to make sure it looks OK.
-# pdm run update-readme # Update README.rst from numdifftools.info
-# pdm run update-license # Update LICENSE.txt from numdifftools.license
-
-# git commit
-# pdm bump pre-release --pre alpha # creates 0.1.1a1 from 0.1.0
-# pdm bump pre-release --pre beta # creates 0.1.1.b1 from 0.1.1a1
-# pdm bump pre-release --pre release-candidate # creates 0.1.1rc1 from 0.1.1b1
-# pdm bump no-pre-release # creates 0.1.1 from 0.1.1rc1
-# pdm bump micro # creates 0.1.2 from 0.1.1
-# pdm bump minor # creates 0.2.0 from 0.1.2
-# pdm bump major # creates 1.0.0 from 0.2.0
-# pdm bump suggest  # Suggest new version number
-# pdm bump tag # creates a git tag with a leading v # Note a new build is only published when the tag exists
-# git commit
-# git push   # wait for test to complet
-# git push --tags  # publish the new version
 #
+# Recommended release workflow
+#
+# Development:
+# git checkout develop
+# git pull origin develop
+# pdm format
+# pdm check-style
+# pdm check-types
+# pdm all-tests
+#
+# Prepare release:
+# pdm install -G release   # Install release tools if needed
+# pdm prepare-release      # update README.rst, LICENSE.txt and CHANGELOG.md. Inspect and verify.
+# git add .
+# git commit
+# git push
+#
+# Determine version:
+# pdm bump suggest
+# pdm bump pre-release --pre alpha              # creates 0.1.1a1 from 0.1.0
+# pdm bump pre-release --pre beta               # creates 0.1.1b1 from 0.1.1a1
+# pdm bump pre-release --pre release-candidate  # creates 0.1.1rc1 from 0.1.1b1
+# pdm bump no-pre-release                       # creates 0.1.1 from 0.1.1rc1
+# pdm bump micro                                # creates 0.1.2 from 0.1.1
+# pdm bump minor                                # creates 0.2.0 from 0.1.2
+# pdm bump major                                # creates 1.0.0 from 0.2.0
+#
+# Release:
+# Merge develop into master:
+# git checkout master
+# git pull origin master
+# git merge --no-ff develop
+# git push origin master                        # Wait for CI to complete successfully
+#
+# Create and publish release tag:
+# pdm bump tag                                  # creates a git tag with a leading v
+# git push --tags                               # publish the new version
+#
+# Note:
+# Publishing to PyPI occurs when a tag beginning with 'v'
+# is pushed and the GitHub release workflow succeeds.
+#
+# Rebuilding the lock files:
+# pdm lock
+# pdm lock-py314
+#
+# After the release, merge master back into develop
+# so that release commits and version changes are present in develop:
+#
+# git checkout develop
+# git pull origin develop
+# git merge master
+# git push origin develop
+#
+
 [project]
 name = "numdifftools"
 dynamic = ["version"]
@@ -96,17 +126,20 @@ docs-html = "sphinx-build -b html docs docs/_build/html -d docs/_build/doctrees"
 docs-latex = "sphinx-build -b latex docs docs/_build/latex -d docs/_build/doctrees"
 docs-pdf = "sphinx-build -b latexpdf docs docs/_build/latex -d docs/_build/doctrees"
 docs-doctest = "sphinx-build -b doctest docs docs/_build/doctest -d docs/_build/doctrees"
+lock = "pdm lock -dG all"
 lock-py314 = "pdm lock -L pdm.lock314 --python 3.14 --strategy no_direct_minimal_versions -dG all"
 lock-win64 = "pdm lock -L pdm_windows.lock --python 3.13 --strategy no_direct_minimal_versions --platform windows -dG all"
 lock-linux = "pdm lock -L pdm_linux.lock --python 3.13 --strategy no_direct_minimal_versions --platform linux -dG all"
 lock-macos = "pdm lock -L pdm_macos.lock --python 3.13 --strategy no_direct_minimal_versions --platform macos -dG all"
+lock-all = {composite = ["lock", "lock-py314"]}
 
 format = "ruff format ./src/"  # format code
 check-style = "ruff check ./src/"  # check code style
 check-types = "mypy ./src/"  # check types
 tests = {cmd = "pytest", env = {"MPLBACKEND" = "Agg"}}
-all-tests = {composite = ["format", "check-style", "tests", "docs-doctest"]}  # "check-types", 
+all-tests = {composite = ["format", "check-style", "check-types", "tests", "docs-doctest"]}  #
 
+show-version = "python -c \"from numdifftools import __version__; print(__version__)\""
 show-next-version = "git-cliff --bumped-version"  # calculate and print the next semantic version to stdout:
 show-next-changelog = "git-cliff"
 append-changelog = "git-cliff --unreleased --prepend CHANGELOG.md"  # prepend new entries to CHANGELOG.md without footer part
@@ -119,15 +152,18 @@ prepare-release = {composite = ["update-license", "update-readme", "append-chang
 #shell = "gitlint --commits $(git describe --tags --abbrev=0)..HEAD lint"
 
 
-[tool.pdm.dev-dependencies]
+[dependency-groups]
 build = [
     "setuptools>=39.2",  # Pycharm complains oddly without this on Windows platform
     "spyder-kernels",    # If you want to use Spyder
+    "click>=8.3.1",
+]
+release = [
     "git-cliff>=2.6.1",
     "pdm-bump>=0.9.8",
-    "click>=8.3.1",
 
 ]
+
 # semantic_release.commit-messages git-cliff
 # chore: Changes to the build process or auxiliary tools and libraries such as documentation generation
 # docs: Documentation only changes
@@ -142,13 +178,10 @@ test = [
     "nox",
     "pytest",
     "pytest-cov",
-    "pytest-pep8",
     "line_profiler",
     "hypothesis>=3.6",
-    "pytest-ruff>=0.4.1",
     "ruff>=0.0.47",
     # "gitlint>=0.19",
-    "pytest-mypy>=0.10.3",
     "mypy>=1.11.2",
     "numdifftools[plot,tools]",
 ]
@@ -159,8 +192,9 @@ sphinx = [
     "sphinxcontrib-bibtex",
     "myst_parser",
 ]
+develop = ["numdifftools[tools,build,test,sphinx]"]
 all = [
-     "numdifftools[plot,tools,build,test,sphinx]",
+     "numdifftools[plot,tools,build,release,test,sphinx]",
 
 ]
 
@@ -230,8 +264,12 @@ markers = [
     "slow: marks tests as slow (time-consuming)",
     "benchmark: marks tests used for benchmarking",
 ]
-doctest_optionflags = ["NORMALIZE_WHITESPACE", "IGNORE_EXCEPTION_DETAIL",  "ELLIPSIS"]
-addopts = "-rsxXf --doctest-modules --cov=numdifftools --cov-report=xml" #--ruff-format  --mypy  --ruff
+doctest_optionflags = [
+    "NORMALIZE_WHITESPACE",
+    "IGNORE_EXCEPTION_DETAIL",
+    "ELLIPSIS"
+]
+addopts = "-rsxXf"
 testpaths = [
     "src"
 ]

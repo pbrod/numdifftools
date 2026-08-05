@@ -1,7 +1,7 @@
 # .github/workflows/ci.yml
 # This workflow runs Continous Integration (CI) including tests and linting.
 # for a variety of Python versions
-# For more information see: 
+# For more information see:
 # https://py-pkgs.org/08-ci-cd
 # https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
 
@@ -85,7 +85,18 @@ jobs:
         run: pdm install -dG test
 
       - name: Run tests
-        run: pdm run pytest
+        run: pdm run
+
+      - name: Run doctests
+        run: pdm docs-doctest
+
+      - name: Coverage
+        if: matrix.python_version == '3.13' && matrix.os == 'ubuntu-latest'
+        run: |
+          pdm run pytest \
+          --cov=numdifftools \
+          --cov-report=xml
+
       - name: Upload coverage to Codecov
         if: matrix.python_version == '3.13' && matrix.os == 'ubuntu-latest'
         # See: https://martinheinz.dev/blog/69 "Ultimate CI Pipeline for All of Your Python Projects"
