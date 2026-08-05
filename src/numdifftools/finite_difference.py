@@ -628,7 +628,8 @@ class LogRule:
         n_r = fd_rule.size - 1
         _assert(
             n_r < num_steps,
-            f"num_steps ({num_steps:d}) must  be larger than ({n_r + 1:d}) n + order - 1 = {self.n:d} + {self.order:d} -1 ({self.method:s})",
+            f"num_steps ({num_steps:d}) must  be larger than "
+            f"({n_r + 1:d}) n + order - 1 = {self.n:d} + {self.order:d} -1 ({self.method:s})",
         )
         f_diff = convolve(f_del, fd_rule[::-1], axis=0, origin=n_r // 2)
 
