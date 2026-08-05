@@ -147,10 +147,12 @@ def benchmark(x=0.0001, dfun=None, fd=None, name="", scales=None, show_plot=True
     if not np.isfinite(relativ_errors).any():
         return {"n": n, "order": order, "method": method, "fun": name, "error": np.nan, "scale": np.nan}
     if show_plot:
-        txt = ["", "1'st", "2'nd", "3'rd", "4'th", "5'th", "6'th", "7th"] + [
-            "%d'th" % i for i in range(8, 25)
-        ]
-        title = "The %s derivative using %s, order=%d" % (txt[n], method, order)
+        ordinal = (
+            ["", "1'st", "2'nd", "3'rd", "4'th", "5'th", "6'th", "7th"][n]
+            if n < 8
+            else f"{n}'th"
+        )
+        title = f"The {ordinal} derivative using {method}, order={order}"
         scale0 = default_scale(method, n, order)
         plot_error(scales, relativ_errors, scale0, title, label=name)
 
