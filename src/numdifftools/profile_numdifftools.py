@@ -3,7 +3,6 @@ This script profile different parts of numdifftools.
 
 """
 
-
 import numpy as np
 
 import numdifftools as nd  # numdifftools.nd_statsmodels as nd

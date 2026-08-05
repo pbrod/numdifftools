@@ -209,8 +209,13 @@ strict = true
 explicit_package_bases = false
 no_namespace_packages = true
 warn_return_any = false
-disable_error_code = "import-untyped"
-plugins = "numpy.typing.mypy_plugin"
+warn_unused_ignores = true
+disable_error_code = ["import-untyped"]
+plugins = ["numpy.typing.mypy_plugin"]
+
+[[tool.mypy.overrides]]
+module = ["numdifftools.*"]
+disallow_untyped_calls = false
 
 [[tool.mypy.overrides]]
 module = [

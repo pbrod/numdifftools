@@ -9,13 +9,13 @@ Release date: 5/23/2008
 
 """
 
-
 import warnings
-from collections import namedtuple
+
 from functools import partial
 
 import numpy as np
 
+from numdifftools._typing import ExtrapolationResult, Info, RichardsonLike, StepGeneratorFactory
 from numdifftools.extrapolation import Richardson, dea3
 from numdifftools.step_generators import MinStepGenerator
 
@@ -115,11 +115,11 @@ class CStepGenerator(MinStepGenerator):
 class _Limit:
     """Common methods and member variables"""
 
-    info = namedtuple("info", ["error_estimate", "final_step", "index"])
+    info = Info
 
     def __init__(self, step=None, **options):
-        self.step = step, options
-
+        self.step: StepGeneratorFactory = step, options
+        self.richardson: RichardsonLike
         self.richardson = Richardson(step_ratio=1.6, step=1, order=1, num_terms=2)
 
     @staticmethod
@@ -129,8 +129,7 @@ class _Limit:
             step, options = step
         return step, options
 
-    @staticmethod
-    def _step_generator(step, options):
+    def _step_generator(self, step, options):
         if callable(step):
             return step
         step_nom = None if step is None else 1
@@ -205,7 +204,7 @@ class _Limit:
         der, errors = dea3(der[0:-2], der[1:-1], der[2:], symmetric=False)
         return der, errors, steps[2:]
 
-    def _extrapolate(self, results, steps, shape):
+    def _extrapolate(self, results, steps, shape) -> ExtrapolationResult:
         # if len(results) > 2:
         #     der0, errors0, steps0 = self._wynn_extrapolate(results, steps)
         #     if len(der0) > 0:
@@ -511,9 +510,7 @@ class Residue(Limit):
         _assert(pole_order < order, "order must be at least pole_order+1.")
         self.pole_order = pole_order
 
-        super().__init__(
-            f, step=step, method=method, order=order, full_output=full_output, **options
-        )
+        super().__init__(f, step=step, method=method, order=order, full_output=full_output, **options)
 
     def _fun(self, z, d_z, args, kwds):
         return self.fun(z + d_z, *args, **kwds) * (d_z**self.pole_order)

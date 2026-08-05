@@ -5,7 +5,6 @@ This module provides an easy to use interface to derivatives calculated with
 statsmodels.numdiff.
 """
 
-
 import warnings
 from functools import partial
 

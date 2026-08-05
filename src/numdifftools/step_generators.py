@@ -2,7 +2,6 @@
 Step generators module
 """
 
-
 from collections import namedtuple
 
 import numpy as np

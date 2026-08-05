@@ -4,7 +4,6 @@ Created on 28. aug. 2015
 @author: pab
 """
 
-
 import warnings
 
 import numpy as np

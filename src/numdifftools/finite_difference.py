@@ -2,7 +2,6 @@
 Finite difference methods module.
 """
 
-
 import warnings
 
 import numpy as np

@@ -5,7 +5,6 @@ See also:
 https://www.pythoncentral.io/measure-time-in-python-time-time-vs-time-clock/
 """
 
-
 import cProfile
 import inspect
 import warnings
@@ -134,9 +133,7 @@ class TimeWith:
         return timer() - self.start
 
     def checkpoint(self, name=""):
-        print(
-            f"{self.name} {name} took {self.elapsed} seconds".strip()
-        )
+        print(f"{self.name} {name} took {self.elapsed} seconds".strip())
 
     def __enter__(self):
         return self

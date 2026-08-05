@@ -30,7 +30,6 @@ Project report, NTNU
 
 """
 
-
 import numpy as np
 
 _tiny_name = "tiny" if np.__version__ < "1.22" else "smallest_normal"

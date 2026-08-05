@@ -90,7 +90,6 @@ n=10, scale=14.200000000000001
 
 """
 
-
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -147,11 +146,7 @@ def benchmark(x=0.0001, dfun=None, fd=None, name="", scales=None, show_plot=True
     if not np.isfinite(relativ_errors).any():
         return {"n": n, "order": order, "method": method, "fun": name, "error": np.nan, "scale": np.nan}
     if show_plot:
-        ordinal = (
-            ["", "1'st", "2'nd", "3'rd", "4'th", "5'th", "6'th", "7th"][n]
-            if n < 8
-            else f"{n}'th"
-        )
+        ordinal = ["", "1'st", "2'nd", "3'rd", "4'th", "5'th", "6'th", "7th"][n] if n < 8 else f"{n}'th"
         title = f"The {ordinal} derivative using {method}, order={order}"
         scale0 = default_scale(method, n, order)
         plot_error(scales, relativ_errors, scale0, title, label=name)
@@ -166,9 +161,7 @@ def _print_summary(method, order, x_values, scales):
     header = f'method="{method}", order={order}, x_values={str(x_values)}:'
     print(header)
     for n in scales:
-        print(
-            f"n={n}, mean scale={np.mean(scales[n]):.2f}, median scale={np.median(scales[n]):.2f}"
-        )
+        print(f"n={n}, mean scale={np.mean(scales[n]):.2f}, median scale={np.median(scales[n]):.2f}")
 
     print("Default scale with " + header)
     for n in scales:

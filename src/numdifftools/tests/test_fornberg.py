@@ -1,4 +1,3 @@
-
 import numpy as np
 from hypothesis import given, note, settings  # , reproduce_failure
 from hypothesis import strategies as st
@@ -44,9 +43,7 @@ def test_high_order_derivative(x):
                 assert_allclose(np.real(vals[n]), tval, rtol=1e-6, atol=aerr)
             except AssertionError as error:
                 print(n, name, y, vals[n], tval, info.iterations, aerr0, aerr)
-                note(
-                    f"{n}, {name}, {y}, {vals[n]}, {tval}, {info.iterations}, {aerr0}, {aerr}"
-                )
+                note(f"{n}, {name}, {y}, {vals[n]}, {tval}, {info.iterations}, {aerr0}, {aerr}")
                 raise error
 
 

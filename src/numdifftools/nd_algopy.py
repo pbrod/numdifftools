@@ -53,7 +53,6 @@ https://en.wikipedia.org/wiki/Automatic_differentiation
 https://pythonhosted.org/algopy/index.html
 """
 
-
 from collections import namedtuple
 
 import numpy as np
