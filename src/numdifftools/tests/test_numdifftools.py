@@ -358,15 +358,22 @@ class TestJacobian(object):
 
     def test_issue_68(self):
         """Check that Jacobian does not fail for functions of shape (1,)"""
-        x = np.array([1., 2])
-        fun = lambda x: np.array([np.sum(x**2) - 1,])
-        jvalues = nd.Jacobian(fun)(x)
-        assert_allclose(jvalues, [[2., 4.]])
+        x = np.array([1.0, 2])
 
+        def fun(x):
+            return np.array(
+                [
+                    np.sum(x**2) - 1,
+                ]
+            )
+
+        jvalues = nd.Jacobian(fun)(x)
+        assert_allclose(jvalues, [[2.0, 4.0]])
 
     @staticmethod
     def test_issue_25():
         """Check size of Jacobian tensor"""
+
         def g_fun(x):
             out = np.zeros((2, 2))
             out[0] = x
@@ -608,12 +615,24 @@ class TestHessian(object):
             assert_allclose(a, b, atol=1e-4)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import numpy as np
+
     import numdifftools as nd
-    x = np.array([1., 2])
-    fun2 = lambda x: np.array([np.sum(x**2) - 1, 0])
+
+    x = np.array([1.0, 2])
+
+    def fun2(x):
+        return np.array([np.sum(x**2) - 1, 0])
+
     J2 = nd.Jacobian(fun2)(x)
-    fun = lambda x: np.array([np.sum(x**2) - 1,])
+
+    def fun(x):
+        return np.array(
+            [
+                np.sum(x**2) - 1,
+            ]
+        )
+
     J1 = nd.Jacobian(fun)(x)
     print(J1, J2)
