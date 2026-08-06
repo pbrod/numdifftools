@@ -52,12 +52,19 @@ https://en.wikipedia.org/wiki/Automatic_differentiation
 
 https://pythonhosted.org/algopy/index.html
 """
+# mypy: disable-error-code=no-redef
+from __future__ import annotations
 
-from collections import namedtuple
+from typing import Any
 
 import numpy as np
+from numpy.typing import ArrayLike
 from scipy import special
 
+from numdifftools._typing import Array, ArrayOrScalar, FunctionLike, Info
+
+algopy: Any
+UTPM: Any
 try:
     import algopy
     from algopy import UTPM
@@ -117,29 +124,44 @@ _cmn_doc = """
 class _Derivative:
     """Base class"""
 
-    info = namedtuple("info", ["error_estimate", "final_step", "index"])
+    _fun: FunctionLike
+    _computational_graph: Any | None
 
-    def __init__(self, fun, n=1, method="forward", full_output=False):
+
+
+    def __init__(
+        self,
+        fun: FunctionLike | None = None,
+        n: int = 1,
+        method: str = "forward",
+        full_output: bool = False,
+    ) -> None:
+
         self.fun = fun
         self.method = method
         self.n = n
         self.full_output = full_output
 
     @property
-    def fun(self):
+    def fun(self) -> FunctionLike | None:
         return self._fun
 
     @fun.setter
-    def fun(self, fun):
+    def fun(self, fun: FunctionLike | None) -> None:
         self._fun = fun
         self._computational_graph = None
 
-    def computational_graph(self, x, *args, **kwds):
+    def computational_graph(
+        self,
+        x: ArrayLike,
+        *args: Any,
+        **kwds: Any,
+    ) -> Any:
         if self._computational_graph is None:
             # STEP 1: trace the function evaluation
-            cg = algopy.CGraph()
-            tmp = algopy.Function(x)
-
+            cg: Any = algopy.CGraph()
+            tmp: Any = algopy.Function(x)
+            assert self.fun is not None
             y = self.fun(tmp, *args, **kwds)
 
             cg.trace_off()
@@ -148,18 +170,24 @@ class _Derivative:
             self._computational_graph = cg
         return self._computational_graph
 
-    def _get_function(self):
+    def _get_function(self)-> FunctionLike | None:
         if self.n == 0:
             return self.fun
         name = "_" + {"backward": "reverse"}.get(self.method, self.method)
         return getattr(self, name)
 
-    def __call__(self, x, *args, **kwds):
+    def __call__(
+        self,
+        x: ArrayLike,
+        *args: Any,
+        **kwds: Any,
+    ) -> ArrayOrScalar | tuple[ArrayOrScalar, Info]:
         fun = self._get_function()
         x0 = np.asarray(x, dtype=float)
+        assert fun is not None
         df = fun(x0, *args, **kwds)
         if self.full_output:
-            return df, self.info(np.maximum(10 * EPS * np.abs(df), EPS), EPS, 0)
+            return df, Info(np.maximum(10 * EPS * np.abs(df), EPS), EPS, 0, 0)
         return df
 
 
@@ -207,7 +235,12 @@ class Derivative(_Derivative):
     """,
     }
 
-    def _forward(self, x, *args, **kwds):
+    def _forward(
+        self,
+        x: ArrayLike,
+        *args: Any,
+        **kwds: Any,
+    ) -> Array:
         x0 = np.array(x)
         shape = x0.shape
         P = 1
@@ -219,7 +252,12 @@ class Derivative(_Derivative):
 
         return y.data[self.n, 0] * special.factorial(self.n)
 
-    def _reverse(self, x, *args, **kwds):
+    def _reverse(
+        self,
+        x: Array,
+        *args: Any,
+        **kwds: Any,
+    ) -> Array:
         if self.n != 1:
             raise NotImplementedError("Derivative reverse not implemented for n>1")
 
@@ -280,14 +318,24 @@ class Gradient(_Derivative):
     """,
     }
 
-    def _forward(self, x, *args, **kwds):
+    def _forward(
+        self,
+        x: ArrayLike,
+        *args: Any,
+        **kwds: Any,
+    ) -> Array:
         # forward mode without building the computational graph
 
         tmp = UTPM.init_jacobian(x)
         y = self.fun(tmp, *args, **kwds)
         return UTPM.extract_jacobian(y)
 
-    def _reverse(self, x, *args, **kwds):
+    def _reverse(
+        self,
+        x: Array,
+        *args: Any,
+        **kwds: Any,
+    ) -> Array:
         c_graph = self.computational_graph(x, *args, **kwds)
         return c_graph.gradient(x)
 
@@ -368,10 +416,10 @@ class Jacobian(Gradient):
     """,
     }
 
-    def _forward(self, x, *args, **kwds):
+    def _forward(self, x: ArrayLike, *args: Any, **kwds: Any) -> Array:
         return np.atleast_2d(super()._forward(x, *args, **kwds))
 
-    def _reverse(self, x, *args, **kwds):
+    def _reverse(self, x: Array, *args: Any, **kwds: Any) -> Array:
         x = np.atleast_1d(x)
         c_graph = self.computational_graph(x, *args, **kwds)
         return c_graph.jacobian(x)
@@ -432,13 +480,13 @@ class Hessian(_Derivative):
     def __init__(self, f, method="forward", full_output=False):
         super().__init__(f, n=2, method=method, full_output=full_output)
 
-    def _forward(self, x, *args, **kwds):
+    def _forward(self, x: ArrayLike, *args: Any, **kwds: Any) -> Array:
         x = np.atleast_1d(x)
         tmp = UTPM.init_hessian(x)
         y = self.fun(tmp, *args, **kwds)
         return UTPM.extract_hessian(len(x), y)
 
-    def _reverse(self, x, *args, **kwds):
+    def _reverse(self, x: Array, *args: Any, **kwds: Any) -> Array:
         x = np.atleast_1d(np.asarray(x, dtype=float))
         c_graph = self.computational_graph(x, *args, **kwds)
         return c_graph.hessian(x)
@@ -494,7 +542,7 @@ class Hessdiag(Hessian):
     """,
     }
 
-    def _forward(self, x, *args, **kwds):
+    def _forward(self, x: ArrayLike, *args: Any, **kwds: Any) -> Array:
         d, n = 2 + 1, x.size
         p = n
         y = UTPM(np.zeros((d, p, n)))
@@ -506,11 +554,17 @@ class Hessdiag(Hessian):
         H = z.data[2, ...] * 2
         return H
 
-    def _reverse(self, x, *args, **kwds):
+    def _reverse(self, x: Array, *args: Any, **kwds: Any) -> Array:
         return np.diag(super()._reverse(x, *args, **kwds))
 
 
-def directionaldiff(f, x0, vec, **options):
+def directionaldiff(
+    f: FunctionLike,
+    x0: ArrayLike,
+    vec: ArrayLike,
+    **options: Any,
+) -> ArrayOrScalar | tuple[ArrayOrScalar, Info]:
+
     """
     Return directional derivative of a function of n variables
 
@@ -589,11 +643,18 @@ class Taylor:
 
     """
 
-    def __init__(self, fun, n=1):
+    def __init__(
+        self,
+        fun: FunctionLike | None = None,
+        n: int = 1,
+    ) -> None:
         self.fun = fun
         self.n = n
 
-    def __call__(self, z0=0):
+    def __call__(
+        self,
+        z0: ArrayLike | float | complex = 0,
+    ) -> Array:
         z = np.atleast_1d(z0).ravel()
         x = UTPM(np.zeros((self.n, 1, z.size), dtype=z.dtype))
 

@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from typing import Any, cast
+
 import numpy as np
 from numpy.typing import ArrayLike
 
@@ -20,10 +21,10 @@ from numdifftools._typing import (
     ArrayOrScalar,
     DifferenceFunction,
     FiniteDifferenceRule,
-    RuleClass,
     FunctionLike,
     Info,
     RichardsonLike,
+    RuleClass,
     StepGeneratorFactory,
     StepGeneratorLike,
 )
@@ -200,7 +201,7 @@ class Derivative(_Limit):
 
     def __init__(
         self,
-        fun: FunctionLike,
+        fun: FunctionLike | None = None,
         step: float | ArrayLike | None = None,
         method: str = "central",
         order: int = 2,

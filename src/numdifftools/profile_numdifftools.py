@@ -2,23 +2,27 @@
 This script profile different parts of numdifftools.
 
 """
+from collections.abc import Iterable
 
 import numpy as np
 
 import numdifftools as nd  # numdifftools.nd_statsmodels as nd
+from numdifftools._typing import FunctionLike
 from numdifftools.example_functions import function_names, get_function
 from numdifftools.profiletools import do_profile
 from numdifftools.run_benchmark import BenchmarkFunction
 
 
-def profile_hessian(n_values=(4, 8, 16, 32, 64, 96)):
+def profile_hessian(
+    n_values: Iterable[int] = (4, 8, 16, 32, 64, 96),
+) -> None:
     for n in n_values:
-        f = BenchmarkFunction(n)
+        f: FunctionLike = BenchmarkFunction(n)
 
         step = nd.step_generators.one_step
         cls = nd.Hessian(f, step=step, method="central")
         # pylint: disable=protected-access
-        follow = [
+        follow: list[FunctionLike]= [
             cls._derivative_nonzero_order,
             cls._apply_fd_rule,
             cls._get_finite_difference_rule,
@@ -33,9 +37,12 @@ def profile_hessian(n_values=(4, 8, 16, 32, 64, 96)):
         do_profile(follow=follow)(cls)(x)
 
 
-def main():
-    x = 0.5
-    methods = ["complex", "central", "backward", "forward"]
+def main() -> None:
+    x: float = 0.5
+    methods: list[str] = ["complex", "central", "backward", "forward"]
+
+    f: FunctionLike
+    true_df: FunctionLike | None
 
     # for i, derivative in enumerate([nd.Derivative, nds.Gradient, nda.Derivative]):
     i = 0
@@ -55,7 +62,7 @@ def main():
             print(i, name, method, dm, np.abs(val - tval))
 
 
-def profile_main():
+def profile_main() -> None:
     import cProfile
     import pstats
 

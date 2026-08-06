@@ -1,15 +1,28 @@
-from collections import namedtuple
+from collections.abc import Callable, Generator
+from typing import Any, NamedTuple
 
 import numpy as np
+from numpy.typing import ArrayLike
 from scipy.special import factorial
 
+from numdifftools._typing import Array, ArrayOrScalar, FunctionLike
 from numdifftools.extrapolation import EPS, dea3
 from numdifftools.limits import _Limit
 
-_INFO = namedtuple(
-    "info", ["error_estimate", "degenerate", "final_radius", "function_count", "iterations", "failed"]
-)
-CENTRAL_WEIGHTS_AND_POINTS = {
+
+class TaylorInfo(NamedTuple):
+    error_estimate: Array
+    degenerate: bool
+    final_radius: float
+    function_count: int
+    iterations: int
+    failed: bool
+
+
+CENTRAL_WEIGHTS_AND_POINTS: dict[
+    tuple[int, int],
+    tuple[Array, Array],
+] = {
     (1, 3): (np.array([-1.0, 0, 1]) / 2.0, np.arange(-1, 2)),
     (1, 5): (np.array([1.0, -8, 0, 8, -1]) / 12.0, np.arange(-2, 3)),
     (1, 7): (np.array([-1.0, 9, -45, 0, 45, -9, 1]) / 60.0, np.arange(-3, 4)),
@@ -21,12 +34,16 @@ CENTRAL_WEIGHTS_AND_POINTS = {
 }
 
 
-def _assert(cond, msg):
+def _assert(cond: bool, msg: str) -> None:
     if not cond:
         raise ValueError(msg)
 
 
-def fd_weights_all(x, x0=0, n=1):
+def fd_weights_all(
+    x: ArrayLike,
+    x0: float | complex = 0,
+    n: int = 1,
+) -> Array:
     """
     Return finite difference weights for derivatives of all orders up to n.
 
@@ -63,6 +80,7 @@ def fd_weights_all(x, x0=0, n=1):
 
     http://www.scholarpedia.org/article/Finite_difference_method
     """
+    x = np.asarray(x, dtype=float)
     m = len(x)
     _assert(n < m, "len(x) must be larger than n")
 
@@ -73,7 +91,7 @@ def fd_weights_all(x, x0=0, n=1):
 
 # from numba import jit, float64, int64, int32, int8, void
 # @jit(void(float64[:,:], float64[:], float64, int64))
-def _fd_weights_all(weights, x, x0, n):
+def _fd_weights_all(weights: Array, x: Array, x0: float | complex, n: int) -> None:
     m = len(x)
     c_1, c_4 = 1, x[0] - x0
     weights[0, 0] = 1
@@ -88,7 +106,7 @@ def _fd_weights_all(weights, x, x0, n):
         c_1 = c_2
 
 
-def fd_weights(x, x0=0, n=1):
+def fd_weights(x: ArrayLike, x0: float | complex = 0, n: int = 1) -> Array:
     """
     Return finite difference weights for the n'th derivative.
 
@@ -119,7 +137,7 @@ def fd_weights(x, x0=0, n=1):
     return fd_weights_all(x, x0, n)[-1]
 
 
-def fd_derivative(fx, x, n=1, m=2):
+def fd_derivative(fx: ArrayLike, x: ArrayLike, n: int = 1, m: int = 2) -> Array:
     """
     Return the n'th derivative for all points using Finite Difference method.
 
@@ -175,12 +193,16 @@ def fd_derivative(fx, x, n=1, m=2):
     return du
 
 
-def _circle(z, r, m):
+def _circle(
+    z: complex | ArrayLike,
+    r: float,
+    m: int,
+) -> Array:
     theta = np.linspace(0.0, 2.0 * np.pi, num=m, endpoint=False)
     return z + r * np.exp(theta * 1j)
 
 
-def _poor_convergence(z, r, f, bn, mvec):
+def _poor_convergence(z: complex | ArrayLike, r: float, f: FunctionLike, bn: Array, mvec: Array) -> bool:
     """
     Test for poor convergence based on three function evaluations.
 
@@ -204,14 +226,14 @@ def _poor_convergence(z, r, f, bn, mvec):
     return max_abs_error > 1e-3 * max_f_value
 
 
-def _get_logn(n):
+def _get_logn(n: int) -> int:
     if n == 1:
         return 0
 
-    return np.int_(np.log2(n - 1) - 1.5849625007211561).clip(min=0)
+    return int(np.int_(np.log2(n - 1) - 1.5849625007211561).clip(min=0))
 
 
-def _num_taylor_coefficients(n):
+def _num_taylor_coefficients(n: int) -> int:
     """
     Return number of taylor coefficients
 
@@ -238,21 +260,21 @@ def _num_taylor_coefficients(n):
     return m
 
 
-def richardson_parameter(vals, k):
+def richardson_parameter(vals: Array, k: int) -> ArrayOrScalar:
     c = np.real((vals[k - 1] - vals[k - 2]) / (vals[k] - vals[k - 1])) - 1.0
     # The lower bound 0.07 admits the singularity x.^-0.9
     c = np.maximum(c, 0.07)
     return -c
 
 
-def richardson(vals, k, c=None):
+def richardson(vals: Array, k: int, c: ArrayOrScalar | None = None) -> ArrayOrScalar:
     """Richardson extrapolation with parameter estimation"""
     if c is None:
         c = richardson_parameter(vals, k)
     return vals[k] - (vals[k] - vals[k - 1]) / c
 
 
-def _extrapolate(bs, rs, m):
+def _extrapolate(bs: list[Array], rs: list[float], m: int) -> list[Array]:
     # Begin Richardson Extrapolation. Presumably we have bs[i]'s around three
     # successive circles and can now extrapolate those coefficients, zeroing
     # out higher order error terms.
@@ -268,7 +290,7 @@ def _extrapolate(bs, rs, m):
     return extrap
 
 
-def _get_best_taylor_coefficients(bs, rs, m, max_m1m2):
+def _get_best_taylor_coefficients(bs: list[Array], rs: list[float], m: int, max_m1m2: Callable[[], float]) -> tuple[Array, Array]:
     extrap = _extrapolate(bs, rs, m)
     mvec = np.arange(m)
     if len(extrap) > 2:
@@ -283,7 +305,7 @@ def _get_best_taylor_coefficients(bs, rs, m, max_m1m2):
     return coefs, errors
 
 
-def _check_fft(m1, m2, check_degenerate=True):
+def _check_fft(m1: float, m2: float, check_degenerate: bool = True) -> tuple[bool, bool]:
     # If not degenerate, check for geometric progression in the FFT by comparing m1 and m2:
 
     # If there's an extreme mismatch, then we can consider the
@@ -381,8 +403,34 @@ class Taylor:
         ACM Transactions on Mathematical Software (TOMS),
         7(4), 512-526. http://doi.org/10.1145/355972.355979
     """
+    fun: FunctionLike
+    n: int
+    r: float
+    num_extrap: int
+    step_ratio: float
+    max_iter: int
+    min_iter: int
+    full_output: bool
 
-    def __init__(self, fun, n=1, r=0.0059, num_extrap=3, step_ratio=1.6, **kwds):
+    _step_ratio: float
+    _direction_changes: int
+    _previous_direction: bool | None
+    _degenerate: bool
+    _failed: bool
+    _m: int
+    _mvec: Array
+    _crat: Array
+    _num_changes: int
+
+    def __init__(
+        self,
+        fun: FunctionLike,
+        n: int = 1,
+        r: float = 0.0059,
+        num_extrap: int = 3,
+        step_ratio: float = 1.6,
+        **kwds: Any,
+    ) -> None:
         self.fun = fun
         self.max_iter = kwds.pop("max_iter", 30)
         self.min_iter = kwds.pop("min_iter", self.max_iter // 2)
@@ -392,7 +440,7 @@ class Taylor:
         self.num_extrap = num_extrap
         self.step_ratio = step_ratio
 
-    def _initialize(self):
+    def _initialize(self) -> tuple[int, Array]:
         m = _num_taylor_coefficients(self.n)
         self._step_ratio = self.step_ratio
         self._direction_changes = 0
@@ -406,18 +454,26 @@ class Taylor:
         self._num_changes = 0
         return m, self._mvec
 
-    def _get_max_m1m2(self, bn, m):
+    def _get_max_m1m2(self, bn: Array, m: int) -> float:
         m1, m2 = self._get_m1_m2(bn, m)
         return np.maximum(m1, m2)
 
-    def _get_m1_m2(self, bn, m):
+    def _get_m1_m2(self, bn: Array, m: int) -> tuple[float, float]:
         # If not degenerate, check for geometric progression in the FFT:
         bnc = bn / self._crat
         m1 = np.max(np.abs(bnc[: m // 2]))
         m2 = np.max(np.abs(bnc[m // 2 :]))
-        return m1, m2
+        return float(m1), float(m2)
 
-    def _check_convergence(self, i, z0, r, m, bn):
+    def _check_convergence(
+        self,
+        i: int,
+        z0: ArrayOrScalar,
+        r: float,
+        m: int,
+        bn: Array,
+    ) -> tuple[bool, float]:
+
         if self._direction_changes > 1 or self._degenerate:
             self._num_changes += 1
             if self._num_changes >= 1 + self.num_extrap:
@@ -446,7 +502,10 @@ class Taylor:
         self._previous_direction = needs_smaller
         return False, r
 
-    def __call__(self, z0=0):
+    def __call__(
+        self,
+        z0: float | complex | ArrayLike = 0,
+    ) -> Array | tuple[Array, TaylorInfo]:
         m, mvec = self._initialize()
 
         # Start iterating. The goal of this loops is to select a circle radius that
@@ -455,7 +514,7 @@ class Taylor:
         # function of the circle radius r so that we can perform Richardson
         # Extrapolation and zero out error terms, *greatly* improving the quality
         # of the approximation.
-
+        z0 = np.asarray(z0)
         rs = []
         bs = []
         i = 0
@@ -475,14 +534,22 @@ class Taylor:
         coefs, errors = _get_best_taylor_coefficients(bs, rs, m, lambda: self._get_max_m1m2(bn, m))
         if self.full_output:
             failed = not converged
-            info = _INFO(
+            info = TaylorInfo(
                 errors, self._degenerate, final_radius=r, function_count=i * m, iterations=i, failed=failed
             )
             return coefs, info
         return coefs
 
 
-def taylor(fun, z0=0, n=1, r=0.0059, num_extrap=3, step_ratio=1.6, **kwds):
+def taylor(
+    fun: FunctionLike,
+    z0: float | complex | ArrayLike = 0,
+    n: int = 1,
+    r: float = 0.0059,
+    num_extrap: int = 3,
+    step_ratio: float = 1.6,
+    **kwds: Any,
+) -> Array | tuple[Array, TaylorInfo]:
     """
     Return Taylor coefficients of complex analytic function using FFT
 
@@ -568,7 +635,12 @@ def taylor(fun, z0=0, n=1, r=0.0059, num_extrap=3, step_ratio=1.6, **kwds):
     return Taylor(fun, n=n, r=r, num_extrap=num_extrap, step_ratio=step_ratio, **kwds)(z0)
 
 
-def derivative(fun, z0, n=1, **kwds):
+def derivative(
+    fun: FunctionLike,
+    z0: float | complex | ArrayLike,
+    n: int = 1,
+    **kwds: Any,
+) -> Array | tuple[Array, TaylorInfo]:
     """
     Calculate n-th derivative of complex analytic function using FFT
 
@@ -663,12 +735,13 @@ def derivative(fun, z0, n=1, **kwds):
     fact = factorial(np.arange(m))
     if kwds.get("full_output"):
         coefs, info_ = result
-        info = _INFO(info_.error_estimate * fact, *info_[1:])
+        info = TaylorInfo(info_.error_estimate * fact, *info_[1:])
         return coefs * fact, info
+    assert not isinstance(result, tuple)
     return result * fact
 
 
 if __name__ == "__main__":
     from numdifftools.testing import test_docstrings
 
-    test_docstrings()
+    test_docstrings(__file__)
