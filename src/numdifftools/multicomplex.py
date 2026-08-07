@@ -29,6 +29,7 @@ Adriaen Verheyleweghen, (2014)
 Project report, NTNU
 
 """
+
 from __future__ import annotations
 
 from typing import Any

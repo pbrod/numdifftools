@@ -1,6 +1,7 @@
 """
 Finite difference methods module.
 """
+
 from __future__ import annotations
 
 import warnings
@@ -45,7 +46,7 @@ def _assert(cond: bool, msg: str) -> None:
         raise ValueError(msg)
 
 
-def make_exact(h:ArrayOrScalar) -> ArrayOrScalar:
+def make_exact(h: ArrayOrScalar) -> ArrayOrScalar:
     """Make sure h is an exact representable number
 
     This is important when calculating numerical derivatives and is
@@ -66,7 +67,7 @@ class DifferenceFunctions:
     # pylint: disable=unused-argument
     @staticmethod
     def _central_even(
-         f: FunctionLike,
+        f: FunctionLike,
         f_x0i: ArrayOrScalar,
         x0i: ArrayLike,
         h: ArrayLike,
@@ -78,7 +79,7 @@ class DifferenceFunctions:
         f: FunctionLike,
         f_x0i: ArrayOrScalar,  # @UnusedVariable
         x0i: ArrayLike,
-        h: ArrayLike
+        h: ArrayLike,
     ) -> ArrayOrScalar:
         return (f(x0i + h) - f(x0i - h)) / 2.0
 
@@ -95,7 +96,7 @@ class DifferenceFunctions:
         f: FunctionLike,
         f_x: ArrayOrScalar,  # @UnusedVariable
         x: ArrayLike,
-        h: ArrayLike
+        h: ArrayLike,
     ) -> ArrayOrScalar:
         return f(x + 1j * h).imag
 
@@ -571,7 +572,7 @@ class LogRule:
         name = first + middle + last
         return getattr(self._difference_functions, name)
 
-    def rule(self, step_ratio: float=2.0) -> Array:
+    def rule(self, step_ratio: float = 2.0) -> Array:
         """
         Return finite differencing rule.
 
@@ -621,10 +622,7 @@ class LogRule:
         return f_del, h, original_shape
 
     def apply(
-        self,
-        sequence: list[ArrayOrScalar],
-        steps: list[Array],
-        step_ratio: float=2.0
+        self, sequence: list[ArrayOrScalar], steps: list[Array], step_ratio: float = 2.0
     ) -> tuple[Array, Array, tuple[int, ...]]:
         """
         Apply finite difference rule along the first axis.
@@ -838,7 +836,7 @@ class LogHessianRule(LogRule):
         return {"backward": 1, "forward": 1}.get(self.method, 2)
 
     @order.setter
-    def order(self, order:int | None) -> None:
+    def order(self, order: int | None) -> None:
         valid_order = self.order
 
         if order is not None and order != valid_order:
@@ -855,7 +853,6 @@ class LogHessianRule(LogRule):
         steps: list[Array],
         step_ratio: float = 2.0,
     ) -> tuple[Array, Array, tuple[int, ...]]:
-
         """
         Apply finite difference rule along the first axis.
 

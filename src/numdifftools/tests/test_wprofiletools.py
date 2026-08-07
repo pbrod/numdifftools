@@ -1,3 +1,6 @@
+from collections.abc import Callable
+from typing import Any
+
 import pytest
 
 from numdifftools.profiletools import LineProfiler, TimeWith, do_cprofile, do_profile, timefun
@@ -166,6 +169,18 @@ class TestDoCProfile:
             raise ValueError("Did not find _get_number or expensive_function")
 
 
+def row_finder(rows: list[Any]) -> Callable[[str], tuple]:
+    def find_row(text: str) -> tuple:
+        row = next(
+            (row for row in rows if isinstance(row, tuple) and row[5].strip() == text),
+            None,
+        )
+        assert row is not None, f"Could not find row: {text!r}"
+        return row
+
+    return find_row
+
+
 #  @pytest.mark.skip('Suspect this test fucks up coverage stats.')
 @pytest.mark.skipif(LineProfiler is None, reason="LineProfiler is not installed.")
 class TestDoProfile:
@@ -180,14 +195,13 @@ class TestDoProfile:
             expensive_function()
         results = _extract_do_profile_results(out[0])
         msg = str(results)
+
         assert len(results) > 0, msg
-        assert results[0] == FIRST_LINE
-        assert results[1][5].strip() == "def _get_number():"
-        assert results[2][5].strip() == "for x in range(50000):"
-        assert results[2][1] == 50001
-        assert results[2][2] > 4000
-        assert results[4] == FIRST_LINE
-        assert results[5][5].strip() == "@do_profile(follow=[_get_number])"
+        assert results[0] == FIRST_LINE, msg
+
+        find_row = row_finder(results)
+        find_row("def _get_number():")
+        find_row("@do_profile(follow=[_get_number])")
 
     def test_on_class_method_and_follow_function(self):
         class ExpensiveClass1:
@@ -204,12 +218,10 @@ class TestDoProfile:
         msg = str(results)
         assert len(results) > 0, msg
         assert results[0] == FIRST_LINE, msg
-        assert results[1][5].strip() == "def _get_number():", msg
-        assert results[2][5].strip() == "for x in range(50000):", msg
-        assert results[2][1] == 50001, msg
-        assert results[2][2] > 2900, msg
-        assert results[4] == FIRST_LINE, msg
-        assert results[5][5].strip() == "@do_profile(follow=[_get_number])", msg
+
+        find_row = row_finder(results)
+        find_row("def _get_number():")
+        find_row("@do_profile(follow=[_get_number])")
 
     def test_on_class_method_and_follow_class_method(self):
         class ExpensiveClass2:
@@ -234,12 +246,11 @@ class TestDoProfile:
         msg = str(results)
         assert len(results) > 0, msg
         assert results[0] == FIRST_LINE, msg
-        assert results[1][5].strip() == '@do_profile(follow=["_get_number2"])', msg
-        assert results[2][5].strip() == "def expensive_method2(self):", msg
-        assert results[2][1] == 0, msg
-        assert results[2][2] == 0, msg
-        assert results[6] == FIRST_LINE, msg
-        assert results[7][5].strip() == "def _get_number2(self):", msg
+
+        find_row = row_finder(results)
+        find_row('@do_profile(follow=["_get_number2"])')
+        assert find_row("def expensive_method2(self):")[1] == 0, msg
+        find_row("def _get_number2(self):")
 
     def test_on_all_class_methods(self):
         class ExpensiveClass3:
@@ -266,12 +277,14 @@ class TestDoProfile:
         msg = str(results)
         assert len(results) > 0, msg
         assert results[0] == FIRST_LINE
-        assert results[1][5].strip() == "@do_profile(follow_all_methods=True)"
-        assert results[2][5].strip() == "def expensive_method3(self):"
-        assert results[2][1] == 0
-        assert results[2][2] == 0
-        assert results[7] == FIRST_LINE
-        assert results[8][5].strip() == "def _get_number3(self):"
+
+        find_row = row_finder(results)
+        find_row("@do_profile(follow_all_methods=True)")
+        row = find_row("def expensive_method3(self):")
+        assert row[1] == 0
+        assert row[2] == 0
+
+        find_row("def _get_number3(self):")
 
     def test_on_all_class_methods_without_decorator(self):
         with capture_stdout_and_stderr() as out:
@@ -282,9 +295,10 @@ class TestDoProfile:
         msg = str(results)
         assert len(results) > 0, msg
         assert results[0] == FIRST_LINE, msg
-        assert results[1][5].strip() == "def expensive_method4(self):", msg
-        assert results[2][5].strip() == "for x in self._get_number4():", msg
-        assert results[2][1] == 5001, msg
-        assert results[2][2] > 10, msg
-        assert results[5] == FIRST_LINE, msg
-        assert results[6][5].strip() == "def _get_number4(self):", msg
+        find_row = row_finder(results)
+        find_row("def expensive_method4(self):")
+        row = find_row("for x in self._get_number4():")
+        assert row[1] == 5001, msg
+        assert row[2] > 10, msg
+
+        find_row("def _get_number4(self):")

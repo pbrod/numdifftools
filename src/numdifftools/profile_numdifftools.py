@@ -2,6 +2,7 @@
 This script profile different parts of numdifftools.
 
 """
+
 from collections.abc import Iterable
 
 import numpy as np
@@ -22,7 +23,7 @@ def profile_hessian(
         step = nd.step_generators.one_step
         cls = nd.Hessian(f, step=step, method="central")
         # pylint: disable=protected-access
-        follow: list[FunctionLike]= [
+        follow: list[FunctionLike] = [
             cls._derivative_nonzero_order,
             cls._apply_fd_rule,
             cls._get_finite_difference_rule,

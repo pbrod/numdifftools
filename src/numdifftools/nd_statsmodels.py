@@ -4,6 +4,7 @@ Numdifftools.nd_statsmodels
 This module provides an easy to use interface to derivatives calculated with
 statsmodels.numdiff.
 """
+
 # mypy: disable-error-code=no-redef
 from __future__ import annotations
 
@@ -182,7 +183,6 @@ def approx_fprime_cs(
     return _transpose(grad, grad[0].ndim + 1)
 
 
-
 def _approx_hess1_backward(
     x: ArrayLike,
     f: FunctionLike,
@@ -314,7 +314,6 @@ class Hessian(_Common):
         return 2
 
 
-
 class Jacobian(_Common):
     """
     Calculate Jacobian with finite difference approximation
@@ -432,11 +431,15 @@ class Gradient(Jacobian):
         *args: Any,
         **kwds: Any,
     ) -> Array:
-        return super().__call__(
-            np.atleast_1d(x).ravel(),
-            *args,
-            **kwds,
-        ).squeeze()
+        return (
+            super()
+            .__call__(
+                np.atleast_1d(x).ravel(),
+                *args,
+                **kwds,
+            )
+            .squeeze()
+        )
 
 
 if __name__ == "__main__":

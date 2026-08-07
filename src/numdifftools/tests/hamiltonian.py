@@ -84,8 +84,9 @@ def run_hamiltonian(hessian, verbose=True, full_output=True):
 
     true_h = np.array([[5.23748385e-12, -2.61873829e-12], [-2.61873829e-12, 5.23748385e-12]])
     if full_output:
-        h, info = hessian(xopt)
-        error = info.error_estimate
+        result = hessian(xopt)
+        h = result.estimate
+        error = result.error_estimate
     else:
         h = hessian(xopt)
         error = np.abs(h - true_h)

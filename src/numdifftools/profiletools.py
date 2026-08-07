@@ -4,6 +4,7 @@ This module is based on: https://zapier.com/engineering/profiling-python-boss/
 See also:
 https://www.pythoncentral.io/measure-time-in-python-time-time-vs-time-clock/
 """
+
 # mypy: disable-error-code=no-redef
 from __future__ import annotations
 

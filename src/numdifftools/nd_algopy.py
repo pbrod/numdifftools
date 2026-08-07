@@ -52,6 +52,7 @@ https://en.wikipedia.org/wiki/Automatic_differentiation
 
 https://pythonhosted.org/algopy/index.html
 """
+
 # mypy: disable-error-code=no-redef
 from __future__ import annotations
 
@@ -61,7 +62,7 @@ import numpy as np
 from numpy.typing import ArrayLike
 from scipy import special
 
-from numdifftools._typing import Array, ArrayOrScalar, FunctionLike, Info
+from numdifftools._typing import Array, ArrayOrScalar, EstimateResult, FunctionLike
 
 algopy: Any
 UTPM: Any
@@ -127,8 +128,6 @@ class _Derivative:
     _fun: FunctionLike
     _computational_graph: Any | None
 
-
-
     def __init__(
         self,
         fun: FunctionLike | None = None,
@@ -170,7 +169,7 @@ class _Derivative:
             self._computational_graph = cg
         return self._computational_graph
 
-    def _get_function(self)-> FunctionLike | None:
+    def _get_function(self) -> FunctionLike | None:
         if self.n == 0:
             return self.fun
         name = "_" + {"backward": "reverse"}.get(self.method, self.method)
@@ -181,13 +180,14 @@ class _Derivative:
         x: ArrayLike,
         *args: Any,
         **kwds: Any,
-    ) -> ArrayOrScalar | tuple[ArrayOrScalar, Info]:
+    ) -> ArrayOrScalar | EstimateResult:
         fun = self._get_function()
         x0 = np.asarray(x, dtype=float)
         assert fun is not None
         df = fun(x0, *args, **kwds)
         if self.full_output:
-            return df, Info(np.maximum(10 * EPS * np.abs(df), EPS), EPS, 0, 0)
+            error = np.maximum(10 * EPS * np.abs(df), EPS)
+            return EstimateResult(df, error_estimate=error, final_step=EPS, index=0)
         return df
 
 
@@ -563,8 +563,7 @@ def directionaldiff(
     x0: ArrayLike,
     vec: ArrayLike,
     **options: Any,
-) -> ArrayOrScalar | tuple[ArrayOrScalar, Info]:
-
+) -> ArrayOrScalar | EstimateResult:
     """
     Return directional derivative of a function of n variables
 

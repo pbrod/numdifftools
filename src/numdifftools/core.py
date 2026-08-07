@@ -8,10 +8,11 @@ Created:     01.08.2008
 Copyright:   (c) pab 2008
 Licence:     New BSD
 """
+
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any, cast
+from typing import Any
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -20,9 +21,9 @@ from numdifftools._typing import (
     Array,
     ArrayOrScalar,
     DifferenceFunction,
+    EstimateResult,
     FiniteDifferenceRule,
     FunctionLike,
-    Info,
     RichardsonLike,
     RuleClass,
     StepGeneratorFactory,
@@ -188,8 +189,6 @@ class Derivative(_Limit):
     Hessian
     """,
     }
-
-    info = Info
 
     _fd_rule: RuleClass = LogRule
     fd_rule: FiniteDifferenceRule
@@ -360,14 +359,14 @@ class Derivative(_Limit):
         x: ArrayLike,
         *args: Any,
         **kwds: Any,
-    ) -> ArrayOrScalar | tuple[ArrayOrScalar, Info]:
+    ) -> ArrayOrScalar | EstimateResult:
         x_i = np.asarray(x)
         with np.errstate(divide="ignore", invalid="ignore"):
             results, f_xi = self._derivative(x_i, args, kwds)
-            derivative, info = self._extrapolate(*results)
+            result = self._extrapolate(*results)
         if self.full_output:
-            return derivative, self.info(f_xi, *info)
-        return derivative
+            return result
+        return result.estimate
 
 
 def directionaldiff(
@@ -375,7 +374,7 @@ def directionaldiff(
     x0: ArrayLike,
     vec: ArrayLike,
     **options: Any,
-) -> ArrayOrScalar | tuple[ArrayOrScalar, Info]:
+) -> ArrayOrScalar | EstimateResult:
     """
     Return directional derivative of a function of n variables
 
@@ -406,10 +405,10 @@ def directionaldiff(
     >>> import numdifftools as nd
     >>> vec = np.r_[1, 2]
     >>> rosen = lambda x: (1-x[0])**2 + 105*(x[1]-x[0]**2)**2
-    >>> dd, info = nd.directionaldiff(rosen, [1, 1], vec, full_output=True)
-    >>> np.allclose(dd, 0)
+    >>> result = nd.directionaldiff(rosen, [1, 1], vec, full_output=True)
+    >>> np.allclose(result.estimate, 0)
     True
-    >>> bool(np.abs(info.error_estimate)<1e-14)
+    >>> bool(np.abs(result.error_estimate)<1e-14)
     True
 
     See also
@@ -489,9 +488,6 @@ class Jacobian(Derivative):
     """,
     }
 
-    #     n = property(fget=lambda cls: 1,
-    #                  fset=lambda cls, val: cls._set_derivative())  # @UnusedVariable
-
     _fd_rule = LogJacobianRule
 
     @staticmethod
@@ -525,7 +521,7 @@ class Jacobian(Derivative):
         x: ArrayLike,
         *args: Any,
         **kwds: Any,
-    ) -> ArrayOrScalar | tuple[ArrayOrScalar, Info]:
+    ) -> ArrayOrScalar | EstimateResult:
         return super().__call__(np.atleast_1d(x), *args, **kwds)
 
 
@@ -592,11 +588,10 @@ class Gradient(Jacobian):
         x: ArrayLike,
         *args: Any,
         **kwds: Any,
-    ) -> ArrayOrScalar | tuple[ArrayOrScalar, Info]:
+    ) -> ArrayOrScalar | EstimateResult:
         result = super().__call__(np.atleast_1d(x).ravel(), *args, **kwds)
         if self.full_output:
-            value, info = cast(tuple[ArrayOrScalar, Info], result)
-            return np.squeeze(value), info
+            return EstimateResult(np.squeeze(result.estimate), *result[1:])
         return np.squeeze(result[0])
 
 
@@ -624,11 +619,11 @@ class Hessdiag(Derivative):
     >>> import numdifftools as nd
     >>> fun = lambda x : x[0] + x[1]**2 + x[2]**3
     >>> Hfun = nd.Hessdiag(fun, full_output=True)
-    >>> hd, info = Hfun([1,2,3])
-    >>> np.allclose(hd, [0.,   2.,  18.])
+    >>> result = Hfun([1,2,3])
+    >>> np.allclose(result.estimate, [0.,   2.,  18.])
     True
 
-    >>> bool(np.all(info.error_estimate < 1e-11))
+    >>> bool(np.all(result.error_estimate < 1e-11))
     True
     """,
         "see_also": """
@@ -656,7 +651,7 @@ class Hessdiag(Derivative):
         x: ArrayLike,
         *args: Any,
         **kwds: Any,
-    ) -> ArrayOrScalar | tuple[ArrayOrScalar, Info]:
+    ) -> ArrayOrScalar | EstimateResult:
         return super().__call__(np.atleast_1d(x), *args, **kwds)
 
 

@@ -59,9 +59,9 @@ class TestLimit:
             lim_f = Limit(fun, path=path, full_output=True)
 
             x = np.arange(-10, 10) / np.pi
-            lim_f0, err = lim_f(x * np.pi)
-            assert_array_almost_equal(lim_f0, np.sinc(x))
-            assert np.all(err.error_estimate < 1.0e-14)
+            lim_f0 = lim_f(x * np.pi)
+            assert_array_almost_equal(lim_f0.estimate, np.sinc(x))
+            assert np.all(lim_f0.error_estimate < 1.0e-14)
 
     def test_derivative_of_cos(self):
         x0 = np.pi / 2
@@ -69,18 +69,18 @@ class TestLimit:
         def fun(x):
             return (np.cos(x0 + x) - np.cos(x0)) / x
 
-        lim, err = Limit(fun, step=CStepGenerator(), full_output=True)(0)
-        assert_allclose(lim, -1)
-        assert err.error_estimate < 1e-14
+        lim_f = Limit(fun, step=CStepGenerator(), full_output=True)(0)
+        assert_allclose(lim_f.estimate, -1)
+        assert lim_f.error_estimate < 1e-14
 
     def test_residue_1_div_1_minus_exp_x(self):
         def fun(z):
             return -z / (np.expm1(2 * z))
 
-        lim, err = Limit(fun, full_output=True)(0)
-        assert_allclose(lim, -0.5)
+        lim_f = Limit(fun, full_output=True)(0)
+        assert_allclose(lim_f.estimate, -0.5)
 
-        assert err.error_estimate < 1e-14
+        assert lim_f.error_estimate < 1e-14
 
     def test_difficult_limit(self):
         def fun(x):
@@ -89,10 +89,10 @@ class TestLimit:
         for path in [
             "radial",
         ]:
-            lim, err = Limit(fun, path=path, full_output=True)(0)
-            assert_allclose(lim, 0.5)
+            lim_f = Limit(fun, path=path, full_output=True)(0)
+            assert_allclose(lim_f.estimate, 0.5)
 
-            assert err.error_estimate < 1e-8
+            assert lim_f.error_estimate < 1e-8
 
 
 class TestResidue:
@@ -100,16 +100,16 @@ class TestResidue:
         def fun(z):
             return -1.0 / (np.expm1(2 * z))
 
-        res_h, err = Residue(fun, full_output=True)(0)
-        assert_allclose(res_h, -0.5)
+        res_f = Residue(fun, full_output=True)(0)
+        assert_allclose(res_f.estimate, -0.5)
 
-        assert err.error_estimate < 1e-14
+        assert res_f.error_estimate < 1e-14
 
     def test_residue_1_div_sin_x2(self):
         def fun(z):
             return 1.0 / np.sin(z) ** 2
 
-        res_h, info = Residue(fun, full_output=True, pole_order=2)(np.pi)
-        assert_allclose(res_h, 1)
+        res_f = Residue(fun, full_output=True, pole_order=2)(np.pi)
+        assert_allclose(res_f.estimate, 1)
 
-        assert info.error_estimate < 1e-10
+        assert res_f.error_estimate < 1e-10

@@ -1,4 +1,4 @@
-from collections.abc import Callable, Generator
+from collections.abc import Callable
 from typing import Any, NamedTuple
 
 import numpy as np
@@ -173,6 +173,8 @@ def fd_derivative(fx: ArrayLike, x: ArrayLike, n: int = 1, m: int = 2) -> Array:
     --------
     fd_weights
     """
+    x = np.asarray(x)
+    fx = np.asarray(fx)
     num_x = len(x)
     _assert(n < num_x, "len(x) must be larger than n")
     _assert(num_x == len(fx), "len(x) must be equal len(fx)")
@@ -194,7 +196,7 @@ def fd_derivative(fx: ArrayLike, x: ArrayLike, n: int = 1, m: int = 2) -> Array:
 
 
 def _circle(
-    z: complex | ArrayLike,
+    z: ArrayOrScalar,
     r: float,
     m: int,
 ) -> Array:
@@ -202,7 +204,7 @@ def _circle(
     return z + r * np.exp(theta * 1j)
 
 
-def _poor_convergence(z: complex | ArrayLike, r: float, f: FunctionLike, bn: Array, mvec: Array) -> bool:
+def _poor_convergence(z: ArrayOrScalar, r: float, f: FunctionLike, bn: Array, mvec: Array) -> bool:
     """
     Test for poor convergence based on three function evaluations.
 
@@ -267,7 +269,7 @@ def richardson_parameter(vals: Array, k: int) -> ArrayOrScalar:
     return -c
 
 
-def richardson(vals: Array, k: int, c: ArrayOrScalar | None = None) -> ArrayOrScalar:
+def richardson(vals: list[Array], k: int, c: ArrayOrScalar | None = None) -> ArrayOrScalar:
     """Richardson extrapolation with parameter estimation"""
     if c is None:
         c = richardson_parameter(vals, k)
@@ -290,15 +292,18 @@ def _extrapolate(bs: list[Array], rs: list[float], m: int) -> list[Array]:
     return extrap
 
 
-def _get_best_taylor_coefficients(bs: list[Array], rs: list[float], m: int, max_m1m2: Callable[[], float]) -> tuple[Array, Array]:
+def _get_best_taylor_coefficients(
+    bs: list[Array], rs: list[float], m: int, max_m1m2: Callable[[], float]
+) -> tuple[Array, Array]:
     extrap = _extrapolate(bs, rs, m)
     mvec = np.arange(m)
     if len(extrap) > 2:
         all_coefs, all_errors = dea3(extrap[:-2], extrap[1:-1], extrap[2:])
         steps = np.atleast_1d(rs[4:])[:, None] * mvec
         # pylint: disable=protected-access
-        coefs, info = _Limit._get_best_estimate(all_coefs, all_errors, steps, (m,))
-        errors = info.error_estimate
+        result = _Limit._get_best_estimate(all_coefs, all_errors, steps, (m,))
+        errors = result.error_estimate
+        coefs = result.estimate
     else:
         errors = EPS / np.power(rs[2], mvec) * max_m1m2()
         coefs = extrap[-1]
@@ -403,6 +408,7 @@ class Taylor:
         ACM Transactions on Mathematical Software (TOMS),
         7(4), 512-526. http://doi.org/10.1145/355972.355979
     """
+
     fun: FunctionLike
     n: int
     r: float

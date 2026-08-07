@@ -2,7 +2,6 @@
 Step generators module
 """
 
-
 from __future__ import annotations
 
 from collections.abc import Iterator
@@ -11,7 +10,7 @@ from typing import NamedTuple
 import numpy as np
 from numpy.typing import ArrayLike
 
-from numdifftools._typing import Array, ArrayOrScalar
+from numdifftools._typing import Array, ArrayOrScalar, GeneratorStepRatio
 from numdifftools.extrapolation import EPS
 
 __all__ = (
@@ -25,6 +24,7 @@ __all__ = (
     "BasicMaxStepGenerator",
     "BasicMinStepGenerator",
 )
+
 
 class State(NamedTuple):
     x: Array
@@ -55,10 +55,10 @@ def get_base_step(scale: float) -> float:
 
 
 def default_scale(
-        method: str = "forward",
-        n: int = 1,
-        order: int = 2,
-    ) -> float:
+    method: str = "forward",
+    n: int = 1,
+    order: int = 2,
+) -> float:
     """Returns good scale for MinStepGenerator"""
     high_order = int(n > 1 or order >= 4)
     order2 = max(order // 2 - 1, 0)
@@ -302,7 +302,7 @@ class MinStepGenerator:
         self._num_steps = num_steps
 
     @property
-    def step_ratio(self) -> float:
+    def step_ratio(self) -> float | complex:
         """Ratio between sequential steps generated"""
         step_ratio = self._step_ratio
         if step_ratio is None:
@@ -325,6 +325,9 @@ class MinStepGenerator:
     def step_nom(self, step_nom: ArrayOrScalar | None) -> None:
         self._step_nom = step_nom
 
+    def _generator_step_ratio(self) -> GeneratorStepRatio:
+        return self.step_ratio
+
     def step_generator_function(
         self,
         x: ArrayLike,
@@ -334,7 +337,8 @@ class MinStepGenerator:
     ) -> BasicMinStepGenerator | BasicMaxStepGenerator:
         """Step generator function"""
         self._state = State(np.asarray(x), method, n, order)
-        base_step, step_ratio = self.base_step * self.step_nom, self.step_ratio
+        base_step = self.base_step * self.step_nom
+        step_ratio = self._generator_step_ratio()
         if self.use_exact_steps:
             base_step = make_exact(base_step)
             step_ratio = make_exact(step_ratio)
@@ -413,7 +417,6 @@ class MaxStepGenerator(MinStepGenerator):
             check_num_steps=check_num_steps,
             scale=scale,
         )
-
 
 
 one_step: MinStepGenerator = MinStepGenerator(num_steps=1, scale=None, step_nom=None)

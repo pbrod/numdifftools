@@ -1,6 +1,3 @@
-
-
-
 import timeit
 from collections.abc import Callable, Iterable
 from datetime import datetime
@@ -29,6 +26,7 @@ else:
 
 class BenchmarkFunction:
     """Return 0.5 * np.dot(x**2, np.dot(A,x))"""
+
     A: Array
 
     def __init__(self, n: int) -> None:
@@ -95,9 +93,9 @@ def plot_errors(
 
 
 def plot_runtimes(
-        run_time_objects: list[tuple[str, dict[str, Any], Array]],
-        problem_sizes: ArrayLike,
-        symbols: tuple[str, ...]
+    run_time_objects: list[tuple[str, dict[str, Any], Array]],
+    problem_sizes: ArrayLike,
+    symbols: tuple[str, ...],
 ) -> None:
     _plot(plt.loglog, problem_sizes, run_time_objects, symbols, ylabel="time $t$", loc=2, logx=True)
 

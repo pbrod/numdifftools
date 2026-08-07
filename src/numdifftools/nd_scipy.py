@@ -166,11 +166,15 @@ class Gradient(Jacobian):
         *args: Any,
         **kwds: Any,
     ) -> Array:
-        return super().__call__(
-            np.atleast_1d(x).ravel(),
-            *args,
-            **kwds,
-        ).squeeze()
+        return (
+            super()
+            .__call__(
+                np.atleast_1d(x).ravel(),
+                *args,
+                **kwds,
+            )
+            .squeeze()
+        )
 
 
 if __name__ == "__main__":
