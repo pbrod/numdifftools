@@ -82,7 +82,7 @@ jobs:
           python-version: ${{ matrix.python_version }}
 
       - name: Install dependencies
-        run: pdm install -dG test
+        run: pdm install -dG test -dG sphinx
 
       - name: Run tests
         run: pdm run
