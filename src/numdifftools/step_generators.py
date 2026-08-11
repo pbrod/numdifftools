@@ -10,7 +10,7 @@ from typing import NamedTuple
 import numpy as np
 from numpy.typing import ArrayLike
 
-from numdifftools._typing import Array, ArrayOrScalar, GeneratorStepRatio
+from numdifftools._typing import Array, ArrayOrScalar, GeneratorStepRatio, StepGenerator
 from numdifftools.extrapolation import EPS
 
 __all__ = (
@@ -39,6 +39,10 @@ def make_exact(h: ArrayOrScalar) -> ArrayOrScalar:
     This is important when calculating numerical derivatives and is
     accomplished by adding 1.0 and then subtracting 1.0.
     """
+    return (h + 1.0) - 1.0
+
+
+def make_exact_scalar(h: GeneratorStepRatio) -> GeneratorStepRatio:
     return (h + 1.0) - 1.0
 
 
@@ -116,7 +120,8 @@ class BasicMaxStepGenerator:
     """
 
     base_step: ArrayOrScalar
-    step_ratio: float
+    step_ratio: GeneratorStepRatio
+    extrapolation_ratio: float
     num_steps: int
     offset: int
     _sign: int = -1
@@ -124,21 +129,31 @@ class BasicMaxStepGenerator:
     def __init__(
         self,
         base_step: ArrayOrScalar,
-        step_ratio: float,
+        step_ratio: GeneratorStepRatio,
         num_steps: int,
         offset: int = 0,
+        extrapolation_ratio: float | None = None,
     ) -> None:
         self.base_step = base_step
         self.step_ratio = step_ratio
         self.num_steps = num_steps
         self.offset = offset
 
+        if extrapolation_ratio is None:
+            extrapolation_ratio = float(abs(step_ratio))
+
+        self.extrapolation_ratio = extrapolation_ratio
+
     def _range(self) -> range:
         return range(self.num_steps)
 
     def __call__(self) -> Iterator[ArrayOrScalar]:
-        base_step, step_ratio = self.base_step, self.step_ratio
-        sgn, offset = self._sign, self.offset
+        base_step = self.base_step
+
+        step_ratio = self.step_ratio
+        sgn= self._sign
+        offset = self.offset
+
         for i in self._range():
             step = base_step * step_ratio ** (sgn * i + offset)
             if (np.abs(step) > 0).all():
@@ -180,6 +195,9 @@ class BasicMinStepGenerator(BasicMaxStepGenerator):
         return range(self.num_steps - 1, -1, -1)
 
 
+BasicStepGenerator = BasicMinStepGenerator | BasicMaxStepGenerator
+
+
 class MinStepGenerator:
     """
     Generates a sequence of steps
@@ -215,14 +233,19 @@ class MinStepGenerator:
         computed with the default_scale function.
     """
 
-    _step_generator: type[BasicMinStepGenerator] = BasicMinStepGenerator
+    _step_generator: type[BasicStepGenerator] = BasicMinStepGenerator
+    _scale: float | None
+    _base_step: ArrayOrScalar | None
+    _num_steps: int | None
+    _step_ratio: float | None
+    _step_nom: ArrayOrScalar | None
 
     def __init__(
         self,
-        base_step: ArrayOrScalar | None = None,
+        base_step: ArrayLike | None = None,
         step_ratio: float | None = None,
         num_steps: int | None = None,
-        step_nom: float | None = None,
+        step_nom: ArrayLike | None = None,
         offset: int = 0,
         num_extrap: int = 0,
         use_exact_steps: bool = True,
@@ -270,8 +293,8 @@ class MinStepGenerator:
         return self._base_step
 
     @base_step.setter
-    def base_step(self, base_step: ArrayOrScalar) -> None:
-        self._base_step = base_step
+    def base_step(self, base_step: ArrayLike | None) -> None:
+        self._base_step = np.asarray(base_step)
 
     @staticmethod
     def _num_step_divisor(method: str, n: int, order: int) -> int:
@@ -302,7 +325,7 @@ class MinStepGenerator:
         self._num_steps = num_steps
 
     @property
-    def step_ratio(self) -> float | complex:
+    def step_ratio(self) -> float:
         """Ratio between sequential steps generated"""
         step_ratio = self._step_ratio
         if step_ratio is None:
@@ -322,8 +345,8 @@ class MinStepGenerator:
         return np.full(x.shape, fill_value=self._step_nom)
 
     @step_nom.setter
-    def step_nom(self, step_nom: ArrayOrScalar | None) -> None:
-        self._step_nom = step_nom
+    def step_nom(self, step_nom: ArrayLike | None) -> None:
+        self._step_nom = np.asarray(step_nom)
 
     def _generator_step_ratio(self) -> GeneratorStepRatio:
         return self.step_ratio
@@ -334,14 +357,14 @@ class MinStepGenerator:
         method: str = "forward",
         n: int = 1,
         order: int = 2,
-    ) -> BasicMinStepGenerator | BasicMaxStepGenerator:
+    ) -> StepGenerator:
         """Step generator function"""
         self._state = State(np.asarray(x), method, n, order)
         base_step = self.base_step * self.step_nom
         step_ratio = self._generator_step_ratio()
         if self.use_exact_steps:
             base_step = make_exact(base_step)
-            step_ratio = make_exact(step_ratio)
+            step_ratio = make_exact_scalar(step_ratio)
         return self._step_generator(
             base_step=base_step, step_ratio=step_ratio, num_steps=self.num_steps, offset=self.offset
         )

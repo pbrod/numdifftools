@@ -92,7 +92,7 @@ class Jacobian(_Common):
     True
     """
 
-    def __call__(self, x, *args, **kwds):
+    def __call__(self, x: ArrayLike, *args: Any, **kwds: Any) -> Array:
         x = np.atleast_1d(x)
         method = {"complex": "cs", "central": "3-point", "forward": "2-point", "backward": "2-point"}[
             self.method

@@ -69,8 +69,8 @@ class DifferenceFunctions:
     def _central_even(
         f: FunctionLike,
         f_x0i: ArrayOrScalar,
-        x0i: ArrayLike,
-        h: ArrayLike,
+        x0i: ArrayOrScalar,
+        h: ArrayOrScalar,
     ) -> ArrayOrScalar:
         return (f(x0i + h) + f(x0i - h)) / 2.0 - f_x0i
 
@@ -78,55 +78,55 @@ class DifferenceFunctions:
     def _central(
         f: FunctionLike,
         f_x0i: ArrayOrScalar,  # @UnusedVariable
-        x0i: ArrayLike,
-        h: ArrayLike,
+        x0i: ArrayOrScalar,
+        h: ArrayOrScalar,
     ) -> ArrayOrScalar:
         return (f(x0i + h) - f(x0i - h)) / 2.0
 
     @staticmethod
-    def _forward(f: FunctionLike, f_x0i: ArrayOrScalar, x0i: ArrayLike, h: ArrayLike) -> ArrayOrScalar:
+    def _forward(f: FunctionLike, f_x0i: ArrayOrScalar, x0i: ArrayOrScalar, h: ArrayOrScalar) -> ArrayOrScalar:
         return f(x0i + h) - f_x0i
 
     @staticmethod
-    def _backward(f: FunctionLike, f_x0i: ArrayOrScalar, x0i: ArrayLike, h: ArrayLike) -> ArrayOrScalar:
+    def _backward(f: FunctionLike, f_x0i: ArrayOrScalar, x0i: ArrayOrScalar, h: ArrayOrScalar) -> ArrayOrScalar:
         return f_x0i - f(x0i - h)
 
     @staticmethod
     def _complex(
         f: FunctionLike,
         f_x: ArrayOrScalar,  # @UnusedVariable
-        x: ArrayLike,
-        h: ArrayLike,
+        x: ArrayOrScalar,
+        h: ArrayOrScalar,
     ) -> ArrayOrScalar:
         return f(x + 1j * h).imag
 
     @staticmethod
-    def _complex_odd(f: FunctionLike, f_x: ArrayOrScalar, x: ArrayLike, h: ArrayLike):
+    def _complex_odd(f: FunctionLike, f_x: ArrayOrScalar, x: ArrayOrScalar, h: ArrayOrScalar):
         i_h = h * _SQRT_J
         return ((_SQRT_J / 2.0) * (f(x + i_h) - f(x - i_h))).imag
 
     @staticmethod
-    def _complex_odd_higher(f: FunctionLike, f_x: ArrayOrScalar, x: ArrayLike, h: ArrayLike):
+    def _complex_odd_higher(f: FunctionLike, f_x: ArrayOrScalar, x: ArrayOrScalar, h: ArrayOrScalar):
         i_h = h * _SQRT_J
         return ((3 * _SQRT_J) * (f(x + i_h) - f(x - i_h))).real
 
     @staticmethod
-    def _complex_even(f: FunctionLike, f_x: ArrayOrScalar, x: ArrayLike, h: ArrayLike):
+    def _complex_even(f: FunctionLike, f_x: ArrayOrScalar, x: ArrayOrScalar, h: ArrayOrScalar):
         i_h = h * _SQRT_J
         return (f(x + i_h) + f(x - i_h)).imag
 
     @staticmethod
-    def _complex_even_higher(f: FunctionLike, f_x: ArrayOrScalar, x: ArrayLike, h: ArrayLike):
+    def _complex_even_higher(f: FunctionLike, f_x: ArrayOrScalar, x: ArrayOrScalar, h: ArrayOrScalar):
         i_h = h * _SQRT_J
         return 12.0 * (f(x + i_h) + f(x - i_h) - 2 * f_x).real
 
     @staticmethod
-    def _multicomplex(f: FunctionLike, f_x: ArrayOrScalar, x: ArrayLike, h: ArrayLike):
+    def _multicomplex(f: FunctionLike, f_x: ArrayOrScalar, x: ArrayOrScalar, h: ArrayOrScalar):
         z = Bicomplex(x + 1j * h, 0)
         return Bicomplex.__array_wrap__(f(z)).imag
 
     @staticmethod
-    def _multicomplex2(f: FunctionLike, f_x: ArrayOrScalar, x: ArrayLike, h: ArrayLike):
+    def _multicomplex2(f: FunctionLike, f_x: ArrayOrScalar, x: ArrayOrScalar, h: ArrayOrScalar):
         z = Bicomplex(x + 1j * h, h)
         return Bicomplex.__array_wrap__(f(z)).imag12
 

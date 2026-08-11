@@ -27,7 +27,8 @@ from numdifftools._typing import (
     RichardsonLike,
     RuleClass,
     StepGeneratorFactory,
-    StepGeneratorLike,
+    StepGenerator,
+    StepArgument,
 )
 from numdifftools.extrapolation import Richardson, dea3  # @UnusedImport
 from numdifftools.finite_difference import (
@@ -201,7 +202,7 @@ class Derivative(_Limit):
     def __init__(
         self,
         fun: FunctionLike | None = None,
-        step: float | ArrayLike | None = None,
+        step: StepArgument = None,
         method: str = "central",
         order: int = 2,
         n: int = 1,
@@ -210,7 +211,7 @@ class Derivative(_Limit):
         self.richardson_terms: int = options.pop("richardson_terms", 2)
         self.full_output: bool = options.pop("full_output", False)
 
-        self.fun: FunctionLike = fun
+        self.fun: FunctionLike | None = fun
 
         self.fd_rule = self._fd_rule(n=n, method=method, order=order)
 
@@ -252,9 +253,9 @@ class Derivative(_Limit):
 
     def _step_generator(
         self,
-        step: float | ArrayLike | StepGeneratorFactory | None,
+        step: StepArgument,
         options: dict[str, Any],
-    ) -> StepGeneratorLike:
+    ) -> StepGeneratorFactory:
         if callable(step):
             return step
 
@@ -274,6 +275,7 @@ class Derivative(_Limit):
         self, x_i: Array, args: tuple[Any, ...], kwds: dict[str, Any]
     ) -> tuple[Any, Any]:
         steps = [np.zeros_like(x_i)]
+        assert self.fun is not None
         results = [self.fun(x_i, *args, **kwds)]
         self.set_richardson_rule(2, 0)
         return self._vstack(results, steps), results[0]
@@ -312,6 +314,7 @@ class Derivative(_Limit):
         DifferenceFunction,
         Callable[[ArrayLike], ArrayOrScalar],
     ]:
+        assert self.fun is not None
         fun = self.fun
 
         def export_fun(x: ArrayLike) -> ArrayOrScalar:
@@ -326,7 +329,7 @@ class Derivative(_Limit):
         method, n, order = self.method, self.n, self.method_order
         # pylint: disable=no-member
         step_gen = self.step.step_generator_function(x_i, method, n, order)
-        return list(step_gen()), step_gen.step_ratio
+        return list(step_gen()), step_gen.extrapolation_ratio
 
     def _raise_error_if_any_is_complex(
         self,
@@ -590,7 +593,7 @@ class Gradient(Jacobian):
         **kwds: Any,
     ) -> ArrayOrScalar | EstimateResult:
         result = super().__call__(np.atleast_1d(x).ravel(), *args, **kwds)
-        if self.full_output:
+        if isinstance(result, EstimateResult):
             return EstimateResult(np.squeeze(result.estimate), *result[1:])
         return np.squeeze(result[0])
 
@@ -637,8 +640,8 @@ class Hessdiag(Derivative):
 
     def __init__(
         self,
-        f: Callable[..., Any],
-        step: float | ArrayLike | None = None,
+        f: FunctionLike | None = None,
+        step: StepArgument = None,
         method: str = "central",
         order: int = 2,
         **options: Any,
@@ -722,8 +725,8 @@ class Hessian(Hessdiag):
 
     def __init__(
         self,
-        f: Callable[..., Any],
-        step: float | ArrayLike | None = None,
+        f: FunctionLike | None = None,
+        step: StepArgument = None,
         method: str = "central",
         order: int | None = None,
         **options: Any,

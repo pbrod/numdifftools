@@ -4,7 +4,7 @@ This module is based on: https://zapier.com/engineering/profiling-python-boss/
 See also:
 https://www.pythoncentral.io/measure-time-in-python-time-time-vs-time-clock/
 """
-
+# mypy: disable-error-code=return-value
 # mypy: disable-error-code=no-redef
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ from types import TracebackType
 from typing import Any, TypeVar
 
 F = TypeVar("F", bound=Callable[..., Any])
-LineProfiler: type[Any] | None
+LineProfiler: Any
 
 try:
     from line_profiler import LineProfiler
@@ -40,7 +40,7 @@ try:
             profiler.add_function(f)
 
     def do_profile(
-        follow: tuple[str | Callable[..., Any], ...] = (),
+        follow: tuple[Any, ...] = (),
         follow_all_methods: bool = False,
     ) -> Callable[[F], F]:
         """
@@ -91,7 +91,7 @@ except ImportError as error:
     warnings.warn(str(error), stacklevel=2)
 
     def do_profile(
-        follow: tuple[str | Callable[..., Any], ...] = (),
+        follow: tuple[Any, ...] = (),
         follow_all_methods: bool = False,
     ) -> Callable[[F], F]:
         "Helpful if you accidentally leave in production!"

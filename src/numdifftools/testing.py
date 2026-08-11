@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import contextlib
 import sys
-from collections.abc import Generator
+from collections.abc import Generator, Sequence
 from io import StringIO
 from timeit import default_timer as timer
 from typing import Any
@@ -29,7 +29,7 @@ def rosen(x: ArrayLike) -> ArrayOrScalar:
     return (1 - x[0]) ** 2 + 105.0 * (x[1] - x[0] ** 2) ** 2
 
 
-def test_docstrings(filename: str = None) -> Any:
+def test_docstrings(filename: str | None = None) -> Any:
     import doctest
 
     if filename:
@@ -94,7 +94,7 @@ def test(
 
 
 @contextlib.contextmanager
-def capture_stdout_and_stderr() -> Generator[list[StringIO | str], None, None]:
+def capture_stdout_and_stderr() -> Generator[Sequence[StringIO | str], None, None]:
     """
     Capture sys.stdout and sys.stderr
 

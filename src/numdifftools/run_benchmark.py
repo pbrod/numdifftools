@@ -11,7 +11,7 @@ from numpy.typing import ArrayLike
 import numdifftools as nd
 import numdifftools.nd_scipy as nsc
 import numdifftools.nd_statsmodels as nds
-from numdifftools._typing import Array, ArrayOrScalar, Differentiator
+from numdifftools._typing import Array, ArrayOrScalar, Differentiator, EstimateResult
 from numdifftools.core import MaxStepGenerator, MinStepGenerator
 
 nda: ModuleType | None
@@ -127,6 +127,8 @@ def _compute_benchmark(
             t = timeit.default_timer()
             x = 3 * np.ones(n)
             val = function(x)
+            if isinstance(val, EstimateResult):
+                val = val.estimate
             run_time = timeit.default_timer() - t
             if ref_g is None:
                 ref_g = val
@@ -213,13 +215,13 @@ def main(
     options: dict[str, Any]
     for method in ["forward", "central", "complex"]:
         options = {"method": method, "order": order}
-        gradient_funs[method] = nd.Jacobian(1, step=fixed_step, **options)
-        hessian_funs[method] = ndc_hessian(1, step=fixed_step, **options)
+        gradient_funs[method] = nd.Jacobian(None, step=fixed_step, **options)
+        hessian_funs[method] = ndc_hessian(None, step=fixed_step, **options)
     for method in ["forward", "central", "complex"]:
         method2 = method + adaptiv_txt
         options = {"method": method, "order": order}
-        gradient_funs[method2] = nd.Jacobian(1, step=epsilon, **options)
-        hessian_funs[method2] = ndc_hessian(1, step=epsilon, **options)
+        gradient_funs[method2] = nd.Jacobian(None, step=epsilon, **options)
+        hessian_funs[method2] = ndc_hessian(None, step=epsilon, **options)
 
     hessian_funs["forward_statsmodels"] = nds.Hessian(None, method="forward")
     hessian_funs["central_statsmodels"] = nds.Hessian(None, method="central")

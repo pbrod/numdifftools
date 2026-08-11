@@ -1,3 +1,18 @@
+"""
+
+
+MinStepGenerator      \
+MaxStepGenerator       > StepGeneratorFactory
+CStepGenerator        /
+
+            |
+            v
+
+BasicMinStepGenerator \
+BasicMaxStepGenerator  > StepGenerator
+
+
+"""
 from __future__ import annotations
 
 from collections.abc import Callable, Iterator
@@ -16,7 +31,7 @@ class EstimateResult(NamedTuple):
     estimate: ArrayOrScalar
     error_estimate: ArrayOrScalar
     final_step: ArrayOrScalar
-    index: int | Array
+    best_index: int | Array
 
 
 class ExtrapolatedSequence(NamedTuple):
@@ -30,7 +45,7 @@ class DerivativeCallable(Protocol):
         self,
         x: ArrayLike,
         f: FunctionLike,
-        epsilon: ArrayLike | float | None = None,
+        epsilon: StepGeneratorFactory | None = None,
         args: tuple[Any, ...] = (),
         kwargs: dict[str, Any] | None = None,
     ) -> Array: ...
@@ -84,17 +99,30 @@ class FiniteDifferenceRule(Protocol):
 
 
 class StepGenerator(Protocol):
-    """Concrete generator returned by step_generator_function()."""
+    """Concrete generator returned by step_generator_function().
 
-    step_ratio: float
+    Notes
+    ----
+    Generator is either BasicMinStepGenerator or BasicMinStepGenerator.
+    """
 
-    def __call__(self) -> Iterator[Array]: ...
+    step_ratio: GeneratorStepRatio
+    extrapolation_ratio: float
+
+    def __call__(self) -> Iterator[ArrayOrScalar]: ...
 
 
 class StepGeneratorFactory(Protocol):
     """Implemented by MinStepGenerator and MaxStepGenerator."""
 
-    step_ratio: float
+    # step_ratio: float | None
+    scale: float | None
+
+    @property
+    def step_ratio(self) -> float: ...
+
+    @step_ratio.setter
+    def step_ratio(self, value: float | None) -> None: ...
 
     def step_generator_function(
         self,
@@ -113,7 +141,12 @@ class StepGeneratorFactory(Protocol):
     ) -> Iterator[ArrayOrScalar]: ...
 
 
-StepGeneratorLike = Callable[..., Any] | StepGeneratorFactory
+StepArgument: TypeAlias = (
+    float
+    | ArrayLike
+    | StepGeneratorFactory
+    | None
+)
 
 
 class RichardsonLike(Protocol):

@@ -56,20 +56,26 @@ def c_max(
     x: ArrayLike,
     y: ArrayLike,
 ) -> Array:
-    return np.where(x.real < y.real, y, x)
+    x_arr = np.asarray(x)
+    y_arr = np.asarray(y)
+    return np.where(x_arr.real < y_arr.real, y, x)
 
 
 def c_min(
     x: ArrayLike,
     y: ArrayLike,
 ) -> Array:
-    return np.where(x.real > y.real, y, x)
+    x_arr = np.asarray(x)
+    y_arr = np.asarray(y)
+    return np.where(x_arr.real > y_arr.real, y, x)
 
 
 def c_abs(z: ArrayLike) -> Array:
-    if np.all(np.iscomplex(z)):
-        return np.where(np.real(z) >= 0, z, -z)
-    return np.abs(z)
+    z_arr = np.asarray(z)
+
+    if np.all(np.iscomplex(z_arr)):
+        return np.where(np.real(z_arr) >= 0, z_arr, -z_arr)
+    return np.abs(z_arr)
 
 
 class Bicomplex:
@@ -183,7 +189,7 @@ class Bicomplex:
         other = self._coerce(other)
         return self.z1.real >= other.z1.real
 
-    def __eq__(self, other: Any) -> Array:
+    def __eq__(self, other: Any) -> Array:  # type: ignore[override]
         other = self._coerce(other)
         return (self.z1 == other.z1) * (self.z2 == other.z2)
 

@@ -312,35 +312,34 @@ def derivative_inv(n: int) -> FuncOrNone:
     return (inv, dinv)[min(n, 1)]
 
 
-def get_function(fun_name: str, n: int = 1) -> FunctionPair | tuple[str, ...]:
-    f_dic: dict[str, DerivativeFactory] = {
-        "cosh": derivative_cosh,
-        "cos": derivative_cos,
-        "sin": derivative_sin,
-        "sinh": derivative_sinh,
-        "tan": derivative_tan,
-        "tanh": derivative_tanh,
-        "arccosh": derivative_arccosh,
-        "arcsinh": derivative_arcsinh,
-        "arctanh": derivative_arctanh,
-        "arccos": derivative_arccos,
-        "arcsin": derivative_arcsin,
-        "arctan": derivative_arctan,
-        "exp": derivative_exp,
-        "expm1": derivative_expm1,
-        "exp2": derivative_exp2,
-        "log1p": derivative_log1p,
-        "log2": derivative_log2,
-        "log10": derivative_log10,
-        "log": derivative_log,
-        "sqrt": derivative_sqrt,
-        "square": derivative_square,
-        "inv": derivative_inv,
-    }
-    if fun_name == "all":
-        return tuple(f_dic)
+FUN_DICT: dict[str, DerivativeFactory] = {
+    "cosh": derivative_cosh,
+    "cos": derivative_cos,
+    "sin": derivative_sin,
+    "sinh": derivative_sinh,
+    "tan": derivative_tan,
+    "tanh": derivative_tanh,
+    "arccosh": derivative_arccosh,
+    "arcsinh": derivative_arcsinh,
+    "arctanh": derivative_arctanh,
+    "arccos": derivative_arccos,
+    "arcsin": derivative_arcsin,
+    "arctan": derivative_arctan,
+    "exp": derivative_exp,
+    "expm1": derivative_expm1,
+    "exp2": derivative_exp2,
+    "log1p": derivative_log1p,
+    "log2": derivative_log2,
+    "log10": derivative_log10,
+    "log": derivative_log,
+    "sqrt": derivative_sqrt,
+    "square": derivative_square,
+    "inv": derivative_inv,
+}
 
-    funs = f_dic.get(fun_name)
+
+def get_function(fun_name: str, n: int = 1) -> FunctionPair:
+    funs = FUN_DICT.get(fun_name)
     if funs is None:
         raise KeyError(f"Unknown function {fun_name}")
     return funs(0), funs(n)

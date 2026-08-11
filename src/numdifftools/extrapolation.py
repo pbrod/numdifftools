@@ -17,8 +17,9 @@ from scipy.ndimage import convolve1d
 if np.__version__ >= "2.0":
     from numpy import trapezoid
 else:
-    # type: ignore[assignment]
-    trapezoid = np.trapz
+    from typing import Any, cast
+    from collections.abc import Callable
+    trapezoid = cast(Callable[..., Any], np.trapz)
 
 from numdifftools._typing import Array, ArrayOrScalar, ExtrapolatedSequence
 
@@ -189,9 +190,9 @@ class Dea:
 
             self._update_res3la(res3la, result, nres)
         # 100
-        abserr = float(max(abserr, 5.0 * EPS * abs(result)))
+        abserr = max(abserr, 5.0 * EPS * abs(result))
         self._nres += 1
-        return result, abserr, n
+        return result, float(abserr), n
 
     @staticmethod
     def _shift_table(epstab: Array, n: int, newelm: int, old_n: int) -> Array:
@@ -222,13 +223,13 @@ class Dea:
         if n == 0:
             abserr = abs(result)
         elif n == 1:
-            abserr = 6.0 * abs(result - epstab[0])
+            abserr = float(6.0 * abs(result - epstab[0]))
         else:
             result, abserr, n = self._dea(epstab, n)
         n += 1
         self._n = n
 
-        return result, abserr
+        return result, float(abserr)
 
 
 class EpsAlg:

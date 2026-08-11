@@ -416,7 +416,7 @@ class TestJacobian:
         assert_allclose(res.estimate, 1)
         assert res.error_estimate < 1e-13
         assert res.final_step == 0.015625
-        # assert res.index == 5  # Breaking change
+        # assert res.best_index == 5  # Breaking change
         # assert res.f_value == 4  # Breaking change
 
 
@@ -448,7 +448,7 @@ class TestGradient:
         assert_allclose(res.estimate, 1)
         assert res.error_estimate < 1e-13
         assert res.final_step == 0.015625
-        # assert res.index == 5
+        # assert res.best_index == 5
         # assert res.f_value == 4
 
     @staticmethod

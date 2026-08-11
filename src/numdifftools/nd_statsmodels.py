@@ -205,7 +205,7 @@ class _Common:
 
     def __init__(
         self,
-        fun: FunctionLike,
+        fun: FunctionLike | None,
         step: float | ArrayLike | StepGeneratorFactory | None = None,
         method: str = "central",
         order: int | None = None,

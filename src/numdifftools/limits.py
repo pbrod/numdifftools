@@ -48,14 +48,14 @@ class CStepGenerator(MinStepGenerator):
 
     Parameters
     ----------
-    base_step : float, array-like, default None
+    base_step : array-like, default None
         Defines the minimum step, if None, the value is set to EPS**(1/scale)
     step_ratio : real scalar, optional, default 4.0
         Ratio between sequential steps generated.
     num_steps : scalar integer, optional,
         defines number of steps generated.
         If None the value is 2 * int(round(16.0/log(abs(step_ratio)))) + 1
-    step_nom :  default maximum(log(exp(1)+|x|), 1)
+    step_nom :  array-like, default maximum(log(exp(1)+|x|), 1)
         Nominal step where x is supplied at runtime through the __call__ method.
     offset : real scalar, optional, default 0
         offset to the base step
@@ -73,10 +73,10 @@ class CStepGenerator(MinStepGenerator):
 
     def __init__(
         self,
-        base_step: float | ArrayLike | None = None,
-        step_ratio: float = 4.0,
+        base_step: ArrayLike | None = None,
+        step_ratio: float | None = 4.0,
         num_steps: int | None = None,
-        step_nom: float | ArrayLike | None = None,
+        step_nom: ArrayLike | None = None,
         offset: int = 0,
         scale: float = 1.2,
         **options: Any,
@@ -97,15 +97,6 @@ class CStepGenerator(MinStepGenerator):
     def _check_path(self) -> None:
         _assert(self.path in ["spiral", "radial"], f"Invalid Path: {str(self.path)}")
 
-    # @property
-    # def step_ratio(self) -> float | complex:
-    #     """Ratio between sequential steps generated."""
-    #     dtheta = self.dtheta
-    #     _step_ratio = float(self._step_ratio)  # radial path
-    #     if dtheta != 0:
-    #         _step_ratio = np.exp(1j * dtheta) * _step_ratio  # a spiral path
-    #     return _step_ratio
-
     def _generator_step_ratio(self) -> GeneratorStepRatio:
         """Ratio between sequential steps generated."""
         dtheta = self.dtheta
@@ -117,10 +108,12 @@ class CStepGenerator(MinStepGenerator):
 
     @property
     def step_ratio(self) -> float:
+        if self._step_ratio is None:
+            return 4.0
         return float(self._step_ratio)
 
     @step_ratio.setter
-    def step_ratio(self, step_ratio: float) -> None:
+    def step_ratio(self, step_ratio: float | None) -> None:
         self._step_ratio = step_ratio
 
     @property
@@ -177,7 +170,7 @@ class _Limit:
         return CStepGenerator(base_step=step, step_nom=step_nom, **options)
 
     @property
-    def step(self) -> StepGeneratorFactory | Callable[..., Any]:
+    def step(self) -> StepGeneratorFactory:
         """The step spacing(s) used in the approximation"""
         return self._step
 
@@ -444,7 +437,7 @@ class Limit(_Limit):
 
     def _set_richardson_rule(
         self,
-        step_ratio: float | complex,
+        step_ratio: float,
         num_terms: int = 2,
     ) -> None:
         self.richardson = Richardson(step_ratio=step_ratio, step=1, order=1, num_terms=num_terms)
@@ -474,7 +467,7 @@ class Limit(_Limit):
         result = self._lim(f, z)
         if self.full_output:
             return result
-        return result.value
+        return result.estimate
 
     def _call_lim(
         self,
@@ -495,7 +488,7 @@ class Limit(_Limit):
             if self.full_output:
                 final_step = np.where(np.isnan(f_z), zero, final_step)
                 np.put(final_step, k, result.final_step)
-                np.put(index, k, result.index)
+                np.put(index, k, result.best_index)
                 np.put(err, k, result.error_estimate)
         return EstimateResult(f_z, err, final_step, index)
 
@@ -513,7 +506,7 @@ class Limit(_Limit):
 
         if self.full_output:
             return result
-        return result.f_value
+        return result.estimate
 
 
 class Residue(Limit):

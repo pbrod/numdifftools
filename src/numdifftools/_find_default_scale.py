@@ -90,44 +90,86 @@ n=10, scale=14.200000000000001
 
 """
 
+from typing import Any, TypedDict
+
 import matplotlib.pyplot as plt
 import numpy as np
 
 from numdifftools import Derivative
 from numdifftools.example_functions import function_names, get_function
 from numdifftools.step_generators import MinStepGenerator, default_scale
+from numdifftools._typing import Array, ArrayOrScalar, FunctionLike, StepGeneratorFactory, EstimateResult
+
+class BenchmarkResult(TypedDict):
+    n: int
+    order: int
+    method: str
+    fun: str
+    error: float
+    scale: float
+    x: float
 
 
-def plot_error(scales, relativ_error, scale0, title="", label=""):
-    plt.semilogy(scales, relativ_error, label=label)
-    plt.vlines(scale0, np.nanmin(relativ_error), 1)
+def plot_error(
+    scales: Array,
+    relative_error: Array,
+    scale0: float,
+    title: str = "",
+    label: str = "",
+) -> None:
+
+    plt.semilogy(scales, relative_error, label=label)
+    plt.vlines(scale0, np.nanmin(relative_error), 1)
     plt.xlabel("scales")
     plt.ylabel("Relative error")
     plt.title(title)
     plt.legend(frameon=False, framealpha=0.5)
-    plt.axis([min(scales), max(scales), np.nanmin(relativ_error), 1])
+    plt.axis(
+        (
+            float(min(scales)),
+            float(max(scales)),
+            float(np.nanmin(relative_error)),
+            1.0,
+        )
+    )
 
 
-def _compute_relative_errors(x, dfun, fd, scales):
-    t = []
+def _compute_relative_errors(
+    x: float,
+    dfun: FunctionLike,
+    fd: Derivative,
+    scales: Array,
+) -> Array:
+    values: list[ArrayOrScalar] = []
     for scale in scales:
         fd.step.scale = scale
         try:
             val = fd(x)
+            if isinstance(val, EstimateResult):
+                val = val.estimate
         except Exception:
             val = np.nan
-        t.append(val)
 
-    t = np.array(t)
+        values.append(val)
+
+    t = np.array(values)
     tt = dfun(x)
     relativ_errors = np.abs(t - tt) / (np.maximum(np.abs(tt), 1)) + 1e-16
     return relativ_errors
 
 
-def benchmark(x=0.0001, dfun=None, fd=None, name="", scales=None, show_plot=True):
+def benchmark(
+    x: float = 0.0001,
+    dfun: FunctionLike | None = None,
+    fd: Derivative | None = None,
+    name: str = "",
+    scales: Array | None = None,
+    show_plot: bool = True,
+) -> BenchmarkResult:
     if scales is None:
         scales = np.arange(1.0, 35, 0.25)
 
+    assert fd is not None
     n, method, order = fd.n, fd.method, fd.order
 
     if dfun is None:
@@ -144,7 +186,15 @@ def benchmark(x=0.0001, dfun=None, fd=None, name="", scales=None, show_plot=True
     relativ_errors = _compute_relative_errors(x, dfun, fd, scales)
 
     if not np.isfinite(relativ_errors).any():
-        return {"n": n, "order": order, "method": method, "fun": name, "error": np.nan, "scale": np.nan}
+        return {
+            "n": n,
+            "order": order,
+            "method": method,
+            "fun": name,
+             "error": np.nan,
+             "scale": np.nan,
+             "x": np.nan,
+             }
     if show_plot:
         ordinal = ["", "1'st", "2'nd", "3'rd", "4'th", "5'th", "6'th", "7th"][n] if n < 8 else f"{n}'th"
         title = f"The {ordinal} derivative using {method}, order={order}"
@@ -156,7 +206,12 @@ def benchmark(x=0.0001, dfun=None, fd=None, name="", scales=None, show_plot=True
     return {"n": n, "order": order, "method": method, "fun": name, "error": error, "scale": scales[i], "x": x}
 
 
-def _print_summary(method, order, x_values, scales):
+def _print_summary(
+    method: str,
+    order: int,
+    x_values: tuple[float, ...] | list[float],
+    scales: dict[int, list[float]],
+) -> None:
     print(scales)
     header = f'method="{method}", order={order}, x_values={str(x_values)}:'
     print(header)
@@ -168,10 +223,16 @@ def _print_summary(method, order, x_values, scales):
         print(f"n={n}, scale={default_scale(method, n, order):.2f}")
 
 
-def run_all_benchmarks(method="forward", order=4, x_values=(0.1, 0.5, 1.0, 5), n_max=11, show_plot=True):
-    epsilon = MinStepGenerator(base_step=None, scale=None, step_nom=None, num_extrap=0)
+def run_all_benchmarks(
+    method: str = "forward",
+    order: int = 4,
+    x_values: tuple[float, ...] | list[float] = (0.1, 0.5, 1.0, 5),
+    n_max: int = 11,
+    show_plot: bool = True,
+) -> None:
+    epsilon: StepGeneratorFactory = MinStepGenerator(base_step=None, scale=None, step_nom=None, num_extrap=0)
 
-    scales = {}
+    scales: dict[int, list[float]] = {}
     for n in range(1, n_max):
         plt.figure(n)
         scale_n = scales.setdefault(n, [])
