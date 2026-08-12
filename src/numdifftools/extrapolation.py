@@ -14,14 +14,6 @@ from numpy.typing import ArrayLike
 from scipy import linalg
 from scipy.ndimage import convolve1d
 
-if np.__version__ >= "2.0":
-    from numpy import trapezoid
-else:
-    from collections.abc import Callable
-    from typing import Any, cast
-
-    trapezoid = cast(Callable[..., Any], np.trapz)
-
 from numdifftools._typing import Array, ArrayOrScalar, ExtrapolatedSequence
 
 FINFO: np.finfo[Any] = np.finfo(float)
@@ -309,7 +301,7 @@ def richardson_demo() -> None:
     txt = "{0:5d} {1:20.8f}  {2:20.8f}  {3:20.8f}"
     for k in range(n):
         x = linfun(k)
-        val = trapezoid(np.sin(x), x)
+        val = np.trapezoid(np.sin(x), x)
         h.append(x[1])
         e_i.append(val)
         vale, _err0, _step = Richardson(step=1, order=1)(np.array(e_i), np.array(h))
@@ -340,7 +332,7 @@ def epsalg_demo() -> None:
     txt = "{0:5d} {1:20.8f}  {2:20.8f}  {3:20.8f}"
     for k in range(10):
         x = linfun(k)
-        val = trapezoid(np.sin(x), x)
+        val = np.trapezoid(np.sin(x), x)
         vale = dea(val)
         err = np.abs(1.0 - vale)
         print(txt.format(len(x) - 1, val, vale, err))
@@ -372,7 +364,7 @@ def dea_demo() -> None:
     num_panels = []
     for k in range(12):
         x = linfun(k)
-        val = trapezoid(np.sin(x), x)
+        val = np.trapezoid(np.sin(x), x)
         vals.append(val)
         num_panels.append(len(x) - 1)
     for k, val in zip(num_panels, vals, strict=False):
