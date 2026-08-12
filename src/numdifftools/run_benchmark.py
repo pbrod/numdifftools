@@ -104,9 +104,10 @@ def loglimits(
     data: ArrayLike,
     border: float = 0.05,
 ) -> tuple[float, float]:
-    low, high = np.min(data), np.max(data)
+    arr = np.asarray(data, dtype=float)
+    low, high = np.min(arr), np.max(arr)
     scale = (high / low) ** border
-    return low / scale, high * scale
+    return float(low / scale), float(high * scale)
 
 
 def _compute_benchmark(
