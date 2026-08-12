@@ -1,8 +1,10 @@
 import os
 from datetime import datetime
 
+MAX_FILE_SIZE = 1024 * 1024  # 1 MB
 
-def process_folder(folder_path):
+
+def process_folder(folder_path, max_file_size=MAX_FILE_SIZE):
     # --- No changes in this section ---
     if not os.path.isdir(folder_path):
         return "Invalid directory. Please enter a valid folder path."
@@ -41,15 +43,41 @@ def process_folder(folder_path):
     # --- NEW: List of directories to ignore ---
     # Using a set for efficient lookup
     dirs_to_ignore = {
-        ".git", "__pycache__", "node_modules", "venv",
-        ".vscode", ".idea", "build", "dist", "target"
+        ".git",
+        "__pycache__",
+        "node_modules",
+        "venv",
+        ".venv",
+        "env",
+        ".vscode",
+        ".idea",
+        "build",
+        "dist",
+        "target",
+        ".tox",
+        ".pytest_cache",
+        ".mypy_cache",
+        ".ruff_cache",
+        ".coverage",
+        ".next",
+        ".cache",
+        ".eggs",
+        ".gitlab",
+        ".svn",
+        "coverage",
+        "htmlcov",
+        ".nox",
+        ".terraform",
+        ".serverless",
+        "site",
+        "_build",
     }
 
     # --- CHANGED: Use os.walk() for recursive traversal ---
     for dirpath, dirnames, filenames in os.walk(folder_path):
         # --- NEW: Prune the directories to explore ---
         # This is an efficient way to prevent os.walk from descending into ignored folders.
-        dirnames[:] = [d for d in dirnames if d not in dirs_to_ignore]
+        dirnames[:] = sorted([d for d in dirnames if d not in dirs_to_ignore])
 
         # --- NEW: Add a header for the current directory ---
         # We calculate the relative path to keep the output clean.
@@ -60,7 +88,7 @@ def process_folder(folder_path):
         dir_md_content = ""
 
         # --- CHANGED: Loop through filenames from os.walk() ---
-        for filename in filenames:
+        for filename in sorted(filenames):
             if filename in filenames_to_ignore:
                 continue
             # Check if the file should be included
@@ -69,15 +97,26 @@ def process_folder(folder_path):
             )
 
             # Check if it's the output file we might be generating
-            # This check is now simpler as we don't need to worry about timestamped files yet.
-            is_output_file = filename == "code_summary.md"
+            # Ignore previously generated summary files.
+            is_output_file = (
+                filename == "code_summary.md"
+                or filename.startswith("code_summary_")
+            )
 
             if should_include and not is_output_file:
                 # --- CHANGED: Construct the full file path using dirpath ---
                 file_path = os.path.join(dirpath, filename)
+                if os.path.getsize(file_path) > max_file_size:
+                    dir_md_content += (
+                        f"### {os.path.relpath(file_path, folder_path)}\n\n"
+                        f"*Skipped: file exceeds {max_file_size // 1024} KB limit*\n\n"
+                    )
+                    continue
 
+                relative_file = os.path.relpath(file_path, folder_path)
+                dir_md_content += f"### {relative_file}\n\n"
                 # --- CHANGED: Use H3 for filename for better structure ---
-                dir_md_content += f"### {filename}\n\n"
+                # dir_md_content += f"### {filename}\n\n"
                 try:
                     with open(file_path, "r", encoding="utf-8", errors="ignore") as code_file:
                         code = code_file.read()
@@ -87,7 +126,7 @@ def process_folder(folder_path):
                     if filename == ".gitignore": lang_hint = "gitignore"
                     elif filename.lower() == "makefile": lang_hint = "makefile"
                     elif filename == ".bazelrc": lang_hint = "bazelrc"
-                    elif filename == "BUILD" or filename == "WORKSPACE": lang_hint = "bazel"
+                    elif filename in {"BUILD", "WORKSPACE"}: lang_hint = "bazel"
                     elif filename == "Dockerfile": lang_hint = "dockerfile"
 
                     dir_md_content += f"```{lang_hint}\n{code}\n```\n\n"
