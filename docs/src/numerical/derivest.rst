@@ -9,11 +9,11 @@ The general problem of differentiation of a function typically pops up in three 
 
 -  Compute numerical derivatives of a analytically supplied function.
 
-Clearly the first member of this list is the domain of the symbolic toolbox SymPy, or some set of symbolic tools. 
-Numerical differentiation of a function defined by data points can be achieved with the function gradient, or 
+Clearly the first member of this list is the domain of the symbolic toolbox SymPy, or some set of symbolic tools.
+Numerical differentiation of a function defined by data points can be achieved with the function gradient, or
 perhaps by differentiation of a curve fit to the data, perhaps to an interpolating spline or a least squares spline fit.
 
-The third class of differentiation problems is where Numdifftools is valuable. This document will describe the methods 
+The third class of differentiation problems is where Numdifftools is valuable. This document will describe the methods
 used in Numdifftools and in particular the Derivative class.
 
 
@@ -26,9 +26,9 @@ Surely you recall the traditional definition of a derivative, in terms of a limi
     f'(x) = \lim_{\delta \to 0}{\frac{f(x+\delta) - f(x)}{\delta}}
     :label: 1
 
-For small :math:`\delta`, the limit approaches :math:`f'(x)`. This is a one-sided approximation for the derivative. 
-For a fixed value of :math:`\delta`, this is also known as a finite difference approximation (a forward difference.) 
-Other approximations for the derivative are also available. We will see the origin of these approximations in the 
+For small :math:`\delta`, the limit approaches :math:`f'(x)`. This is a one-sided approximation for the derivative.
+For a fixed value of :math:`\delta`, this is also known as a finite difference approximation (a forward difference.)
+Other approximations for the derivative are also available. We will see the origin of these approximations in the
 Taylor series expansion of a function :math:`f(x)` around some point :math:`x_0`.
 
 .. math::
@@ -44,9 +44,9 @@ Truncate the series in :eq:`2` to the first three terms, divide by :math:`\delta
     f'(x_0) = \frac{f(x_0+\delta) - f(x_0)}{\delta} - \frac{\delta}{2} f''(x_0) - \frac{\delta^2}{6} f'''(x_0) + ...
     :label: 3
 
-When :math:`\delta` is small, :math:`\delta^2` and any higher powers are vanishingly small. So we tend to ignore 
-those higher powers, and describe the approximation in :eq:`3` as a first order approximation since the error in 
-this approximation approaches zero at the same rate as the first power of :math:`\delta`.  [1]_ The values of 
+When :math:`\delta` is small, :math:`\delta^2` and any higher powers are vanishingly small. So we tend to ignore
+those higher powers, and describe the approximation in :eq:`3` as a first order approximation since the error in
+this approximation approaches zero at the same rate as the first power of :math:`\delta`.  [1]_ The values of
 :math:`f''(x_0)` and :math:`f'''(x_0)`, while unknown to us, are fixed constants as :math:`\delta` varies.
 
 Higher order approximations arise in the same fashion. The central difference :eq:`4` is a second order approximation.
@@ -59,11 +59,11 @@ Higher order approximations arise in the same fashion. The central difference :e
 Unequally spaced finite difference rules
 ########################################
 
-While most finite difference rules used to differentiate a function will use equally spaced points, this fails to 
-be appropriate when one does not know the final spacing. Adaptive quadrature rules can succeed by subdividing each 
-sub-interval as necessary. But an adaptive differentiation scheme must work differently, since differentiation is 
-a point estimate. Derivative generates a sequence of sample points that follow a log spacing away from the point 
-in question, then it uses a single rule (generated on the fly) to estimate the desired derivative. Because the points 
+While most finite difference rules used to differentiate a function will use equally spaced points, this fails to
+be appropriate when one does not know the final spacing. Adaptive quadrature rules can succeed by subdividing each
+sub-interval as necessary. But an adaptive differentiation scheme must work differently, since differentiation is
+a point estimate. Derivative generates a sequence of sample points that follow a log spacing away from the point
+in question, then it uses a single rule (generated on the fly) to estimate the desired derivative. Because the points
 are log spaced, the same rule applies at any scale, with only a scale factor applied.
 
 
@@ -71,8 +71,8 @@ Odd and even transformations of a function
 ##########################################
 .. index:: odd transformation
 
-Returning to the Taylor series expansion of :math:`f(x)` around some point :math:`x_0`, an even function  [2]_ 
-around :math:`x_0` must have all the odd order derivatives vanish at :math:`x_0`. An odd function has all its 
+Returning to the Taylor series expansion of :math:`f(x)` around some point :math:`x_0`, an even function  [2]_
+around :math:`x_0` must have all the odd order derivatives vanish at :math:`x_0`. An odd function has all its
 even derivatives vanish from its expansion. Consider the derived functions :math:`f_{odd}(x)` and :math:`f_{even}(x)`.
 
 .. math::
@@ -89,7 +89,7 @@ The Taylor series expansion of :math:`f_{odd}(x)` around zero has the useful pro
     f_{odd}(\delta) = \delta f'(x_0) + \frac{\delta^3}{6} f^{(3)}(x_0) + \frac{\delta^5}{120} f^{(5)}(x_0) + \frac{\delta^7}{5040} f^{(7)}(x_0) +...
     :label: 7
 
-Likewise, the Taylor series expansion of :math:`f_{even}(x)` has no odd order terms or a constant term, but other 
+Likewise, the Taylor series expansion of :math:`f_{even}(x)` has no odd order terms or a constant term, but other
 even order terms that are identical to :math:`f(x)`.
 
 .. index:: even transformation
@@ -99,9 +99,9 @@ even order terms that are identical to :math:`f(x)`.
     :label: 8
 
 
-The point of these transformations is we can rather simply generate a higher order approximation for any odd order 
-derivatives of :math:`f(x)` by working with :math:`f_{odd}(x)`. Even order derivatives of :math:`f(x)` are similarly 
-generated from :math:`f_{even}(x)`. For example, a second order approximation for :math:`f'(x_0)` is trivially 
+The point of these transformations is we can rather simply generate a higher order approximation for any odd order
+derivatives of :math:`f(x)` by working with :math:`f_{odd}(x)`. Even order derivatives of :math:`f(x)` are similarly
+generated from :math:`f_{even}(x)`. For example, a second order approximation for :math:`f'(x_0)` is trivially
 written in :eq:`9` as a function of :math:`\delta`.
 
 .. math::
@@ -124,7 +124,7 @@ Derivative uses similar approximations for all derivatives of :math:`f` up to an
 
 Complex-Step derivative
 #######################
-The derivation of the complex-step derivative approximation is accomplished by replacing :math:`\delta` in :Eq:`2` 
+The derivation of the complex-step derivative approximation is accomplished by replacing :math:`\delta` in :Eq:`2`
 with a complex step :math:`i h`:
 
 .. math::
@@ -168,7 +168,7 @@ Similarly dividing with :math:`h^2/2` and taking only the imaginary components y
     \quad f^{(2)}(x_0) = \Im\,(2\,f_{even}(i^\frac{1}{2} h)) / h^2 + \frac{h^4}{360} f^{(6)}(x_0) - \frac{h^8}{1814400} f^{(10)}(x_0)...
     :label: 12f
 
-This approximation is still subject to difference errors, but the error associated with this approximation is proportional to 
+This approximation is still subject to difference errors, but the error associated with this approximation is proportional to
 :math:`h^4`. Neglecting these higher order terms yields:
 
 .. math::
@@ -176,15 +176,15 @@ This approximation is still subject to difference errors, but the error associat
     :label: 12g
 
 See [LaiCrassidisCheng2005]_ and [Ridout2009]_ for more details.
-The complex-step derivative in numdifftools.Derivative has truncation error 
+The complex-step derivative in numdifftools.Derivative has truncation error
 :math:`O(\delta^4)` for both odd and even order derivatives for :math:`n>1`. For :math:`n=1`
-the truncation error is on the order of :math:`O(\delta^2)`, so truncation error can be 
-eliminated by choosing steps to be very small.  The first order complex-step derivative 
-avoids the problem of round-off error with small steps because there is no subtraction. 
-However, the function to differentiate needs to be analytic. This method does not work 
+the truncation error is on the order of :math:`O(\delta^2)`, so truncation error can be
+eliminated by choosing steps to be very small.  The first order complex-step derivative
+avoids the problem of round-off error with small steps because there is no subtraction.
+However, the function to differentiate needs to be analytic. This method does not work
 if it does not support complex numbers or involves non-analytic functions such as
 e.g.: abs, max, min. For this reason the `central` method is the default method.
-    
+
 
 High order derivative
 #####################
@@ -234,7 +234,7 @@ The solution of these equations are simply:
     \end{bmatrix}
     :label: 14a
 
-The first row of :eq:`14a` gives the coefficients for 6'th order approximation. Looking at at row two and three, we see also that 
+The first row of :eq:`14a` gives the coefficients for 6'th order approximation. Looking at at row two and three, we see also that
 this gives the 6'th order approximation for the 3'rd and 5'th order derivatives as bonus. Thus this is also a general method for obtaining high order differentiation rules. As previously noted these formulas have the additional benefit of beeing applicable to any scale, with only a scale factor applied.
 
 
@@ -301,7 +301,7 @@ A quick test in Python yields much better results yet.
     >>> np.allclose(df3, 1.01260482097715)
     True
 
-    >>> np.allclose(1./3*df1 - 2*df2 + 8./3*df3, 1.00000539448361) 
+    >>> np.allclose(1./3*df1 - 2*df2 + 8./3*df3, 1.00000539448361)
     True
 
 Again, Derivative uses the appropriate multiple term Richardson extrapolants for all derivatives of :math:`f` up to any order [3]_. This, combined with the use of high order approximations for the derivatives, allows the use of quite large step sizes. See [LynessMoler1966]_ and [LynessMoler1969]_. How to compute the multiple term Richardson extrapolants will be elaborated further in the next section.
@@ -386,35 +386,35 @@ These error estimates are also of value in a different sense. Since they are eff
     >>> import numdifftools as nd
     >>> from numpy import exp
     >>> f = nd.Derivative(exp, full_output=True)
-    >>> val, info = f(1)
-    >>> np.allclose(val, 2.71828183)
-    True       
-    >>> np.allclose(info.error_estimate, 6.927791673660977e-14)
+    >>> result = f(1)
+    >>> np.allclose(result.estimate, 2.71828183)
     True
-    >>> np.allclose(info.final_step, 0.0078125)
+    >>> np.allclose(result.error_estimate, 6.927791673660977e-14)
+    True
+    >>> np.allclose(result.final_step, 0.0078125)
     True
 
 
 However, if we force the step size to be artificially large, then approximation error takes over.
 
-    >>> f = nd.Derivative(exp, step=1, full_output=True) 
-    >>> val, info = f(1)
-    >>> np.allclose(val, 3.19452805)
+    >>> f = nd.Derivative(exp, step=1, full_output=True)
+    >>> result = f(1)
+    >>> np.allclose(result.estimate, 3.19452805)
     True
-    >>> np.allclose(val-exp(1), 0.47624622)
+    >>> np.allclose(result.estimate-exp(1), 0.47624622)
     True
-    >>> np.allclose(info.final_step, 1)
+    >>> np.allclose(result.final_step, 1)
     True
 
 And if the step size is forced to be too small, then we see noise dominate the problem.
 
    >>> f = nd.Derivative(exp, step=1e-10, full_output=True)
-   >>> val, info = f(1)
-   >>> np.allclose(val, 2.71828093)
+   >>> result = f(1)
+   >>> np.allclose(result.estimate, 2.71828093)
    True
-   >>> np.allclose(val - exp(1), -8.97648138e-07)
+   >>> np.allclose(result.estimate - exp(1), -8.97648138e-07)
    True
-   >>> np.allclose(info.final_step, 1.0000000e-10)
+   >>> np.allclose(result.final_step, 1.0000000e-10)
    True
 
 
@@ -427,11 +427,11 @@ Derivative in action
 How does numdifftools.Derivative work in action? A simple nonlinear function with a well known derivative is :math:`e^x`. At :math:`x = 0`, the derivative should be 1.
 
    >>> f = nd.Derivative(exp, full_output=True)
-   >>> val, info = f(0)
-   >>> np.allclose(val, 1)
+   >>> result = f(0)
+   >>> np.allclose(result.estimate, 1)
    True
 
-   >>> np.allclose(info.error_estimate, 5.28466160e-14)
+   >>> np.allclose(result.error_estimate, 5.28466160e-14)
    True
 
 A second simple example comes from trig functions. The first four derivatives of the sine function, evaluated at :math:`x = 0`, should be respectively :math:`[cos(0), -sin(0), -cos(0), sin(0)]`, or :math:`[1,0,-1,0]`.
@@ -462,7 +462,7 @@ Estimation of the gradient vector (numdifftools.Gradient) of a function of multi
 
 Multivariate calculus examples
 ------------------------------
-Typical usage of the gradient and Hessian might be in optimization problems, where one might compare 
+Typical usage of the gradient and Hessian might be in optimization problems, where one might compare
 an analytically derived gradient for correctness, or use the Hessian matrix to compute confidence interval estimates on parameters in a maximum likelihood estimation.
 
 
@@ -471,7 +471,7 @@ Gradients and Hessians
 
     >>> import numpy as np
     >>> def rosen(x): return (1-x[0])**2 + 105.*(x[1]-x[0]**2)**2
-    
+
 Gradient of the Rosenbrock function at [1,1], the global minimizer
     >>> grad = nd.Gradient(rosen)([1, 1])
 
@@ -511,7 +511,7 @@ one of these eigenvalues will be zero (approximately)
     [True, False]
 
 
-Directional derivatives 
+Directional derivatives
 -----------------------
 
 The directional derivative will be the dot product of the gradient with the (unit normalized) vector. This is of course possible to do with numdifftools and you could do it like this for the Rosenbrock function at the solution, x0 = [1,1]:
@@ -520,12 +520,12 @@ The directional derivative will be the dot product of the gradient with the (uni
     >>> x0 = [1, 1]
     >>> directional_diff = np.dot(nd.Gradient(rosen)(x0), v)
 
-This should be zero. 
+This should be zero.
 
     >>> np.allclose(directional_diff, 0)
     True
 
- 
+
 Ok, its a trivial test case, but it easy to compute the directional derivative at other locations:
 
     >>> v2 = np.r_[1, -1]/np.sqrt(2)
@@ -601,10 +601,10 @@ References
 .. [DErrico2006] D'Errico, J. R.  (2006), Adaptive Robust Numerical Differentiation
         http://www.mathworks.com/matlabcentral/fileexchange/13490-adaptive-robust-numerical-differentiation
 
-.. [Perktold2014] Perktold, J (2014), numdiff package   
+.. [Perktold2014] Perktold, J (2014), numdiff package
         http://statsmodels.sourceforge.net/0.6.0/_modules/statsmodels/tools/numdiff.html
 
-.. [LaiCrassidisCheng2005] K.-L. Lai, J.L. Crassidis, Y. Cheng, J. Kim (2005), New complex step derivative approximations with 										application to second-order kalman filtering, 
+.. [LaiCrassidisCheng2005] K.-L. Lai, J.L. Crassidis, Y. Cheng, J. Kim (2005), New complex step derivative approximations with 										application to second-order kalman filtering,
         AIAA Guidance, *Navigation and Control Conference*,
         San Francisco, California, August 2005, AIAA-2005-5944.
 

@@ -4,14 +4,18 @@ Created on Jun 25, 2016
 @author: pab
 """
 
+from typing import Any
+
 import numpy as np
 from numpy import pi, r_, sqrt
+from numpy.typing import ArrayLike
 from scipy import constants, linalg, optimize
 
+from numdifftools._typing import Array, ArrayOrScalar, Differentiator, EstimateResult
 from numdifftools.multicomplex import c_abs
 
 
-class ClassicalHamiltonian(object):
+class ClassicalHamiltonian:
     """
     Hamiltonian
 
@@ -27,7 +31,12 @@ class ClassicalHamiltonian(object):
         the mass of a single trapped ion in the chain
     """
 
-    def __init__(self):
+    n: int
+    w: float
+    C: float
+    m: float
+
+    def __init__(self) -> None:
         self.n = 2
         f = 1000000  # f is a scalar, it's the trap frequency
         self.w = 2 * pi * f
@@ -35,13 +44,13 @@ class ClassicalHamiltonian(object):
         # C is a scalar, it's the I
         self.m = 39.96 * 1.66e-27
 
-    def potential(self, positionvector):
+    def potential(self, positionvector: ArrayLike) -> Any:
         """
         Return potential
 
         Parameters
         ----------
-        positionvector:  1-d array (vector) of length n
+        positionvector: 1-d array (vector) of length n
             positions of the n ions
         """
         x = np.asarray(positionvector)
@@ -57,37 +66,45 @@ class ClassicalHamiltonian(object):
                 v_x += C / (c_abs(xi - xj))
         return v_x
 
-    def initialposition(self):
+    def initialposition(self) -> Array:
         """Defines initial position as an estimate for the minimize process."""
         n = self.n
-        x_0 = r_[-(n - 1) / 2 : (n - 1) / 2 : n * 1j]
+        x_0: Array = r_[-(n - 1) / 2 : (n - 1) / 2 : n * 1j]
         return x_0
 
-    def normal_modes(self, eigenvalues):
+    def normal_modes(self, eigenvalues: ArrayLike) -> Array:
         """Return normal modes
 
         Computed eigenvalues of the matrix Vx are of the form
             (normal_modes)**2*m.
         """
         m = self.m
-        normal_modes = sqrt(eigenvalues / m)
+        normal_modes: Array = sqrt(np.asarray(eigenvalues) / m)
         return normal_modes
 
 
-def run_hamiltonian(hessian, verbose=True, full_output=True):
+def run_hamiltonian(
+    hessian: Differentiator,
+    verbose: bool = True,
+    full_output: bool = True,
+) -> tuple[ArrayOrScalar, ArrayOrScalar, Array]:
     c = ClassicalHamiltonian()
 
-    xopt = optimize.fmin(c.potential, c.initialposition(), xtol=1e-10)
+    xopt: Array = optimize.fmin(c.potential, c.initialposition(), xtol=1e-10)
 
     hessian.fun = c.potential
-    hessian.full_output = full_output
 
-    true_h = np.array([[5.23748385e-12, -2.61873829e-12], [-2.61873829e-12, 5.23748385e-12]])
-    if full_output:
-        h, info = hessian(xopt)
-        error = info.error_estimate
+    if hasattr(hessian, "full_output"):
+        hessian.full_output = full_output
+
+    true_h: Array = np.array([[5.23748385e-12, -2.61873829e-12], [-2.61873829e-12, 5.23748385e-12]])
+
+    result = hessian(xopt)
+    if isinstance(result, EstimateResult):
+        h: ArrayOrScalar = result.estimate
+        error: ArrayOrScalar = result.error_estimate
     else:
-        h = hessian(xopt)
+        h = result
         error = np.abs(h - true_h)
 
     eigenvalues = linalg.eigvals(h)

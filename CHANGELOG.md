@@ -1,4 +1,49 @@
-# Changelog
+# Ghangelog
+
+## [0.10.0] - 2026-08-12
+
+### 🚀 Features
+
+- Add `app2md2` for application-to-markdown conversion
+
+### 🐛 Bug Fixes
+
+- *(ci)* Make Sphinx doctests work in GitHub Actions
+- *(ci)* Fix workflow syntax and optimize test matrix execution in `test.yml`
+- *(typing)* Normalize `ArrayLike` input in `loglimits`
+- *(Jacobian)* Ensure Jacobian does not fail for functions of shape (1,)
+
+### 🚜 Refactor
+
+- *(api)* Return `EstimateResult` for `full_output` mode
+- *(typing)* Introduce protocols and annotate differentiation core
+- *(typing)* Modernize type annotations and protocols across package
+- *(test_numdifftools.py)* Replace lambda with named function
+- Rename `_atleast_2d` to `_ensure_2d_shape`
+- Remove Python 2 compatibility code
+
+### 📚 Documentation
+
+- Update documentation examples using the new API
+- Update links and remove redundant Python version references in `info.py` and `README.rst`
+- Update maintainability badge path in `info.py`
+
+### 🎨 Styling
+
+- Update benchmark title using f-strings
+- *(finite_difference.py)* Reformat code to comply with max line length
+- Format `app2md2.py` with Ruff
+- Remove obsolete code
+
+### ⚙️ Miscellaneous Tasks
+
+- Drop NumPy < 2.0 support and modernize tooling
+- Update `codecov-action` to v6
+- Simplify Python 3.15 allow-failure logic and improve CI workflow security
+- *(ci)* Improve test and release automation
+- Delete obsolete `appveyor` and `conda_recipe` folders
+- Update build & dependency configurations (`pyproject.toml`, `build_package.py`, `pdm.lock`, `pdm.lock314`)
+- Add missing `_typing.py` and coverage reports
 
 ## [0.9.42] - 2025-12-11
 

@@ -46,7 +46,7 @@ sys.path.insert(0, SOURCE_PATH)
 
 #
 # from sphinx import apidoc
-#
+
 # output_dir = os.path.join(__location__, "api")
 # module_dir = os.path.join(__location__, "../src", PACKAGE_NAME)
 # try:

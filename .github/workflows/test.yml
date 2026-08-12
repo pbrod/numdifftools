@@ -1,5 +1,5 @@
 # .github/workflows/ci.yml
-# This workflow runs Continous Integration (CI) including tests and linting.
+# This workflow runs Continuous Integration (CI) including tests and linting.
 # for a variety of Python versions
 # For more information see:
 # https://py-pkgs.org/08-ci-cd
@@ -65,37 +65,40 @@ jobs:
             Write-Host "pdm.lock314 not found; falling back to pdm.lock"
           }
 
-      # Caching step for speed (runs after potential copy so cache key includes chosen pdm.lock)
-      - name: Set up PDM cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/pdm
-            .venv
-          key: ${{ runner.os }}-pdm-${{ matrix.python_version }}-${{ hashFiles('pyproject.toml', 'pdm.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-pdm-${{ matrix.python_version }}-
-
       - name: Set up PDM
         uses: pdm-project/setup-pdm@v4
         with:
           python-version: ${{ matrix.python_version }}
+          cache: true
 
       - name: Install dependencies
-        run: pdm install -dG test
+        run: pdm install -dG test -dG sphinx
 
-      - name: Run tests
-        run: pdm run
-
-      - name: Run doctests
-        run: pdm docs-doctest
-
-      - name: Coverage
+      # Run linting/typing only once on primary runner to save compute
+      - name: Check style
         if: matrix.python_version == '3.13' && matrix.os == 'ubuntu-latest'
         run: |
+          pdm format --check
+          pdm check-style
+
+      - name: Check types
+        if: matrix.python_version == '3.13' && matrix.os == 'ubuntu-latest'
+        run: pdm check-types
+
+      # Run regular test suite on all non-coverage matrix runners
+      - name: Run tests
+        if: ${{ !(matrix.python_version == '3.13' && matrix.os == 'ubuntu-latest') }}
+        run: pdm run pytest -p no:pep8
+
+      # Combined test + coverage step for the coverage runner
+      - name: Coverage & Doctest
+        if: matrix.python_version == '3.13' && matrix.os == 'ubuntu-latest'
+        run: |
+          pdm docs-doctest
           pdm run pytest \
-          --cov=numdifftools \
-          --cov-report=xml
+            -p no:pep8 \
+            --cov=numdifftools \
+            --cov-report=xml
 
       - name: Upload coverage to Codecov
         if: matrix.python_version == '3.13' && matrix.os == 'ubuntu-latest'

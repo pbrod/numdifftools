@@ -5,30 +5,45 @@ See also:
 https://www.pythoncentral.io/measure-time-in-python-time-time-vs-time-clock/
 """
 
-from __future__ import absolute_import, print_function
+# mypy: disable-error-code=return-value
+# mypy: disable-error-code=no-redef
+from __future__ import annotations
 
 import cProfile
 import inspect
 import warnings
+from collections.abc import Callable
 from functools import wraps
 from timeit import default_timer as timer
+from types import TracebackType
+from typing import Any, TypeVar
+
+F = TypeVar("F", bound=Callable[..., Any])
+LineProfiler: Any
 
 try:
     from line_profiler import LineProfiler
 
-    def _add_all_class_methods(profiler, cls, except_=""):
+    def _add_all_class_methods(
+        profiler: LineProfiler,
+        cls: Any,
+        except_: str = "",
+    ) -> None:
         for k, v in inspect.getmembers(cls, inspect.ismethod):
             if k != except_:
                 profiler.add_function(v)
 
-    def _add_function_or_classmethod(profiler, f, args):
+    def _add_function_or_classmethod(profiler: LineProfiler, f: Any, args: tuple[Any, ...]) -> None:
         if isinstance(f, str):  # f is a method of the
             cls = args[0]  # class instance
             profiler.add_function(getattr(cls, f))
         else:
             profiler.add_function(f)
 
-    def do_profile(follow=(), follow_all_methods=False):
+    def do_profile(
+        follow: tuple[Any, ...] = (),
+        follow_all_methods: bool = False,
+    ) -> Callable[[F], F]:
         """
         Decorator to profile a function or class method
 
@@ -53,8 +68,8 @@ try:
         do_cprofile, test_do_profile
         """
 
-        def inner(func):
-            def profiled_func(*args, **kwargs):
+        def inner(func: F) -> F:
+            def profiled_func(*args: Any, **kwargs: Any) -> Any:
                 try:
                     profiler = LineProfiler()
                     profiler.add_function(func)
@@ -76,11 +91,14 @@ except ImportError as error:
     LineProfiler = None
     warnings.warn(str(error), stacklevel=2)
 
-    def do_profile(follow=(), follow_all_methods=False):
+    def do_profile(
+        follow: tuple[Any, ...] = (),
+        follow_all_methods: bool = False,
+    ) -> Callable[[F], F]:
         "Helpful if you accidentally leave in production!"
 
-        def inner(func):
-            def nothing(*args, **kwargs):
+        def inner(func: F) -> F:
+            def nothing(*args: Any, **kwargs: Any) -> Any:
                 return func(*args, **kwargs)
 
             return nothing
@@ -88,7 +106,7 @@ except ImportError as error:
         return inner
 
 
-def timefun(fun):
+def timefun(fun: F) -> F:
     """Timing decorator
 
     Timers require you to do some digging. Start wrapping a few of the higher level
@@ -110,7 +128,7 @@ def timefun(fun):
     """
 
     @wraps(fun)
-    def measure_time(*args, **kwargs):
+    def measure_time(*args: Any, **kwargs: Any) -> Any:
         t1 = timer()
         result = fun(*args, **kwargs)
         t2 = timer()
@@ -126,31 +144,32 @@ class TimeWith:
 
     """
 
-    def __init__(self, name=""):
+    def __init__(self, name: str = "") -> None:
         self.name = name
         self.start = timer()
 
     @property
-    def elapsed(self):
+    def elapsed(self) -> float:
         return timer() - self.start
 
-    def checkpoint(self, name=""):
-        print(
-            "{timer} {checkpoint} took {elapsed} seconds".format(
-                timer=self.name,
-                checkpoint=name,
-                elapsed=self.elapsed,
-            ).strip()
-        )
+    def checkpoint(self, name: str = "") -> None:
+        print(f"{self.name} {name} took {self.elapsed} seconds".strip())
 
-    def __enter__(self):
+    def __enter__(self) -> TimeWith:
         return self
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> None:
         self.checkpoint("finished")
 
 
-def do_cprofile(func):
+def do_cprofile(
+    func: Callable[..., Any],
+) -> Callable[..., Any]:
     """
     Decorator to profile a function
 
@@ -175,7 +194,7 @@ def do_cprofile(func):
     do_profile, test_do_profile
     """
 
-    def profiled_func(*args, **kwargs):
+    def profiled_func(*args: Any, **kwargs: Any) -> Any:
         profile = cProfile.Profile()
         try:
             profile.enable()

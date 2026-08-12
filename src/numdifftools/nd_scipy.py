@@ -1,14 +1,35 @@
-from __future__ import absolute_import, division, print_function
+from __future__ import annotations
+
+from typing import Any
 
 import numpy as np
+from numpy.typing import ArrayLike
 from scipy.optimize._numdiff import approx_derivative
 
+from numdifftools._typing import Array, FunctionLike
 
-class _Common(object):
-    def __init__(self, fun, step=None, method="central", order=2, bounds=(-np.inf, np.inf), sparsity=None):
+
+class _Common:
+    fun: FunctionLike | None
+    step: float | ArrayLike | None
+    method: str
+    order: int
+    bounds: tuple[float, float] | tuple[ArrayLike, ArrayLike]
+    sparsity: Any
+
+    def __init__(
+        self,
+        fun: FunctionLike | None,
+        step: float | ArrayLike | None = None,
+        method: str = "central",
+        order: int = 2,
+        bounds: tuple[float, float] | tuple[ArrayLike, ArrayLike] = (-np.inf, np.inf),
+        sparsity: Any = None,
+    ) -> None:
         self.fun = fun
         self.step = step
         self.method = method
+        self.order = order
         self.bounds = bounds
         self.sparsity = sparsity
 
@@ -71,7 +92,7 @@ class Jacobian(_Common):
     True
     """
 
-    def __call__(self, x, *args, **kwds):
+    def __call__(self, x: ArrayLike, *args: Any, **kwds: Any) -> Array:
         x = np.atleast_1d(x)
         method = {"complex": "cs", "central": "3-point", "forward": "2-point", "backward": "2-point"}[
             self.method
@@ -84,7 +105,7 @@ class Jacobian(_Common):
             "bounds": self.bounds,
             "sparsity": self.sparsity,
         }
-
+        assert self.fun is not None
         grad = approx_derivative(self.fun, x, **options)
 
         return grad
@@ -139,8 +160,21 @@ class Gradient(Jacobian):
     Hessian, Jacobian
     """
 
-    def __call__(self, x, *args, **kwds):
-        return super(Gradient, self).__call__(np.atleast_1d(x).ravel(), *args, **kwds).squeeze()
+    def __call__(
+        self,
+        x: ArrayLike,
+        *args: Any,
+        **kwds: Any,
+    ) -> Array:
+        return (
+            super()
+            .__call__(
+                np.atleast_1d(x).ravel(),
+                *args,
+                **kwds,
+            )
+            .squeeze()
+        )
 
 
 if __name__ == "__main__":

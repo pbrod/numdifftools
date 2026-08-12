@@ -5,12 +5,26 @@ This module provides an easy to use interface to derivatives calculated with
 statsmodels.numdiff.
 """
 
-from __future__ import absolute_import, division, print_function
+# mypy: disable-error-code=no-redef
+from __future__ import annotations
 
 import warnings
+from collections.abc import Callable
 from functools import partial
+from typing import Any, TypeAlias
 
 import numpy as np
+from numpy.typing import ArrayLike
+
+from numdifftools._typing import Array, FunctionLike, StepGeneratorFactory
+
+DerivativeCallable: TypeAlias = Callable[..., Array]
+
+approx_hess1: Any
+approx_hess2: Any
+approx_hess3: Any
+approx_hess_cs: Any
+_get_epsilon: Any
 
 try:
     from statsmodels.tools.numdiff import (  # approx_fprime,
@@ -23,19 +37,32 @@ try:
         approx_hess_cs,
     )
 except ImportError:
-    approx_hess1 = approx_hess2 = approx_hess3 = approx_hess_cs = _get_epsilon = None
-
+    approx_hess1 = None
+    approx_hess2 = None
+    approx_hess3 = None
+    approx_hess_cs = None
+    _get_epsilon = None
 
 _EPS = np.finfo(float).eps
 
 
-def _transpose(grad, ndim):
+def _transpose(
+    grad: ArrayLike,
+    ndim: int,
+) -> Array:
     axes = list(range(ndim))
     axes[:2] = axes[1::-1]
     return np.transpose(grad, axes=axes)
 
 
-def approx_fprime(x, f, epsilon=None, args=(), kwargs=None, centered=True):
+def approx_fprime(
+    x: ArrayLike,
+    f: FunctionLike,
+    epsilon: ArrayLike | None = None,
+    args: tuple[Any, ...] = (),
+    kwargs: dict[str, Any] | None = None,
+    centered: bool = True,
+) -> Array:
     """
     Gradient of function, or Jacobian if function fun returns 1d array
 
@@ -69,6 +96,7 @@ def approx_fprime(x, f, epsilon=None, args=(), kwargs=None, centered=True):
     the Jacobian of the first observation would be [:, 0, :]
 
     """
+    assert _get_epsilon is not None
     kwargs = {} if kwargs is None else kwargs
     x = np.atleast_1d(x)  # .ravel()
     n = len(x)
@@ -77,13 +105,13 @@ def approx_fprime(x, f, epsilon=None, args=(), kwargs=None, centered=True):
     grad = np.zeros((n,) + dim, float)
     ei = np.zeros(np.shape(x), float)
     if not centered:
-        epsilon = _get_epsilon(x, 2, epsilon, n)
+        epsilon = np.asarray(_get_epsilon(x, 2, epsilon, n))
         for k in range(n):
             ei[k] = epsilon[k]
             grad[k, :] = (f(*(x + ei,) + args, **kwargs) - f0) / epsilon[k]
             ei[k] = 0.0
     else:
-        epsilon = _get_epsilon(x, 3, epsilon, n) / 2.0
+        epsilon = np.asarray(_get_epsilon(x, 3, epsilon, n)) / 2.0
         for k in range(n):
             ei[k] = epsilon[k]
             grad[k, :] = (f(*(x + ei,) + args, **kwargs) - f(*(x - ei,) + args, **kwargs)) / (2 * epsilon[k])
@@ -91,14 +119,27 @@ def approx_fprime(x, f, epsilon=None, args=(), kwargs=None, centered=True):
     return _transpose(grad, grad.ndim)
 
 
-def _approx_fprime_backward(x, f, epsilon=None, args=(), kwargs=None):
+def _approx_fprime_backward(
+    x: ArrayLike,
+    f: FunctionLike,
+    epsilon: ArrayLike | None = None,
+    args: tuple[Any, ...] = (),
+    kwargs: dict[str, Any] | None = None,
+) -> Array:
+    assert _get_epsilon is not None
     x = np.atleast_1d(x)  # .ravel()
     n = len(x)
-    epsilon = -np.abs(_get_epsilon(x, 2, epsilon, n))
+    epsilon = -np.abs(np.asarray(_get_epsilon(x, 2, epsilon, n)))
     return approx_fprime(x, f, epsilon, args, kwargs, centered=False)
 
 
-def approx_fprime_cs(x, f, epsilon=None, args=(), kwargs=None):
+def approx_fprime_cs(
+    x: ArrayLike,
+    f: FunctionLike,
+    epsilon: ArrayLike | None = None,
+    args: tuple[Any, ...] = (),
+    kwargs: dict[str, Any] | None = None,
+) -> Array:
     """
     Calculate gradient or Jacobian with complex step derivative approximation
 
@@ -131,10 +172,11 @@ def approx_fprime_cs(x, f, epsilon=None, args=(), kwargs=None):
     # From Guilherme P. de Freitas, numpy mailing list
     # May 04 2010 thread "Improvement of performance"
     # http://mail.scipy.org/pipermail/numpy-discussion/2010-May/050250.html
+    assert _get_epsilon is not None
     kwargs = {} if kwargs is None else kwargs
-    x = np.atleast_1d(x)  # .ravel()
+    x = np.atleast_1d(x)
     n = len(x)
-    epsilon = _get_epsilon(x, 1, epsilon, n)
+    epsilon = np.asarray(_get_epsilon(x, 1, epsilon, n))
     ei = np.zeros(np.shape(x), complex)
     grad = []
     for k in range(n):
@@ -144,29 +186,50 @@ def approx_fprime_cs(x, f, epsilon=None, args=(), kwargs=None):
     return _transpose(grad, grad[0].ndim + 1)
 
 
-def _approx_hess1_backward(x, f, epsilon=None, args=(), kwargs=None):
+def _approx_hess1_backward(
+    x: ArrayLike,
+    f: FunctionLike,
+    epsilon: ArrayLike | None = None,
+    args: tuple[Any, ...] = (),
+    kwargs: dict[str, Any] | None = None,
+) -> Array:
+    assert _get_epsilon is not None
+    x = np.atleast_1d(x)  # .ravel()
     n = len(x)
     kwargs = {} if kwargs is None else kwargs
-    epsilon = -np.abs(_get_epsilon(x, 3, epsilon, n))
+    epsilon = -np.abs(np.asarray(_get_epsilon(x, 3, epsilon, n)))
     return approx_hess1(x, f, epsilon, args, kwargs)
 
 
-class _Common(object):
-    def __init__(self, fun, step=None, method="central", order=None):
+class _Common:
+    fun: FunctionLike | None
+    step: float | ArrayLike | StepGeneratorFactory | None = None
+    _method: str
+
+    def __init__(
+        self,
+        fun: FunctionLike | None,
+        step: float | ArrayLike | StepGeneratorFactory | None = None,
+        method: str = "central",
+        order: int | None = None,
+    ) -> None:
         self.fun = fun
         self.step = step
         self.method = method
         self.order = order
 
-    _callables = {}
-    n = property(fget=lambda cls: 1)
+    _callables: dict[str, DerivativeCallable] = {}
 
     @property
-    def order(self):
+    def n(self) -> int:
+        return 1
+
+    @property
+    def order(self) -> int:
         return {"forward": 1, "backward": 1}.get(self.method, 2)
 
     @order.setter
-    def order(self, order):
+    def order(self, order: int | None) -> None:
         if order is None:
             return
         valid_order = self.order
@@ -175,20 +238,26 @@ class _Common(object):
             warnings.warn(msg.format(order, valid_order, self.method), stacklevel=2)
 
     @property
-    def method(self):
+    def method(self) -> str:
         return self._method  # pylint: disable=no-member
 
     @method.setter
-    def method(self, method):
+    def method(self, method: str) -> None:
         self._metod = method
-        callable_ = self._callables.get(method)
-        if callable_:
+        callable_ = self._callables.get(method, None)
+        if callable_ is not None:
             self._derivative_nonzero_order = callable_
         else:
-            warnings.warn('{} is an illegal method! Setting method="central"'.format(method), stacklevel=2)
-            self.method = "central"
+            warnings.warn(f'{method} is an illegal method! Setting method="central"', stacklevel=2)
+            self._method = "central"
 
-    def __call__(self, x, *args, **kwds):
+    def __call__(
+        self,
+        x: ArrayLike,
+        *args: Any,
+        **kwds: Any,
+    ) -> Array:
+        assert self.fun is not None
         return self._derivative_nonzero_order(np.atleast_1d(x), self.fun, self.step, args, kwds)
 
 
@@ -234,15 +303,17 @@ class Hessian(_Common):
     Jacobian, Gradient
     """
 
-    n = property(fget=lambda cls: 2)
-
-    _callables = {
+    _callables: dict[str, DerivativeCallable] = {
         "complex": approx_hess_cs,
         "forward": approx_hess1,
         "backward": _approx_hess1_backward,
         "central": approx_hess3,
         "central2": approx_hess2,
     }
+
+    @property
+    def n(self) -> int:
+        return 2
 
 
 class Jacobian(_Common):
@@ -299,7 +370,7 @@ class Jacobian(_Common):
     True
     """
 
-    _callables = {
+    _callables: dict[str, DerivativeCallable] = {
         "complex": approx_fprime_cs,
         "central": partial(approx_fprime, centered=True),
         "forward": partial(approx_fprime, centered=False),
@@ -356,8 +427,21 @@ class Gradient(Jacobian):
     Hessian, Jacobian
     """
 
-    def __call__(self, x, *args, **kwds):
-        return super(Gradient, self).__call__(np.atleast_1d(x).ravel(), *args, **kwds).squeeze()
+    def __call__(
+        self,
+        x: ArrayLike,
+        *args: Any,
+        **kwds: Any,
+    ) -> Array:
+        return (
+            super()
+            .__call__(
+                np.atleast_1d(x).ravel(),
+                *args,
+                **kwds,
+            )
+            .squeeze()
+        )
 
 
 if __name__ == "__main__":

@@ -2,21 +2,29 @@
 Finite difference methods module.
 """
 
-from __future__ import absolute_import, division, print_function
+from __future__ import annotations
 
 import warnings
+from collections.abc import Iterator, Sequence
+from typing import Any
 
 import numpy as np
 from numpy import linalg
 from scipy import special
 
+from numdifftools._typing import (
+    Array,
+    ArrayOrScalar,
+    DifferenceFunction,
+    FunctionLike,
+)
 from numdifftools.extrapolation import convolve
 from numdifftools.multicomplex import Bicomplex
 
 _SQRT_J = (1j + 1.0) / np.sqrt(2.0)  # = 1j**0.5
 
 # step_ratio, parity, nterms
-FD_RULES = {}
+FD_RULES: dict[tuple[float, int, int], Array] = {}
 # (2.0, 1, 1): array([[1.]]),
 # (2.0, 1, 2): array([[-0.333333333333333333333, 2.666666666666666666666666666],
 #                     [8., -16.]]),
@@ -33,12 +41,12 @@ FD_RULES = {}
 # @PydevIgnore
 
 
-def _assert(cond, msg):
+def _assert(cond: bool, msg: str) -> None:
     if not cond:
         raise ValueError(msg)
 
 
-def make_exact(h):
+def make_exact(h: float) -> float:
     """Make sure h is an exact representable number
 
     This is important when calculating numerical derivatives and is
@@ -47,7 +55,7 @@ def make_exact(h):
     return (h + 1.0) - 1.0
 
 
-class DifferenceFunctions(object):
+class DifferenceFunctions:
     """
     Class defining difference functions
 
@@ -58,62 +66,96 @@ class DifferenceFunctions(object):
 
     # pylint: disable=unused-argument
     @staticmethod
-    def _central_even(f, f_x0i, x0i, h):
+    def _central_even(
+        f: FunctionLike,
+        f_x0i: ArrayOrScalar,
+        x0i: ArrayOrScalar,
+        h: ArrayOrScalar,
+    ) -> ArrayOrScalar:
         return (f(x0i + h) + f(x0i - h)) / 2.0 - f_x0i
 
     @staticmethod
-    def _central(f, f_x0i, x0i, h):  # @UnusedVariable
+    def _central(
+        f: FunctionLike,
+        f_x0i: ArrayOrScalar,  # @UnusedVariable
+        x0i: ArrayOrScalar,
+        h: ArrayOrScalar,
+    ) -> ArrayOrScalar:
         return (f(x0i + h) - f(x0i - h)) / 2.0
 
     @staticmethod
-    def _forward(f, f_x0i, x0i, h):
+    def _forward(
+        f: FunctionLike, f_x0i: ArrayOrScalar, x0i: ArrayOrScalar, h: ArrayOrScalar
+    ) -> ArrayOrScalar:
         return f(x0i + h) - f_x0i
 
     @staticmethod
-    def _backward(f, f_x0i, x0i, h):
+    def _backward(
+        f: FunctionLike, f_x0i: ArrayOrScalar, x0i: ArrayOrScalar, h: ArrayOrScalar
+    ) -> ArrayOrScalar:
         return f_x0i - f(x0i - h)
 
     @staticmethod
-    def _complex(f, f_x, x, h):  # @UnusedVariable
+    def _complex(
+        f: FunctionLike,
+        f_x: ArrayOrScalar,  # @UnusedVariable
+        x: ArrayOrScalar,
+        h: ArrayOrScalar,
+    ) -> ArrayOrScalar:
         return f(x + 1j * h).imag
 
     @staticmethod
-    def _complex_odd(f, f_x, x, h):
+    def _complex_odd(
+        f: FunctionLike, f_x: ArrayOrScalar, x: ArrayOrScalar, h: ArrayOrScalar
+    ) -> ArrayOrScalar:
         i_h = h * _SQRT_J
         return ((_SQRT_J / 2.0) * (f(x + i_h) - f(x - i_h))).imag
 
     @staticmethod
-    def _complex_odd_higher(f, f_x, x, h):
+    def _complex_odd_higher(
+        f: FunctionLike, f_x: ArrayOrScalar, x: ArrayOrScalar, h: ArrayOrScalar
+    ) -> ArrayOrScalar:
         i_h = h * _SQRT_J
         return ((3 * _SQRT_J) * (f(x + i_h) - f(x - i_h))).real
 
     @staticmethod
-    def _complex_even(f, f_x, x, h):
+    def _complex_even(
+        f: FunctionLike, f_x: ArrayOrScalar, x: ArrayOrScalar, h: ArrayOrScalar
+    ) -> ArrayOrScalar:
         i_h = h * _SQRT_J
         return (f(x + i_h) + f(x - i_h)).imag
 
     @staticmethod
-    def _complex_even_higher(f, f_x, x, h):
+    def _complex_even_higher(
+        f: FunctionLike, f_x: ArrayOrScalar, x: ArrayOrScalar, h: ArrayOrScalar
+    ) -> ArrayOrScalar:
         i_h = h * _SQRT_J
         return 12.0 * (f(x + i_h) + f(x - i_h) - 2 * f_x).real
 
     @staticmethod
-    def _multicomplex(f, f_x, x, h):
+    def _multicomplex(
+        f: FunctionLike, f_x: ArrayOrScalar, x: ArrayOrScalar, h: ArrayOrScalar
+    ) -> ArrayOrScalar:
         z = Bicomplex(x + 1j * h, 0)
         return Bicomplex.__array_wrap__(f(z)).imag
 
     @staticmethod
-    def _multicomplex2(f, f_x, x, h):
+    def _multicomplex2(
+        f: FunctionLike, f_x: ArrayOrScalar, x: ArrayOrScalar, h: ArrayOrScalar
+    ) -> ArrayOrScalar:
         z = Bicomplex(x + 1j * h, h)
         return Bicomplex.__array_wrap__(f(z)).imag12
 
 
-class JacobianDifferenceFunctions(object):
+class JacobianDifferenceFunctions:
     """Class defining Jacobian difference functions"""
 
     # pylint: disable=unused-argument
     @staticmethod
-    def increments(n, h):
+    def increments(
+        n: int,
+        h: Array,
+    ) -> Iterator[Array]:
         """Returns Jacobian steps"""
         e_i = np.zeros(np.shape(h), float)
         for k in range(n):
@@ -122,51 +164,51 @@ class JacobianDifferenceFunctions(object):
             e_i[k] = 0
 
     @staticmethod
-    def _central(f, f_x, x, h):
+    def _central(f: FunctionLike, f_x: ArrayOrScalar, x: Array, h: Array) -> Array:
         n = len(x)
         steps = JacobianDifferenceFunctions.increments(n, h)
         return np.array([(f(x + hi) - f(x - hi)) / 2.0 for hi in steps])
 
     @staticmethod
-    def _central_even(f, f_x, x, h):
+    def _central_even(f: FunctionLike, f_x: ArrayOrScalar, x: Array, h: Array) -> Array:
         n = len(x)
         steps = JacobianDifferenceFunctions.increments(n, h)
         return np.array([(f(x + hi) + f(x - hi)) / 2.0 - f_x for hi in steps])
 
     @staticmethod
-    def _backward(f, f_x, x, h):
+    def _backward(f: FunctionLike, f_x: ArrayOrScalar, x: Array, h: Array) -> Array:
         n = len(x)
         steps = JacobianDifferenceFunctions.increments(n, h)
         return np.array([f_x - f(x - hi) for hi in steps])
 
     @staticmethod
-    def _forward(f, f_x, x, h):
+    def _forward(f: FunctionLike, f_x: ArrayOrScalar, x: Array, h: Array) -> Array:
         n = len(x)
         steps = JacobianDifferenceFunctions.increments(n, h)
         return np.array([f(x + hi) - f_x for hi in steps])
 
     @staticmethod
-    def _complex(f, f_x, x, h):
+    def _complex(f: FunctionLike, f_x: ArrayOrScalar, x: Array, h: Array) -> Array:
         n = len(x)
         steps = JacobianDifferenceFunctions.increments(n, h)
         return np.array([f(x + 1j * ih).imag for ih in steps])
 
     @staticmethod
-    def _complex_even(f, f_x, x, h):
+    def _complex_even(f: FunctionLike, f_x: ArrayOrScalar, x: Array, h: Array) -> Array:
         n = len(x)
         j_1 = _SQRT_J
         steps = JacobianDifferenceFunctions.increments(n, h)
         return np.array([(f(x + j_1 * ih) + f(x - j_1 * ih)).imag for ih in steps])
 
     @staticmethod
-    def _complex_odd(f, f_x, x, h):
+    def _complex_odd(f: FunctionLike, f_x: ArrayOrScalar, x: Array, h: Array) -> Array:
         n = len(x)
         j_1 = _SQRT_J
         steps = JacobianDifferenceFunctions.increments(n, h)
         return np.array([((j_1 / 2.0) * (f(x + j_1 * ih) - f(x - j_1 * ih))).imag for ih in steps])
 
     @staticmethod
-    def _multicomplex(f, f_x, x, h):
+    def _multicomplex(f: FunctionLike, f_x: ArrayOrScalar, x: Array, h: Array) -> Array:
         n = len(x)
         steps = JacobianDifferenceFunctions.increments(n, h)
         cmplx_wrap = Bicomplex.__array_wrap__
@@ -174,7 +216,7 @@ class JacobianDifferenceFunctions(object):
         return np.array(partials)
 
 
-class HessdiagDifferenceFunctions(object):
+class HessdiagDifferenceFunctions:
     """Class defining Hessdiag difference functions
 
     References
@@ -185,7 +227,7 @@ class HessdiagDifferenceFunctions(object):
 
     # pylint: disable=unused-argument
     @staticmethod
-    def _central2(f, f_x, x, h):
+    def _central2(f: FunctionLike, f_x: ArrayOrScalar, x: Array, h: Array) -> Array:
         """Eq. 8 in Ridout (2009)."""
         n = len(x)
         increments = np.identity(n) * h
@@ -196,7 +238,7 @@ class HessdiagDifferenceFunctions(object):
         return np.array(partials)
 
     @staticmethod
-    def _central_even(f, f_x, x, h):
+    def _central_even(f: FunctionLike, f_x: ArrayOrScalar, x: Array, h: Array) -> Array:
         """Eq. 9 in Ridout (2009)."""
         n = len(x)
         increments = np.identity(n) * h
@@ -204,21 +246,21 @@ class HessdiagDifferenceFunctions(object):
         return np.array(partials)
 
     @staticmethod
-    def _backward(f, f_x, x, h):
+    def _backward(f: FunctionLike, f_x: ArrayOrScalar, x: Array, h: Array) -> Array:
         n = len(x)
         increments = np.identity(n) * h
         partials = [f_x - f(x - hi) for hi in increments]
         return np.array(partials)
 
     @staticmethod
-    def _forward(f, f_x, x, h):
+    def _forward(f: FunctionLike, f_x: ArrayOrScalar, x: Array, h: Array) -> Array:
         n = len(x)
         increments = np.identity(n) * h
         partials = [f(x + hi) - f_x for hi in increments]
         return np.array(partials)
 
     @staticmethod
-    def _multicomplex2(f, f_x, x, h):
+    def _multicomplex2(f: FunctionLike, f_x: ArrayOrScalar, x: Array, h: Array) -> Array:
         n = len(x)
         increments = np.identity(n) * h
         cmplx_wrap = Bicomplex.__array_wrap__
@@ -226,14 +268,14 @@ class HessdiagDifferenceFunctions(object):
         return np.array(partials)
 
     @staticmethod
-    def _complex_even(f, f_x, x, h):
+    def _complex_even(f: FunctionLike, f_x: ArrayOrScalar, x: Array, h: Array) -> Array:
         n = len(x)
         increments = np.identity(n) * h * (1j + 1) / np.sqrt(2)
         partials = [(f(x + hi) + f(x - hi)).imag for hi in increments]
         return np.array(partials)
 
 
-class HessianDifferenceFunctions(object):
+class HessianDifferenceFunctions:
     """Class defining Hessian difference functions
 
     References
@@ -245,7 +287,7 @@ class HessianDifferenceFunctions(object):
 
     # pylint: disable=unused-argument
     @staticmethod
-    def _complex_even(f, f_x, x, h):
+    def _complex_even(f: FunctionLike, f_x: ArrayOrScalar, x: Array, h: Array) -> Array:
         """
         Calculate Hessian with complex-step derivative approximation
 
@@ -266,7 +308,7 @@ class HessianDifferenceFunctions(object):
         return hess
 
     @staticmethod
-    def _multicomplex2(f, f_x, x, h):
+    def _multicomplex2(f: FunctionLike, f_x: ArrayOrScalar, x: Array, h: Array) -> Array:
         """Calculate Hessian with Bicomplex-step derivative approximation"""
         n = len(x)
         eee = np.diag(h)
@@ -283,7 +325,7 @@ class HessianDifferenceFunctions(object):
         return hess
 
     @staticmethod
-    def _central_even(f, f_x, x, h):
+    def _central_even(f: FunctionLike, f_x: ArrayOrScalar, x: Array, h: Array) -> Array:
         """Eq 9 in Ridout (2009)."""
         n = len(x)  # Number of variables
         s = np.array(f_x).shape  # Shape of function result
@@ -303,7 +345,7 @@ class HessianDifferenceFunctions(object):
         return hess
 
     @staticmethod
-    def _central2(f, f_x, x, h):
+    def _central2(f: FunctionLike, f_x: ArrayOrScalar, x: Array, h: Array) -> Array:
         """Eq. 8 in Ridout (2009)"""
         n = len(x)  # Number of variables
         s = np.array(f_x).shape  # Shape of function result
@@ -333,7 +375,7 @@ class HessianDifferenceFunctions(object):
         return hess
 
     @staticmethod
-    def _forward(f, f_x, x, h):
+    def _forward(f: FunctionLike, f_x: ArrayOrScalar, x: Array, h: Array) -> Array:
         """Eq. 7 in Ridout (2009)"""
         n = len(x)  # Number of variables
         s = np.array(f_x).shape  # Shape of function result
@@ -352,11 +394,11 @@ class HessianDifferenceFunctions(object):
         return hess
 
     @staticmethod
-    def _backward(f, f_x, x, h):
+    def _backward(f: FunctionLike, f_x: ArrayOrScalar, x: Array, h: Array) -> Array:
         return HessianDifferenceFunctions._forward(f, f_x, x, -h)
 
 
-class LogRule(object):
+class LogRule:
     """Log spaced finite difference rule class
 
     Parameters
@@ -406,9 +448,9 @@ class LogRule(object):
 
     """
 
-    _difference_functions = DifferenceFunctions()
+    _difference_functions: Any = DifferenceFunctions()
 
-    def __init__(self, n=1, method="central", order=2):
+    def __init__(self, n: int = 1, method: str = "central", order: int = 2) -> None:
         self.n = n
         self.method = method
         self.order = order
@@ -416,23 +458,31 @@ class LogRule(object):
     # --- properties ---
 
     @property
-    def _odd_derivative(self):
+    def n(self) -> int:
+        return self._n
+
+    @n.setter
+    def n(self, value: int) -> None:
+        self._n = value
+
+    @property
+    def _odd_derivative(self) -> bool:
         return self.n % 2 == 1
 
     @property
-    def _even_derivative(self):
+    def _even_derivative(self) -> bool:
         return self.n % 2 == 0
 
     @property
-    def _derivative_mod_four_is_three(self):
+    def _derivative_mod_four_is_three(self) -> bool:
         return self.n % 4 == 3
 
     @property
-    def _derivative_mod_four_is_zero(self):
+    def _derivative_mod_four_is_zero(self) -> bool:
         return self.n % 4 == 0
 
     @property
-    def eval_first_condition(self):
+    def eval_first_condition(self) -> bool:
         """True if f(x0) needs to be evaluated given the differentiation method."""
         even_derivative = self._even_derivative
         return (
@@ -443,24 +493,24 @@ class LogRule(object):
         )
 
     @property
-    def _complex_high_order(self):
+    def _complex_high_order(self) -> bool:
         return self.method == "complex" and (self.n > 1 or self.order >= 4)
 
     @property
-    def richardson_step(self):
+    def richardson_step(self) -> int:
         """The step between exponents in the error polynomial of the Richardson extrapolation."""
         complex_step = 4 if self._complex_high_order else 2
         return {"central": 2, "central2": 2, "complex": complex_step, "multicomplex": 2}.get(self.method, 1)
 
     @property
-    def method_order(self):
+    def method_order(self) -> int:
         """The leading order of the truncation error of the Richardson extrapolation."""
         step = self.richardson_step
         # Make sure it is even and at least 2 or 4
         order = max((self.order // step) * step, step)
         return order
 
-    def _parity_complex(self, order, method_order):
+    def _parity_complex(self, order: int, method_order: int) -> int:
         if self.n == 1 and method_order < 4:
             return (order % 2) + 1
         return (
@@ -470,7 +520,7 @@ class LogRule(object):
             + int(self._derivative_mod_four_is_zero)
         )
 
-    def _parity(self, method, order, method_order):
+    def _parity(self, method: str, order: int, method_order: int) -> int:
         if method.startswith("central"):
             return (order % 2) + 1
         if method == "complex":
@@ -478,7 +528,7 @@ class LogRule(object):
         return 0
 
     @staticmethod
-    def _fd_matrix(step_ratio, parity, nterms):
+    def _fd_matrix(step_ratio: float, parity: int, nterms: int) -> Array:
         """
         Return matrix for finite difference and complex step derivation.
 
@@ -497,7 +547,7 @@ class LogRule(object):
         nterms : scalar, integer
             number of terms
         """
-        _assert(0 <= parity <= 6, "Parity must be 0, 1, 2, 3, 4, 5 or 6! ({0:d})".format(parity))
+        _assert(0 <= parity <= 6, f"Parity must be 0, 1, 2, 3, 4, 5 or 6! ({parity:d})")
         step = [1, 2, 2, 4, 4, 4, 4][parity]
         inv_sr = 1.0 / step_ratio
         offset = [1, 1, 2, 2, 4, 1, 3][parity]
@@ -507,26 +557,26 @@ class LogRule(object):
         return np.atleast_2d(c[j] * inv_sr ** (i * (step * j + offset)))
 
     @property
-    def _flip_fd_rule(self):
+    def _flip_fd_rule(self) -> bool:
         return (self._even_derivative and (self.method == "backward")) or (
             self.method == "complex" and (self.n % 8 in [3, 4, 5, 6])
         )
 
     @property
-    def _multicomplex_middle_name(self):
+    def _multicomplex_middle_name(self) -> str:
         if self.method == "multicomplex" and self.n > 1:
             _assert(self.n <= 2, "Multicomplex method only support first and second order derivatives.")
             return "2"
         return ""
 
-    def _get_middle_name(self):
+    def _get_middle_name(self) -> str:
         if self._even_derivative and self.method in ("central", "complex"):
             return "_even"
         if self._complex_high_order and self._odd_derivative:
             return "_odd"
         return self._multicomplex_middle_name
 
-    def _get_last_name(self):
+    def _get_last_name(self) -> str:
         last = ""
         if (
             self.method == "complex"
@@ -538,15 +588,15 @@ class LogRule(object):
         return last
 
     @property
-    def diff(self):
+    def diff(self) -> DifferenceFunction:
         "The difference function"
-        first = "_{0!s}".format(self.method)
+        first = f"_{self.method!s}"
         middle = self._get_middle_name()
         last = self._get_last_name()
         name = first + middle + last
         return getattr(self._difference_functions, name)
 
-    def rule(self, step_ratio=2.0):
+    def rule(self, step_ratio: float = 2.0) -> Array:
         """
         Return finite differencing rule.
 
@@ -587,7 +637,10 @@ class LogRule(object):
         return fd_rules[rule_index]
 
     @staticmethod
-    def _vstack(sequence, steps):
+    def _prepare_extrapolation_data(
+        sequence: Sequence[ArrayOrScalar],
+        steps: Sequence[ArrayOrScalar],
+    ) -> tuple[Array, Array, tuple[int, ...]]:
         original_shape = np.shape(sequence[0])
         f_del = np.vstack([np.ravel(r) for r in sequence])
         one = np.ones(original_shape)
@@ -595,7 +648,12 @@ class LogRule(object):
         _assert(f_del.size == h.size, "fun did not return data of correct size (it must be vectorized)")
         return f_del, h, original_shape
 
-    def apply(self, sequence, steps, step_ratio=2.0):
+    def apply(
+        self,
+        sequence: Sequence[ArrayOrScalar],
+        steps: Sequence[ArrayOrScalar],
+        step_ratio: float = 2.0,
+    ) -> tuple[Array, Array, tuple[int, ...]]:
         """
         Apply finite difference rule along the first axis.
 
@@ -607,11 +665,16 @@ class LogRule(object):
         steps: steps
 
         """
-        f_del, h, original_shape = self._vstack(sequence, steps)
+        f_del, h, original_shape = self._prepare_extrapolation_data(sequence, steps)
         der_init, h = self._apply(f_del, h, step_ratio)
         return der_init, h, original_shape
 
-    def _apply(self, f_del, h, step_ratio=2.0):
+    def _apply(
+        self,
+        f_del: Array,
+        h: Array,
+        step_ratio: float = 2.0,
+    ) -> tuple[Array, Array]:
         """
         Apply finite difference rule along the first axis.
 
@@ -629,15 +692,23 @@ class LogRule(object):
         n_r = fd_rule.size - 1
         _assert(
             n_r < num_steps,
-            "num_steps ({0:d}) must  be larger than ({1:d}) n + order - 1 = {2:d} + {3:d} -1 ({4:s})".format(
-                num_steps, n_r + 1, self.n, self.order, self.method
-            ),
+            f"num_steps ({num_steps:d}) must  be larger than "
+            f"({n_r + 1:d}) n + order - 1 = {self.n:d} + {self.order:d} -1 ({self.method:s})",
         )
         f_diff = convolve(f_del, fd_rule[::-1], axis=0, origin=n_r // 2)
 
         der_init = f_diff / (h**self.n)
         num_steps = max(num_steps - n_r, 1)
         return der_init[:num_steps], h[:num_steps]
+
+
+def _ensure_2d_shape(
+    original_shape: list[int] | tuple[int, ...],
+    ndim: int,
+) -> tuple[int, ...]:
+    if ndim == 1:
+        original_shape = (1,) + tuple(original_shape)
+    return tuple(original_shape)
 
 
 class LogJacobianRule(LogRule):
@@ -690,31 +761,35 @@ class LogJacobianRule(LogRule):
 
     """
 
-    _difference_functions = JacobianDifferenceFunctions()
+    _difference_functions: Any = JacobianDifferenceFunctions()
 
-    # n = property(fget=lambda cls: 1, fset=lambda cls, n: None)
+    @property
+    def n(self) -> int:
+        return 1
+
+    @n.setter
+    def n(self, value: int) -> None:
+        pass
 
     @staticmethod
-    def _atleast_2d(original_shape, ndim):
-        if ndim == 1:
-            original_shape = (1,) + tuple(original_shape)
-        return tuple(original_shape)
-
-    def _vstack(self, sequence, steps):
+    def _prepare_extrapolation_data(
+        sequence: Sequence[ArrayOrScalar],
+        steps: Sequence[ArrayOrScalar],
+    ) -> tuple[Array, Array, tuple[int, ...]]:
         original_shape = list(np.shape(np.atleast_1d(sequence[0])))
         ndim = len(original_shape)
         if sum(original_shape) == ndim:
-            f_del = np.vstack(sequence)
-            h = np.vstack(steps)
+            f_del = np.vstack([np.asarray(d_f) for d_f in sequence])
+            h = np.vstack([np.asarray(step) for step in steps])
         else:
             axes = [0, 1, 2][:ndim]
             axes[:2] = axes[1::-1]
             original_shape[:2] = original_shape[1::-1]
 
-            f_del = np.vstack([np.atleast_1d(r).transpose(axes).ravel() for r in sequence])
-            h = np.vstack([np.atleast_1d(r).transpose(axes).ravel() for r in steps])
+            f_del = np.vstack([np.atleast_1d(d_f).transpose(axes).ravel() for d_f in sequence])
+            h = np.vstack([np.atleast_1d(x).transpose(axes).ravel() for x in steps])
         _assert(f_del.size == h.size, "fun did not return data of correct size (it must be vectorized)")
-        return f_del, h, self._atleast_2d(original_shape, ndim)
+        return f_del, h, _ensure_2d_shape(original_shape, ndim)
 
 
 class LogHessdiagRule(LogRule):
@@ -768,9 +843,15 @@ class LogHessdiagRule(LogRule):
 
     """
 
-    _difference_functions = HessdiagDifferenceFunctions()
+    _difference_functions: Any = HessdiagDifferenceFunctions()
 
-    n = property(fget=lambda cls: 2, fset=lambda cls, n: None)
+    @property
+    def n(self) -> int:
+        return 2
+
+    @n.setter
+    def n(self, value: int) -> None:
+        pass
 
 
 class LogHessianRule(LogRule):
@@ -787,17 +868,23 @@ class LogHessianRule(LogRule):
         For 'central' and 'complex' methods, it must be an even number.
     """
 
-    _difference_functions = HessianDifferenceFunctions()
-
-    n = property(fget=lambda cls: 2, fset=lambda cls, unused_n: None)
+    _difference_functions: Any = HessianDifferenceFunctions()
 
     @property
-    def order(self):
+    def n(self) -> int:
+        return 2
+
+    @n.setter
+    def n(self, value: int) -> None:
+        pass
+
+    @property
+    def order(self) -> int:
         """The order of the error term in the Taylor approximation used"""
         return {"backward": 1, "forward": 1}.get(self.method, 2)
 
     @order.setter
-    def order(self, order):
+    def order(self, order: int | None) -> None:
         valid_order = self.order
 
         if order is not None and order != valid_order:
@@ -805,10 +892,15 @@ class LogHessianRule(LogRule):
             warnings.warn(msg.format(order, valid_order, self.method), stacklevel=2)
 
     @property
-    def _complex_high_order(self):
+    def _complex_high_order(self) -> bool:
         return False
 
-    def apply(self, sequence, steps, step_ratio=2.0):
+    def apply(
+        self,
+        sequence: Sequence[ArrayOrScalar],
+        steps: Sequence[ArrayOrScalar],
+        step_ratio: float = 2.0,
+    ) -> tuple[Array, Array, tuple[int, ...]]:
         """
         Apply finite difference rule along the first axis.
 
@@ -820,7 +912,7 @@ class LogHessianRule(LogRule):
         steps: steps
 
         """
-        f_del, h, original_shape = self._vstack(sequence, steps)
+        f_del, h, original_shape = self._prepare_extrapolation_data(sequence, steps)
         return f_del, h, original_shape
 
 

@@ -17,7 +17,7 @@ else:
 pytestmark = pytest.mark.skipif(algopy is None, reason="algopy is not installed!")
 
 
-class TestExampleFunctions(object):
+class TestExampleFunctions:
     @staticmethod
     def test_high_order_derivative():
         x = 0.5
@@ -38,11 +38,11 @@ class TestExampleFunctions(object):
                         if i == 0 and n > 7 and method not in ["complex"]:
                             continue
                         df = derivative(f, method=method, n=n, full_output=True)
-                        val, info = df(x)
-                        dm = max(int(-np.log10(info.error_estimate + 1e-16)) - 1, min_dm.get(method, 4))
+                        res = df(x)
+                        dm = max(int(-np.log10(res.error_estimate + 1e-16)) - 1, min_dm.get(method, 4))
                         print(i, name, method, n, dm)
                         tval = true_df(x)
-                        assert_array_almost_equal(val, tval, decimal=dm)
+                        assert_array_almost_equal(res.estimate, tval, decimal=dm)
 
     def test_first_order_derivative(self):
         x = 0.5

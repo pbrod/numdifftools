@@ -67,7 +67,7 @@ maintainers = [
 ]
 requires-python = ">=3.10"
 dependencies = [
-    "numpy>=1.21.2",
+    "numpy>=2.0",
     "scipy>=1.7.3",
 ]
 
@@ -122,10 +122,11 @@ source = "file"
 path = "src/numdifftools/__init__.py"
 
 [tool.pdm.scripts]
-docs-html = "sphinx-build -b html docs docs/_build/html -d docs/_build/doctrees"
-docs-latex = "sphinx-build -b latex docs docs/_build/latex -d docs/_build/doctrees"
-docs-pdf = "sphinx-build -b latexpdf docs docs/_build/latex -d docs/_build/doctrees"
-docs-doctest = "sphinx-build -b doctest docs docs/_build/doctest -d docs/_build/doctrees"
+docs-generate-api = { cmd = "sphinx-apidoc -f -o docs/api src/numdifftools" }
+docs-html = "python -m sphinx -b html docs docs/_build/html -d docs/_build/doctrees"
+docs-latex = "python -m sphinx -b latex docs docs/_build/latex -d docs/_build/doctrees"
+docs-pdf = "python -m sphinx -b latexpdf docs docs/_build/latex -d docs/_build/doctrees"
+docs-doctest = "python -m sphinx -b doctest docs docs/_build/doctest -d docs/_build/doctrees"
 lock = "pdm lock -dG all"
 lock-py314 = "pdm lock -L pdm.lock314 --python 3.14 --strategy no_direct_minimal_versions -dG all"
 lock-win64 = "pdm lock -L pdm_windows.lock --python 3.13 --strategy no_direct_minimal_versions --platform windows -dG all"
@@ -209,8 +210,12 @@ strict = true
 explicit_package_bases = false
 no_namespace_packages = true
 warn_return_any = false
-disable_error_code = "import-untyped"
-plugins = "numpy.typing.mypy_plugin"
+warn_unused_ignores = true
+disable_error_code = ["import-untyped"]
+
+[[tool.mypy.overrides]]
+module = ["numdifftools.*"]
+disallow_untyped_calls = false
 
 [[tool.mypy.overrides]]
 module = [
@@ -244,7 +249,7 @@ select = ["B",  # flake8-bugbear
           "F",  # PyFlakes
           "I",  # isort
           "Q",
-          # "UP", # pyupgrade
+          "UP", # pyupgrade
           ]
 
 # On top of the numpy convention, disable `D417`, which requires

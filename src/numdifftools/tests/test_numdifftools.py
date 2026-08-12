@@ -1,7 +1,5 @@
 """Test functions for numdifftools module"""
 
-from __future__ import absolute_import, print_function
-
 import numpy as np
 import pytest
 from hypothesis import example, given, note, settings
@@ -14,7 +12,7 @@ from numdifftools.testing import rosen
 from numdifftools.tests.hamiltonian import run_hamiltonian
 
 
-class TestRichardson(object):
+class TestRichardson:
     @staticmethod
     def test_central_forward_backward():
         central = {
@@ -100,11 +98,11 @@ class TestRichardson(object):
                     d.set_richardson_rule(step_ratio=2.0, num_terms=num_terms)
                     rule = d.richardson.rule()
 
-                    msg = "n={0}, num_terms={1}, order={2}".format(n, num_terms, order)
+                    msg = f"n={n}, num_terms={num_terms}, order={order}"
                     assert_allclose(rule, truth[(n, num_terms, order)], err_msg=msg)
 
 
-class TestDerivative(object):
+class TestDerivative:
     @staticmethod
     def test_directional_diff():
         v = [1, -1]
@@ -134,7 +132,7 @@ class TestDerivative(object):
                 true_val = true_vals[n]
                 for order in range(2, 9, 2):
                     d3cos = nd.Derivative(np.cos, n=n, order=order, method=method, full_output=True)
-                    y, _info = d3cos(np.pi / 2.0)
+                    result = d3cos(np.pi / 2.0)
                     # _error = np.abs(y - true_val)
                     #                 small = error <= info.error_estimate
                     #                 if not small:
@@ -143,7 +141,7 @@ class TestDerivative(object):
                     #                     print('method=%s, n=%d, order=%d' % (method, n, order))
                     #                     print(error, info.error_estimate)
                     #                 self.assertTrue(small)
-                    assert_allclose(y, true_val, atol=1e-4)
+                    assert_allclose(result.estimate, true_val, atol=1e-4)
         # self.assert_(False)
 
     @staticmethod
@@ -153,25 +151,25 @@ class TestDerivative(object):
     @example(8.9428143931508)
     @example(2.2204460492503134e-14)
     def test_derivative_of_cos_x(x):
-        note("x = {}".format(x))
+        note(f"x = {x}")
         msg = "order = {}, error = {}, err_est = {}"
         true_vals = (-np.sin(x), -np.cos(x), np.sin(x), np.cos(x)) * 2
         for method in ["complex", "central", "forward", "backward"]:
-            note("method = {}".format(method))
+            note(f"method = {method}")
             n_max = {"complex": 7, "central": 6}.get(method, 4)
             for n in range(1, n_max + 1):
                 true_val = true_vals[n - 1]
                 start, stop, step = {"central": (2, 7, 2), "complex": (2, 3, 1)}.get(method, (1, 5, 1))
-                note("n = {}, true_val = {}".format(n, true_val))
+                note(f"n = {n}, true_val = {true_val}")
                 for order in range(start, stop, step):
                     d3cos = nd.Derivative(np.cos, n=n, order=order, method=method, full_output=True)
-                    y, _info = d3cos(x)
-                    _error = np.abs(y - true_val)
-                    aerr = 100 * _info.error_estimate + 1e-14
+                    result = d3cos(x)
+                    _error = np.abs(result.estimate - true_val)
+                    aerr = 100 * result.error_estimate + 1e-14
                     #                     if aerr < 1e-14 and np.abs(true_val) < 1e-3:
                     #                         aerr = 1e-8
-                    note(msg.format(order, _error, _info.error_estimate))
-                    assert_allclose(y, true_val, rtol=1e-6, atol=aerr)
+                    note(msg.format(order, _error, result.error_estimate))
+                    assert_allclose(result.estimate, true_val, rtol=1e-6, atol=aerr)
                     # assert_allclose(y, true_val, rtol=4)
 
     @staticmethod
@@ -267,7 +265,7 @@ class TestDerivative(object):
         assert_allclose(dlog(x), 1 / x)
 
 
-class TestJacobian(object):
+class TestJacobian:
     @staticmethod
     @given(st.floats(min_value=-1000, max_value=1000))
     def test_scalar_to_vector(val):
@@ -276,10 +274,10 @@ class TestJacobian(object):
 
         truth = np.array([[1.0], [2 * val], [3 * val**2]])
         for method in ["multicomplex", "complex", "central", "forward", "backward"]:
-            j0, info = nd.Jacobian(fun, method=method, full_output=True)(val)
-            error = np.abs(j0 - truth)
-            note("method={}, error={}, error_est={}".format(method, error, info.error_estimate))
-            assert_allclose(j0, truth, rtol=1e-3, atol=1e-6)
+            res = nd.Jacobian(fun, method=method, full_output=True)(val)
+            error = np.abs(res.estimate - truth)
+            note(f"method={method}, error={error}, error_est={res.error_estimate}")
+            assert_allclose(res.estimate, truth, rtol=1e-3, atol=1e-6)
 
     @staticmethod
     def test_on_scalar_function():
@@ -414,15 +412,15 @@ class TestJacobian(object):
     @staticmethod
     def test_jacobian_fulloutput():
         """Check info output"""
-        res, info = nd.Jacobian(lambda x, y: x + y, full_output=True)(1, 3)
-        assert_allclose(res, 1)
-        assert info.error_estimate < 1e-13
-        assert info.final_step == 0.015625
-        assert info.index == 5
-        assert info.f_value == 4
+        res = nd.Jacobian(lambda x, y: x + y, full_output=True)(1, 3)
+        assert_allclose(res.estimate, 1)
+        assert res.error_estimate < 1e-13
+        assert res.final_step == 0.015625
+        # assert res.best_index == 5  # Breaking change
+        # assert res.f_value == 4  # Breaking change
 
 
-class TestGradient(object):
+class TestGradient:
     @staticmethod
     def test_issue_39():
         """Check that float/Bicomplex works"""
@@ -436,8 +434,8 @@ class TestGradient(object):
         x0 = [2, 3]
         directional_diff = np.dot(nd.Gradient(rosen)(x0), v)
         assert_allclose(directional_diff, 743.87633380824832)
-        dd, _info = nd.directionaldiff(rosen, x0, v, full_output=True)
-        assert_allclose(dd, 743.87633380824832)
+        res = nd.directionaldiff(rosen, x0, v, full_output=True)
+        assert_allclose(res.estimate, 743.87633380824832)
 
     @staticmethod
     def test_gradient_fulloutput():
@@ -446,12 +444,12 @@ class TestGradient(object):
         Gradient tries to apply squeeze to the output tuple containing both the result
         and the full_output object.
         """
-        res, info = nd.Gradient(lambda x, y: x + y, full_output=True)(1, 3)
-        assert_allclose(res, 1)
-        assert info.error_estimate < 1e-13
-        assert info.final_step == 0.015625
-        assert info.index == 5
-        assert info.f_value == 4
+        res = nd.Gradient(lambda x, y: x + y, full_output=True)(1, 3)
+        assert_allclose(res.estimate, 1)
+        assert res.error_estimate < 1e-13
+        assert res.final_step == 0.015625
+        # assert res.best_index == 5
+        # assert res.f_value == 4
 
     @staticmethod
     def test_gradient():
@@ -467,7 +465,7 @@ class TestGradient(object):
                 assert_allclose(d, dtrue)
 
 
-class TestHessdiag(object):
+class TestHessdiag:
     @staticmethod
     def _fun(x):
         return x[0] + x[1] ** 2 + x[2] ** 3
@@ -482,10 +480,10 @@ class TestHessdiag(object):
         for num_steps in range(3, 7, 1):
             steps = nd.MinStepGenerator(num_steps=num_steps, use_exact_steps=True, step_ratio=2.0, offset=4)
             h_fun = nd.Hessdiag(self._fun, step=steps, method=method, full_output=True)
-            h_val, _info = h_fun([1, 2, 3])
+            res = h_fun([1, 2, 3])
 
-            assert_allclose(h_val, htrue)
-            assert _info.f_value == 32  # fun([1, 2, 3]) == 1+4+27
+            assert_allclose(res.estimate, htrue)
+            # assert res.f_value == 32  # fun([1, 2, 3]) == 1+4+27  # breaking change
 
     @settings(deadline=500.0)
     @given(st.tuples(st.floats(-100, 100), st.floats(-100, 100), st.floats(-100, 100)))
@@ -499,13 +497,13 @@ class TestHessdiag(object):
         methods = ["central2", "central", "multicomplex", "complex", "forward", "backward"]
         for order in range(2, 7, 2):
             steps = nd.MinStepGenerator(num_steps=order + 1, use_exact_steps=True, step_ratio=3.0, offset=0)
-            note("order = {}".format(order))
+            note(f"order = {order}")
             for method in methods:
                 h_fun = nd.Hessdiag(self._fun, step=steps, method=method, order=order, full_output=True)
-                h_val, _info = h_fun(vals)
-                _error = np.abs(h_val - htrue)
-                note("error = {}, error_est = {}".format(_error, _info.error_estimate))
-                assert_allclose(h_val, htrue, rtol=1e-5, atol=100 * max(_info.error_estimate))
+                res = h_fun(vals)
+                _error = np.abs(res.estimate - htrue)
+                note(f"error = {_error}, error_est = {res.error_estimate}")
+                assert_allclose(res.estimate, htrue, rtol=1e-5, atol=100 * max(res.error_estimate))
 
     def test_default_step(self):
         htrue = np.array([0.0, 2.0, 18.0])
@@ -513,12 +511,12 @@ class TestHessdiag(object):
         for order in range(2, 7, 2):
             for method in methods:
                 h_fun = nd.Hessdiag(self._fun, method=method, order=order, full_output=True)
-                h_val, _info = h_fun([1, 2, 3])
-                tol = min(1e-8, _info.error_estimate.max())
-                assert_allclose(h_val, htrue, atol=tol)
+                res = h_fun([1, 2, 3])
+                tol = min(1e-8, res.error_estimate.max())
+                assert_allclose(res.estimate, htrue, atol=tol)
 
 
-class TestHessian(object):
+class TestHessian:
     def test_run_hamiltonian(self):
         # Important to restrict the step in order to avoid the
         # discontinutiy at x=[0,0] of the hamiltonian
@@ -561,10 +559,9 @@ class TestHessian(object):
             step = nd.MinStepGenerator(num_steps=num_steps)
             for method in methods:
                 h_fun = nd.Hessian(fun, method=method, step=step, full_output=True)
-                h_val, _info = h_fun([0, 0])
-                # print(method, (h_val-np.array(htrue)))
-                assert_allclose(h_val, htrue)
-                assert _info.f_value == 1
+                res = h_fun([0, 0])
+                # print(method, (res.estimate-np.array(htrue)))
+                assert_allclose(res.estimate, htrue)
 
     @staticmethod
     def test_on_scalar_function():

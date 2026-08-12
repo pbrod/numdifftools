@@ -9,19 +9,31 @@ Release date: 5/23/2008
 
 """
 
-from __future__ import absolute_import, division, print_function
+from __future__ import annotations
 
 import warnings
-from collections import namedtuple
+from collections.abc import Callable, Sequence
 from functools import partial
+from typing import Any
 
 import numpy as np
+from numpy.typing import ArrayLike
 
+from numdifftools._typing import (
+    Array,
+    ArrayOrScalar,
+    EstimateResult,
+    ExtrapolatedSequence,
+    FunctionLike,
+    GeneratorStepRatio,
+    RichardsonLike,
+    StepGeneratorFactory,
+)
 from numdifftools.extrapolation import Richardson, dea3
 from numdifftools.step_generators import MinStepGenerator
 
 
-def _assert(cond, msg):
+def _assert(cond: bool, msg: str) -> None:
     if not cond:
         raise ValueError(msg)
 
@@ -36,14 +48,14 @@ class CStepGenerator(MinStepGenerator):
 
     Parameters
     ----------
-    base_step : float, array-like, default None
+    base_step : array-like, default None
         Defines the minimum step, if None, the value is set to EPS**(1/scale)
     step_ratio : real scalar, optional, default 4.0
         Ratio between sequential steps generated.
     num_steps : scalar integer, optional,
         defines number of steps generated.
         If None the value is 2 * int(round(16.0/log(abs(step_ratio)))) + 1
-    step_nom :  default maximum(log(exp(1)+|x|), 1)
+    step_nom :  array-like, default maximum(log(exp(1)+|x|), 1)
         Nominal step where x is supplied at runtime through the __call__ method.
     offset : real scalar, optional, default 0
         offset to the base step
@@ -60,11 +72,18 @@ class CStepGenerator(MinStepGenerator):
     """
 
     def __init__(
-        self, base_step=None, step_ratio=4.0, num_steps=None, step_nom=None, offset=0, scale=1.2, **options
-    ):
+        self,
+        base_step: ArrayLike | None = None,
+        step_ratio: float | None = 4.0,
+        num_steps: int | None = None,
+        step_nom: ArrayLike | None = None,
+        offset: int = 0,
+        scale: float = 1.2,
+        **options: Any,
+    ) -> None:
         self.path = options.pop("path", "radial")
         self.dtheta = options.pop("dtheta", np.pi / 8)
-        super(CStepGenerator, self).__init__(
+        super().__init__(
             base_step=base_step,
             step_ratio=step_ratio,
             num_steps=num_steps,
@@ -75,80 +94,93 @@ class CStepGenerator(MinStepGenerator):
         )
         self._check_path()
 
-    def _check_path(self):
-        _assert(self.path in ["spiral", "radial"], "Invalid Path: {}".format(str(self.path)))
+    def _check_path(self) -> None:
+        _assert(self.path in ["spiral", "radial"], f"Invalid Path: {str(self.path)}")
 
-    @property
-    def step_ratio(self):
+    def _generator_step_ratio(self) -> GeneratorStepRatio:
         """Ratio between sequential steps generated."""
         dtheta = self.dtheta
-        _step_ratio = float(self._step_ratio)  # radial path
+        step_ratio = self.step_ratio  # radial path
+
         if dtheta != 0:
-            _step_ratio = np.exp(1j * dtheta) * _step_ratio  # a spiral path
-        return _step_ratio
+            return np.exp(1j * dtheta) * step_ratio  # spiral path
+        return step_ratio
+
+    @property
+    def step_ratio(self) -> float:
+        if self._step_ratio is None:
+            return 4.0
+        return float(self._step_ratio)
 
     @step_ratio.setter
-    def step_ratio(self, step_ratio):
+    def step_ratio(self, step_ratio: float | None) -> None:
         self._step_ratio = step_ratio
 
     @property
-    def dtheta(self):
+    def dtheta(self) -> float:
         """Angular steps in radians used for the exponential spiral path."""
         radial_path = self.path[0].lower() == "r"
-        return 0 if radial_path else self._dtheta
+        return 0.0 if radial_path else self._dtheta
 
     @dtheta.setter
-    def dtheta(self, dtheta):
+    def dtheta(self, dtheta: float | None) -> None:
+        if dtheta is None:
+            dtheta = np.pi / 8
         self._dtheta = dtheta
 
     @property
-    def num_steps(self):
+    def num_steps(self) -> int:
         """The number of steps generated"""
         if self._num_steps is None:
             return 2 * int(np.round(16.0 / np.log(np.abs(self.step_ratio)))) + 1
         return self._num_steps
 
     @num_steps.setter
-    def num_steps(self, num_steps):
+    def num_steps(self, num_steps: int | None) -> None:
         self._num_steps = num_steps
 
 
-class _Limit(object):
+class _Limit:
     """Common methods and member variables"""
 
-    info = namedtuple("info", ["error_estimate", "final_step", "index"])
-
-    def __init__(self, step=None, **options):
-        self.step = step, options
-
+    def __init__(
+        self,
+        step: float | ArrayLike | StepGeneratorFactory | None = None,
+        **options: Any,
+    ) -> None:
+        self.step: StepGeneratorFactory = step, options
+        self.richardson: RichardsonLike
         self.richardson = Richardson(step_ratio=1.6, step=1, order=1, num_terms=2)
 
     @staticmethod
-    def _parse_step_options(step):
+    def _parse_step_options(step: Any) -> tuple[Any, dict[str, Any]]:
         options = {}
         if isinstance(step, tuple) and isinstance(step[-1], dict):
             step, options = step
         return step, options
 
-    @staticmethod
-    def _step_generator(step, options):
+    def _step_generator(
+        self,
+        step: float | ArrayLike | StepGeneratorFactory | None,
+        options: dict[str, Any],
+    ) -> StepGeneratorFactory:
         if callable(step):
             return step
         step_nom = None if step is None else 1
         return CStepGenerator(base_step=step, step_nom=step_nom, **options)
 
     @property
-    def step(self):
+    def step(self) -> StepGeneratorFactory:
         """The step spacing(s) used in the approximation"""
         return self._step
 
     @step.setter
-    def step(self, step_options):
+    def step(self, step_options: Any) -> None:
         step, options = self._parse_step_options(step_options)
         self._step = self._step_generator(step, options)
 
     @staticmethod
-    def _get_arg_min(errors):
+    def _get_arg_min(errors: Array) -> Array:
         shape = errors.shape
         try:
             arg_mins = np.nanargmin(errors, axis=0)
@@ -163,7 +195,10 @@ class _Limit(object):
         return np.ravel_multi_index((arg_mins, np.arange(shape[1])), shape)
 
     @staticmethod
-    def _add_error_to_outliers(der, trim_fact=10):
+    def _add_error_to_outliers(
+        der: Array,
+        trim_fact: float = 10,
+    ) -> Array:
         """
         discard any estimate that differs wildly from the
         median of all estimates. A factor of 10 to 1 in either
@@ -194,19 +229,32 @@ class _Limit(object):
         return errors
 
     @staticmethod
-    def _get_best_estimate(der, errors, steps, shape):
+    def _get_best_estimate(
+        der: Array,
+        errors: Array,
+        steps: Array,
+        shape: tuple[int, ...],
+    ) -> EstimateResult:
         errors += _Limit._add_error_to_outliers(der)
         idx = _Limit._get_arg_min(errors)
         final_step = steps.flat[idx].reshape(shape)
         err = errors.flat[idx].reshape(shape)
-        return der.flat[idx].reshape(shape), _Limit.info(err, final_step, idx)
+        return EstimateResult(der.flat[idx].reshape(shape), err, final_step, idx)
 
     @staticmethod
-    def _wynn_extrapolate(der, steps):
+    def _wynn_extrapolate(
+        der: Array,
+        steps: Array,
+    ) -> ExtrapolatedSequence:
         der, errors = dea3(der[0:-2], der[1:-1], der[2:], symmetric=False)
-        return der, errors, steps[2:]
+        return ExtrapolatedSequence(der, errors, steps[2:])
 
-    def _extrapolate(self, results, steps, shape):
+    def _extrapolate(
+        self,
+        results: Array,
+        steps: Array,
+        shape: tuple[int, ...],
+    ) -> EstimateResult:
         # if len(results) > 2:
         #     der0, errors0, steps0 = self._wynn_extrapolate(results, steps)
         #     if len(der0) > 0:
@@ -215,11 +263,14 @@ class _Limit(object):
         der1, errors1, steps = self.richardson(results, steps)
         if len(der1) > 2:
             der1, errors1, steps = self._wynn_extrapolate(der1, steps)
-        der, info = self._get_best_estimate(der1, errors1, steps, shape)
-        return der, info
+        return self._get_best_estimate(der1, errors1, steps, shape)
 
     @staticmethod
-    def _vstack(sequence, steps):
+    def _prepare_extrapolation_data(
+        sequence: Sequence[ArrayOrScalar],
+        steps: Sequence[ArrayOrScalar],
+    ) -> tuple[Array, Array, tuple[int, ...]]:
+
         original_shape = np.shape(sequence[0])
         f_del = np.vstack([np.ravel(r) for r in sequence])
         one = np.ones(original_shape)
@@ -295,10 +346,10 @@ class Limit(_Limit):
     >>> import numpy as np
     >>> from numdifftools.limits import Limit
     >>> def f(x): return np.sin(x)/x
-    >>> lim_f0, err = Limit(f, full_output=True)(0)
-    >>> np.allclose(lim_f0, 1)
+    >>> lim_f = Limit(f, full_output=True)(0)
+    >>> np.allclose(lim_f.estimate, 1)
     True
-    >>> np.allclose(err.error_estimate, 1.77249444610966e-15)
+    >>> np.allclose(lim_f.error_estimate, 1.77249444610966e-15)
     True
 
     Compute the derivative of cos(x) at x == pi/2. It should
@@ -307,10 +358,10 @@ class Limit(_Limit):
 
     >>> x0 = np.pi/2;
     >>> def g(x): return (np.cos(x0+x)-np.cos(x0))/x
-    >>> lim_g0, err = Limit(g, full_output=True)(0)
-    >>> np.allclose(lim_g0, -1)
+    >>> lim_g0 = Limit(g, full_output=True)(0)
+    >>> np.allclose(lim_g0.estimate, -1)
     True
-    >>> bool(err.error_estimate < 1e-14)
+    >>> bool(lim_g0.error_estimate < 1e-14)
     True
 
     Compute the residue at a first order pole at z = 0
@@ -319,10 +370,10 @@ class Limit(_Limit):
     Here, that residue should be -0.5.
 
     >>> def h(z): return -z/(np.expm1(2*z))
-    >>> lim_h0, err = Limit(h, full_output=True)(0)
-    >>> np.allclose(lim_h0, -0.5)
+    >>> lim_h0 = Limit(h, full_output=True)(0)
+    >>> np.allclose(lim_h0.estimate, -0.5)
     True
-    >>> bool(err.error_estimate < 1e-14)
+    >>> bool(lim_h0.error_estimate < 1e-14)
     True
 
     Compute the residue of function 1./sin(z)**2 at z = 0.
@@ -330,10 +381,10 @@ class Limit(_Limit):
     z**2*fun(z) as z --> 0.
 
     >>> def g(z): return z**2/(np.sin(z)**2)
-    >>> lim_gpi, err = Limit(g, full_output=True)(0)
-    >>> np.allclose(lim_gpi, 1)
+    >>> lim_g = Limit(g, full_output=True)(0)
+    >>> np.allclose(lim_g.estimate, 1)
     True
-    >>> bool(err.error_estimate < 1e-14)
+    >>> bool(lim_g.error_estimate < 1e-14)
     True
 
     A more difficult limit is one where there is significant
@@ -342,83 +393,120 @@ class Limit(_Limit):
     should be 0.5.
 
     >>> def k(x): return (x*np.exp(x)-np.expm1(x))/x**2
-    >>> lim_k0,err = Limit(k, full_output=True)(0)
-    >>> np.allclose(lim_k0, 0.5)
+    >>> lim_k0 = Limit(k, full_output=True)(0)
+    >>> np.allclose(lim_k0.estimate, 0.5)
     True
-    >>> bool(err.error_estimate < 1.0e-8)
+    >>> bool(lim_k0.error_estimate < 1.0e-8)
     True
 
     >>> def h(x): return  (x-np.sin(x))/x**3
-    >>> lim_h0, err = Limit(h, full_output=True)(0)
-    >>> np.allclose(lim_h0, 1./6)
+    >>> lim_h0 = Limit(h, full_output=True)(0)
+    >>> np.allclose(lim_h0.estimate, 1./6)
     True
-    >>> bool(err.error_estimate < 1e-8)
+    >>> bool(lim_h0.error_estimate < 1e-8)
     True
 
     """
 
-    def __init__(self, fun, step=None, method="above", order=4, full_output=False, **options):
-        super(Limit, self).__init__(step=step, **options)
+    def __init__(
+        self,
+        fun: FunctionLike,
+        step: float | ArrayLike | StepGeneratorFactory | None = None,
+        method: str = "above",
+        order: int = 4,
+        full_output: bool = False,
+        **options: Any,
+    ) -> None:
+        super().__init__(step=step, **options)
         self.fun = fun
         self.method = method
         self.order = order
         self.full_output = full_output
 
-    def _fun(self, z, d_z, args, kwds):
+    def _fun(
+        self,
+        z: ArrayOrScalar,
+        d_z: ArrayOrScalar,
+        args: tuple[Any, ...],
+        kwds: dict[str, Any],
+    ) -> ArrayOrScalar:
         return self.fun(z + d_z, *args, **kwds)
 
-    def _get_steps(self, x_i):
-        return list(self.step(x_i))  # pylint: disable=not-callable
+    def _get_steps(self, x_i: Array) -> list[Array]:
+        return [np.asarray(step) for step in self.step(x_i)]
 
-    def _set_richardson_rule(self, step_ratio, num_terms=2):
+    def _set_richardson_rule(
+        self,
+        step_ratio: float,
+        num_terms: int = 2,
+    ) -> None:
         self.richardson = Richardson(step_ratio=step_ratio, step=1, order=1, num_terms=num_terms)
 
-    def _lim(self, f, z):
+    def _lim(
+        self,
+        f: FunctionLike,
+        z: Array,
+    ) -> EstimateResult:
         sign = {"forward": 1, "above": 1, "backward": -1, "below": -1}[self.method]
         steps = [sign * step for step in self.step(z)]  # pylint: disable=not-callable
         # pylint: disable=no-member
         self._set_richardson_rule(self.step.step_ratio, self.order + 1)
         sequence = [f(z, h) for h in steps]
-        results = self._vstack(sequence, steps)
-        lim_fz, info = self._extrapolate(*results)
-        return lim_fz, info
+        results, e_steps, shape = self._prepare_extrapolation_data(sequence, steps)
+        return self._extrapolate(results, e_steps, shape)
 
-    def limit(self, x, *args, **kwds):
+    def limit(
+        self,
+        x: ArrayLike,
+        *args: Any,
+        **kwds: Any,
+    ) -> ArrayOrScalar | EstimateResult:
         """Return lim f(z) as z-> x"""
         z = np.asarray(x)
         f = partial(self._fun, args=args, kwds=kwds)
-        f_z, info = self._lim(f, z)
+        result = self._lim(f, z)
         if self.full_output:
-            return f_z, info
-        return f_z
+            return result
+        return result.estimate
 
-    def _call_lim(self, f_z, z, f):
+    def _call_lim(
+        self,
+        f_z: ArrayOrScalar,
+        z: Array,
+        f: Callable[..., ArrayOrScalar],
+    ) -> EstimateResult:
         err = np.zeros_like(f_z, dtype=float)
         final_step = np.zeros_like(f_z)
         index = np.zeros_like(f_z, dtype=int)
         k = np.flatnonzero(np.isnan(f_z))
         if k.size > 0:
-            lim_fz, info1 = self._lim(f, z.flat[k])
+            result = self._lim(f, z.flat[k])
+            lim_fz = result.estimate
             zero = np.zeros(1, dtype=np.result_type(lim_fz))
             f_z = np.where(np.isnan(f_z), zero, f_z)
             np.put(f_z, k, lim_fz)
             if self.full_output:
                 final_step = np.where(np.isnan(f_z), zero, final_step)
-                np.put(final_step, k, info1.final_step)
-                np.put(index, k, info1.index)
-                np.put(err, k, info1.error_estimate)
-        return f_z, self.info(err, final_step, index)
+                np.put(final_step, k, result.final_step)
+                np.put(index, k, result.best_index)
+                np.put(err, k, result.error_estimate)
+        return EstimateResult(f_z, err, final_step, index)
 
-    def __call__(self, x, *args, **kwds):
+    def __call__(
+        self,
+        x: ArrayLike,
+        *args: Any,
+        **kwds: Any,
+    ) -> ArrayOrScalar | EstimateResult:
         z = np.asarray(x)
         f = partial(self._fun, args=args, kwds=kwds)
         with np.errstate(divide="ignore", invalid="ignore"):
             f_z = f(z, 0)
-            f_z, info = self._call_lim(f_z, z, f)
+            result = self._call_lim(f_z, z, f)
 
         if self.full_output:
-            return f_z, info
-        return f_z
+            return result
+        return result.estimate
 
 
 class Residue(Limit):
@@ -488,23 +576,32 @@ class Residue(Limit):
     >>> import numpy as np
     >>> from numdifftools.limits import Residue
     >>> def f(z): return -1./(np.expm1(2*z))
-    >>> res_f, info = Residue(f, full_output=True)(0)
-    >>> np.allclose(res_f, -0.5)
+    >>> res_f = Residue(f, full_output=True)(0)
+    >>> np.allclose(res_f.estimate, -0.5)
     True
-    >>> bool(info.error_estimate < 1e-14)
+    >>> bool(res_f.error_estimate < 1e-14)
     True
 
     A second order pole around z = 0 and z = pi
     >>> def h(z): return 1.0/np.sin(z)**2
-    >>> res_h, info = Residue(h, full_output=True, pole_order=2)([0, np.pi])
-    >>> np.allclose(res_h, 1)
+    >>> res_h = Residue(h, full_output=True, pole_order=2)([0, np.pi])
+    >>> np.allclose(res_h.estimate, 1)
     True
-    >>> bool((info.error_estimate < 1e-10).all())
+    >>> bool((res_h.error_estimate < 1e-10).all())
     True
 
     """
 
-    def __init__(self, f, step=None, method="above", order=None, pole_order=1, full_output=False, **options):
+    def __init__(
+        self,
+        f: FunctionLike,
+        step: float | ArrayLike | StepGeneratorFactory | None = None,
+        method: str = "above",
+        order: int | None = None,
+        pole_order: int = 1,
+        full_output: bool = False,
+        **options: Any,
+    ) -> None:
         if order is None:
             # MethodOrder will always = pole_order + 2
             order = pole_order + 2
@@ -512,15 +609,24 @@ class Residue(Limit):
         _assert(pole_order < order, "order must be at least pole_order+1.")
         self.pole_order = pole_order
 
-        super(Residue, self).__init__(
-            f, step=step, method=method, order=order, full_output=full_output, **options
-        )
+        super().__init__(f, step=step, method=method, order=order, full_output=full_output, **options)
 
-    def _fun(self, z, d_z, args, kwds):
+    def _fun(
+        self,
+        z: ArrayOrScalar,
+        d_z: ArrayOrScalar,
+        args: tuple[Any, ...],
+        kwds: dict[str, Any],
+    ) -> ArrayOrScalar:
         return self.fun(z + d_z, *args, **kwds) * (d_z**self.pole_order)
 
-    def __call__(self, x, *args, **kwds):
-        return self.limit(x, *args, **kwds)
+    def __call__(
+        self,
+        x: ArrayLike,
+        *args: Any,
+        **kwds: Any,
+    ) -> ArrayOrScalar | EstimateResult:
+        return self.limit(np.asarray(x), *args, **kwds)
 
 
 if __name__ == "__main__":

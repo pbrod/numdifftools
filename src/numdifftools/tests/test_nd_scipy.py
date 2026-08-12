@@ -1,7 +1,4 @@
-# -*- coding:utf-8 -*-
 """"""
-
-from __future__ import absolute_import, division
 
 import numpy as np
 import pytest
@@ -19,7 +16,7 @@ else:
 pytestmark = pytest.mark.skipif(scipy is None, reason="scipy is not installed!")
 
 
-class TestJacobian(object):
+class TestJacobian:
     @staticmethod
     @given(st.floats(min_value=-1e53, max_value=1e53))
     def test_scalar_to_vector(val):
@@ -126,7 +123,7 @@ class TestJacobian(object):
         assert_allclose(dg, tv)
 
 
-class TestGradient(object):
+class TestGradient:
     @staticmethod
     def test_on_scalar_function():
         def fun(x):

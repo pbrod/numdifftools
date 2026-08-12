@@ -9,7 +9,7 @@ except ImportError:
     from numpy import trapz
 
 
-class TestRichardson(object):
+class TestRichardson:
     def setup_method(self):
         self.true_vals = {
             (1, 1, 1): [-0.9999999999999998, 1.9999999999999998],
@@ -101,7 +101,7 @@ class TestRichardson(object):
         # self.assert_(False)
 
 
-class TestExtrapolation(object):
+class TestExtrapolation:
     def setup_method(self):
         n = 7
         e_i = np.zeros(n)

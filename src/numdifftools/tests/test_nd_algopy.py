@@ -1,7 +1,4 @@
-# -*- coding:utf-8 -*-
 """"""
-
-from __future__ import absolute_import, division
 
 import sys
 
@@ -27,7 +24,7 @@ SKIP_PYTHON_314 = sys.version_info.major == 3 and sys.version_info.minor == 14
 pytestmark = pytest.mark.skipif(algopy is None, reason="algopy is not installed!")
 
 
-class TestHessian(object):
+class TestHessian:
     def test_run_hamiltonian(self):
         h, _error_estimate, true_h = run_hamiltonian(nd.Hessian(None), verbose=False)
         assert (np.abs((h - true_h) / true_h) < 1e-4).all()
@@ -51,7 +48,7 @@ class TestHessian(object):
             assert_allclose(h2, htrue)
 
 
-class TestDerivative(object):
+class TestDerivative:
     # TODO: Derivative does not tackle non-finite values.
     #     def test_infinite_functions(self):
     #         def finf(x):
@@ -153,7 +150,7 @@ class TestDerivative(object):
             assert_allclose(dlog(x), 1.0 / x)
 
 
-class TestJacobian(object):
+class TestJacobian:
     @pytest.mark.skipif(SKIP_PYTHON_314, reason="This test fails or is incompatible with Python 3.14.")
     @staticmethod
     @given(st.floats(min_value=-1e153, max_value=1e153))
@@ -268,7 +265,7 @@ class TestJacobian(object):
         assert_allclose(dg, [[[1.0, 0.0], [0.0, 1.0]], [[1.0, 0.0], [0.0, 1.0]]])
 
 
-class TestGradient(object):
+class TestGradient:
     @staticmethod
     def test_on_scalar_function():
         def fun(x):
@@ -282,7 +279,7 @@ class TestGradient(object):
             assert_allclose(d, dtrue)
 
 
-class TestHessdiag(object):
+class TestHessdiag:
     @staticmethod
     def test_forward():
         def fun(x):

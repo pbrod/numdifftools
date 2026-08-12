@@ -4,32 +4,31 @@ Created on 28. aug. 2015
 @author: pab
 """
 
-from __future__ import absolute_import, division, print_function
+from __future__ import annotations
 
 import warnings
+from typing import Any
 
 import numpy as np
+from numpy.typing import ArrayLike
 from scipy import linalg
 from scipy.ndimage import convolve1d
 
-try:
-    from numpy import trapezoid
-except ImportError:
-    from numpy import trapz as trapezoid
+from numdifftools._typing import Array, ArrayOrScalar, ExtrapolatedSequence
 
-FINFO = np.finfo(float)
-_EPS = EPS = FINFO.eps
+FINFO: np.finfo[Any] = np.finfo(float)
+EPS: float = FINFO.eps
 _tiny_name = "tiny" if np.__version__ < "1.22" else "smallest_normal"
-_TINY = getattr(FINFO, _tiny_name)
-_HUGE = FINFO.max
+_TINY: float = getattr(FINFO, _tiny_name)
+_HUGE: float = FINFO.max
 
 
-def _assert(cond, msg):
+def _assert(cond: bool, msg: str) -> None:
     if not cond:
         raise ValueError(msg)
 
 
-def convolve(sequence, rule, **kwds):
+def convolve(sequence: ArrayLike, rule: ArrayLike, **kwds: Any) -> Array:
     """Wrapper around scipy.ndimage.convolve1d that allows complex input."""
     dtype = np.result_type(float, np.ravel(sequence)[0])
     seq = np.asarray(sequence, dtype=dtype)
@@ -38,7 +37,7 @@ def convolve(sequence, rule, **kwds):
     return convolve1d(seq, rule, **kwds)
 
 
-class Dea(object):
+class Dea:
     """
     Extrapolate a slowly convergent sequence using repeated Shanks transformations.
 
@@ -88,24 +87,24 @@ class Dea(object):
     ..  [4] https://mathworld.wolfram.com/WynnsEpsilonMethod.html
     """
 
-    def __init__(self, limexp=50):
+    def __init__(self, limexp: int = 50) -> None:
         self.limexp = limexp
         self._n = 0
         self._nres = 0
 
     @property
-    def limexp(self):
+    def limexp(self) -> int:
         """Maximum number of elements the epsilon table data."""
         return self._limexp
 
     @limexp.setter
-    def limexp(self, limexp):
+    def limexp(self, limexp: int) -> None:
         n = 2 * (limexp // 2) + 1
         _assert(n >= 3, "LIMEXP IS LESS THAN 3")
         self.epstab = np.zeros(n + 5)
         self._limexp = n
 
-    def _dea(self, epstab, n):
+    def _dea(self, epstab: Array, n: int) -> tuple[ArrayOrScalar, float, int]:
         res3la = epstab[-3:]
         nres = self._nres
 
@@ -128,8 +127,8 @@ class Dea(object):
             err2 = abs(delta2)
             err3 = abs(delta3)
             e1abs = abs(e_1)
-            tol2 = max(abs(e_2), e1abs) * _EPS
-            tol3 = max(e1abs, abs(e_0)) * _EPS
+            tol2 = max(abs(e_2), e1abs) * EPS
+            tol3 = max(e1abs, abs(e_0)) * EPS
             all_converged = not (err2 > tol2 or err3 > tol3)
             if all_converged:
                 # if e_0, e_1 and e_2 are equal to within machine accuracy, convergence is assumed.
@@ -143,7 +142,7 @@ class Dea(object):
             epstab[k_1] = e_1
             delta1 = e_1 - e_3
             err1 = abs(delta1)
-            tol1 = max(e1abs, abs(e_3)) * _EPS
+            tol1 = max(e1abs, abs(e_3)) * EPS
 
             # if two elements are very close to each other, omit
             #  a part of the table by adjusting the value of n
@@ -184,12 +183,12 @@ class Dea(object):
 
             self._update_res3la(res3la, result, nres)
         # 100
-        abserr = max(abserr, 5.0 * _EPS * abs(result))
+        abserr = max(abserr, 5.0 * EPS * abs(result))
         self._nres += 1
-        return result, abserr, n
+        return result, float(abserr), n
 
     @staticmethod
-    def _shift_table(epstab, n, newelm, old_n):
+    def _shift_table(epstab: Array, n: int, newelm: int, old_n: int) -> Array:
         i_0 = old_n % 2  # 1 if ((old_n // 2) * 2 == old_n - 1) else 0
         i_n = 2 * newelm + 2
         epstab[i_0:i_n:2] = epstab[i_0 + 2 : i_n + 2 : 2]
@@ -200,14 +199,14 @@ class Dea(object):
         return epstab
 
     @staticmethod
-    def _update_res3la(res3la, result, nres):
+    def _update_res3la(res3la: Array, result: ArrayOrScalar, nres: int) -> None:
         if nres > 2:
             res3la[:2] = res3la[1:]
             res3la[2] = result
         else:
             res3la[nres] = result
 
-    def __call__(self, s_value):
+    def __call__(self, s_value: ArrayOrScalar) -> tuple[ArrayOrScalar, float]:
         epstab = self.epstab
 
         result = s_value
@@ -217,16 +216,17 @@ class Dea(object):
         if n == 0:
             abserr = abs(result)
         elif n == 1:
-            abserr = 6.0 * abs(result - epstab[0])
+            abserr = 6.0 * np.abs(result - epstab[0])
         else:
             result, abserr, n = self._dea(epstab, n)
         n += 1
         self._n = n
 
-        return result, abserr
+        abserr = np.asarray(abserr).item()
+        return result, float(abserr)
 
 
-class EpsAlg(object):
+class EpsAlg:
     """
     Extrapolate a slowly convergent sequence using Shanks transformation.
 
@@ -246,17 +246,19 @@ class EpsAlg(object):
     ..  [2] https://mathworld.wolfram.com/WynnsEpsilonMethod.html
     """
 
-    def __init__(self):
-        self.epstab = []
+    def __init__(self) -> None:
+        self.epstab: list[ArrayOrScalar] = []
 
-    def __call__(self, s_n):
+    def __call__(self, s_n: ArrayOrScalar) -> ArrayOrScalar:
         epstab = self.epstab
         n = len(epstab)
         epstab.append(s_n)
         if n == 0:
             estlim = s_n
         else:
-            aux2 = 0.0
+            aux1: ArrayOrScalar = 0.0
+            aux2: ArrayOrScalar = 0.0
+
             for i in range(n, 0, -1):
                 aux1 = aux2
                 aux2 = epstab[i - 1]
@@ -270,7 +272,11 @@ class EpsAlg(object):
         return estlim
 
 
-def richardson_demo():
+def linfun(i: int) -> Array:
+    return np.linspace(0, np.pi / 2.0, 2**i + 1)
+
+
+def richardson_demo() -> None:
     """
     >>> from numdifftools.extrapolation import richardson_demo
     >>> richardson_demo()
@@ -287,18 +293,15 @@ def richardson_demo():
       512           0.99999922            1.00000000            0.00000000
     """
 
-    def linfun(i):
-        return np.linspace(0, np.pi / 2.0, 2**i + 1)
-
     n = 10
     e_i = []
     h = []
 
     print("NO. PANELS      TRAP. APPROX          APPROX W/R            abserr")
     txt = "{0:5d} {1:20.8f}  {2:20.8f}  {3:20.8f}"
-    for k in np.arange(n):
+    for k in range(n):
         x = linfun(k)
-        val = trapezoid(np.sin(x), x)
+        val = np.trapezoid(np.sin(x), x)
         h.append(x[1])
         e_i.append(val)
         vale, _err0, _step = Richardson(step=1, order=1)(np.array(e_i), np.array(h))
@@ -307,7 +310,7 @@ def richardson_demo():
         print(txt.format(len(x) - 1, val, vale[-1], err[-1]))
 
 
-def epsalg_demo():
+def epsalg_demo() -> None:
     """
     >>> from numdifftools.extrapolation import epsalg_demo
     >>> epsalg_demo()
@@ -324,21 +327,18 @@ def epsalg_demo():
       512           0.99999922            1.00000000            0.00000000
     """
 
-    def linfun(i):
-        return np.linspace(0, np.pi / 2.0, 2**i + 1)
-
     dea = EpsAlg()
     print("NO. PANELS      TRAP. APPROX          APPROX W/EA           abserr")
     txt = "{0:5d} {1:20.8f}  {2:20.8f}  {3:20.8f}"
-    for k in np.arange(10):
+    for k in range(10):
         x = linfun(k)
-        val = trapezoid(np.sin(x), x)
+        val = np.trapezoid(np.sin(x), x)
         vale = dea(val)
         err = np.abs(1.0 - vale)
         print(txt.format(len(x) - 1, val, vale, err))
 
 
-def dea_demo():
+def dea_demo() -> None:
     """
     >>> from numdifftools.extrapolation import dea_demo
     >>> dea_demo()
@@ -357,17 +357,14 @@ def dea_demo():
      2048           0.99999995            1.00000000            0.00000000
     """
 
-    def linfun(i):
-        return np.linspace(0, np.pi / 2.0, 2**i + 1)
-
     dea = Dea(limexp=6)
     print("NO. PANELS      TRAP. APPROX          APPROX W/EA           abserr")
     txt = "{0:5d} {1:20.8f}  {2:20.8f}  {3:20.8f}"
     vals = []
     num_panels = []
-    for k in np.arange(12):
+    for k in range(12):
         x = linfun(k)
-        val = trapezoid(np.sin(x), x)
+        val = np.trapezoid(np.sin(x), x)
         vals.append(val)
         num_panels.append(len(x) - 1)
     for k, val in zip(num_panels, vals, strict=False):
@@ -375,12 +372,12 @@ def dea_demo():
         print(txt.format(k, val, vale, err))
 
 
-def max_abs(a, b):
+def max_abs(a: ArrayLike, b: ArrayLike) -> Array:
     """Returns element-wise maximum of absulute value of array elements"""
     return np.maximum(np.abs(a), np.abs(b))
 
 
-def dea3(v_0, v_1, v_2, symmetric=False):
+def dea3(v_0: ArrayLike, v_1: ArrayLike, v_2: ArrayLike, symmetric: bool = False) -> tuple[Array, Array]:
     """
     Extrapolates a slowly convergent sequence using Shanks transformations.
 
@@ -394,9 +391,9 @@ def dea3(v_0, v_1, v_2, symmetric=False):
 
     Returns
     -------
-    result : array-like
+    result : array
         The extrapolated value(s).
-    abserr : array-like
+    abserr : array
         The estimated absolute error(s).
 
     Notes
@@ -414,7 +411,7 @@ def dea3(v_0, v_1, v_2, symmetric=False):
     >>> import numdifftools as nd
     >>> Ei= np.zeros(3)
     >>> linfun = lambda i : np.linspace(0, np.pi/2., 2**(i+5)+1)
-    >>> for k in np.arange(3):
+    >>> for k in range(3):
     ...    x = linfun(k)
     ...    Ei[k] = np.trapezoid(np.sin(x),x)
     >>> [En, err] = nd.dea3(Ei[0], Ei[1], Ei[2])
@@ -449,7 +446,7 @@ def dea3(v_0, v_1, v_2, symmetric=False):
 
         # Calculate absolute errors and tolerances
         err2, err1 = np.abs(delta2), np.abs(delta1)
-        tol2, tol1 = max_abs(e_2, e_1) * _EPS, max_abs(e_1, e_0) * _EPS
+        tol2, tol1 = max_abs(e_2, e_1) * EPS, max_abs(e_1, e_0) * EPS
 
         # Avoid division by zero
         delta1[err1 < _TINY] = _TINY
@@ -473,7 +470,7 @@ def dea3(v_0, v_1, v_2, symmetric=False):
     return result, abserr
 
 
-class Richardson(object):
+class Richardson:
     """
     Extrapolates a sequence with Richardsons method
 
@@ -512,7 +509,7 @@ class Richardson(object):
     >>> Ei = np.zeros((n,1))
     >>> h = np.zeros((n,1))
     >>> linfun = lambda i : np.linspace(0, np.pi/2., 2**(i+5)+1)
-    >>> for k in np.arange(n):
+    >>> for k in range(n):
     ...    x = linfun(k)
     ...    h[k] = x[1]
     ...    Ei[k] = np.trapezoid(np.sin(x),x)
@@ -526,21 +523,35 @@ class Richardson(object):
     True
     """
 
-    def __init__(self, step_ratio=2.0, step=1, order=1, num_terms=2):
+    step_ratio: float
+    step: int | float
+    order: int
+    num_terms: int
+
+    def __init__(
+        self,
+        step_ratio: float = 2.0,
+        step: int | float = 1,
+        order: int = 1,
+        num_terms: int = 2,
+    ) -> None:
         self.step_ratio = step_ratio
         self.step = step
         self.order = order
         self.num_terms = num_terms
 
     @staticmethod
-    def _r_matrix(step_ratio, step, num_terms, order):
+    def _r_matrix(step_ratio: float, step: int | float, num_terms: int, order: int) -> Array:
         i, j = np.ogrid[0 : num_terms + 1, 0:num_terms]
         dtype = np.result_type(step_ratio, step, float)
         r_mat = np.ones((num_terms + 1, num_terms + 1), dtype=dtype)
         r_mat[:, 1:] = (1.0 / step_ratio) ** (i * (step * j + order))
         return r_mat
 
-    def rule(self, sequence_length=None):
+    def rule(
+        self,
+        sequence_length: int | None = None,
+    ) -> Array:
         """Returns extrapolation rule."""
         if sequence_length is None:
             sequence_length = self.num_terms + 1
@@ -551,7 +562,7 @@ class Richardson(object):
         return np.ones((1,))
 
     @staticmethod
-    def _estimate_error(new_sequence, old_sequence, steps, rule):
+    def _estimate_error(new_sequence: Array, old_sequence: Array, steps: Array, rule: Array) -> Array:
         m = new_sequence.shape[0]
         m_old = old_sequence.shape[0]
         cov1 = np.sum(np.abs(rule) ** 2)  # 1 spare dof
@@ -577,11 +588,15 @@ class Richardson(object):
         abserr = err + np.where(converged, tol * 10, abs(new_sequence[:-1] - old_sequence[-m + 1 :]) * fact)
         return abserr
 
-    def extrapolate(self, sequence, steps):
+    def extrapolate(self, sequence: Array, steps: Array) -> ExtrapolatedSequence:
         """Extrapolate sequence"""
         return self.__call__(sequence, steps)
 
-    def __call__(self, sequence, steps):
+    def __call__(
+        self,
+        sequence: Array,
+        steps: Array,
+    ) -> ExtrapolatedSequence:
         num_steps = sequence.shape[0]
         rule = self.rule(num_steps)
         n_r = rule.size - 1
@@ -589,7 +604,7 @@ class Richardson(object):
         k = min(num_steps, m + 1)
         new_sequence = convolve(sequence, rule[::-1], axis=0, origin=n_r // 2)
         abserr = self._estimate_error(new_sequence[:k], sequence, steps, rule)
-        return new_sequence[:m], abserr[:m], steps[:m]
+        return ExtrapolatedSequence(new_sequence[:m], abserr[:m], steps[:m])
 
 
 if __name__ == "__main__":

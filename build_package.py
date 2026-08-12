@@ -11,26 +11,26 @@ Created on 7. des. 2018
 
 @author: pab
 """
+
+import importlib
 import os
 import re
 import shutil
 import subprocess
-import importlib
-
 
 ROOT = os.path.abspath(os.path.dirname(__file__))
-PACKAGE_NAME = 'numdifftools'
-INFO = importlib.import_module(PACKAGE_NAME+'.info', './src')
-LICENSE = importlib.import_module(PACKAGE_NAME+'.license', './src')
+PACKAGE_NAME = "numdifftools"
+INFO = importlib.import_module(PACKAGE_NAME + ".info", "./src")
+LICENSE = importlib.import_module(PACKAGE_NAME + ".license", "./src")
 
 
 def remove_previous_build():
     """Removes ./dist, ./build, ./docs/_build, and ./src/{}.egg-info directories.
     """.format(PACKAGE_NAME)
-    egginfo_path = os.path.join('src', '{}.egg-info'.format(PACKAGE_NAME))
-    docs_folder = os.path.join('docs', '_build')
+    egginfo_path = os.path.join("src", "{}.egg-info".format(PACKAGE_NAME))
+    docs_folder = os.path.join("docs", "_build")
 
-    for dirname in ['dist', 'build', egginfo_path, docs_folder]:
+    for dirname in ["dist", "build", egginfo_path, docs_folder]:
         path = os.path.join(ROOT, dirname)
         if os.path.exists(path) and os.path.isdir(path):
             shutil.rmtree(path)
@@ -40,12 +40,14 @@ def update_readme():
     readme_txt = INFO.__doc__.replace(
         """Introduction to {}
 ================{}
-""".format(PACKAGE_NAME, '='*len(PACKAGE_NAME)), """{1}
+""".format(PACKAGE_NAME, "=" * len(PACKAGE_NAME)),
+        """{1}
 {0}
 {1}
-""".format(PACKAGE_NAME, '='*len(PACKAGE_NAME)))
-
-    readme_txt = readme_txt.replace('.. only:: html', '')
+""".format(PACKAGE_NAME, "=" * len(PACKAGE_NAME)),
+    )
+    print("Updating readme...")
+    readme_txt = readme_txt.replace(".. only:: html", "")
     filename = os.path.join(ROOT, "README.rst")
     with open(filename, "w") as fid:
         fid.write(readme_txt)
@@ -60,15 +62,16 @@ def set_package(version):
         with open(filename, "r") as fid:
             text = fid.read()
 
-        new_text = re.sub(r"__version__ = ['\"]([^'\"]*)['\"]",
-                          '__version__ = "{}"'.format(version),
-                          text, re.M)  # @UndefinedVariable
+        new_text = re.sub(
+            r"__version__ = ['\"]([^'\"]*)['\"]", '__version__ = "{}"'.format(version), text, re.M
+        )  # @UndefinedVariable
 
         with open(filename, "w") as fid:
             fid.write(new_text)
 
 
 def update_license():
+    print("Updating license")
     filename = os.path.join(ROOT, "LICENSE.txt")
     with open(filename, "w") as fid:
         fid.write(LICENSE.__doc__)
@@ -77,7 +80,7 @@ def update_license():
 def call_subprocess(cmd_opts):
     """Safe call to subprocess"""
     print("\n\n***********************************************")
-    print("Running {}".format(' '.join(cmd_opts)))
+    print("Running {}".format(" ".join(cmd_opts)))
     try:
         subprocess.call(cmd_opts)
     except Exception as error:  # subprocess.CalledProcessError:
@@ -88,7 +91,7 @@ def call_subprocess(cmd_opts):
 if __name__ == "__main__":
     import click
 
-    @click.group(context_settings=dict(help_option_names=['-h', '--help']))
+    @click.group(context_settings=dict(help_option_names=["-h", "--help"]))
     def cli():
         """Main entry point for build and maintenance scripts."""
         pass
@@ -103,20 +106,20 @@ if __name__ == "__main__":
         and finally check the built binaries.
         """.format(PACKAGE_NAME)
         remove_previous_build()
-        
+
         set_package(version)
         update_license()
         update_readme()
         call_subprocess(["pdm", "run", ""])
-        for cmd in ['docs-doctest', 'docs-html', 'docs-latex', 'docs-pdf', 'build']:
+        for cmd in ["docs-doctest", "docs-html", "docs-latex", "docs-pdf", "build"]:
             call_subprocess(["pdm", "run", cmd])
 
-    @cli.command("update-readme") # Define the new command
+    @cli.command("update-readme")  # Define the new command
     def update_readme_cli():
         """Update the README.rst file from the INFO module docstring."""
         update_readme()
 
-    @cli.command("update-license") # Define the new command
+    @cli.command("update-license")  # Define the new command
     def update_license_cli():
         """Update the LICENSE.txt file from the LICENSE module docstring."""
         update_license()

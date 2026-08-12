@@ -26,7 +26,7 @@ Surely you recall the traditional definition of a derivative, in terms of a limi
     :label: 1
 
 For small :math:`\delta`, the limit approaches :math:`f'(x)`. This is a one-sided approximation for the derivative.
-For a fixed value of :math:`\delta`, this is also known as a finite difference approximation (a forward difference.) 
+For a fixed value of :math:`\delta`, this is also known as a finite difference approximation (a forward difference.)
 Other approximations for the derivative are also available. We will see the origin of these approximations in the
 Taylor series expansion of a function :math:`f(x)` around some point :math:`x_0`.
 
@@ -55,12 +55,12 @@ Higher order approximations arise in the same fashion. The central difference :e
 Unequally spaced finite difference rules
 ########################################
 
-While most finite difference rules used to differentiate a function will use equally spaced points, 
-this fails to be appropriate when one does not know the final spacing. Adaptive quadrature rules can 
-succeed by subdividing each sub-interval as necessary. But an adaptive differentiation scheme must 
-work differently, since differentiation is a point estimate. Derivative generates a sequence of sample 
-points that follow a log spacing away from the point in question, then it uses a single rule (generated on the fly) 
-to estimate the desired derivative. Because the points are log spaced, the same rule applies at any scale, 
+While most finite difference rules used to differentiate a function will use equally spaced points,
+this fails to be appropriate when one does not know the final spacing. Adaptive quadrature rules can
+succeed by subdividing each sub-interval as necessary. But an adaptive differentiation scheme must
+work differently, since differentiation is a point estimate. Derivative generates a sequence of sample
+points that follow a log spacing away from the point in question, then it uses a single rule (generated on the fly)
+to estimate the desired derivative. Because the points are log spaced, the same rule applies at any scale,
 with only a scale factor applied.
 
 
@@ -68,8 +68,8 @@ Odd and even transformations of a function
 ##########################################
 .. index:: odd transformation
 
-Returning to the Taylor series expansion of :math:`f(x)` around some point :math:`x_0`, an even function  [2]_ around 
-:math:`x_0` must have all the odd order derivatives vanish at :math:`x_0`. An odd function has all its even derivatives 
+Returning to the Taylor series expansion of :math:`f(x)` around some point :math:`x_0`, an even function  [2]_ around
+:math:`x_0` must have all the odd order derivatives vanish at :math:`x_0`. An odd function has all its even derivatives
 vanish from its expansion. Consider the derived functions :math:`f_{odd}(x)` and :math:`f_{even}(x)`.
 
 .. math::
@@ -80,7 +80,7 @@ vanish from its expansion. Consider the derived functions :math:`f_{odd}(x)` and
     f_{even}(x) = \frac{f(x_0 + x) - 2f(x_0) + f(x_0 - x)}{2}
     :label: 6
 
-The Taylor series expansion of :math:`f_{odd}(x)` around zero has the useful property that we have killed off any even order terms, 
+The Taylor series expansion of :math:`f_{odd}(x)` around zero has the useful property that we have killed off any even order terms,
 but the odd order terms are identical to :math:`f(x)`, as expanded around :math:`x_0`.
 
 .. math::
@@ -118,7 +118,7 @@ Derivative uses similar approximations for all derivatives of :math:`f` up to an
 
 Complex step derivative
 #######################
-The derivation of the complex-step derivative approximation is accomplished by replacing :math:`\delta` in :Eq:`2` 
+The derivation of the complex-step derivative approximation is accomplished by replacing :math:`\delta` in :Eq:`2`
 with a complex step :math:`i h`:
 
 .. math::
@@ -162,7 +162,7 @@ Similarly dividing with :math:`h^2/2` and taking only the imaginary components y
     \quad f^{(2)}(x_0) = \Im\,(2\,f_{even}(i^\frac{1}{2} h)) / h^2 + \frac{h^4}{360} f^{(6)}(x_0) - \frac{h^8}{1814400} f^{(10)}(x_0)...
     :label: 12f
 
-This approximation is still subject to difference errors, but the error associated with this approximation is proportional to 
+This approximation is still subject to difference errors, but the error associated with this approximation is proportional to
 :math:`h^4`. Neglecting these higher order terms yields:
 
 .. math::
@@ -170,7 +170,7 @@ This approximation is still subject to difference errors, but the error associat
     :label: 12g
 
 See [LaiCrassidisCheng2005]_ and [Ridout2009]_ for more details.
-The complex-step derivative in numdifftools.Derivative has truncation error 
+The complex-step derivative in numdifftools.Derivative has truncation error
 :math:`O(\delta^4)` for both odd and even order derivatives for :math:`n>1`. For :math:`n=1`
 the truncation error is on the order of :math:`O(\delta^2)`, so
 truncation error can be eliminated by choosing steps to be very small.  The first order complex-step derivative avoids the problem of
@@ -178,7 +178,7 @@ round-off error with small steps because there is no subtraction. However,
 the function to differentiate needs to be analytic. This method does not work if it does
 not support complex numbers or involves non-analytic functions such as
 e.g.: abs, max, min. For this reason the `central` method is the default method.
-    
+
 
 High order derivative
 #####################
@@ -228,7 +228,7 @@ The solution of these equations are simply:
     \end{bmatrix}
     :label: 14a
 
-The first row of :eq:`14a` gives the coefficients for 6'th order approximation. Looking at at row two and three, we see also that 
+The first row of :eq:`14a` gives the coefficients for 6'th order approximation. Looking at at row two and three, we see also that
 this gives the 6'th order approximation for the 3'rd and 5'th order derivatives as bonus. Thus this is also a general method for obtaining high order differentiation rules. As previously noted these formulas have the additional benefit of beeing applicable to any scale, with only a scale factor applied.
 
 
@@ -294,7 +294,7 @@ A quick test in Python yields much better results yet.
     >>> allclose(df3, 1.01260482097715)
     True
 
-    >>> allclose(1./3*df1 - 2*df2 + 8./3*df3, 1.00000539448361) 
+    >>> allclose(1./3*df1 - 2*df2 + 8./3*df3, 1.00000539448361)
     True
 
 Again, Derivative uses the appropriate multiple term Richardson extrapolants for all derivatives of :math:`f` up to any order [3]_. This, combined with the use of high order approximations for the derivatives, allows the use of quite large step sizes. See [LynessMoler1966]_ and [LynessMoler1969]_. How to compute the multiple term Richardson extrapolants will be elaborated further in the next section.
@@ -379,35 +379,35 @@ These error estimates are also of value in a different sense. Since they are eff
     >>> import numdifftools as nd
     >>> from numpy import exp, allclose
     >>> f = nd.Derivative(exp, full_output=True)
-    >>> val, info = f(1)
-    >>> allclose(val, 2.71828183)
-    True       
-    >>> allclose(info.error_estimate, 6.927791673660977e-14)
+    >>> result = f(1)
+    >>> allclose(result.estimate, 2.71828183)
     True
-    >>> allclose(info.final_step, 0.0078125)
+    >>> allclose(result.error_estimate, 6.927791673660977e-14)
+    True
+    >>> allclose(result.final_step, 0.0078125)
     True
 
 
 However, if we force the step size to be artificially large, then approximation error takes over.
 
-    >>> f = nd.Derivative(exp, step=1, full_output=True) 
-    >>> val, info = f(1)
-    >>> allclose(val, 3.19452805)
+    >>> f = nd.Derivative(exp, step=1, full_output=True)
+    >>> result = f(1)
+    >>> allclose(result.estimate, 3.19452805)
     True
-    >>> allclose(val-exp(1), 0.47624622)
+    >>> allclose(result.estimate-exp(1), 0.47624622)
     True
-    >>> allclose(info.final_step, 1)
+    >>> allclose(result.final_step, 1)
     True
 
 And if the step size is forced to be too small, then we see noise dominate the problem.
 
    >>> f = nd.Derivative(exp, step=1e-10, full_output=True)
-   >>> val, info = f(1)
-   >>> allclose(val, 2.71828093)
+   >>> result = f(1)
+   >>> allclose(result.estimate, 2.71828093)
    True
-   >>> allclose(val - exp(1), -8.97648138e-07)
+   >>> allclose(result.estimate - exp(1), -8.97648138e-07)
    True
-   >>> allclose(info.final_step, 1.0000000e-10)
+   >>> allclose(result.final_step, 1.0000000e-10)
    True
 
 

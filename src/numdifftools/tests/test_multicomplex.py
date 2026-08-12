@@ -18,7 +18,7 @@ def _default_base_step(x, scale):
     return h
 
 
-class TestBicomplex(object):
+class TestBicomplex:
     def test_init(self):
         z = Bicomplex(1, 2)
         assert z.z1 == 1
@@ -353,7 +353,7 @@ def _test_first_derivative(name):
 
     der = f(Bicomplex(x + h * 1j, 0)).imag1 / h
     der_true = df(x)
-    assert_allclose(der, der_true, err_msg="{0!s}".format(name))
+    assert_allclose(der, der_true, err_msg=f"{name!s}")
 
 
 def _test_second_derivative(name):
@@ -364,7 +364,7 @@ def _test_second_derivative(name):
 
     der = f(Bicomplex(x + h * 1j, h)).imag12 / h**2
     der_true = df(x)
-    assert_allclose(der, der_true, err_msg="{0!s}".format(name))
+    assert_allclose(der, der_true, err_msg=f"{name!s}")
 
 
 _function_names = [
@@ -391,7 +391,7 @@ _function_names = [
 ]
 
 
-class TestDerivative(object):
+class TestDerivative:
     @staticmethod
     def test_all_first_derivatives():
         for name in _function_names:

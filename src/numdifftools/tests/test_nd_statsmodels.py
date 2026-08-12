@@ -1,7 +1,4 @@
-# -*- coding:utf-8 -*-
 """"""
-
-from __future__ import absolute_import, division
 
 import numpy as np
 import pytest
@@ -16,7 +13,7 @@ from .hamiltonian import run_hamiltonian
 pytestmark = pytest.mark.skipif(nd.approx_hess1 is None, reason="statsmodels is not installed!")
 
 
-class TestHessian(object):
+class TestHessian:
     def test_run_hamiltonian(self):
         # Important to restrict the step in order to avoid the
         # discontinutiy at x=[0,0] of the hamiltonian
@@ -42,7 +39,7 @@ class TestHessian(object):
             assert_allclose(h2, htrue, rtol=1e-3)
 
 
-class TestJacobian(object):
+class TestJacobian:
     @staticmethod
     @given(st.floats(min_value=-1000, max_value=1000))
     def test_scalar_to_vector(val):
@@ -156,7 +153,7 @@ class TestJacobian(object):
         assert_allclose(dg, [[[1.0, 0.0], [0.0, 1.0]], [[1.0, 0.0], [0.0, 1.0]]])
 
 
-class TestGradient(object):
+class TestGradient:
     @staticmethod
     def test_on_scalar_function():
         def fun(x):

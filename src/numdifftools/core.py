@@ -9,12 +9,26 @@ Copyright:   (c) pab 2008
 Licence:     New BSD
 """
 
-from __future__ import absolute_import, division, print_function
+from __future__ import annotations
 
-from collections import namedtuple
+from collections.abc import Callable
+from typing import Any, cast
 
 import numpy as np
+from numpy.typing import ArrayLike
 
+from numdifftools._typing import (
+    Array,
+    ArrayOrScalar,
+    DifferenceFunction,
+    EstimateResult,
+    FiniteDifferenceRule,
+    FunctionLike,
+    RichardsonLike,
+    RuleClass,
+    StepArgument,
+    StepGeneratorFactory,
+)
 from numdifftools.extrapolation import Richardson, dea3  # @UnusedImport
 from numdifftools.finite_difference import (
     LogHessdiagRule,
@@ -37,11 +51,11 @@ __all__ = (
     "Richardson",
     "directionaldiff",
 )
-FD_RULES = {}
+FD_RULES: dict[Any, Any] = {}
 _SQRT_J = (1j + 1.0) / np.sqrt(2.0)  # = 1j**0.5
 
 
-def _assert(cond, msg):
+def _raise_if_not(cond: bool, msg: str) -> None:
     if not cond:
         raise ValueError(msg)
 
@@ -55,7 +69,7 @@ _CMN_DOC = """
        function of one array fun(x, `*args`, `**kwds`)
     step : float, array-like or StepGenerator object, optional
         Defines the spacing used in the approximation.
-        Default is MinStepGenerator(**step_options) if method in in ['complex', 'multicomplex'],
+        Default is MinStepGenerator(**step_options) if method is one of {'complex', 'multicomplex'},
         otherwise
             MaxStepGenerator(**step_options)
         The results are extrapolated if the StepGenerator generate more than 3
@@ -140,7 +154,7 @@ class Derivative(_Limit):
     Returns
     -------
     der : ndarray
-       array of derivatives
+        array of derivatives
     """,
         "example": """
     Examples
@@ -176,116 +190,174 @@ class Derivative(_Limit):
     """,
     }
 
-    _fd_rule = LogRule
-    info = namedtuple("info", ["f_value", "error_estimate", "final_step", "index"])
+    _fd_rule: RuleClass = LogRule
+    fd_rule: FiniteDifferenceRule
+    _derivative: Callable[
+        [Array, tuple[Any, ...], dict[str, Any]],
+        tuple[tuple[Array, Array, tuple[int, ...]], ArrayOrScalar],
+    ]
+    richardson: RichardsonLike
 
-    def __init__(self, fun, step=None, method="central", order=2, n=1, **options):
-        self.richardson_terms = options.pop("richardson_terms", 2)
-        self.full_output = options.pop("full_output", False)
+    def __init__(
+        self,
+        fun: FunctionLike | None = None,
+        step: StepArgument = None,
+        method: str = "central",
+        order: int = 2,
+        n: int = 1,
+        **options: Any,
+    ) -> None:
+        self.richardson_terms: int = options.pop("richardson_terms", 2)
+        self.full_output: bool = options.pop("full_output", False)
 
-        self.fun = fun
+        self.fun: FunctionLike | None = fun
 
         self.fd_rule = self._fd_rule(n=n, method=method, order=order)
 
-        super(Derivative, self).__init__(step=step, **options)
+        super().__init__(step=step, **options)
         self._set_derivative()
 
     @property
-    def n(self):
+    def n(self) -> int:
         """Order of the derivative."""
         return self.fd_rule.n
 
     @n.setter
-    def n(self, value):
+    def n(self, value: int) -> None:
         self.fd_rule.n = value
         self._set_derivative()
 
     @property
-    def order(self):
+    def order(self) -> int:
         """Defines the order of the error term in the Taylor approximation used."""
         return self.fd_rule.order
 
     @order.setter
-    def order(self, order):
+    def order(self, order: int) -> None:
         self.fd_rule.order = order
 
     @property
-    def method(self):
+    def method(self) -> str:
         """Defines the method used in the finite difference approximation."""
         return self.fd_rule.method
 
     @method.setter
-    def method(self, method):
+    def method(self, method: str) -> None:
         self.fd_rule.method = method
 
     @property
-    def method_order(self):
+    def method_order(self) -> int:
         """Defines the leading order of the error term in the Richardson extrapolation method."""
         return self.fd_rule.method_order
 
-    def _step_generator(self, step, options):
+    def _step_generator(
+        self,
+        step: StepArgument,
+        options: dict[str, Any],
+    ) -> StepGeneratorFactory:
         if callable(step):
             return step
 
-        if step is None and self.method not in ["complex", "multicomplex"]:
+        if step is None and self.method not in {"complex", "multicomplex"}:
             return MaxStepGenerator(**options)
         if "step_nom" not in options and step is not None:
             options["step_nom"] = 1.0
         return MinStepGenerator(base_step=step, **options)
 
-    def _set_derivative(self):
+    def _set_derivative(self) -> None:
         if self.n == 0:
             self._derivative = self._derivative_zero_order
         else:
             self._derivative = self._derivative_nonzero_order
 
-    def _derivative_zero_order(self, x_i, args, kwds):
+    def _derivative_zero_order(
+        self, x_i: Array, args: tuple[Any, ...], kwds: dict[str, Any]
+    ) -> tuple[tuple[Array, Array, tuple[int, ...]], ArrayOrScalar]:
         steps = [np.zeros_like(x_i)]
+        assert self.fun is not None
         results = [self.fun(x_i, *args, **kwds)]
-        self.set_richardson_rule(2, 0)
-        return self._vstack(results, steps), results[0]
+        self.set_richardson_rule(2.0, 0)
+        f_xi = np.asarray(results[0])
+        return self._prepare_extrapolation_data(results, steps), f_xi
 
-    def _derivative_nonzero_order(self, x_i, args, kwds):
+    def _derivative_nonzero_order(
+        self,
+        x_i: Array,
+        args: tuple[Any, ...],
+        kwds: dict[str, Any],
+    ) -> tuple[tuple[Array, Array, tuple[int, ...]], Array]:
         diff, f = self._get_functions(args, kwds)
         steps, step_ratio = self._get_steps(x_i)
-        fxi = self._eval_first(f, x_i)
+        fxi = np.asarray(self._eval_first(f, x_i))
         results = [diff(f, fxi, x_i, h) for h in steps]
 
         self.set_richardson_rule(step_ratio, self.richardson_terms)
 
         return self.fd_rule.apply(results, steps, step_ratio), fxi
 
-    def set_richardson_rule(self, step_ratio, num_terms=2):
+    def set_richardson_rule(
+        self,
+        step_ratio: float,
+        num_terms: int = 2,
+    ) -> None:
         """Set Richardson extrapolation options"""
         order = self.method_order
         step = self.fd_rule.richardson_step
+
         self.richardson = Richardson(step_ratio=step_ratio, step=step, order=order, num_terms=num_terms)
 
-    def _get_functions(self, args, kwds):
+    def _get_functions(
+        self,
+        args: tuple[Any, ...],
+        kwds: dict[str, Any],
+    ) -> tuple[
+        DifferenceFunction,
+        Callable[[ArrayLike], ArrayOrScalar],
+    ]:
+        assert self.fun is not None
         fun = self.fun
 
-        def export_fun(x):
+        def export_fun(x: ArrayLike) -> ArrayOrScalar:
             return fun(x, *args, **kwds)
 
         return self.fd_rule.diff, export_fun
 
-    def _get_steps(self, x_i):
+    def _get_steps(
+        self,
+        x_i: Array,
+    ) -> tuple[list[Array], float]:
         method, n, order = self.method, self.n, self.method_order
-        # pylint: disable=no-member
+        # Assert self.step exists from _Limit parent class
+        assert hasattr(self, "step") and self.step is not None
         step_gen = self.step.step_generator_function(x_i, method, n, order)
-        return list(step_gen()), step_gen.step_ratio
+        steps = cast(list[Array], list(step_gen()))
+        return steps, float(step_gen.extrapolation_ratio)
 
-    def _raise_error_if_any_is_complex(self, x, f_x):
+    def _raise_error_if_any_is_complex(
+        self,
+        x: ArrayLike,
+        f_x: ArrayOrScalar,
+    ) -> None:
         msg = (
-            "The {} step derivative method does only work on a real valued analytic "
-            "function of a real variable!".format(self.method)
+            f"The {self.method} step derivative method does only work on a real valued analytic "
+            "function of a real variable!"
         )
-        _assert(not np.any(np.iscomplex(x)), msg + " But a complex variable was given!")
+        _raise_if_not(
+            not np.any(np.iscomplex(cast(np.ndarray[Any, Any], x))),
+            msg + " But a complex variable was given!",
+        )
 
-        _assert(not np.any(np.iscomplex(f_x)), msg + " But the function given is complex valued!")
+        _raise_if_not(
+            not np.any(np.iscomplex(cast(np.ndarray[Any, Any], f_x))),
+            msg + " But the function given is complex valued!",
+        )
 
-    def _eval_first(self, f, x):
-        if self.method in ["complex", "multicomplex"]:
+    def _eval_first(
+        self,
+        f: Callable[[ArrayLike], ArrayOrScalar],
+        x: ArrayLike,
+    ) -> ArrayOrScalar:
+        if self.method in {"complex", "multicomplex"}:
             f_x = f(x)
             self._raise_error_if_any_is_complex(x, f_x)
             return f_x
@@ -293,17 +365,27 @@ class Derivative(_Limit):
             return f(x)
         return 0.0
 
-    def __call__(self, x, *args, **kwds):
-        x_i = np.asarray(x)
+    def __call__(
+        self,
+        x: ArrayLike,
+        *args: Any,
+        **kwds: Any,
+    ) -> ArrayOrScalar | EstimateResult:
+        x_i: Array = np.asarray(x)
         with np.errstate(divide="ignore", invalid="ignore"):
-            results, f_xi = self._derivative(x_i, args, kwds)
-            derivative, info = self._extrapolate(*results)
+            (results, steps, shape), f_xi = self._derivative(x_i, args, kwds)
+            result = self._extrapolate(results, steps, shape=shape)
         if self.full_output:
-            return derivative, self.info(f_xi, *info)
-        return derivative
+            return result
+        return result.estimate
 
 
-def directionaldiff(f, x0, vec, **options):
+def directionaldiff(
+    f: Callable[[ArrayLike], ArrayOrScalar],
+    x0: ArrayLike,
+    vec: ArrayLike,
+    **options: Any,
+) -> ArrayOrScalar | EstimateResult:
     """
     Return directional derivative of a function of n variables
 
@@ -334,10 +416,10 @@ def directionaldiff(f, x0, vec, **options):
     >>> import numdifftools as nd
     >>> vec = np.r_[1, 2]
     >>> rosen = lambda x: (1-x[0])**2 + 105*(x[1]-x[0]**2)**2
-    >>> dd, info = nd.directionaldiff(rosen, [1, 1], vec, full_output=True)
-    >>> np.allclose(dd, 0)
+    >>> result = nd.directionaldiff(rosen, [1, 1], vec, full_output=True)
+    >>> np.allclose(result.estimate, 0)
     True
-    >>> bool(np.abs(info.error_estimate)<1e-14)
+    >>> bool(np.abs(result.error_estimate)<1e-14)
     True
 
     See also
@@ -347,7 +429,7 @@ def directionaldiff(f, x0, vec, **options):
     """
     x0 = np.asarray(x0)
     vec = np.asarray(vec)
-    _assert(x0.size == vec.size, "vec and x0 must be the same shapes")
+    _raise_if_not(x0.size == vec.size, "vec and x0 must be the same shapes")
     vec = np.reshape(vec / np.linalg.norm(vec.ravel()), x0.shape)
     return Derivative(lambda t: f(x0 + t * vec), **options)(0)
 
@@ -417,18 +499,24 @@ class Jacobian(Derivative):
     """,
     }
 
-    #     n = property(fget=lambda cls: 1,
-    #                  fset=lambda cls, val: cls._set_derivative())  # @UnusedVariable
-
     _fd_rule = LogJacobianRule
 
     @staticmethod
-    def _expand_steps(steps, x_i, fxi):
+    def _expand_steps(
+        steps: list[Array],
+        x_i: Array,
+        fxi: ArrayOrScalar,
+    ) -> list[Array]:
         n = len(x_i)
         one = np.ones_like(fxi)
         return [np.array([one * h[i] for i in range(n)]) for h in steps]
 
-    def _derivative_nonzero_order(self, x_i, args, kwds):
+    def _derivative_nonzero_order(
+        self,
+        x_i: Array,
+        args: tuple[Any, ...],
+        kwds: dict[str, Any],
+    ) -> tuple[Any, Any]:
         diff, f = self._get_functions(args, kwds)
         steps, step_ratio = self._get_steps(x_i)
         fxi = f(x_i)
@@ -439,8 +527,13 @@ class Jacobian(Derivative):
         self.set_richardson_rule(step_ratio, self.richardson_terms)
         return self.fd_rule.apply(results, steps2, step_ratio), fxi
 
-    def __call__(self, x, *args, **kwds):
-        return super(Jacobian, self).__call__(np.atleast_1d(x), *args, **kwds)
+    def __call__(
+        self,
+        x: ArrayLike,
+        *args: Any,
+        **kwds: Any,
+    ) -> ArrayOrScalar | EstimateResult:
+        return super().__call__(np.atleast_1d(x), *args, **kwds)
 
 
 class Gradient(Jacobian):
@@ -501,11 +594,16 @@ class Gradient(Jacobian):
     """,
     }
 
-    def __call__(self, x, *args, **kwds):
-        result = super(Gradient, self).__call__(np.atleast_1d(x).ravel(), *args, **kwds)
-        if self.full_output:
-            return result[0].squeeze(), result[1]
-        return result.squeeze()
+    def __call__(
+        self,
+        x: ArrayLike,
+        *args: Any,
+        **kwds: Any,
+    ) -> ArrayOrScalar | EstimateResult:
+        result = super().__call__(np.atleast_1d(x).ravel(), *args, **kwds)
+        if isinstance(result, EstimateResult):
+            return EstimateResult(np.squeeze(result.estimate), *result[1:])
+        return np.squeeze(result)
 
 
 class Hessdiag(Derivative):
@@ -532,11 +630,11 @@ class Hessdiag(Derivative):
     >>> import numdifftools as nd
     >>> fun = lambda x : x[0] + x[1]**2 + x[2]**3
     >>> Hfun = nd.Hessdiag(fun, full_output=True)
-    >>> hd, info = Hfun([1,2,3])
-    >>> np.allclose(hd, [0.,   2.,  18.])
+    >>> result = Hfun([1,2,3])
+    >>> np.allclose(result.estimate, [0.,   2.,  18.])
     True
 
-    >>> bool(np.all(info.error_estimate < 1e-11))
+    >>> bool(np.all(result.error_estimate < 1e-11))
     True
     """,
         "see_also": """
@@ -546,14 +644,26 @@ class Hessdiag(Derivative):
     """,
     }
 
-    _fd_rule = LogHessdiagRule
+    _fd_rule: RuleClass = LogHessdiagRule
 
-    def __init__(self, f, step=None, method="central", order=2, **options):
+    def __init__(
+        self,
+        f: FunctionLike | None = None,
+        step: StepArgument = None,
+        method: str = "central",
+        order: int = 2,
+        **options: Any,
+    ) -> None:
         options.pop("n", None)
-        super(Hessdiag, self).__init__(f, step=step, method=method, n=2, order=order, **options)
+        super().__init__(f, step=step, method=method, n=2, order=order, **options)
 
-    def __call__(self, x, *args, **kwds):
-        return super(Hessdiag, self).__call__(np.atleast_1d(x), *args, **kwds)
+    def __call__(
+        self,
+        x: ArrayLike,
+        *args: Any,
+        **kwds: Any,
+    ) -> ArrayOrScalar | EstimateResult:
+        return super().__call__(np.atleast_1d(x), *args, **kwds)
 
 
 class Hessian(Hessdiag):
@@ -619,12 +729,19 @@ class Hessian(Hessdiag):
     """,
     }
 
-    _fd_rule = LogHessianRule
+    _fd_rule: RuleClass = LogHessianRule
 
-    def __init__(self, f, step=None, method="central", order=None, **options):
+    def __init__(
+        self,
+        f: FunctionLike | None = None,
+        step: StepArgument = None,
+        method: str = "central",
+        order: int | None = None,
+        **options: Any,
+    ) -> None:
         if order is None:
             order = {"backward": 1, "forward": 1}.get(method, 2)
-        super(Hessian, self).__init__(f, step=step, method=method, order=order, **options)
+        super().__init__(f, step=step, method=method, order=order, **options)
 
 
 if __name__ == "__main__":

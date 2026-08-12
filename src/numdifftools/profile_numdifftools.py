@@ -3,41 +3,56 @@ This script profile different parts of numdifftools.
 
 """
 
-from __future__ import absolute_import, print_function
+from collections.abc import Callable, Iterable
+from typing import Any, cast
 
 import numpy as np
 
 import numdifftools as nd  # numdifftools.nd_statsmodels as nd
+from numdifftools._typing import (
+    ArrayOrScalar,
+    EstimateResult,
+    FuncOrNone,
+    MathFunc,
+)
 from numdifftools.example_functions import function_names, get_function
 from numdifftools.profiletools import do_profile
 from numdifftools.run_benchmark import BenchmarkFunction
 
 
-def profile_hessian(n_values=(4, 8, 16, 32, 64, 96)):
+def profile_hessian(
+    n_values: Iterable[int] = (4, 8, 16, 32, 64, 96),
+) -> None:
     for n in n_values:
-        f = BenchmarkFunction(n)
+        f: MathFunc = BenchmarkFunction(n)
 
         step = nd.step_generators.one_step
-        cls = nd.Hessian(f, step=step, method="central")
+        cls = cast(Any, nd.Hessian(f, step=step, method="central"))
         # pylint: disable=protected-access
-        follow = [
+
+        difference_functions = cls._difference_functions
+        follow: tuple[Callable[..., Any], ...] = (
             cls._derivative_nonzero_order,
             cls._apply_fd_rule,
             cls._get_finite_difference_rule,
-            cls._vstack,
-            cls._difference_functions._central_even,
-        ]
+            cls._prepare_extrapolation_data,
+            difference_functions._central_even,
+        )
+
         #         cls = nds.Hessian(f, step=None, method='central')
-        #         follow = [cls._derivative_nonzero_order, ]
+        #         follow = (cls._derivative_nonzero_order, )
 
         x = 3 * np.ones(n)
 
         do_profile(follow=follow)(cls)(x)
 
 
-def main():
-    x = 0.5
-    methods = ["complex", "central", "backward", "forward"]
+def main() -> None:
+    x: float = 0.5
+    methods: list[str] = ["complex", "central", "backward", "forward"]
+
+    f: FuncOrNone
+    true_df: FuncOrNone
 
     # for i, derivative in enumerate([nd.Derivative, nds.Gradient, nda.Derivative]):
     i = 0
@@ -47,22 +62,26 @@ def main():
             continue
 
         f, true_df = get_function(name, n=1)
-        if true_df is None:
+        if true_df is None or f is None:
             continue
+        assert true_df is not None
+        assert f is not None
         for method in methods[3 * (i > 1) :]:
             df = derivative(f, method=method)
-            val = df(x)
+            result: ArrayOrScalar | EstimateResult = df(x)
+            val: ArrayOrScalar = result.estimate if isinstance(result, EstimateResult) else result
             tval = true_df(x)
+
             dm = 7
             print(i, name, method, dm, np.abs(val - tval))
 
 
-def profile_main():
+def profile_main() -> None:
     import cProfile
     import pstats
 
-    cProfile.run("main()", "{}.profile".format(__file__))
-    s = pstats.Stats("{}.profile".format(__file__))
+    cProfile.run("main()", f"{__file__}.profile")
+    s = pstats.Stats(f"{__file__}.profile")
 
     s.sort_stats("time").print_stats(20)
 
