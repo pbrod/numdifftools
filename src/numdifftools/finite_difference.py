@@ -5,11 +5,11 @@ Finite difference methods module.
 from __future__ import annotations
 
 import warnings
-from collections.abc import Generator
+from collections.abc import Iterator, Sequence
+from typing import Any
 
 import numpy as np
 from numpy import linalg
-from numpy.typing import ArrayLike
 from scipy import special
 
 from numdifftools._typing import (
@@ -46,7 +46,7 @@ def _assert(cond: bool, msg: str) -> None:
         raise ValueError(msg)
 
 
-def make_exact(h: ArrayOrScalar) -> ArrayOrScalar:
+def make_exact(h: float) -> float:
     """Make sure h is an exact representable number
 
     This is important when calculating numerical derivatives and is
@@ -105,32 +105,44 @@ class DifferenceFunctions:
         return f(x + 1j * h).imag
 
     @staticmethod
-    def _complex_odd(f: FunctionLike, f_x: ArrayOrScalar, x: ArrayOrScalar, h: ArrayOrScalar):
+    def _complex_odd(
+        f: FunctionLike, f_x: ArrayOrScalar, x: ArrayOrScalar, h: ArrayOrScalar
+    ) -> ArrayOrScalar:
         i_h = h * _SQRT_J
         return ((_SQRT_J / 2.0) * (f(x + i_h) - f(x - i_h))).imag
 
     @staticmethod
-    def _complex_odd_higher(f: FunctionLike, f_x: ArrayOrScalar, x: ArrayOrScalar, h: ArrayOrScalar):
+    def _complex_odd_higher(
+        f: FunctionLike, f_x: ArrayOrScalar, x: ArrayOrScalar, h: ArrayOrScalar
+    ) -> ArrayOrScalar:
         i_h = h * _SQRT_J
         return ((3 * _SQRT_J) * (f(x + i_h) - f(x - i_h))).real
 
     @staticmethod
-    def _complex_even(f: FunctionLike, f_x: ArrayOrScalar, x: ArrayOrScalar, h: ArrayOrScalar):
+    def _complex_even(
+        f: FunctionLike, f_x: ArrayOrScalar, x: ArrayOrScalar, h: ArrayOrScalar
+    ) -> ArrayOrScalar:
         i_h = h * _SQRT_J
         return (f(x + i_h) + f(x - i_h)).imag
 
     @staticmethod
-    def _complex_even_higher(f: FunctionLike, f_x: ArrayOrScalar, x: ArrayOrScalar, h: ArrayOrScalar):
+    def _complex_even_higher(
+        f: FunctionLike, f_x: ArrayOrScalar, x: ArrayOrScalar, h: ArrayOrScalar
+    ) -> ArrayOrScalar:
         i_h = h * _SQRT_J
         return 12.0 * (f(x + i_h) + f(x - i_h) - 2 * f_x).real
 
     @staticmethod
-    def _multicomplex(f: FunctionLike, f_x: ArrayOrScalar, x: ArrayOrScalar, h: ArrayOrScalar):
+    def _multicomplex(
+        f: FunctionLike, f_x: ArrayOrScalar, x: ArrayOrScalar, h: ArrayOrScalar
+    ) -> ArrayOrScalar:
         z = Bicomplex(x + 1j * h, 0)
         return Bicomplex.__array_wrap__(f(z)).imag
 
     @staticmethod
-    def _multicomplex2(f: FunctionLike, f_x: ArrayOrScalar, x: ArrayOrScalar, h: ArrayOrScalar):
+    def _multicomplex2(
+        f: FunctionLike, f_x: ArrayOrScalar, x: ArrayOrScalar, h: ArrayOrScalar
+    ) -> ArrayOrScalar:
         z = Bicomplex(x + 1j * h, h)
         return Bicomplex.__array_wrap__(f(z)).imag12
 
@@ -143,7 +155,7 @@ class JacobianDifferenceFunctions:
     def increments(
         n: int,
         h: Array,
-    ) -> Generator[Array, None, None]:
+    ) -> Iterator[Array]:
         """Returns Jacobian steps"""
         e_i = np.zeros(np.shape(h), float)
         for k in range(n):
@@ -436,7 +448,7 @@ class LogRule:
 
     """
 
-    _difference_functions: DifferenceFunctions = DifferenceFunctions()
+    _difference_functions: Any = DifferenceFunctions()
 
     def __init__(self, n: int = 1, method: str = "central", order: int = 2) -> None:
         self.n = n
@@ -444,6 +456,14 @@ class LogRule:
         self.order = order
 
     # --- properties ---
+
+    @property
+    def n(self) -> int:
+        return self._n
+
+    @n.setter
+    def n(self, value: int) -> None:
+        self._n = value
 
     @property
     def _odd_derivative(self) -> bool:
@@ -617,7 +637,10 @@ class LogRule:
         return fd_rules[rule_index]
 
     @staticmethod
-    def _vstack(sequence, steps):
+    def _prepare_extrapolation_data(
+        sequence: Sequence[ArrayOrScalar],
+        steps: Sequence[ArrayOrScalar],
+    ) -> tuple[Array, Array, tuple[int, ...]]:
         original_shape = np.shape(sequence[0])
         f_del = np.vstack([np.ravel(r) for r in sequence])
         one = np.ones(original_shape)
@@ -626,7 +649,10 @@ class LogRule:
         return f_del, h, original_shape
 
     def apply(
-        self, sequence: list[ArrayOrScalar], steps: list[Array], step_ratio: float = 2.0
+        self,
+        sequence: Sequence[ArrayOrScalar],
+        steps: Sequence[ArrayOrScalar],
+        step_ratio: float = 2.0,
     ) -> tuple[Array, Array, tuple[int, ...]]:
         """
         Apply finite difference rule along the first axis.
@@ -639,7 +665,7 @@ class LogRule:
         steps: steps
 
         """
-        f_del, h, original_shape = self._vstack(sequence, steps)
+        f_del, h, original_shape = self._prepare_extrapolation_data(sequence, steps)
         der_init, h = self._apply(f_del, h, step_ratio)
         return der_init, h, original_shape
 
@@ -735,27 +761,33 @@ class LogJacobianRule(LogRule):
 
     """
 
-    _difference_functions: JacobianDifferenceFunctions = JacobianDifferenceFunctions()
+    _difference_functions: Any = JacobianDifferenceFunctions()
 
-    # n = property(fget=lambda cls: 1, fset=lambda cls, n: None)
+    @property
+    def n(self) -> int:
+        return 1
+
+    @n.setter
+    def n(self, value: int) -> None:
+        pass
 
     @staticmethod
-    def _vstack(
-        sequence: list[Array],
-        steps: list[Array],
+    def _prepare_extrapolation_data(
+        sequence: Sequence[ArrayOrScalar],
+        steps: Sequence[ArrayOrScalar],
     ) -> tuple[Array, Array, tuple[int, ...]]:
         original_shape = list(np.shape(np.atleast_1d(sequence[0])))
         ndim = len(original_shape)
         if sum(original_shape) == ndim:
-            f_del = np.vstack(sequence)
-            h = np.vstack(steps)
+            f_del = np.vstack([np.asarray(d_f) for d_f in sequence])
+            h = np.vstack([np.asarray(step) for step in steps])
         else:
             axes = [0, 1, 2][:ndim]
             axes[:2] = axes[1::-1]
             original_shape[:2] = original_shape[1::-1]
 
-            f_del = np.vstack([np.atleast_1d(r).transpose(axes).ravel() for r in sequence])
-            h = np.vstack([np.atleast_1d(r).transpose(axes).ravel() for r in steps])
+            f_del = np.vstack([np.atleast_1d(d_f).transpose(axes).ravel() for d_f in sequence])
+            h = np.vstack([np.atleast_1d(x).transpose(axes).ravel() for x in steps])
         _assert(f_del.size == h.size, "fun did not return data of correct size (it must be vectorized)")
         return f_del, h, _ensure_2d_shape(original_shape, ndim)
 
@@ -811,9 +843,15 @@ class LogHessdiagRule(LogRule):
 
     """
 
-    _difference_functions: HessdiagDifferenceFunctions = HessdiagDifferenceFunctions()
+    _difference_functions: Any = HessdiagDifferenceFunctions()
 
-    n = property(fget=lambda cls: 2, fset=lambda cls, n: None)
+    @property
+    def n(self) -> int:
+        return 2
+
+    @n.setter
+    def n(self, value: int) -> None:
+        pass
 
 
 class LogHessianRule(LogRule):
@@ -830,9 +868,15 @@ class LogHessianRule(LogRule):
         For 'central' and 'complex' methods, it must be an even number.
     """
 
-    _difference_functions: HessianDifferenceFunctions = HessianDifferenceFunctions()
+    _difference_functions: Any = HessianDifferenceFunctions()
 
-    n = property(fget=lambda cls: 2, fset=lambda cls, unused_n: None)
+    @property
+    def n(self) -> int:
+        return 2
+
+    @n.setter
+    def n(self, value: int) -> None:
+        pass
 
     @property
     def order(self) -> int:
@@ -853,8 +897,8 @@ class LogHessianRule(LogRule):
 
     def apply(
         self,
-        sequence: list[Array],
-        steps: list[Array],
+        sequence: Sequence[ArrayOrScalar],
+        steps: Sequence[ArrayOrScalar],
         step_ratio: float = 2.0,
     ) -> tuple[Array, Array, tuple[int, ...]]:
         """
@@ -868,7 +912,7 @@ class LogHessianRule(LogRule):
         steps: steps
 
         """
-        f_del, h, original_shape = self._vstack(sequence, steps)
+        f_del, h, original_shape = self._prepare_extrapolation_data(sequence, steps)
         return f_del, h, original_shape
 
 

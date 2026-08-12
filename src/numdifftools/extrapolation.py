@@ -17,8 +17,9 @@ from scipy.ndimage import convolve1d
 if np.__version__ >= "2.0":
     from numpy import trapezoid
 else:
-    from typing import Any, cast
     from collections.abc import Callable
+    from typing import Any, cast
+
     trapezoid = cast(Callable[..., Any], np.trapz)
 
 from numdifftools._typing import Array, ArrayOrScalar, ExtrapolatedSequence
@@ -223,12 +224,13 @@ class Dea:
         if n == 0:
             abserr = abs(result)
         elif n == 1:
-            abserr = float(6.0 * abs(result - epstab[0]))
+            abserr = 6.0 * np.abs(result - epstab[0])
         else:
             result, abserr, n = self._dea(epstab, n)
         n += 1
         self._n = n
 
+        abserr = np.asarray(abserr).item()
         return result, float(abserr)
 
 

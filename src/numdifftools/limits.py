@@ -12,7 +12,7 @@ Release date: 5/23/2008
 from __future__ import annotations
 
 import warnings
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from functools import partial
 from typing import Any
 
@@ -266,9 +266,9 @@ class _Limit:
         return self._get_best_estimate(der1, errors1, steps, shape)
 
     @staticmethod
-    def _vstack(
-        sequence: list[ArrayOrScalar],
-        steps: list[Array],
+    def _prepare_extrapolation_data(
+        sequence: Sequence[ArrayOrScalar],
+        steps: Sequence[ArrayOrScalar],
     ) -> tuple[Array, Array, tuple[int, ...]]:
 
         original_shape = np.shape(sequence[0])
@@ -433,7 +433,7 @@ class Limit(_Limit):
         return self.fun(z + d_z, *args, **kwds)
 
     def _get_steps(self, x_i: Array) -> list[Array]:
-        return list(self.step(x_i))  # pylint: disable=not-callable
+        return [np.asarray(step) for step in self.step(x_i)]
 
     def _set_richardson_rule(
         self,
@@ -452,8 +452,8 @@ class Limit(_Limit):
         # pylint: disable=no-member
         self._set_richardson_rule(self.step.step_ratio, self.order + 1)
         sequence = [f(z, h) for h in steps]
-        results = self._vstack(sequence, steps)
-        return self._extrapolate(*results)
+        results, e_steps, shape = self._prepare_extrapolation_data(sequence, steps)
+        return self._extrapolate(results, e_steps, shape)
 
     def limit(
         self,

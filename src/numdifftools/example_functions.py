@@ -6,9 +6,6 @@ Created on 17. mai 2015
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import TypeAlias
-
 import numpy as np
 import scipy.special as special
 from numpy import (
@@ -33,7 +30,13 @@ from numpy import (
     tanh,
 )
 
-from numdifftools._typing import ArrayOrScalar
+from numdifftools._typing import (
+    ArrayOrScalar,
+    DerivativeFactory,
+    FuncOrNone,
+    FunctionPair,
+    MathFunc,
+)
 
 function_names: list[str] = [
     "cos",
@@ -56,15 +59,6 @@ function_names: list[str] = [
     "arcsin",
     "arctan",
 ]
-
-
-MathFunc: TypeAlias = Callable[..., ArrayOrScalar]
-FuncOrNone: TypeAlias = MathFunc | None
-FunctionPair: TypeAlias = tuple[
-    FuncOrNone,
-    FuncOrNone,
-]
-DerivativeFactory = Callable[[int], FuncOrNone]
 
 
 def darcsin(x: ArrayOrScalar) -> ArrayOrScalar:

@@ -109,14 +109,17 @@ def capture_stdout_and_stderr() -> Generator[Sequence[StringIO | str], None, Non
     True
     """
     old_out = sys.stdout, sys.stderr
-    out: list[StringIO | str, ...] = [StringIO(), StringIO()]
+    out: list[StringIO | str]
+    out = [StringIO(), StringIO()]
     try:
         sys.stdout, sys.stderr = out
         yield out
     finally:
         sys.stdout, sys.stderr = old_out
-        out[0] = out[0].getvalue()
-        out[1] = out[1].getvalue()
+        if isinstance(out[0], StringIO):
+            out[0] = out[0].getvalue()
+        if isinstance(out[1], StringIO):
+            out[1] = out[1].getvalue()
 
 
 if __name__ == "__main__":

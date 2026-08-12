@@ -152,7 +152,7 @@ class TimeWith:
     def elapsed(self) -> float:
         return timer() - self.start
 
-    def checkpoint(self, name: str = ""):
+    def checkpoint(self, name: str = "") -> None:
         print(f"{self.name} {name} took {self.elapsed} seconds".strip())
 
     def __enter__(self) -> TimeWith:
@@ -167,7 +167,9 @@ class TimeWith:
         self.checkpoint("finished")
 
 
-def do_cprofile(func):
+def do_cprofile(
+    func: Callable[..., Any],
+) -> Callable[..., Any]:
     """
     Decorator to profile a function
 
@@ -192,7 +194,7 @@ def do_cprofile(func):
     do_profile, test_do_profile
     """
 
-    def profiled_func(*args: Any, **kwargs: Any) -> None:
+    def profiled_func(*args: Any, **kwargs: Any) -> Any:
         profile = cProfile.Profile()
         try:
             profile.enable()

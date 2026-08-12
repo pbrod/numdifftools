@@ -13,9 +13,10 @@ BasicMaxStepGenerator  > StepGenerator
 
 
 """
+
 from __future__ import annotations
 
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterator, Sequence
 from typing import Any, NamedTuple, Protocol, TypeAlias
 
 from numpy.typing import ArrayLike, NDArray
@@ -25,6 +26,15 @@ Scalar: TypeAlias = float | complex
 ArrayOrScalar: TypeAlias = Array | Scalar
 GeneratorStepRatio: TypeAlias = float | complex
 RuleClass: TypeAlias = type[Any]
+
+FunctionLike: TypeAlias = Callable[..., Any]
+MathFunc: TypeAlias = Callable[..., ArrayOrScalar]
+FuncOrNone: TypeAlias = MathFunc | None
+FunctionPair: TypeAlias = tuple[
+    FuncOrNone,
+    FuncOrNone,
+]
+DerivativeFactory = Callable[[int], FuncOrNone]
 
 
 class EstimateResult(NamedTuple):
@@ -45,7 +55,7 @@ class DerivativeCallable(Protocol):
         self,
         x: ArrayLike,
         f: FunctionLike,
-        epsilon: StepGeneratorFactory | None = None,
+        epsilon: StepGeneratorFactory | ArrayLike | None = None,
         args: tuple[Any, ...] = (),
         kwargs: dict[str, Any] | None = None,
     ) -> Array: ...
@@ -58,7 +68,7 @@ class DifferenceFunction(Protocol):
         f_xi: Any,
         x_i: Array,
         h: Array,
-    ) -> Any: ...
+    ) -> Array | ArrayOrScalar: ...
 
 
 class Differentiator(Protocol):
@@ -79,7 +89,7 @@ class FiniteDifferenceRule(Protocol):
     order: int
     method: str
     method_order: int
-    richardson_step: int | float
+    richardson_step: int
     eval_first_condition: bool
 
     def diff(
@@ -92,10 +102,10 @@ class FiniteDifferenceRule(Protocol):
 
     def apply(
         self,
-        sequence: Any,
-        steps: Any,
+        sequence: Sequence[ArrayOrScalar],
+        steps: Sequence[ArrayOrScalar],
         step_ratio: float,
-    ) -> Any: ...
+    ) -> tuple[Array, Array, tuple[int, ...]]: ...
 
 
 class StepGenerator(Protocol):
@@ -141,12 +151,7 @@ class StepGeneratorFactory(Protocol):
     ) -> Iterator[ArrayOrScalar]: ...
 
 
-StepArgument: TypeAlias = (
-    float
-    | ArrayLike
-    | StepGeneratorFactory
-    | None
-)
+StepArgument: TypeAlias = ArrayLike | StepGeneratorFactory | None
 
 
 class RichardsonLike(Protocol):
@@ -162,6 +167,3 @@ class RichardsonLike(Protocol):
         sequence: Array,
         steps: Array,
     ) -> ExtrapolatedSequence: ...
-
-
-FunctionLike: TypeAlias = Callable[..., Any]

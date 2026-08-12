@@ -262,18 +262,19 @@ def _num_taylor_coefficients(n: int) -> int:
     return m
 
 
-def richardson_parameter(vals: Array, k: int) -> ArrayOrScalar:
+def richardson_parameter(vals: list[Array], k: int) -> ArrayOrScalar:
     c = np.real((vals[k - 1] - vals[k - 2]) / (vals[k] - vals[k - 1])) - 1.0
     # The lower bound 0.07 admits the singularity x.^-0.9
     c = np.maximum(c, 0.07)
     return -c
 
 
-def richardson(vals: list[Array], k: int, c: ArrayOrScalar | None = None) -> ArrayOrScalar:
+def richardson(vals: list[Array], k: int, c: ArrayOrScalar | None = None) -> Array:
     """Richardson extrapolation with parameter estimation"""
     if c is None:
         c = richardson_parameter(vals, k)
-    return vals[k] - (vals[k] - vals[k - 1]) / c
+    result: Array = np.asarray(vals[k] - (vals[k] - vals[k - 1]) / c)
+    return result
 
 
 def _extrapolate(bs: list[Array], rs: list[float], m: int) -> list[Array]:
@@ -302,8 +303,8 @@ def _get_best_taylor_coefficients(
         steps = np.atleast_1d(rs[4:])[:, None] * mvec
         # pylint: disable=protected-access
         result = _Limit._get_best_estimate(all_coefs, all_errors, steps, (m,))
-        errors = result.error_estimate
-        coefs = result.estimate
+        errors: Array = np.asarray(result.error_estimate)
+        coefs: Array = np.asarray(result.estimate)
     else:
         errors = EPS / np.power(rs[2], mvec) * max_m1m2()
         coefs = extrap[-1]

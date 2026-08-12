@@ -90,15 +90,16 @@ n=10, scale=14.200000000000001
 
 """
 
-from typing import Any, TypedDict
+from typing import TypedDict
 
 import matplotlib.pyplot as plt
 import numpy as np
 
 from numdifftools import Derivative
+from numdifftools._typing import Array, ArrayOrScalar, EstimateResult, FunctionLike, StepGeneratorFactory
 from numdifftools.example_functions import function_names, get_function
 from numdifftools.step_generators import MinStepGenerator, default_scale
-from numdifftools._typing import Array, ArrayOrScalar, FunctionLike, StepGeneratorFactory, EstimateResult
+
 
 class BenchmarkResult(TypedDict):
     n: int
@@ -191,10 +192,10 @@ def benchmark(
             "order": order,
             "method": method,
             "fun": name,
-             "error": np.nan,
-             "scale": np.nan,
-             "x": np.nan,
-             }
+            "error": np.nan,
+            "scale": np.nan,
+            "x": np.nan,
+        }
     if show_plot:
         ordinal = ["", "1'st", "2'nd", "3'rd", "4'th", "5'th", "6'th", "7th"][n] if n < 8 else f"{n}'th"
         title = f"The {ordinal} derivative using {method}, order={order}"

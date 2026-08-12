@@ -27,7 +27,6 @@ from numdifftools._typing import (
     RichardsonLike,
     RuleClass,
     StepArgument,
-    StepGenerator,
     StepGeneratorFactory,
 )
 from numdifftools.extrapolation import Richardson, dea3  # @UnusedImport
@@ -279,7 +278,7 @@ class Derivative(_Limit):
         results = [self.fun(x_i, *args, **kwds)]
         self.set_richardson_rule(2.0, 0)
         f_xi = np.asarray(results[0])
-        return self._vstack(results, steps), f_xi
+        return self._prepare_extrapolation_data(results, steps), f_xi
 
     def _derivative_nonzero_order(
         self,

@@ -208,7 +208,7 @@ class MinStepGenerator:
 
     Parameters
     ----------
-    base_step : float, array-like, optional
+    base_step : array-like, optional
         Defines the minimum step, if None, the value is set to EPS**(1/scale)
     step_ratio : real scalar, optional, default 2
         Ratio between sequential steps generated.
@@ -218,7 +218,7 @@ class MinStepGenerator:
         defines number of steps generated. It should be larger than
         min_num_steps = (n + order - 1) / fact where fact is 1, 2 or 4
         depending on differentiation method used.
-    step_nom :  default maximum(log(exp(1)+|x|), 1)
+    step_nom :  array-like, default maximum(log(exp(1)+|x|), 1)
         Nominal step where x is supplied at runtime through the __call__ method.
     offset : real scalar, optional, default 0
         offset to the base step
@@ -425,10 +425,10 @@ class MaxStepGenerator(MinStepGenerator):
 
     def __init__(
         self,
-        base_step: float = 2.0,
+        base_step: ArrayLike = 2.0,
         step_ratio: float | None = None,
         num_steps: int = 15,
-        step_nom: float | None = None,
+        step_nom: ArrayLike | None = None,
         offset: int = 0,
         num_extrap: int = 9,
         use_exact_steps: bool = False,

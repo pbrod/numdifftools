@@ -5,17 +5,13 @@ Created on Jun 25, 2016
 """
 
 from typing import Any
+
 import numpy as np
 from numpy import pi, r_, sqrt
 from numpy.typing import ArrayLike
 from scipy import constants, linalg, optimize
 
-from numdifftools._typing import (
-    Array,
-    ArrayOrScalar,
-    Differentiator,
-    EstimateResult
-)
+from numdifftools._typing import Array, ArrayOrScalar, Differentiator, EstimateResult
 from numdifftools.multicomplex import c_abs
 
 
@@ -99,13 +95,10 @@ def run_hamiltonian(
     hessian.fun = c.potential
 
     if hasattr(hessian, "full_output"):
-        setattr(hessian, "full_output", full_output)
+        hessian.full_output = full_output
 
-    true_h: Array = np.array(
-        [[5.23748385e-12, -2.61873829e-12], [-2.61873829e-12, 5.23748385e-12]]
-    )
+    true_h: Array = np.array([[5.23748385e-12, -2.61873829e-12], [-2.61873829e-12, 5.23748385e-12]])
 
-    
     result = hessian(xopt)
     if isinstance(result, EstimateResult):
         h: ArrayOrScalar = result.estimate

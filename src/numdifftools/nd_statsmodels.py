@@ -9,13 +9,16 @@ statsmodels.numdiff.
 from __future__ import annotations
 
 import warnings
+from collections.abc import Callable
 from functools import partial
-from typing import Any
+from typing import Any, TypeAlias
 
 import numpy as np
 from numpy.typing import ArrayLike
 
-from numdifftools._typing import Array, DerivativeCallable, FunctionLike, StepGeneratorFactory
+from numdifftools._typing import Array, FunctionLike, StepGeneratorFactory
+
+DerivativeCallable: TypeAlias = Callable[..., Array]
 
 approx_hess1: Any
 approx_hess2: Any
@@ -55,7 +58,7 @@ def _transpose(
 def approx_fprime(
     x: ArrayLike,
     f: FunctionLike,
-    epsilon: ArrayLike | float | None = None,
+    epsilon: ArrayLike | None = None,
     args: tuple[Any, ...] = (),
     kwargs: dict[str, Any] | None = None,
     centered: bool = True,
@@ -119,7 +122,7 @@ def approx_fprime(
 def _approx_fprime_backward(
     x: ArrayLike,
     f: FunctionLike,
-    epsilon: ArrayLike | float | None = None,
+    epsilon: ArrayLike | None = None,
     args: tuple[Any, ...] = (),
     kwargs: dict[str, Any] | None = None,
 ) -> Array:
@@ -133,7 +136,7 @@ def _approx_fprime_backward(
 def approx_fprime_cs(
     x: ArrayLike,
     f: FunctionLike,
-    epsilon: ArrayLike | float | None = None,
+    epsilon: ArrayLike | None = None,
     args: tuple[Any, ...] = (),
     kwargs: dict[str, Any] | None = None,
 ) -> Array:
@@ -186,7 +189,7 @@ def approx_fprime_cs(
 def _approx_hess1_backward(
     x: ArrayLike,
     f: FunctionLike,
-    epsilon: ArrayLike | float | None = None,
+    epsilon: ArrayLike | None = None,
     args: tuple[Any, ...] = (),
     kwargs: dict[str, Any] | None = None,
 ) -> Array:
@@ -241,9 +244,8 @@ class _Common:
     @method.setter
     def method(self, method: str) -> None:
         self._metod = method
-        callable_ = self._callables.get(method)
-        assert callable_ is not None
-        if callable_:
+        callable_ = self._callables.get(method, None)
+        if callable_ is not None:
             self._derivative_nonzero_order = callable_
         else:
             warnings.warn(f'{method} is an illegal method! Setting method="central"', stacklevel=2)
