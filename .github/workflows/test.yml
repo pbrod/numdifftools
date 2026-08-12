@@ -87,7 +87,7 @@ jobs:
 
       # Run regular test suite on all non-coverage matrix runners
       - name: Run tests
-        if: !(matrix.python_version == '3.13' && matrix.os == 'ubuntu-latest')
+        if: ${{ !(matrix.python_version == '3.13' && matrix.os == 'ubuntu-latest') }}
         run: pdm run pytest -p no:pep8
 
       # Combined test + coverage step for the coverage runner
