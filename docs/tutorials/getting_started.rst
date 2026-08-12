@@ -14,11 +14,11 @@ How does numdifftools.Derivative work in action? A simple nonlinear function wit
     >>> from numpy import exp
     >>> import numdifftools as nd
     >>> f = nd.Derivative(exp, full_output=True)
-    >>> val, info = f(0)
-    >>> np.allclose(val, 1)
+    >>> result = f(0)
+    >>> np.allclose(result.estimate, 1)
     True
 
-    >>> np.allclose(info.error_estimate, 5.28466160e-14)
+    >>> np.allclose(result.error_estimate, 5.28466160e-14)
     True
 
 A second simple example comes from trig functions. The first four derivatives of the sine function, evaluated at :math:`x = 0`, should be respectively :math:`[cos(0), -sin(0), -cos(0), sin(0)]`, or :math:`[1,0,-1,0]`.
@@ -65,7 +65,7 @@ Estimation of the gradient vector (numdifftools.Gradient) of a function of multi
 
 Multivariate calculus examples
 ------------------------------
-Typical usage of the gradient and Hessian might be in optimization problems, where one might compare 
+Typical usage of the gradient and Hessian might be in optimization problems, where one might compare
 an analytically derived gradient for correctness, or use the Hessian matrix to compute confidence interval estimates on parameters in a maximum likelihood estimation.
 
 
@@ -74,7 +74,7 @@ Gradients and Hessians
 
     >>> import numpy as np
     >>> def rosen(x): return (1-x[0])**2 + 105.*(x[1]-x[0]**2)**2
-    
+
 Gradient of the Rosenbrock function at [1,1], the global minimizer
     >>> grad = nd.Gradient(rosen)([1, 1])
 
@@ -114,7 +114,7 @@ one of these eigenvalues will be zero (approximately)
     [True, False]
 
 
-Directional derivatives 
+Directional derivatives
 -----------------------
 
 The directional derivative will be the dot product of the gradient with the (unit normalized) vector. This is of course possible to do with numdifftools and you could do it like this for the Rosenbrock function at the solution, x0 = [1,1]:
@@ -123,12 +123,12 @@ The directional derivative will be the dot product of the gradient with the (uni
     >>> x0 = [1, 1]
     >>> directional_diff = np.dot(nd.Gradient(rosen)(x0), v)
 
-This should be zero. 
+This should be zero.
 
     >>> np.allclose(directional_diff, 0)
     True
 
- 
+
 Ok, its a trivial test case, but it easy to compute the directional derivative at other locations:
 
     >>> v2 = np.r_[1, -1]/np.sqrt(2)
@@ -182,4 +182,3 @@ Conclusion
 ##########
 
 numdifftools.Derivative is an a adaptive scheme that can compute the derivative of arbitrary (well behaved) functions. It is reasonably fast as an adaptive method. Many options have been provided for the user who wishes the ultimate amount of control over the estimation.
-
