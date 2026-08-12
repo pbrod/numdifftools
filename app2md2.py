@@ -14,16 +14,54 @@ def process_folder(folder_path, max_file_size=MAX_FILE_SIZE):
 
     # List of file extensions to include
     valid_extensions = (
-        ".py", ".js", ".java", ".c", ".cpp", ".cc", ".h",
-        ".rb", ".go", ".php", ".cs", ".ts",
-        ".html", ".css", ".scss", ".xml",
-        ".kt", ".swift", ".m", ".mm",
-        ".sh", ".bat", ".ps1", ".r",
-        ".pl", ".pm", ".asp", ".jsp", ".sql",
-        ".lua", ".dart", ".erl", ".ex", ".jsx", ".tsx",
-        ".scala", ".rs", ".vb", ".f90", ".for", ".s",
-        ".ini", ".toml", ".yaml", ".yml", ".json",
-        ".md", ".rst"
+        ".py",
+        ".js",
+        ".java",
+        ".c",
+        ".cpp",
+        ".cc",
+        ".h",
+        ".rb",
+        ".go",
+        ".php",
+        ".cs",
+        ".ts",
+        ".html",
+        ".css",
+        ".scss",
+        ".xml",
+        ".kt",
+        ".swift",
+        ".m",
+        ".mm",
+        ".sh",
+        ".bat",
+        ".ps1",
+        ".r",
+        ".pl",
+        ".pm",
+        ".asp",
+        ".jsp",
+        ".sql",
+        ".lua",
+        ".dart",
+        ".erl",
+        ".ex",
+        ".jsx",
+        ".tsx",
+        ".scala",
+        ".rs",
+        ".vb",
+        ".f90",
+        ".for",
+        ".s",
+        ".ini",
+        ".toml",
+        ".yaml",
+        ".yml",
+        ".json",
+        ".md",
+        ".rst",
     )
 
     filenames_to_ignore = {
@@ -34,10 +72,11 @@ def process_folder(folder_path, max_file_size=MAX_FILE_SIZE):
         "BUILD",
         ".bazelrc",
         ".gitignore",
-        "makefile", "Makefile",
+        "makefile",
+        "Makefile",
         "WORKSPACE",
         "gpp_build.sh",
-        "Dockerfile"
+        "Dockerfile",
     }
 
     # --- NEW: List of directories to ignore ---
@@ -92,16 +131,11 @@ def process_folder(folder_path, max_file_size=MAX_FILE_SIZE):
             if filename in filenames_to_ignore:
                 continue
             # Check if the file should be included
-            should_include = (
-                filename.endswith(valid_extensions) or filename in specific_filenames_to_include
-            )
+            should_include = filename.endswith(valid_extensions) or filename in specific_filenames_to_include
 
             # Check if it's the output file we might be generating
             # Ignore previously generated summary files.
-            is_output_file = (
-                filename == "code_summary.md"
-                or filename.startswith("code_summary_")
-            )
+            is_output_file = filename == "code_summary.md" or filename.startswith("code_summary_")
 
             if should_include and not is_output_file:
                 # --- CHANGED: Construct the full file path using dirpath ---
@@ -123,11 +157,16 @@ def process_folder(folder_path, max_file_size=MAX_FILE_SIZE):
 
                     _, ext = os.path.splitext(filename)
                     lang_hint = ext[1:] if ext else filename.lower()
-                    if filename == ".gitignore": lang_hint = "gitignore"
-                    elif filename.lower() == "makefile": lang_hint = "makefile"
-                    elif filename == ".bazelrc": lang_hint = "bazelrc"
-                    elif filename in {"BUILD", "WORKSPACE"}: lang_hint = "bazel"
-                    elif filename == "Dockerfile": lang_hint = "dockerfile"
+                    if filename == ".gitignore":
+                        lang_hint = "gitignore"
+                    elif filename.lower() == "makefile":
+                        lang_hint = "makefile"
+                    elif filename == ".bazelrc":
+                        lang_hint = "bazelrc"
+                    elif filename in {"BUILD", "WORKSPACE"}:
+                        lang_hint = "bazel"
+                    elif filename == "Dockerfile":
+                        lang_hint = "dockerfile"
 
                     dir_md_content += f"```{lang_hint}\n{code}\n```\n\n"
                 except Exception as e:
@@ -139,7 +178,6 @@ def process_folder(folder_path, max_file_size=MAX_FILE_SIZE):
             display_path = relative_dir if relative_dir != "." else "root directory"
             md_content += f"## Directory: `{display_path}`\n\n"
             md_content += dir_md_content
-
 
     # --- No changes in this section ---
     output_filename = "code_summary.md"
@@ -157,6 +195,7 @@ def process_folder(folder_path, max_file_size=MAX_FILE_SIZE):
         return f"Markdown file created at: {output_path}"
     except Exception as e:
         return f"Error writing markdown file: {str(e)}"
+
 
 if __name__ == "__main__":
     folder_path = input("Enter the path of the folder to process: ").strip().strip('"')
