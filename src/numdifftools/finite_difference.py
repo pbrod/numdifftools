@@ -84,11 +84,15 @@ class DifferenceFunctions:
         return (f(x0i + h) - f(x0i - h)) / 2.0
 
     @staticmethod
-    def _forward(f: FunctionLike, f_x0i: ArrayOrScalar, x0i: ArrayOrScalar, h: ArrayOrScalar) -> ArrayOrScalar:
+    def _forward(
+        f: FunctionLike, f_x0i: ArrayOrScalar, x0i: ArrayOrScalar, h: ArrayOrScalar
+    ) -> ArrayOrScalar:
         return f(x0i + h) - f_x0i
 
     @staticmethod
-    def _backward(f: FunctionLike, f_x0i: ArrayOrScalar, x0i: ArrayOrScalar, h: ArrayOrScalar) -> ArrayOrScalar:
+    def _backward(
+        f: FunctionLike, f_x0i: ArrayOrScalar, x0i: ArrayOrScalar, h: ArrayOrScalar
+    ) -> ArrayOrScalar:
         return f_x0i - f(x0i - h)
 
     @staticmethod
@@ -672,6 +676,15 @@ class LogRule:
         return der_init[:num_steps], h[:num_steps]
 
 
+def _ensure_2d_shape(
+    original_shape: list[int] | tuple[int, ...],
+    ndim: int,
+) -> tuple[int, ...]:
+    if ndim == 1:
+        original_shape = (1,) + tuple(original_shape)
+    return tuple(original_shape)
+
+
 class LogJacobianRule(LogRule):
     """Log spaced finite difference Jacobian rule class
 
@@ -727,16 +740,7 @@ class LogJacobianRule(LogRule):
     # n = property(fget=lambda cls: 1, fset=lambda cls, n: None)
 
     @staticmethod
-    def _atleast_2d(
-        original_shape: list[int] | tuple[int, ...],
-        ndim: int,
-    ) -> tuple[int, ...]:
-        if ndim == 1:
-            original_shape = (1,) + tuple(original_shape)
-        return tuple(original_shape)
-
     def _vstack(
-        self,
         sequence: list[Array],
         steps: list[Array],
     ) -> tuple[Array, Array, tuple[int, ...]]:
@@ -753,7 +757,7 @@ class LogJacobianRule(LogRule):
             f_del = np.vstack([np.atleast_1d(r).transpose(axes).ravel() for r in sequence])
             h = np.vstack([np.atleast_1d(r).transpose(axes).ravel() for r in steps])
         _assert(f_del.size == h.size, "fun did not return data of correct size (it must be vectorized)")
-        return f_del, h, self._atleast_2d(original_shape, ndim)
+        return f_del, h, _ensure_2d_shape(original_shape, ndim)
 
 
 class LogHessdiagRule(LogRule):
