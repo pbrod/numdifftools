@@ -12,7 +12,7 @@ Licence:     New BSD
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -26,9 +26,9 @@ from numdifftools._typing import (
     FunctionLike,
     RichardsonLike,
     RuleClass,
-    StepGeneratorFactory,
-    StepGenerator,
     StepArgument,
+    StepGenerator,
+    StepGeneratorFactory,
 )
 from numdifftools.extrapolation import Richardson, dea3  # @UnusedImport
 from numdifftools.finite_difference import (
@@ -155,7 +155,7 @@ class Derivative(_Limit):
     Returns
     -------
     der : ndarray
-       array of derivatives
+        array of derivatives
     """,
         "example": """
     Examples
@@ -195,7 +195,7 @@ class Derivative(_Limit):
     fd_rule: FiniteDifferenceRule
     _derivative: Callable[
         [Array, tuple[Any, ...], dict[str, Any]],
-        tuple[ArrayOrScalar, ArrayOrScalar],
+        tuple[tuple[Array, Array, tuple[int, ...]], ArrayOrScalar],
     ]
     richardson: RichardsonLike
 
@@ -273,22 +273,23 @@ class Derivative(_Limit):
 
     def _derivative_zero_order(
         self, x_i: Array, args: tuple[Any, ...], kwds: dict[str, Any]
-    ) -> tuple[Any, Any]:
+    ) -> tuple[tuple[Array, Array, tuple[int, ...]], ArrayOrScalar]:
         steps = [np.zeros_like(x_i)]
         assert self.fun is not None
         results = [self.fun(x_i, *args, **kwds)]
-        self.set_richardson_rule(2, 0)
-        return self._vstack(results, steps), results[0]
+        self.set_richardson_rule(2.0, 0)
+        f_xi = np.asarray(results[0])
+        return self._vstack(results, steps), f_xi
 
     def _derivative_nonzero_order(
         self,
         x_i: Array,
         args: tuple[Any, ...],
         kwds: dict[str, Any],
-    ) -> tuple[Any, Any]:
+    ) -> tuple[tuple[Array, Array, tuple[int, ...]], Array]:
         diff, f = self._get_functions(args, kwds)
         steps, step_ratio = self._get_steps(x_i)
-        fxi = self._eval_first(f, x_i)
+        fxi = np.asarray(self._eval_first(f, x_i))
         results = [diff(f, fxi, x_i, h) for h in steps]
 
         self.set_richardson_rule(step_ratio, self.richardson_terms)
@@ -327,9 +328,11 @@ class Derivative(_Limit):
         x_i: Array,
     ) -> tuple[list[Array], float]:
         method, n, order = self.method, self.n, self.method_order
-        # pylint: disable=no-member
+        # Assert self.step exists from _Limit parent class
+        assert hasattr(self, "step") and self.step is not None
         step_gen = self.step.step_generator_function(x_i, method, n, order)
-        return list(step_gen()), step_gen.extrapolation_ratio
+        steps = cast(list[Array], list(step_gen()))
+        return steps, float(step_gen.extrapolation_ratio)
 
     def _raise_error_if_any_is_complex(
         self,
@@ -340,9 +343,15 @@ class Derivative(_Limit):
             f"The {self.method} step derivative method does only work on a real valued analytic "
             "function of a real variable!"
         )
-        _raise_if_not(not np.any(np.iscomplex(x)), msg + " But a complex variable was given!")
+        _raise_if_not(
+            not np.any(np.iscomplex(cast(np.ndarray[Any, Any], x))),
+            msg + " But a complex variable was given!",
+        )
 
-        _raise_if_not(not np.any(np.iscomplex(f_x)), msg + " But the function given is complex valued!")
+        _raise_if_not(
+            not np.any(np.iscomplex(cast(np.ndarray[Any, Any], f_x))),
+            msg + " But the function given is complex valued!",
+        )
 
     def _eval_first(
         self,
@@ -363,10 +372,10 @@ class Derivative(_Limit):
         *args: Any,
         **kwds: Any,
     ) -> ArrayOrScalar | EstimateResult:
-        x_i = np.asarray(x)
+        x_i: Array = np.asarray(x)
         with np.errstate(divide="ignore", invalid="ignore"):
-            results, f_xi = self._derivative(x_i, args, kwds)
-            result = self._extrapolate(*results)
+            (results, steps, shape), f_xi = self._derivative(x_i, args, kwds)
+            result = self._extrapolate(results, steps, shape=shape)
         if self.full_output:
             return result
         return result.estimate
@@ -595,7 +604,7 @@ class Gradient(Jacobian):
         result = super().__call__(np.atleast_1d(x).ravel(), *args, **kwds)
         if isinstance(result, EstimateResult):
             return EstimateResult(np.squeeze(result.estimate), *result[1:])
-        return np.squeeze(result[0])
+        return np.squeeze(result)
 
 
 class Hessdiag(Derivative):

@@ -151,7 +151,7 @@ class BasicMaxStepGenerator:
         base_step = self.base_step
 
         step_ratio = self.step_ratio
-        sgn= self._sign
+        sgn = self._sign
         offset = self.offset
 
         for i in self._range():
@@ -294,7 +294,10 @@ class MinStepGenerator:
 
     @base_step.setter
     def base_step(self, base_step: ArrayLike | None) -> None:
-        self._base_step = np.asarray(base_step)
+        if base_step is None:
+            self._base_step = None
+        else:
+            self._base_step = np.asarray(base_step)
 
     @staticmethod
     def _num_step_divisor(method: str, n: int, order: int) -> int:
@@ -346,7 +349,10 @@ class MinStepGenerator:
 
     @step_nom.setter
     def step_nom(self, step_nom: ArrayLike | None) -> None:
-        self._step_nom = np.asarray(step_nom)
+        if step_nom is None:
+            self._step_nom = None
+        else:
+            self._step_nom = np.asarray(step_nom)
 
     def _generator_step_ratio(self) -> GeneratorStepRatio:
         return self.step_ratio

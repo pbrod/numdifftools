@@ -4,6 +4,7 @@ This module is based on: https://zapier.com/engineering/profiling-python-boss/
 See also:
 https://www.pythoncentral.io/measure-time-in-python-time-time-vs-time-clock/
 """
+
 # mypy: disable-error-code=return-value
 # mypy: disable-error-code=no-redef
 from __future__ import annotations
@@ -32,7 +33,7 @@ try:
             if k != except_:
                 profiler.add_function(v)
 
-    def _add_function_or_classmethod(profiler: LineProfiler, f: Any, args: tuple) -> None:
+    def _add_function_or_classmethod(profiler: LineProfiler, f: Any, args: tuple[Any, ...]) -> None:
         if isinstance(f, str):  # f is a method of the
             cls = args[0]  # class instance
             profiler.add_function(getattr(cls, f))
@@ -151,7 +152,7 @@ class TimeWith:
     def elapsed(self) -> float:
         return timer() - self.start
 
-    def checkpoint(self, name=""):
+    def checkpoint(self, name: str = ""):
         print(f"{self.name} {name} took {self.elapsed} seconds".strip())
 
     def __enter__(self) -> TimeWith:
@@ -191,7 +192,7 @@ def do_cprofile(func):
     do_profile, test_do_profile
     """
 
-    def profiled_func(*args, **kwargs):
+    def profiled_func(*args: Any, **kwargs: Any) -> None:
         profile = cProfile.Profile()
         try:
             profile.enable()

@@ -109,7 +109,7 @@ def capture_stdout_and_stderr() -> Generator[Sequence[StringIO | str], None, Non
     True
     """
     old_out = sys.stdout, sys.stderr
-    out = [StringIO(), StringIO()]
+    out: list[StringIO | str, ...] = [StringIO(), StringIO()]
     try:
         sys.stdout, sys.stderr = out
         yield out
