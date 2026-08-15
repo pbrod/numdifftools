@@ -13,6 +13,7 @@
 # Prepare release:
 # pdm install -G release   # Install release tools if needed
 # pdm prepare-release      # update README.rst, LICENSE.txt and CHANGELOG.md. Inspect and verify.
+# git log v0.9.42..HEAD --oneline > log.txt
 # git add .
 # git commit
 # git push
