@@ -3,49 +3,49 @@
 # Recommended release workflow
 #
 # Development:
-# git checkout develop
-# git pull origin develop
-# pdm format
-# pdm check-style
-# pdm check-types
-# pdm all-tests
+#   git checkout develop
+#   git pull origin develop
+#   pdm format
+#   pdm check-style
+#   pdm check-types
+#   pdm all-tests
 #
 # Prepare release:
-# pdm install -G release   # Install release tools if needed
-# pdm prepare-release      # update README.rst, LICENSE.txt and CHANGELOG.md. Inspect and verify.
-# git log v0.9.42..HEAD --oneline > log.txt
-# git add .
-# git commit
-# git push
+#   pdm install -G release   # Install release tools if needed
+#   pdm prepare-release      # update README.rst, LICENSE.txt and CHANGELOG.md. Inspect and verify.
+#   git log v0.9.42..HEAD --oneline > log.txt
+#   git add .
+#   git commit
+#   git push
 #
 # Determine version:
-# pdm bump suggest
-# pdm bump pre-release --pre alpha              # creates 0.1.1a1 from 0.1.0
-# pdm bump pre-release --pre beta               # creates 0.1.1b1 from 0.1.1a1
-# pdm bump pre-release --pre release-candidate  # creates 0.1.1rc1 from 0.1.1b1
-# pdm bump no-pre-release                       # creates 0.1.1 from 0.1.1rc1
-# pdm bump micro                                # creates 0.1.2 from 0.1.1
-# pdm bump minor                                # creates 0.2.0 from 0.1.2
-# pdm bump major                                # creates 1.0.0 from 0.2.0
+#   pdm bump suggest
+#   pdm bump pre-release --pre alpha              # creates 0.1.1a1 from 0.1.0
+#   pdm bump pre-release --pre beta               # creates 0.1.1b1 from 0.1.1a1
+#   pdm bump pre-release --pre release-candidate  # creates 0.1.1rc1 from 0.1.1b1
+#   pdm bump no-pre-release                       # creates 0.1.1 from 0.1.1rc1
+#   pdm bump micro                                # creates 0.1.2 from 0.1.1
+#   pdm bump minor                                # creates 0.2.0 from 0.1.2
+#   pdm bump major                                # creates 1.0.0 from 0.2.0
 #
 # Release:
 # Merge develop into master:
-# git checkout master
-# git pull origin master
-# git merge --no-ff develop
-# git push origin master                        # Wait for CI to complete successfully
+#   git checkout master
+#   git pull origin master
+#   git merge --no-ff develop
+#   git push origin master                        # Wait for CI to complete successfully
 #
 # Create and publish release tag:
-# pdm bump tag                                  # creates a git tag with a leading v
-# git push --tags                               # publish the new version
+#   pdm bump tag                                  # creates a git tag with a leading v
+#   git push --tags                               # publish the new version
 #
 # Note:
 # Publishing to PyPI occurs when a tag beginning with 'v'
 # is pushed and the GitHub release workflow succeeds.
 #
 # Rebuilding the lock files:
-# pdm lock
-# pdm lock-py314
+#   pdm lock
+#   pdm lock-py314
 #
 # After the release, merge master back into develop
 # so that release commits and version changes are present in develop:
@@ -73,8 +73,7 @@ dependencies = [
 ]
 
 readme = "README.rst"
-license = {text = "new BSD"}
-license_file = "LICENSE.txt"
+license = {file = "LICENSE.txt"}
 classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
