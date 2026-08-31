@@ -7,6 +7,7 @@ Created on Apr 4, 2016
 from __future__ import annotations
 
 import contextlib
+import subprocess
 import sys
 from collections.abc import Generator, Sequence
 from io import StringIO
@@ -48,7 +49,6 @@ def test_docstrings(filename: str | None = None) -> Any:
 def test(
     package_name: str,
     *options: str,
-    plugins: Any | None = None,
 ) -> int:
     """
     Run tests for package using pytest.
@@ -80,17 +80,16 @@ def test(
     {super}
 
     """
-    try:
-        import pytest
-    except ImportError as exc:
-        raise ImportError(
-            "pytest is required to run package tests. Install it with: pip install pytest."
-        ) from exc
+    command = [
+        sys.executable,
+        "-m",
+        "pytest",
+        "--pyargs",
+        package_name,
+        *options,
+    ]
 
-    return pytest.main(
-        ["--pyargs", package_name, *options],
-        plugins=plugins,
-    )
+    return subprocess.call(command)
 
 
 @contextlib.contextmanager
