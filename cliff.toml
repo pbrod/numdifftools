@@ -2,10 +2,8 @@
 # https://git-cliff.org/docs/configuration
 
 [changelog]
-header = """
-# Changelog
+header = ""
 
-"""
 
 body = """
 {% if version %}
@@ -48,43 +46,44 @@ commit_parsers = [
   # Bug fixes
   { message = "^fix", group = "<!-- 1 -->🐛 Bug Fixes" },
 
+  # Security
+  { body = "(?i).*security.*", group = "<!-- 2 -->🛡️ Security" },
+
   # Refactoring and typing improvements
-  { message = "^refactor", group = "<!-- 2 -->♻️ Refactoring" },
-  { message = "^chore\\(mypy\\)", group = "<!-- 2 -->♻️ Refactoring" },
-  { message = "^fix\\(mypy\\)", group = "<!-- 2 -->♻️ Refactoring" },
-  { message = "^refactor\\(typing\\)", group = "<!-- 2 -->♻️ Refactoring" },
+  { message = "^refactor", group = "<!-- 3 -->♻️ Refactoring" },
+  { message = "^chore\\(mypy\\)", group = "<!-- 3 -->♻️ Refactoring" },
+  { message = "^fix\\(mypy\\)", group = "<!-- 3 -->♻️ Refactoring" },
+  { message = "^refactor\\((typing|types|typehints)\\)", group = "<!-- 3 -->♻️ Refactoring" },
 
   # Documentation
-  { message = "^docs?", group = "<!-- 3 -->📚 Documentation" },
+  { message = "^docs?", group = "<!-- 4 -->📚 Documentation" },
 
   # Performance
-  { message = "^perf", group = "<!-- 4 -->⚡ Performance" },
+  { message = "^perf", group = "<!-- 5 -->⚡ Performance" },
 
   # Formatting and style
-  { message = "^style", group = "<!-- 5 -->🎨 Styling" },
+  { message = "^style", group = "<!-- 6 -->🎨 Styling" },
 
   # Testing
-  { message = "^test", group = "<!-- 6 -->🧪 Testing" },
+  { message = "^test", group = "<!-- 7 -->🧪 Testing" },
 
   # Build system
-  { message = "^build", group = "<!-- 7 -->⚙️ Build System" },
+  { message = "^build", group = "<!-- 8 -->📦 Build System" },
 
   # Ignore release commits
   { message = "^chore\\(release\\)", skip = true },
   { message = "^docs\\(release\\)", skip = true },
 
   # CI/CD
-  { message = "^ci", group = "<!-- 8 -->🏗️ CI/CD" },
-  { message = "^chore\\((ci)\\)", group = "<!-- 8 -->🏗️ CI/CD" },
+  { message = "^ci", group = "<!-- 9 -->🏗️ CI/CD" },
+  { message = "^chore\\(ci\\)", group = "<!-- 9 -->🏗️ CI/CD" },
 
   # Dependencies
-  { message = "^chore\\(deps", group = "<!-- 9 -->📦 Dependencies" },
+  { message = "^chore\\(deps", group = "<!-- 10 -->📦 Dependencies" },
+  { message = "^build\\(deps\\)", group = "<!-- 10 -->📦 Dependencies" },
 
   # Maintenance
-  { message = "^chore", group = "<!-- 10 -->⚙️ Maintenance" },
-
-  # Security
-  { body = "(?i).*security.*", group = "<!-- 11 -->🛡️ Security" },
+  { message = "^chore", group = "<!-- 11 -->⚙️ Maintenance" },
 
   # Reverts
   { message = "^revert", group = "<!-- 12 -->◀️ Revert" },
