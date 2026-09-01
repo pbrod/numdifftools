@@ -61,7 +61,7 @@ authors = [
     {name = "Per A. Brodtkorb"}
 ]
 maintainers = [
-  {name = "Per A. Brodtkorb",email = "per.andreas.brodtkorb@gmail.com"}
+  {name = "Per A. Brodtkorb", email = "per.andreas.brodtkorb@gmail.com"}
 ]
 requires-python = ">=3.10"
 dependencies = [
@@ -71,8 +71,17 @@ dependencies = [
 
 readme = "README.rst"
 license = {file = "LICENSE.txt"}
+keywords = [
+    "numerical differentiation",
+    "derivatives",
+    "optimization",
+    "finite differences",
+    "calculus",
+]
+
 classifiers = [
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -88,19 +97,22 @@ classifiers = [
     "Operating System :: MacOS",
     "Operating System :: Microsoft :: Windows",
     "Topic :: Scientific/Engineering :: Mathematics",
-    "Topic :: Scientific/Engineering :: GIS"
 ]
 
 [project.optional-dependencies]
-plot =["matplotlib>=3.8.0",
-       ]
+plot =[
+    "matplotlib>=3.8.0",
+]
+
 tools = [
     "algopy>=0.4",
     "statsmodels>=0.6",
 ]
 [project.urls]
-repository  = "https://github.com/pbrod/numdifftools/"
-documentation = "https://numdifftools.readthedocs.io/en/latest/"
+Homepage = "https://github.com/pbrod/numdifftools/"
+Documentation = "https://numdifftools.readthedocs.io/en/latest/"
+Repository = "https://github.com/pbrod/numdifftools/"
+Issues = "https://github.com/pbrod/numdifftools/issues"
 
 
 [build-system]
@@ -126,15 +138,13 @@ docs-pdf = "python -m sphinx -b latexpdf docs docs/_build/latex -d docs/_build/d
 docs-doctest = "python -m sphinx -b doctest docs docs/_build/doctest -d docs/_build/doctrees"
 lock = "pdm lock -dG all"
 lock-py314 = "pdm lock -L pdm.lock314 --python 3.14 --strategy no_direct_minimal_versions -dG all"
-lock-win64 = "pdm lock -L pdm_windows.lock --python 3.13 --strategy no_direct_minimal_versions --platform windows -dG all"
-lock-linux = "pdm lock -L pdm_linux.lock --python 3.13 --strategy no_direct_minimal_versions --platform linux -dG all"
-lock-macos = "pdm lock -L pdm_macos.lock --python 3.13 --strategy no_direct_minimal_versions --platform macos -dG all"
 lock-all = {composite = ["lock", "lock-py314"]}
 
 format = "ruff format ./src/"  # format code
 check-style = "ruff check ./src/"  # check code style
 check-types = "mypy ./src/"  # check types
 tests = {cmd = "pytest", env = {"MPLBACKEND" = "Agg"}}
+test = {composite = ["tests"]}
 all-tests = {composite = ["format", "check-style", "check-types", "tests", "docs-doctest"]}  #
 
 show-version = "python -c \"from numdifftools import __version__; print(__version__)\""
@@ -176,6 +186,7 @@ test = [
     "pytest",
     "pytest-cov",
     "line_profiler",
+    "profiletools",
     "hypothesis>=3.6",
     "ruff>=0.0.47",
     # "gitlint>=0.19",
