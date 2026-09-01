@@ -1,5 +1,4 @@
 from functools import wraps
-from typing import Any
 
 from . import extrapolation, limits, step_generators
 from .core import (
