@@ -1,4 +1,30 @@
-# Ghangelog
+# Changelog
+
+## [0.11.0] - 2026-09-01
+
+### 🐛 Bug Fixes
+
+- *(numdifftools.test)* Remove unsupported `plugins` argument
+
+### ⚙️ Maintenance
+
+- Remove unused `typing.Any` import
+- *(cliff)* Improve changelog generation and commit grouping
+- *(pyproject)* Update metadata, tooling, and lock files
+
+### ♻️ Refactoring
+
+- *(test)* Run pytest in a subprocess
+- *(profiletools)* Remove bundled profiling code
+
+### 📚 Documentation
+
+- Update readthedocs.yaml
+- *(pyproject)* Improve project metadata and release workflow documentation
+- *(pyproject)* Add Git command to extract commit messages since the previous release
+- *(changelog)* Modernize release history formatting
+- *(changelog)* Add git-cliff configuration
+
 
 ## [0.10.1] - 2026-08-12
 
