@@ -1,5 +1,4 @@
 from functools import wraps
-from typing import Any
 
 from . import extrapolation, limits, step_generators
 from .core import (
@@ -17,7 +16,7 @@ from .core import (
 from .info import __doc__ as __doc__
 from .testing import test as _test  # noqa
 
-__version__ = "0.10.1"
+__version__ = "0.11.0"
 
 __all__ = (
     "Derivative",
@@ -37,5 +36,5 @@ __all__ = (
 
 
 @wraps(_test)
-def test(*options: str, plugins: Any | None = None) -> int:
-    return _test(__name__, *options, plugins=plugins)
+def test(*options: str) -> int:
+    return _test(__name__, *options)

@@ -3,57 +3,55 @@
 # Recommended release workflow
 #
 # Development:
-# git checkout develop
-# git pull origin develop
-# pdm format
-# pdm check-style
-# pdm check-types
-# pdm all-tests
-#
-# Prepare release:
-# pdm install -G release   # Install release tools if needed
-# pdm prepare-release      # update README.rst, LICENSE.txt and CHANGELOG.md. Inspect and verify.
-# git add .
-# git commit
-# git push
+#   git checkout develop
+#   git pull origin develop
+#   pdm format
+#   pdm check-style
+#   pdm check-types
+#   pdm all-tests
 #
 # Determine version:
-# pdm bump suggest
-# pdm bump pre-release --pre alpha              # creates 0.1.1a1 from 0.1.0
-# pdm bump pre-release --pre beta               # creates 0.1.1b1 from 0.1.1a1
-# pdm bump pre-release --pre release-candidate  # creates 0.1.1rc1 from 0.1.1b1
-# pdm bump no-pre-release                       # creates 0.1.1 from 0.1.1rc1
-# pdm bump micro                                # creates 0.1.2 from 0.1.1
-# pdm bump minor                                # creates 0.2.0 from 0.1.2
-# pdm bump major                                # creates 1.0.0 from 0.2.0
+#   pdm bump suggest
+#   pdm bump pre-release --pre alpha              # creates 0.1.1a1 from 0.1.0
+#   pdm bump pre-release --pre beta               # creates 0.1.1b1 from 0.1.1a1
+#   pdm bump pre-release --pre release-candidate  # creates 0.1.1rc1 from 0.1.1b1
+#   pdm bump no-pre-release                       # creates 0.1.1 from 0.1.1rc1
+#   pdm bump micro                                # creates 0.1.2 from 0.1.1
+#   pdm bump minor                                # creates 0.2.0 from 0.1.2
+#   pdm bump major                                # creates 1.0.0 from 0.2.0
+#
+# Prepare release:
+#   pdm install -G release   # Install release tools if needed
+#   pdm prepare-release      # update README.rst, LICENSE.txt and CHANGELOG.md. Inspect and verify.
+#   git log v0.10.1..HEAD --oneline > log.txt
+#   git add .
+#   git commit -m "chore(release): prepare release"
+#   git push origin develop
 #
 # Release:
-# Merge develop into master:
-# git checkout master
-# git pull origin master
-# git merge --no-ff develop
-# git push origin master                        # Wait for CI to complete successfully
+#  Merge develop into master:
+#   git checkout master
+#   git pull origin master
+#   git merge --no-ff develop                     # Vim: Press Esc, Type: ':wq', Press Enter
+#   git push origin master                        # Wait for CI to complete successfully
 #
 # Create and publish release tag:
-# pdm bump tag                                  # creates a git tag with a leading v
-# git push --tags                               # publish the new version
+#   pdm bump tag                                  # creates a git tag with a leading v
+#   git push --tags                               # publish the new version
 #
 # Note:
 # Publishing to PyPI occurs when a tag beginning with 'v'
 # is pushed and the GitHub release workflow succeeds.
 #
 # Rebuilding the lock files:
-# pdm lock
-# pdm lock-py314
+#   pdm lock-all
 #
 # After the release, merge master back into develop
 # so that release commits and version changes are present in develop:
-#
-# git checkout develop
-# git pull origin develop
-# git merge master
-# git push origin develop
-#
+#   git checkout develop
+#   git pull origin develop
+#   git merge master
+#   git push origin develop
 
 [project]
 name = "numdifftools"
@@ -63,7 +61,7 @@ authors = [
     {name = "Per A. Brodtkorb"}
 ]
 maintainers = [
-  {name = "Per A. Brodtkorb",email = "per.andreas.brodtkorb@gmail.com"}
+  {name = "Per A. Brodtkorb", email = "per.andreas.brodtkorb@gmail.com"}
 ]
 requires-python = ">=3.10"
 dependencies = [
@@ -72,10 +70,18 @@ dependencies = [
 ]
 
 readme = "README.rst"
-license = {text = "new BSD"}
-license_file = "LICENSE.txt"
+license = {file = "LICENSE.txt"}
+keywords = [
+    "numerical differentiation",
+    "derivatives",
+    "optimization",
+    "finite differences",
+    "calculus",
+]
+
 classifiers = [
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -91,19 +97,22 @@ classifiers = [
     "Operating System :: MacOS",
     "Operating System :: Microsoft :: Windows",
     "Topic :: Scientific/Engineering :: Mathematics",
-    "Topic :: Scientific/Engineering :: GIS"
 ]
 
 [project.optional-dependencies]
-plot =["matplotlib>=3.8.0",
-       ]
+plot =[
+    "matplotlib>=3.8.0",
+]
+
 tools = [
     "algopy>=0.4",
     "statsmodels>=0.6",
 ]
 [project.urls]
-repository  = "https://github.com/pbrod/numdifftools/"
-documentation = "https://numdifftools.readthedocs.io/en/latest/"
+Homepage = "https://github.com/pbrod/numdifftools/"
+Documentation = "https://numdifftools.readthedocs.io/en/latest/"
+Repository = "https://github.com/pbrod/numdifftools/"
+Issues = "https://github.com/pbrod/numdifftools/issues"
 
 
 [build-system]
@@ -129,15 +138,13 @@ docs-pdf = "python -m sphinx -b latexpdf docs docs/_build/latex -d docs/_build/d
 docs-doctest = "python -m sphinx -b doctest docs docs/_build/doctest -d docs/_build/doctrees"
 lock = "pdm lock -dG all"
 lock-py314 = "pdm lock -L pdm.lock314 --python 3.14 --strategy no_direct_minimal_versions -dG all"
-lock-win64 = "pdm lock -L pdm_windows.lock --python 3.13 --strategy no_direct_minimal_versions --platform windows -dG all"
-lock-linux = "pdm lock -L pdm_linux.lock --python 3.13 --strategy no_direct_minimal_versions --platform linux -dG all"
-lock-macos = "pdm lock -L pdm_macos.lock --python 3.13 --strategy no_direct_minimal_versions --platform macos -dG all"
 lock-all = {composite = ["lock", "lock-py314"]}
 
 format = "ruff format ./src/"  # format code
 check-style = "ruff check ./src/"  # check code style
 check-types = "mypy ./src/"  # check types
 tests = {cmd = "pytest", env = {"MPLBACKEND" = "Agg"}}
+test = {composite = ["tests"]}
 all-tests = {composite = ["format", "check-style", "check-types", "tests", "docs-doctest"]}  #
 
 show-version = "python -c \"from numdifftools import __version__; print(__version__)\""
@@ -155,17 +162,16 @@ prepare-release = {composite = ["update-license", "update-readme", "append-chang
 
 [dependency-groups]
 build = [
-    "setuptools>=39.2",  # Pycharm complains oddly without this on Windows platform
+    "setuptools>=39.2",  # Retained for PyCharm compatibility on Windows
     "spyder-kernels",    # If you want to use Spyder
     "click>=8.3.1",
 ]
 release = [
     "git-cliff>=2.6.1",
     "pdm-bump>=0.9.8",
-
 ]
 
-# semantic_release.commit-messages git-cliff
+# Conventional Commit types used by git-cliff
 # chore: Changes to the build process or auxiliary tools and libraries such as documentation generation
 # docs: Documentation only changes
 # feat: A new feature
@@ -180,6 +186,7 @@ test = [
     "pytest",
     "pytest-cov",
     "line_profiler",
+    "profiletools",
     "hypothesis>=3.6",
     "ruff>=0.0.47",
     # "gitlint>=0.19",

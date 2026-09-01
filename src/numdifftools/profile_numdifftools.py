@@ -7,6 +7,7 @@ from collections.abc import Callable, Iterable
 from typing import Any, cast
 
 import numpy as np
+from profiletools import do_cprofile, do_profile
 
 import numdifftools as nd  # numdifftools.nd_statsmodels as nd
 from numdifftools._typing import (
@@ -16,7 +17,6 @@ from numdifftools._typing import (
     MathFunc,
 )
 from numdifftools.example_functions import function_names, get_function
-from numdifftools.profiletools import do_profile
 from numdifftools.run_benchmark import BenchmarkFunction
 
 
@@ -29,13 +29,13 @@ def profile_hessian(
         step = nd.step_generators.one_step
         cls = cast(Any, nd.Hessian(f, step=step, method="central"))
         # pylint: disable=protected-access
+        fd_rule = cls._fd_rule
 
-        difference_functions = cls._difference_functions
+        difference_functions = fd_rule._difference_functions
         follow: tuple[Callable[..., Any], ...] = (
             cls._derivative_nonzero_order,
-            cls._apply_fd_rule,
-            cls._get_finite_difference_rule,
-            cls._prepare_extrapolation_data,
+            fd_rule.apply,
+            fd_rule._prepare_extrapolation_data,
             difference_functions._central_even,
         )
 
@@ -47,6 +47,7 @@ def profile_hessian(
         do_profile(follow=follow)(cls)(x)
 
 
+@do_cprofile  # type: ignore[untyped-decorator]
 def main() -> None:
     x: float = 0.5
     methods: list[str] = ["complex", "central", "backward", "forward"]
@@ -87,7 +88,6 @@ def profile_main() -> None:
 
 
 if __name__ == "__main__":
-    profile_hessian()
-    profile_main()
-    # from numdifftools.testing import test_docstrings
-    # test_docstrings()
+    # profile_hessian()
+    # profile_main()
+    main()
