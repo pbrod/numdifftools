@@ -7,7 +7,7 @@ from collections.abc import Callable, Iterable
 from typing import Any, cast
 
 import numpy as np
-from profiletools import do_profile, do_cprofile
+from profiletools import do_cprofile, do_profile
 
 import numdifftools as nd  # numdifftools.nd_statsmodels as nd
 from numdifftools._typing import (
@@ -29,7 +29,7 @@ def profile_hessian(
         step = nd.step_generators.one_step
         cls = cast(Any, nd.Hessian(f, step=step, method="central"))
         # pylint: disable=protected-access
-        fd_rule  = cls._fd_rule
+        fd_rule = cls._fd_rule
 
         difference_functions = fd_rule._difference_functions
         follow: tuple[Callable[..., Any], ...] = (
@@ -47,7 +47,7 @@ def profile_hessian(
         do_profile(follow=follow)(cls)(x)
 
 
-@do_cprofile
+@do_cprofile  # type: ignore[untyped-decorator]
 def main() -> None:
     x: float = 0.5
     methods: list[str] = ["complex", "central", "backward", "forward"]
