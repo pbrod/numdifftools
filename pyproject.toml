@@ -10,14 +10,6 @@
 #   pdm check-types
 #   pdm all-tests
 #
-# Prepare release:
-#   pdm install -G release   # Install release tools if needed
-#   pdm prepare-release      # update README.rst, LICENSE.txt and CHANGELOG.md. Inspect and verify.
-#   git log v0.9.42..HEAD --oneline > log.txt
-#   git add .
-#   git commit
-#   git push
-#
 # Determine version:
 #   pdm bump suggest
 #   pdm bump pre-release --pre alpha              # creates 0.1.1a1 from 0.1.0
@@ -28,11 +20,19 @@
 #   pdm bump minor                                # creates 0.2.0 from 0.1.2
 #   pdm bump major                                # creates 1.0.0 from 0.2.0
 #
+# Prepare release:
+#   pdm install -G release   # Install release tools if needed
+#   pdm prepare-release      # update README.rst, LICENSE.txt and CHANGELOG.md. Inspect and verify.
+#   git log v0.10.1..HEAD --oneline > log.txt
+#   git add .
+#   git commit -m "chore(release): prepare release"
+#   git push origin develop
+#
 # Release:
-# Merge develop into master:
+#  Merge develop into master:
 #   git checkout master
 #   git pull origin master
-#   git merge --no-ff develop
+#   git merge --no-ff develop                     # Vim: Press Esc, Type: ':wq', Press Enter
 #   git push origin master                        # Wait for CI to complete successfully
 #
 # Create and publish release tag:
@@ -44,17 +44,14 @@
 # is pushed and the GitHub release workflow succeeds.
 #
 # Rebuilding the lock files:
-#   pdm lock
-#   pdm lock-py314
+#   pdm lock-all
 #
 # After the release, merge master back into develop
 # so that release commits and version changes are present in develop:
-#
-# git checkout develop
-# git pull origin develop
-# git merge master
-# git push origin develop
-#
+#   git checkout develop
+#   git pull origin develop
+#   git merge master
+#   git push origin develop
 
 [project]
 name = "numdifftools"
@@ -155,17 +152,16 @@ prepare-release = {composite = ["update-license", "update-readme", "append-chang
 
 [dependency-groups]
 build = [
-    "setuptools>=39.2",  # Pycharm complains oddly without this on Windows platform
+    "setuptools>=39.2",  # Retained for PyCharm compatibility on Windows
     "spyder-kernels",    # If you want to use Spyder
     "click>=8.3.1",
 ]
 release = [
     "git-cliff>=2.6.1",
     "pdm-bump>=0.9.8",
-
 ]
 
-# semantic_release.commit-messages git-cliff
+# Conventional Commit types used by git-cliff
 # chore: Changes to the build process or auxiliary tools and libraries such as documentation generation
 # docs: Documentation only changes
 # feat: A new feature
