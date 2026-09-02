@@ -16,7 +16,7 @@ from .core import (
 from .info import __doc__ as __doc__
 from .testing import test as _test  # noqa
 
-__version__ = "0.11.0"
+__version__ = "0.11.1"
 
 __all__ = (
     "Derivative",

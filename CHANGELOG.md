@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.1] - 2026-09-02
+
+### 🐛 Bug Fixes
+
+- *(test)* Skip profiletools-dependent tests when the optional dependency is unavailable
+
+
 ## [0.11.0] - 2026-09-01
 
 ### 🐛 Bug Fixes
