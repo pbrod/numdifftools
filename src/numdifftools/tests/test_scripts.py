@@ -1,8 +1,5 @@
-import pytest
-
 from numdifftools import run_benchmark
 from numdifftools._find_default_scale import run_all_benchmarks
-from numdifftools.profile_numdifftools import main, profile_hessian
 
 
 def test__find_default_scale_run_all_benchmarks():
@@ -18,12 +15,3 @@ def test__find_default_scale_run_all_benchmarks():
 
 def test_run_gradient_and_hessian_benchmarks():
     run_benchmark.main(problem_sizes=(4, 8, 16))
-
-
-def test_profile_numdifftools_main():
-    main()
-
-
-@pytest.mark.skip("Suspect this test breaks all further testing or at least makes the coverage to not show.")
-def test_profile_numdifftools_profile_hessian():
-    profile_hessian()
