@@ -144,7 +144,8 @@ format = "ruff format ./src/"  # format code
 check-style = "ruff check ./src/"  # check code style
 check-types = "mypy ./src/"  # check types
 tests = {cmd = "pytest", env = {"MPLBACKEND" = "Agg"}}
-test = {composite = ["tests"]}
+tests-fast = {cmd = "pytest -m 'not slow'", env = {"MPLBACKEND" = "Agg"}}
+tests-slow = {cmd = "pytest -m slow", env = {"MPLBACKEND" = "Agg"}}
 all-tests = {composite = ["format", "check-style", "check-types", "tests", "docs-doctest"]}  #
 
 show-version = "python -c \"from numdifftools import __version__; print(__version__)\""
