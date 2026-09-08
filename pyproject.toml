@@ -271,12 +271,13 @@ convention = "numpy"
 #docstring-code-format = true
 docstring-code-line-length = 100
 
-
+[tool.pytest.ini_options]
 doctest_optionflags = [
     "NORMALIZE_WHITESPACE",
     "IGNORE_EXCEPTION_DETAIL",
     "ELLIPSIS"
 ]
+
 addopts = "-rsxXf"
 testpaths = [
     "src"
