@@ -520,6 +520,8 @@ class Jacobian(Derivative):
         diff, f = self._get_functions(args, kwds)
         steps, step_ratio = self._get_steps(x_i)
         fxi = f(x_i)
+        if self.method in {"complex", "multicomplex"}:
+            self._raise_error_if_any_is_complex(x_i, fxi)
         results = [diff(f, fxi, x_i, h) for h in steps]
 
         steps2 = self._expand_steps(steps, x_i, fxi)
