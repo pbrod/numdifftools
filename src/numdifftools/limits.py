@@ -182,6 +182,10 @@ class _Limit:
     @staticmethod
     def _get_arg_min(errors: Array) -> Array:
         shape = errors.shape
+        all_nan = np.all(np.isnan(errors), axis=0)
+        if np.any(all_nan):
+            warnings.warn("All-NaN slice encountered", stacklevel=2)
+            errors = np.where(all_nan, np.inf, errors)
         try:
             arg_mins = np.nanargmin(errors, axis=0)
             min_errors = np.nanmin(errors, axis=0)
@@ -190,6 +194,9 @@ class _Limit:
             return np.arange(shape[1])
 
         for i, min_error in enumerate(min_errors):
+            if all_nan[i]:
+                arg_mins[i] = 0
+                continue
             idx = np.flatnonzero(errors[:, i] == min_error)
             arg_mins[i] = idx[idx.size // 2]
         return np.ravel_multi_index((arg_mins, np.arange(shape[1])), shape)
