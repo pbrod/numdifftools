@@ -70,7 +70,7 @@ dependencies = [
 ]
 
 readme = "README.rst"
-license = {file = "LICENSE.txt"}
+license = "BSD-3-Clause"
 keywords = [
     "numerical differentiation",
     "derivatives",
@@ -90,7 +90,6 @@ classifiers = [
     "Environment :: Console",
     "Intended Audience :: Education",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: BSD License",
     "Operating System :: OS Independent",
     "Operating System :: POSIX :: Linux",
     "Operating System :: Unix",
