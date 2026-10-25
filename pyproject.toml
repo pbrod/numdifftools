@@ -23,7 +23,7 @@
 # Prepare release:
 #   pdm install -G release   # Install release tools if needed
 #   pdm prepare-release      # update README.rst, LICENSE.txt and CHANGELOG.md. Inspect and verify.
-#   git log v0.10.1..HEAD --oneline > log.txt
+#   git log v0.11.2..HEAD --oneline > log.txt
 #   git add .
 #   git commit -m "chore(release): prepare release"
 #   git push origin develop
@@ -70,7 +70,7 @@ dependencies = [
 ]
 
 readme = "README.rst"
-license = {file = "LICENSE.txt"}
+license = "BSD-3-Clause"
 keywords = [
     "numerical differentiation",
     "derivatives",
@@ -90,7 +90,6 @@ classifiers = [
     "Environment :: Console",
     "Intended Audience :: Education",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: BSD License",
     "Operating System :: OS Independent",
     "Operating System :: POSIX :: Linux",
     "Operating System :: Unix",
@@ -144,7 +143,8 @@ format = "ruff format ./src/"  # format code
 check-style = "ruff check ./src/"  # check code style
 check-types = "mypy ./src/"  # check types
 tests = {cmd = "pytest", env = {"MPLBACKEND" = "Agg"}}
-test = {composite = ["tests"]}
+tests-fast = {cmd = "pytest -m 'not slow'", env = {"MPLBACKEND" = "Agg"}}
+tests-slow = {cmd = "pytest -m slow", env = {"MPLBACKEND" = "Agg"}}
 all-tests = {composite = ["format", "check-style", "check-types", "tests", "docs-doctest"]}  #
 
 show-version = "python -c \"from numdifftools import __version__; print(__version__)\""
@@ -271,16 +271,12 @@ convention = "numpy"
 docstring-code-line-length = 100
 
 [tool.pytest.ini_options]
-# Register all custom markers here.
-markers = [
-    "slow: marks tests as slow (time-consuming)",
-    "benchmark: marks tests used for benchmarking",
-]
 doctest_optionflags = [
     "NORMALIZE_WHITESPACE",
     "IGNORE_EXCEPTION_DETAIL",
     "ELLIPSIS"
 ]
+
 addopts = "-rsxXf"
 testpaths = [
     "src"

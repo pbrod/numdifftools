@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.11.2] - 2026-10-26
+
+### 🐛 Bug Fixes
+
+- *(test) Register custom pytest markers in installed tests
+- *(pyproject.toml) Revert unintended [tool.pytest.ini_options] changes
+- Prevent all-NaN error columns from affecting derivative estimate selection in valid outputs
+- Apply complex-step input validation to Jacobian and Gradient
+
+
+### ⚙️ Maintenance
+
+- *(packaging)* Adopt SPDX license metadata and refresh lock files
+
+
 ## [0.11.1] - 2026-09-02
 
 ### 🐛 Bug Fixes
