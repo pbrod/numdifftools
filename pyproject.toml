@@ -23,7 +23,7 @@
 # Prepare release:
 #   pdm install -G release   # Install release tools if needed
 #   pdm prepare-release      # update README.rst, LICENSE.txt and CHANGELOG.md. Inspect and verify.
-#   git log v0.10.1..HEAD --oneline > log.txt
+#   git log v0.11.2..HEAD --oneline > log.txt
 #   git add .
 #   git commit -m "chore(release): prepare release"
 #   git push origin develop
