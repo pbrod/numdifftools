@@ -179,7 +179,7 @@ def fd_derivative(fx: ArrayLike, x: ArrayLike, n: int = 1, m: int = 2) -> Array:
     _assert(n < num_x, "len(x) must be larger than n")
     _assert(num_x == len(fx), "len(x) must be equal len(fx)")
 
-    du = np.zeros_like(fx)
+    du = np.zeros_like(fx, dtype=np.result_type(fx, 1.0))
 
     mm = n // 2 + m
     size = 2 * mm + 2  # stencil size at boundary
