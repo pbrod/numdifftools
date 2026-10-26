@@ -22,8 +22,8 @@ def test_fractional_derivative_of_integer_samples(dtype: type[np.generic], n: in
     assert_array_equal(samples, original)
 
 
-@pytest.mark.parametrize("dtype", [np.float32, np.float64, np.complex64, np.complex128])
-def test_sampled_derivative_preserves_inexact_dtype(dtype: type[np.generic]) -> None:
+@pytest.mark.parametrize("dtype", ["f4", "f8", "c8", "c16", ">f4", ">f8", ">c8", ">c16"])
+def test_sampled_derivative_preserves_inexact_dtype(dtype: str) -> None:
     x = np.arange(11, dtype=float)
     samples = (x**2 / 4).astype(dtype)
     expected: Array = x / 2
@@ -35,3 +35,15 @@ def test_sampled_derivative_preserves_inexact_dtype(dtype: type[np.generic]) -> 
 
     assert result.dtype == samples.dtype
     assert_allclose(result, expected, atol=1e-12)
+
+
+@pytest.mark.parametrize("dtype", ["f8", ">f8", "c16", ">c16"])
+def test_sampled_derivative_preserves_dtype_metadata(dtype: str) -> None:
+    x = np.arange(11, dtype=float)
+    samples = (x / 2).astype(dtype).view(np.dtype(dtype, metadata={"unit": "adu"}))
+
+    result = fd_derivative(samples, x)
+
+    assert result.dtype == samples.dtype
+    assert result.dtype.metadata == samples.dtype.metadata
+    assert_allclose(result, 0.5, atol=1e-12)
