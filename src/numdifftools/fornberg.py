@@ -84,7 +84,7 @@ def fd_weights_all(
     m = len(x)
     _assert(n < m, "len(x) must be larger than n")
 
-    weights = np.zeros((m, n + 1))
+    weights = np.zeros((m, n + 1), dtype=complex if np.iscomplexobj(x0) else float)
     _fd_weights_all(weights, x, x0, n)
     return weights.T
 
