@@ -7,6 +7,7 @@ Created on 22. apr. 2015
 import numpy as np
 from numpy.testing import assert_allclose, assert_array_equal  # @UnresolvedImport
 
+import numdifftools as nd
 from numdifftools.example_functions import get_function
 from numdifftools.multicomplex import Bicomplex
 
@@ -19,6 +20,13 @@ def _default_base_step(x, scale):
 
 
 class TestBicomplex:
+    @staticmethod
+    def test_expm1():
+        z = Bicomplex([0, 0, 1e-30, -40], [np.pi / 3, 1e-20, 0, 1e-20])
+        result = np.expm1(z)
+        assert_allclose(result.z1, [-0.5, -0.5e-40, 1e-30, -1], rtol=1e-15, atol=0)
+        assert_allclose(result.z2, [np.sqrt(3) / 2, 1e-20, 0, np.exp(-40) * 1e-20], rtol=1e-15, atol=0)
+
     def test_init(self):
         z = Bicomplex(1, 2)
         assert z.z1 == 1
@@ -354,6 +362,8 @@ def _test_first_derivative(name):
     der = f(Bicomplex(x + h * 1j, 0)).imag1 / h
     der_true = df(x)
     assert_allclose(der, der_true, err_msg=f"{name!s}")
+    der_second_unit = f(Bicomplex(x, h)).imag2 / h
+    assert_allclose(der_second_unit, der_true, err_msg=f"{name!s}")
 
 
 def _test_second_derivative(name):
@@ -392,6 +402,16 @@ _function_names = [
 
 
 class TestDerivative:
+    @staticmethod
+    def test_expm1_composition():
+        derivative = nd.Derivative(lambda x: np.exp(np.expm1(x)), n=2, method="multicomplex")
+        assert_allclose(derivative(0.0), 2.0)
+
+    @staticmethod
+    def test_expm1_mixed_hessian():
+        hessian = nd.Hessian(lambda x: x[0] * np.expm1(x[1]), method="multicomplex")
+        assert_allclose(hessian([1.0, 0.0]), [[0.0, 1.0], [1.0, 1.0]], atol=1e-14)
+
     @staticmethod
     def test_all_first_derivatives():
         for name in _function_names:
