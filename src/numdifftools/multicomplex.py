@@ -343,8 +343,10 @@ class Bicomplex:
         return Bicomplex(np.log1p(self.mod_c()), self.arg_c1p())
 
     def expm1(self) -> Bicomplex:
-        expz1 = np.expm1(self.z1)
-        return Bicomplex(expz1 * np.cos(self.z2), expz1 * np.sin(self.z2))
+        # cos(z2) - 1 = -2*sin(z2/2)**2 avoids cancellation near zero.
+        z1 = np.expm1(self.z1) * np.cos(self.z2) - 2 * np.sin(self.z2 / 2) ** 2
+        z2 = np.exp(self.z1) * np.sin(self.z2)
+        return Bicomplex(z1, z2)
 
     def exp(self) -> Bicomplex:
         expz1 = np.exp(self.z1)
