@@ -62,6 +62,7 @@ def process_folder(folder_path, max_file_size=MAX_FILE_SIZE):
         ".json",
         ".md",
         ".rst",
+        ".xsd",
     )
 
     filenames_to_ignore = {
